@@ -76,7 +76,10 @@ class GitHubError(RuntimeError):
         self.status, self.kind, self.fix = status, kind, fix
 
     def line(self):
-        return str(self) + (f" Fix: {self.fix}" if self.fix else "")
+        text = str(self).rstrip()
+        if self.fix:
+            text += ("" if text.endswith((".", "!", "?")) else ".") + f" Fix: {self.fix}."
+        return text
 
 
 def report(e):
@@ -93,13 +96,13 @@ def sso_fix(headers=None):
             url = part[4:]
     where = f"open {url} and authorise the token" if url else (
         f"open {TOKENS_PAGE}, choose Configure SSO next to the token and authorise the organisation")
-    return f"your organisation uses single sign-on, so {where}. Then rerun."
+    return f"your organisation uses single sign-on, so {where}. Then rerun"
 
 
 def _reset_time(headers):
     try:
-        reset = int(headers.get("X-RateLimit-Reset"))
-        return _dt.datetime.fromtimestamp(reset).strftime("%H:%M")
+        at = _dt.datetime.fromtimestamp(int(headers.get("X-RateLimit-Reset")))
+        return at.strftime("%H:%M" if at.date() == _dt.date.today() else "%Y-%m-%d %H:%M")
     except (TypeError, ValueError, OverflowError, OSError):
         return ""
 
