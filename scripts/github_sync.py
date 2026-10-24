@@ -417,7 +417,8 @@ def run(argv=None):
         L.say("\nNo Epic, so no roll-up comment. The sub-epics hold their own work item lists.")
     L.say("\nSummary")
     L.say(f"  labels created: {s.counts['labels']}")
-    L.say("  sub-epics: " + ", ".join(f"#{s.numbers[f'M{m['number']}']}" for m in plan["milestones"]))
+    sub_epic_numbers = [str(s.numbers["M%d" % m["number"]]) for m in plan["milestones"]]
+    L.say("  sub-epics: #" + ", #".join(sub_epic_numbers))
     L.say(f"  work items: {len(plan['items'])} ({s.numbers[L.tag(plan, plan['items'][0]['id'])]} to {max(s.numbers[L.tag(plan, i['id'])] for i in plan['items'])})")
     L.say(f"  new sub-issue links: {s.counts['links']}, bodies rewritten: {s.counts['bodies']}")
     L.say("Next: python3 scripts/github_project.py to build the board. Then run this script with --verify.")
