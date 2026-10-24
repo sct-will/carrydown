@@ -1,12 +1,12 @@
 # Plan owner guide
 
-The long form for the plan owner: the engineering lead or product manager who owns the plan. You do not need to write code. The short form is the [Getting started](../README.md#getting-started) section of the README. It holds the install line and the three sentences you say to your agent. This guide does not repeat them. It explains what happens between them, what to review and what to ask for in advance.
+The long form for the plan owner: the engineering lead, product manager or designer who owns the plan. You do not need to write code. The short form is the README: [Getting started](../README.md#getting-started) has the install line, and [What it sounds like](../README.md#what-it-sounds-like) has the sentences you say to your agent and what it replies. This guide does not repeat them. It explains what happens between them, what to review and what to ask for in advance.
 
 ## Who runs what
 
 | Role | What they do | Which skill |
 | --- | --- | --- |
-| Plan owner | The engineering lead or product manager who owns the plan. Brings the ground truth and the constraints, answers the interview, decides on what the agent drafts, says yes before anything is written to GitHub, and generates the developer skill once. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
+| Plan owner | The engineering lead, product manager or designer who owns the plan. Brings the ground truth and the constraints, answers the interview, decides on what the agent drafts, says yes before anything is written to GitHub, and generates the developer skill once. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
 | Lead reviewer | A senior engineer who spends about an hour reading the generated specifications as the person who will build them, before anything goes to GitHub. | Reviews the output of `carrydown-ground-truth` |
 | Engineers | The people building the work items, each with their own coding agent. They install the developer skill, start an item by naming it, post evidence when it closes, and give the demonstrations. | The generated developer skill, made by `carrydown-dev-skill` |
 | Program | The people accountable for the outcome. They attend the demonstrations and decide pass or fail against criteria written before the work. They run nothing, and keep their own work, the program items, outside the plan. | None |
@@ -35,7 +35,7 @@ Things to ask for now, because they can take days:
 
 - **Permission to create a Project** in your GitHub organisation, and to create issues in the repository. Ask an organisation administrator. If you do not have it yet, planning carries on. You only need it at the GitHub step.
 - **Single sign-on approval.** If your organisation enforces single sign-on (SSO), your token must be approved for it. You do that yourself in two clicks (see "The token" below), but some organisations route it through an administrator.
-- **Node.js and Python 3** on the computer where your agent runs. The README's Prerequisites section says what each is for. Your agent can check both.
+- **Node.js and Python 3** on the computer where your agent runs. Node.js runs the install line once, and Python runs the scripts. Your agent can check both, and [setup.md](setup.md) has the steps for each system.
 
 Things to gather:
 
@@ -129,7 +129,7 @@ To change the plan later, change `plan.yaml` with your agent and run the checker
 - A script fails. Ask the agent to show the message and explain it. Nothing is written until you said yes, and no script deletes anything.
 - `npx: command not found`. Node.js is missing. See [faq.md](faq.md).
 - A GitHub step is refused. The usual cause is single sign-on or a missing organisation permission. The token check names the fix.
-- The agent does not pick up a skill. Put the skill name in front of the sentence, as the README says.
+- The agent does not pick up a skill. Put the skill name in front of the sentence, as the [FAQ](faq.md#how-do-i-start-each-skill) shows.
 - You want to start over. Delete the `docs/spec/` folder in your project and ask again. The scripts never touch your source documents.
 
 ## Glossary
