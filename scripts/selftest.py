@@ -149,6 +149,32 @@ def error_paths(tmp, plan_text):
          order=["plan.yaml:", "complete_by 2027-01-09 is a weekend", "unfinished template text (TODO)"])
 
 
+def maintenance(tmp):
+    """--refresh-headers follows plan.yaml and keeps what a person wrote."""
+    proj = tmp / "maintenance"
+    shutil.copytree(ROOT / SAMPLE, proj)
+    plan = proj / "docs/spec/plan.yaml"
+    text = plan.read_text(encoding="utf-8")
+    text = text.replace('    size: "Medium, about 3 days"\n    depends: []\n', "    depends: []\n")      # WI-01 loses its size in the plan
+    text = text.replace("complete_by: 2027-02-24", "complete_by: 2027-02-25")                               # WI-03 moves a day
+    plan.write_text(text, encoding="utf-8")
+    ms3 = proj / "docs/spec/m3-enforce-policy/milestone.md"
+    custom = "| Demonstration | 2027-03-19, the engineers with the finance advisor, in the review room. |"
+    t = ms3.read_text(encoding="utf-8")
+    import re
+    ms3.write_text(re.sub(r"(?m)^\| Demonstration \|.*$", custom, t), encoding="utf-8")
+    wi1 = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
+    wi1.write_text(re.sub(r"(?m)^(\| Ground truth \|.*)$", r"\1\n| Reviewer | Security review booked |", wi1.read_text(encoding="utf-8")), encoding="utf-8")
+    run = [PY, "scripts/scaffold_spec.py", "--root", str(proj), "--refresh-headers", "--apply", "--allow-no-git"]
+    step("--refresh-headers follows the plan and counts what it wrote", run, contains=["refresh header: docs/spec/m2-route-to-approvers/wi-03-routing-engine.md",
+         "refresh header: docs/spec/m2-route-to-approvers/milestone.md", "refresh tables: docs/spec/README.md", "3 file(s) written"],
+         files={proj / "docs/spec/m2-route-to-approvers/wi-03-routing-engine.md": ["Complete by 2027-02-25"],
+                proj / "docs/spec/README.md": ["| 2027-02-25 |"]})
+    step("--refresh-headers keeps a filled Size row, an added row and a custom demonstration", [PY, "scripts/check_specs.py", "--root", str(proj), "--quiet"],
+         files={wi1: ["| Size | Medium, about 3 days |", "| Reviewer | Security review booked |"], ms3: [custom]})
+    step("--refresh-headers is stable on a second run", run, contains=["0 file(s) written"])
+
+
 def main():
     if "--help" in sys.argv or "-h" in sys.argv:
         print(__doc__)
@@ -219,9 +245,21 @@ def main():
                 step(f"installed copy of {skill} runs {script}", [PY, str(dst / "scripts" / script), "--root", str(ROOT / SAMPLE), "--offline", "--show-body", "3"])
             else:
                 step(f"installed copy of {skill} runs {script}", [PY, str(dst / "scripts" / script), "--root", str(ROOT / SAMPLE)])
+            for other in sorted((dst / "scripts").glob("*.py")):
+                if other.name != "carrydown_lib.py":
+                    step(f"installed copy of {skill} runs {other.name} --help", [PY, str(other), "--help"])
+            if (dst / "scripts/scaffold_spec.py").exists():
+                step(f"installed copy of {skill} runs the header refresh", [PY, str(dst / "scripts/scaffold_spec.py"), "--root", str(ROOT / SAMPLE), "--refresh-headers"])
+        dev = Path(tmp) / "carrydown-dev-skill"
+        step("installed copy of carrydown-dev-skill refreshes only the references", [PY, str(dev / "scripts/generate_dev_skill.py"), "--root", str(ROOT / SAMPLE), "--only", "references"],
+             contains=["would write: references/work-items.md", "would write: references/ground-truth-map.md"], absent=("Traceback", "SKILL.md"))
+        extra = sorted(x.name for x in (dev / "scripts").glob("*.py") if x.name not in ("generate_dev_skill.py", "check_specs.py", "carrydown_lib.py"))
+        results.append((not extra, "carrydown-dev-skill ships only the scripts it runs"))
+        print(("PASS " if not extra else "FAIL ") + "carrydown-dev-skill ships only the scripts it runs" + (f" (remove {', '.join(extra)})" if extra else ""))
         fixtures(Path(tmp))
         citations(Path(tmp))
         error_paths(Path(tmp), plan_text)
+        maintenance(Path(tmp))
     failed = [n for ok, n in results if not ok]
     print(f"\n{len(results) - len(failed)} of {len(results)} steps passed")
     return 1 if failed else 0

@@ -14,8 +14,9 @@ after generating: add the topics and contracts only a person knows to be importa
 Dry run unless --apply. Existing files are replaced only with --force.
 
 Usage
-  python3 scripts/generate_dev_skill.py --root .            dry run
-  python3 scripts/generate_dev_skill.py --root . --apply    write
+  python3 scripts/generate_dev_skill.py --root .                              dry run
+  python3 scripts/generate_dev_skill.py --root . --apply                      write
+  python3 scripts/generate_dev_skill.py --root . --only references --apply    refresh only the references
 """
 import argparse
 import re
@@ -24,18 +25,15 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
-import scaffold_spec as SC  # noqa: E402
 
-
-def md_table(headers, rows):
-    return SC.md_table(headers, rows)
+md_table = L.md_table
 
 
 def work_items_md(plan, root):
     out = ["# Work item index", "",
            "Generated from `plan.yaml`. The GitHub issues hold the owners, status and dates of record.", "",
            "## Work units and milestones", "",
-           SC.schedule_table(plan), ""]
+           L.schedule_table(plan), ""]
     tdate, ttext = L.target_date(plan)
     by_track = {}
     for person in plan["people"]:
@@ -110,10 +108,9 @@ def ground_truth_map_md(plan, root):
            f"Headings of `{plan['project']['ground_truth']}` with GitHub anchors and line numbers, then the sections each work item cites. "
            "Regenerating the rendering may move line numbers. Run `generate_dev_skill.py` again then.", ""]
     if gt.exists():
-        import render_ground_truth as R
         lines = L.read_text(gt).split("\n")
-        heads = R.collect_headings(lines)
-        anchors = R.anchors_for(heads)
+        heads = L.collect_headings(lines)
+        anchors = L.anchors_for(heads)
         out += ["## By heading", ""]
         rows = [[f"{ln}", "#" * lvl, text, f"`#{anc}`"] for (ln, lvl, text), anc in zip(heads, anchors) if lvl > 1]
         out += [md_table(["Line", "Level", "Heading", "Anchor"], rows), ""]
@@ -179,6 +176,8 @@ def main(argv=None):
     ap.add_argument("--plan", help="path to plan.yaml (default: <root>/docs/spec/plan.yaml)")
     ap.add_argument("--apply", action="store_true", help="write the files. Without it this is a dry run")
     ap.add_argument("--force", action="store_true", help="replace files that already exist")
+    ap.add_argument("--only", choices=["references"], help="write only references/ (always replaced: they are generated). "
+                    "Use it after plan.yaml or a specification changes; SKILL.md and README.md keep their hand edits")
     a = ap.parse_args(argv)
     root = Path(a.root).resolve()
     plan_path = L.find_plan(root, a.plan)
@@ -207,25 +206,29 @@ def main(argv=None):
         "spec_dir": proj["spec_dir"], "example_id": L.tag(plan, first["id"]), "example_stem": stem,
         "example_path": f"{proj['spec_dir']}/{ms1['folder']}/{stem}.md",
         "ground_truth": gt, "ground_truth_index": re.sub(r"\.md$", ".index.txt", gt),
-        "conventions": SC.conventions_text(plan), "branch": proj["branch"],
+        "conventions": L.conventions_text(plan), "branch": proj["branch"],
         "definition_of_done": dod_checkboxes(plan), "tests": tests_text(plan),
         "item_count": len(plan["items"]), "skill_path": skill_path, "skill_path_win": skill_path.replace("/", "\\"),
         "tree_url": L.github_tree_url(plan, skill_path) if proj.get("repo") else "<repository tree url for this folder>",
     }
     outputs = {
-        "SKILL.md": L.fill(L.read_template("dev-skill", "SKILL.md"), values),
-        "README.md": L.fill(L.read_template("dev-skill", "README.md"), values),
-        "references/work-items.md": work_items_md(plan, root),
-        "references/contracts.md": contracts_md(plan, root),
-        "references/ground-truth-map.md": ground_truth_map_md(plan, root),
+        "SKILL.md": lambda: L.fill(L.read_template("dev-skill", "SKILL.md.tmpl"), values),
+        "README.md": lambda: L.fill(L.read_template("dev-skill", "README.md.tmpl"), values),
+        "references/work-items.md": lambda: work_items_md(plan, root),
+        "references/contracts.md": lambda: contracts_md(plan, root),
+        "references/ground-truth-map.md": lambda: ground_truth_map_md(plan, root),
     }
+    if a.only == "references":
+        # the references follow plan.yaml and the specs; SKILL.md and README.md may hold hand edits
+        outputs = {k: v for k, v in outputs.items() if k.startswith("references/")}
     dest = root / skill_path
     L.say(f"developer skill: {skill_name}  ->  {skill_path}")
     L.say(f"description length: {len(values['description'])} characters (limit 1024)")
     n = 0
-    for rel, content in outputs.items():
+    for rel, make in outputs.items():
+        content = make()
         p = dest / rel
-        if p.exists() and not a.force:
+        if p.exists() and not (a.force or a.only == "references"):
             L.say(f"  skip (exists): {rel}")
             continue
         L.say(f"  {'write' if a.apply else 'would write'}: {rel} ({len(content.splitlines())} lines)")

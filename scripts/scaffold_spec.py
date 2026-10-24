@@ -31,39 +31,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
 
 
-def md_table(headers, rows):
-    out = ["| " + " | ".join(headers) + " |", "| " + " | ".join("---" for _ in headers) + " |"]
-    for r in rows:
-        out.append("| " + " | ".join(str(c).replace("|", "\\|") for c in r) + " |")
-    return "\n".join(out)
-
-
-def conventions_text(plan):
-    c = plan["conventions"]
-    lines = []
-    if c.get("feature_flag"):
-        lines.append(f"- Feature flag. `{c['feature_flag']}` gates the new behaviour. Off by default until the release. With the flag off, nothing existing changes.")
-    if c.get("test_command"):
-        lines.append(f"- Tests. Run `{c['test_command']}`. New suites accompany each work item.")
-    if c.get("lint_command"):
-        lines.append(f"- Lint and format. `{c['lint_command']}` passes on every pull request.")
-    for extra in c.get("extra") or []:
-        lines.append(f"- {extra}")
-    lines.append("- Documentation style in this folder. Sentence-case headings, short sentences, no em dashes or en dashes, no names of people. Owners and dates live in the GitHub issues.")
-    lines.append("- Existing behaviour is not changed by a work item unless its file says so.")
-    return "\n".join(lines)
-
-
-def schedule_table(plan):
-    rows = []
-    entries = []
-    for m in plan["milestones"]:
-        entries.append((m["start"], f"{m['number']}, {m['name']}", f"{m['start']} to {m['end']}", m["gate"]))
-    for br in plan["breaks"]:
-        entries.append((br["start"], br["name"], f"{br['start']} to {br['end']}", "None committed."))
-    for _, a, b, c in sorted(entries):
-        rows.append([a, b, c])
-    return md_table(["Work unit", "Dates", "Gate"], rows)
+md_table = L.md_table
+conventions_text = L.conventions_text
+schedule_table = L.schedule_table
 
 
 def milestone_table(plan):
@@ -242,6 +212,120 @@ def init_plan(root, a, git_top):
     return 0
 
 
+def is_placeholder(value):
+    return not value.strip() or "to be " in value.lower() or "TODO" in value
+
+
+def refreshed_header(plan, it, old):
+    """The header table of a work item file, from plan.yaml, keeping what a person filled in.
+
+    The plan decides the rows it holds values for. A Size or Ground truth row a person filled in
+    stays when the plan has no value for it, and rows the template does not have stay at the end."""
+    have = dict(L.table_rows(old))
+    rows = []
+    for name, value in L.expected_header(plan, it):
+        if name in ("Size", "Ground truth") and is_placeholder(value) and not is_placeholder(have.get(name, "")):
+            value = have[name]
+        rows.append((name, value))
+    known = {n for n, _ in rows}
+    rows += [(n, v) for n, v in L.table_rows(old) if n not in known]
+    return "\n".join(["| | |", "| --- | --- |"] + [f"| {n} | {v} |" for n, v in rows])
+
+
+def template_demonstration(plan, ms):
+    """The Demonstration row of the milestone template, filled in for ms."""
+    for n, v in L.table_rows(L.read_template("milestone.md").split("## ", 1)[0]):
+        if n == "Demonstration":
+            return L.fill(v, {"demo": ms["demo"], "number": ms["number"], "name": ms["name"]})
+    return ms["demo"]
+
+
+def refreshed_milestone_header(plan, ms, old):
+    """Due, Exit gate and Work items come from plan.yaml. The Demonstration row keeps its wording
+    and only takes the new date. Other rows a person added stay."""
+    have = L.table_rows(old)
+    its = ", ".join(L.tag(plan, it["id"]) for it in plan["items"] if it["milestone"] == ms["number"])
+    demo = dict(have).get("Demonstration")
+    if demo is None:
+        demo = template_demonstration(plan, ms)
+    elif re.match(r"^\d{4}-\d\d-\d\d", demo):
+        demo = ms["demo"] + demo[10:]
+    else:
+        demo = f"{ms['demo']}, {demo}"
+    rows = [("Due", ms["end"]), ("Exit gate", ms["gate"]), ("Work items", its), ("Demonstration", demo)]
+    known = {n for n, _ in rows}
+    rows += [(n, v) for n, v in have if n not in known]
+    return "\n".join(["| | |", "| --- | --- |"] + [f"| {n} | {v} |" for n, v in rows])
+
+
+README_TABLES = ("| Work unit | Dates | Gate |", "| Sub-epic |", "| Date | Checkpoint | Items due | Joint check |",
+                 "| Id | Work item | Track | Complete by |", "| Id | Program item | Note |")
+
+
+def tables_of(lines):
+    """[(start, end, header line)] of the tables outside code fences."""
+    out = []
+    fence = False
+    i = 0
+    while i < len(lines):
+        if lines[i].lstrip().startswith("```"):
+            fence = not fence
+        if not fence and lines[i].startswith("|"):
+            j = i
+            while j < len(lines) and lines[j].startswith("|"):
+                j += 1
+            out.append((i, j, lines[i]))
+            i = j
+            continue
+        i += 1
+    return out
+
+
+def refreshed_readme(plan, old):
+    """Refresh the generated tables of the specification README (schedule, sub-epics, checkpoints,
+    index, program items) and leave every other line alone. Return (text, kinds not refreshed)."""
+    lines = old.split("\n")
+    fresh = build_readme(plan).split("\n")
+    have, want = tables_of(lines), tables_of(fresh)
+    swaps, skipped = [], []
+    for head in README_TABLES:
+        o = [t for t in have if t[2].startswith(head)]
+        f = [t for t in want if t[2].startswith(head)]
+        if len(o) != len(f):
+            skipped.append(head.strip("| ").split(" |")[0])
+            continue
+        swaps += list(zip(o, f))
+    for (s0, e0, _), (s1, e1, _) in sorted(swaps, key=lambda x: -x[0][0]):
+        lines[s0:e0] = fresh[s1:e1]
+    return "\n".join(lines), skipped
+
+
+def refresh(plan, root, a, actions):
+    def put(path, old, new, kind, what="refresh header"):
+        if new != old:
+            actions.append((what, path, kind))
+            if a.apply:
+                L.inside(root, path, kind).write_text(new, encoding="utf-8")
+    for it in plan["items"]:
+        p = L.spec_path(plan, root, it)
+        if p.exists():
+            old = L.read_text(p)
+            put(p, old, replace_first_table(old, refreshed_header(plan, it, old)), "spec")
+    for ms in plan["milestones"]:
+        p = L.milestone_path(plan, root, ms)
+        if p.exists():
+            old = L.read_text(p)
+            new = replace_first_table(old, refreshed_milestone_header(plan, ms, old))
+            put(p, old, replace_section_table(new, "Work items", work_table(plan, ms)), "milestone")
+    p = root / plan["project"]["spec_dir"] / "README.md"
+    if p.exists():
+        old = L.read_text(p)
+        new, skipped = refreshed_readme(plan, old)
+        put(p, old, new, "README", "refresh tables")
+        for kind in skipped:
+            print(f"note: README.md: the {kind} tables do not match the plan's shape, so they were left alone. Edit them by hand.")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Scaffold the specification folder from plan.yaml. Dry run unless --apply is given.",
@@ -308,36 +392,14 @@ def main(argv=None):
         for name in ("check_specs.py", "carrydown_lib.py"):
             plan_write(root / "tools/carrydown" / name, (Path(__file__).resolve().parent / name).read_text(encoding="utf-8"), "checker copy")
     if a.refresh_headers:
-        for it in plan["items"]:
-            p = L.spec_path(plan, root, it)
-            if p.exists():
-                old = L.read_text(p)
-                new = replace_first_table(old, L.header_markdown(plan, it))
-                if new != old:
-                    actions.append(("refresh header", p, "spec"))
-                    if a.apply:
-                        p.write_text(new, encoding="utf-8")
-        for ms in plan["milestones"]:
-            p = L.milestone_path(plan, root, ms)
-            if p.exists():
-                old = L.read_text(p)
-                its = ", ".join(L.tag(plan, it["id"]) for it in plan["items"] if it["milestone"] == ms["number"])
-                table = "\n".join([
-                    "| | |", "| --- | --- |", f"| Due | {ms['end']} |", f"| Exit gate | {ms['gate']} |", f"| Work items | {its} |",
-                    f"| Demonstration | {ms['demo']}, both people, in a meeting session with the program. |",
-                ])
-                new = replace_section_table(replace_first_table(old, table), "Work items", work_table(plan, ms))
-                if new != old:
-                    actions.append(("refresh header", p, "milestone"))
-                    if a.apply:
-                        p.write_text(new, encoding="utf-8")
+        refresh(plan, root, a, actions)
     verb = "" if a.apply else "would "
     for what, path, kind in actions:
         print(f"{verb}{what}: {path.relative_to(root)}  [{kind}]")
     missing = [it for it in plan["items"] if not L.spec_path(plan, root, it).exists()]
     if missing and not a.stubs:
         print(f"{len(missing)} specification stub(s) do not exist yet. Add --stubs to {'write' if a.apply else 'include'} them.")
-    created = sum(1 for w, _, _ in actions if w in ("create", "overwrite"))
+    created = sum(1 for w, _, _ in actions if w in ("create", "overwrite", "refresh header", "refresh tables"))
     print(f"{len(actions)} action(s), {created} file(s) {'written' if a.apply else 'would be written'}." + ("" if a.apply else " Dry run. Add --apply to write."))
     return 0
 

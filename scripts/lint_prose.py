@@ -24,7 +24,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-EXTENSIONS = {".md", ".yml", ".yaml", ".py", ".txt", ".json"}
+EXTENSIONS = {".md", ".yml", ".yaml", ".py", ".txt", ".json", ".tmpl"}
 SKIP_DIRS = {".git", "__pycache__", "node_modules"}
 SKIP_FILES = {"LICENSE"}
 
@@ -41,8 +41,9 @@ VENDORS = re.compile(
 # Files that hold the install instructions and so may name the agents.
 VENDOR_OK = [
     "README.md", "START-HERE.md",
-    "templates/dev-skill/README.md",
-    "skills/*/templates/dev-skill/README.md",
+    "templates/dev-skill/README.md.tmpl",
+    "skills/*/templates/dev-skill/README.md.tmpl",
+    "skills/*/templates/dev-skill/README.md",   # the copy from before the rename, until it is removed
     "skills/carrydown-dev-skill/references/install.md",
     "sample/*/docs/dev/skills/*/README.md",
 ]

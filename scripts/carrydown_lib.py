@@ -1010,6 +1010,101 @@ def rel_spec(plan, root, it):
 
 
 # ---------------------------------------------------------------------------
+# Markdown helpers shared by the scaffold, the renderer and the skill generator
+# ---------------------------------------------------------------------------
+
+def md_table(headers, rows):
+    out = ["| " + " | ".join(headers) + " |", "| " + " | ".join("---" for _ in headers) + " |"]
+    for r in rows:
+        out.append("| " + " | ".join(str(c).replace("|", "\\|") for c in r) + " |")
+    return "\n".join(out)
+
+
+def conventions_text(plan):
+    c = plan["conventions"]
+    lines = []
+    if c.get("feature_flag"):
+        lines.append(f"- Feature flag. `{c['feature_flag']}` gates the new behaviour. Off by default until the release. With the flag off, nothing existing changes.")
+    if c.get("test_command"):
+        lines.append(f"- Tests. Run `{c['test_command']}`. New suites accompany each work item.")
+    if c.get("lint_command"):
+        lines.append(f"- Lint and format. `{c['lint_command']}` passes on every pull request.")
+    for extra in c.get("extra") or []:
+        lines.append(f"- {extra}")
+    lines.append("- Documentation style in this folder. Sentence-case headings, short sentences, no em dashes or en dashes, no names of people. Owners and dates live in the GitHub issues.")
+    lines.append("- Existing behaviour is not changed by a work item unless its file says so.")
+    return "\n".join(lines)
+
+
+def schedule_table(plan):
+    rows = []
+    entries = []
+    for m in plan["milestones"]:
+        entries.append((m["start"], f"{m['number']}, {m['name']}", f"{m['start']} to {m['end']}", m["gate"]))
+    for br in plan["breaks"]:
+        entries.append((br["start"], br["name"], f"{br['start']} to {br['end']}", "None committed."))
+    for _, a, b, c in sorted(entries):
+        rows.append([a, b, c])
+    return md_table(["Work unit", "Dates", "Gate"], rows)
+
+
+def anchor_slug(text):
+    """GitHub heading anchor: lowercase, drop punctuation, spaces to hyphens."""
+    s = text.strip().lower()
+    s = re.sub(r"[^\w\s-]", "", s)
+    s = re.sub(r"\s+", "-", s)
+    return s
+
+
+def collect_headings(lines):
+    """Return [(line_no, level, text)] for ATX headings outside code fences."""
+    out = []
+    fence = None
+    for i, line in enumerate(lines, 1):
+        m = re.match(r"^\s{0,3}(`{3,}|~{3,})", line)
+        if m:
+            tok = m.group(1)
+            if fence is None:
+                fence = tok[0]
+            elif tok[0] == fence:
+                fence = None
+            continue
+        if fence:
+            continue
+        h = re.match(r"^(#{1,6})\s+(.+?)\s*#*\s*$", line)
+        if h:
+            out.append((i, len(h.group(1)), h.group(2).strip()))
+    return out
+
+
+def anchors_for(headings):
+    counts = {}
+    result = []
+    for _, _, text in headings:
+        plain = re.sub(r"[`*_]", "", text)
+        base = anchor_slug(plain)
+        n = counts.get(base, 0)
+        counts[base] = n + 1
+        result.append(base if n == 0 else f"{base}-{n}")
+    return result
+
+
+def table_rows(text):
+    """Rows of the first Markdown table in text as an ordered list of (name, value)."""
+    rows = []
+    started = False
+    for line in text.split("\n"):
+        if line.startswith("|"):
+            started = True
+            m = re.match(r"^\| (.+?) \| (.*?) \|$", line)
+            if m and not set(m.group(1).strip()) <= set("-: "):
+                rows.append((m.group(1).strip(), m.group(2).strip()))
+        elif started:
+            break
+    return rows
+
+
+# ---------------------------------------------------------------------------
 # Capacity and target
 # ---------------------------------------------------------------------------
 
