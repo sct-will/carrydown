@@ -53,9 +53,9 @@ Install them with the line in the README. Then the plan owner says one sentence 
 2. "Create the GitHub issues and the board." (`carrydown-plan-to-github`)
 3. "Generate the developer skill." (`carrydown-dev-skill`)
 
-Roles: the plan owner runs the three skills, the lead reviewer reads the generated specifications for about an hour, the engineers use the generated developer skill every day, and the program attends the demonstrations and decides pass or fail. The program runs nothing. The README has the table.
+Roles: the plan owner runs the three skills, the lead reviewer reads the generated specifications for about an hour, the engineers use the generated developer skill every day, and the program attends the demonstrations and decides pass or fail. The program runs nothing.
 
-If a skill is not picked up, name it first: "Use the carrydown-ground-truth skill." The steps with expected output are in the README under Getting started. The long form, for the plan owner, is `docs/plan-owner-guide.md`.
+If a skill is not picked up, name it first: "Use the carrydown-ground-truth skill." When a person asks where to start, point them to the README. Its "What it sounds like" section shows what to say and what the agent replies.
 
 ## Pull requests
 
