@@ -24,18 +24,19 @@ Ids 5 and 10 are missing on purpose. They belong to the program (pilot team recr
 
 ## Run it
 
-From the root of the kit repository:
+From the root of the kit repository. The renderer example writes to a separate folder, `my-test/`, so it does not overwrite the shipped sample. Delete that folder when you are done.
 
 ```bash
-python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --version 0.3
+python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --out-dir ../../my-test/ground-truth --version 0.3
 python3 scripts/check_specs.py --root sample/expense-approvals
 python3 scripts/check_specs.py --root sample/expense-approvals --report
+python3 scripts/github_sync.py --root sample/expense-approvals --offline
 python3 scripts/github_sync.py --root sample/expense-approvals --repo YOUR-USER/YOUR-TEST-REPO
 python3 scripts/github_project.py --root sample/expense-approvals --repo YOUR-USER/YOUR-TEST-REPO
 ```
 
-The last two are dry runs. Use a throwaway repository of your own, and add `--apply` only when you have read what they would do. `docs/sample-run.md` at the top of the repository shows a real run.
+The first three need no token and no network. The `--offline` form of `github_sync.py` shows the plan without a token and without reading GitHub. The full dry run on the last two lines reads GitHub, so it needs a token (run `python3 scripts/github_token.py` first) and a repository that exists. Both are dry runs. Use a throwaway repository of your own, and add `--apply` only when you have read what they would do. `docs/sample-run.md` at the top of the kit repository shows a real run.
 
 ## Make it yours
 
-Copy the folder, replace `ground-truth/architecture.md` with your document, and ask your agent to use the `carrydown-ground-truth` skill.
+Copy the folder, replace `ground-truth/architecture.md` with your document, and say to your agent: "Set up a project plan from this document." Put "Use the carrydown-ground-truth skill." in front if it does not pick the skill up.

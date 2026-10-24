@@ -1,8 +1,12 @@
 # Frequently asked questions
 
+## How do I start each skill?
+
+Say one sentence per skill. "Set up a project plan from this document." "Create the GitHub issues and the board." "Generate the developer skill." If your agent does not pick the skill up, put "Use the carrydown-ground-truth skill." (or `carrydown-plan-to-github`, or `carrydown-dev-skill`) in front.
+
 ## Do I need a terminal?
 
-Only for one command, the install line in START-HERE.md. After that you talk to your agent. If you create a GitHub token, you can save it in a plain text file and give the agent the path, so there is no terminal prompt.
+Only for one command, the install line in START-HERE.md. After that you talk to your agent. If you create a GitHub token, you can save it in a plain text file and give the agent the path, and the agent runs `github_token.py --from-file` for you, so there is no terminal prompt.
 
 ## Which agents work?
 

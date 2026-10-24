@@ -1,10 +1,12 @@
 # A recorded run of the sample
 
+The run was made against a private throwaway repository that was used only for this test. Names and project links below are placeholders.
+
 This page records a real run of the kit on the sample project `sample/expense-approvals/`, against a throwaway private repository, from the renderer to the project board. It shows what each script prints so you know what to expect before you run it on your own material.
 
 How it was made.
 
-- A new private repository, `sct-will/carrydown-sample-test`, held a copy of the sample folder so that the links in the issues resolve.
+- A new private repository, `your-user/your-test-repo` (a placeholder for the real name), held a copy of the sample folder so that the links in the issues resolve.
 - The commands ran from the root of the kit repository. Output is as printed, with the token removed and file paths shortened. The scripts never print the token.
 - The project is fictional. The numbers are the real issue numbers the run created: Epic #1, sub-epics #2 to #6, work items #7 to #15.
 - The scripts took about three and a half minutes in total, most of it pauses that keep GitHub from rate limiting the writes. Reading the dry runs takes longer than running the scripts.
@@ -97,10 +99,10 @@ Nothing was asked, stored or sent.
 ```
 
 ```text
-$ python3 scripts/github_token.py --check --repo sct-will/carrydown-sample-test
-The token belongs to sct-will.
+$ python3 scripts/github_token.py --check --repo your-user/your-test-repo
+The token belongs to your-user.
 Scopes: project, repo
-Repository sct-will/carrydown-sample-test: found (private: True), push access: True.
+Repository your-user/your-test-repo: found (private: True), push access: True.
 Token check passed.
 [exit 0]
 ```
@@ -200,7 +202,7 @@ WI-03 docs/spec/m2-route-to-approvers/wi-03-routing-engine.md:
 ```
 
 ```text
-$ python3 scripts/github_sync.py --root . --repo sct-will/carrydown-sample-test   # in the same copy: the checker gate stops it
+$ python3 scripts/github_sync.py --root . --repo your-user/your-test-repo   # in the same copy: the checker gate stops it
 1 files clean, 14 with findings (9 work items, 5 milestones)
 The checker found problems. Run check_specs.py to see them, fix them, or pass --skip-check.
 [exit 1]
@@ -264,11 +266,11 @@ The dry run, then the write. The Epic is created because the sample plan names n
 <summary>Dry run</summary>
 
 ```text
-$ python3 scripts/github_sync.py --root sample/expense-approvals --repo sct-will/carrydown-sample-test --create-epic
+$ python3 scripts/github_sync.py --root sample/expense-approvals --repo your-user/your-test-repo --create-epic
 15 files clean, 0 with findings (9 work items, 5 milestones)
 
 carrydown github_sync  DRY RUN (nothing will be written)
-repository: sct-will/carrydown-sample-test    plan: docs/spec/plan.yaml
+repository: your-user/your-test-repo    plan: docs/spec/plan.yaml
 5 milestones, 9 work items, 2 tracks, 2 program items kept outside the plan
 repository found (private: True). Reading existing labels and issues.
 
@@ -323,11 +325,11 @@ Dry run complete. Read it, then add --apply to write.
 <summary>Write (labels, Epic, sub-epics, work items, links, roll-up comment)</summary>
 
 ```text
-$ python3 scripts/github_sync.py --root sample/expense-approvals --repo sct-will/carrydown-sample-test --create-epic --apply
+$ python3 scripts/github_sync.py --root sample/expense-approvals --repo your-user/your-test-repo --create-epic --apply
 15 files clean, 0 with findings (9 work items, 5 milestones)
 
 carrydown github_sync  APPLY
-repository: sct-will/carrydown-sample-test    plan: docs/spec/plan.yaml
+repository: your-user/your-test-repo    plan: docs/spec/plan.yaml
 5 milestones, 9 work items, 2 tracks, 2 program items kept outside the plan
 
 Labels
@@ -405,7 +407,7 @@ Linking dependency ids and work item lists
   linked dependencies in #15 WI-11
 
 Epic roll-up comment
-  posted comment https://github.com/sct-will/carrydown-sample-test/issues/1#issuecomment-6381482321
+  posted comment https://github.com/your-user/your-test-repo/issues/1#issuecomment-6381482321
 
 Summary
   labels created: 4
@@ -424,11 +426,11 @@ The second run finds everything in place.
 <summary>Second run</summary>
 
 ```text
-$ python3 scripts/github_sync.py --root sample/expense-approvals --repo sct-will/carrydown-sample-test --create-epic --apply   # second run: nothing new
+$ python3 scripts/github_sync.py --root sample/expense-approvals --repo your-user/your-test-repo --create-epic --apply   # second run: nothing new
 15 files clean, 0 with findings (9 work items, 5 milestones)
 
 carrydown github_sync  APPLY
-repository: sct-will/carrydown-sample-test    plan: docs/spec/plan.yaml
+repository: your-user/your-test-repo    plan: docs/spec/plan.yaml
 5 milestones, 9 work items, 2 tracks, 2 program items kept outside the plan
 
 Labels
@@ -477,11 +479,11 @@ Next: python3 scripts/github_project.py to build the board. Then run this script
 </details>
 
 ```text
-$ python3 scripts/github_sync.py --root sample/expense-approvals --repo sct-will/carrydown-sample-test --create-epic --verify
+$ python3 scripts/github_sync.py --root sample/expense-approvals --repo your-user/your-test-repo --create-epic --verify
 15 files clean, 0 with findings (9 work items, 5 milestones)
 
 carrydown github_sync  VERIFY (read only)
-repository: sct-will/carrydown-sample-test    plan: docs/spec/plan.yaml
+repository: your-user/your-test-repo    plan: docs/spec/plan.yaml
 5 milestones, 9 work items, 2 tracks, 2 program items kept outside the plan
 repository found (private: True). Reading existing labels and issues.
 
@@ -504,10 +506,10 @@ verification passed
 <summary>Dry run</summary>
 
 ```text
-$ python3 scripts/github_project.py --root sample/expense-approvals --repo sct-will/carrydown-sample-test
+$ python3 scripts/github_project.py --root sample/expense-approvals --repo your-user/your-test-repo
 
 carrydown github_project  DRY RUN (nothing will be written)
-project: 'Expense approvals plan'  owner: sct-will  repository: sct-will/carrydown-sample-test
+project: 'Expense approvals plan'  owner: your-user  repository: your-user/your-test-repo
 fields to ensure:
   Work unit (iteration): Work unit 1, Submit an expense report 2027-02-01 +14d; Work unit 2, Route to approvers 2027-02-15 +21d; Work unit 3, Enforce policy 2027-03-08 +14d; Work unit 4, Pilot with one team 2027-03-29 +14d; Work unit 5, Release 2027-04-12 +12d
     gap left for break 'Offsite and planning week': 2027-03-22 to 2027-03-28 (shows as a break)
@@ -527,10 +529,10 @@ Dry run complete. Add --apply to create the project, fields, views and items.
 <summary>Write (project, fields, views, items, values)</summary>
 
 ```text
-$ python3 scripts/github_project.py --root sample/expense-approvals --repo sct-will/carrydown-sample-test --apply
+$ python3 scripts/github_project.py --root sample/expense-approvals --repo your-user/your-test-repo --apply
 
 carrydown github_project  APPLY
-project: 'Expense approvals plan'  owner: sct-will  repository: sct-will/carrydown-sample-test
+project: 'Expense approvals plan'  owner: your-user  repository: your-user/your-test-repo
 fields to ensure:
   Work unit (iteration): Work unit 1, Submit an expense report 2027-02-01 +14d; Work unit 2, Route to approvers 2027-02-15 +21d; Work unit 3, Enforce policy 2027-03-08 +14d; Work unit 4, Pilot with one team 2027-03-29 +14d; Work unit 5, Release 2027-04-12 +12d
     gap left for break 'Offsite and planning week': 2027-03-22 to 2027-03-28 (shows as a break)
@@ -539,7 +541,7 @@ fields to ensure:
 views to ensure: Table, Board, Roadmap
 issues found in the repository: 15; missing: 0
 project does not exist yet. Creating 'Expense approvals plan'.
-  created #2 https://github.com/users/sct-will/projects/2
+  created #2 https://github.com/users/your-user/projects/N
   linked the project to the repository
 
 Fields
@@ -582,7 +584,7 @@ Verification (read only)
   view Board: BOARD_LAYOUT, group by none
   view Roadmap: ROADMAP_LAYOUT, group by none
   Work unit iterations: 5
-  project: https://github.com/users/sct-will/projects/2
+  project: https://github.com/users/your-user/projects/N
 
 The API cannot set these. Click them once in the project (see docs/faq.md):
   - Group the Table view by Work unit (View menu, Group by).
@@ -603,10 +605,10 @@ The second run finds the project, fields, views and values in place.
 <summary>Second run and verification</summary>
 
 ```text
-$ python3 scripts/github_project.py --root sample/expense-approvals --repo sct-will/carrydown-sample-test --apply   # second run: nothing new
+$ python3 scripts/github_project.py --root sample/expense-approvals --repo your-user/your-test-repo --apply   # second run: nothing new
 
 carrydown github_project  APPLY
-project: 'Expense approvals plan'  owner: sct-will  repository: sct-will/carrydown-sample-test
+project: 'Expense approvals plan'  owner: your-user  repository: your-user/your-test-repo
 fields to ensure:
   Work unit (iteration): Work unit 1, Submit an expense report 2027-02-01 +14d; Work unit 2, Route to approvers 2027-02-15 +21d; Work unit 3, Enforce policy 2027-03-08 +14d; Work unit 4, Pilot with one team 2027-03-29 +14d; Work unit 5, Release 2027-04-12 +12d
     gap left for break 'Offsite and planning week': 2027-03-22 to 2027-03-28 (shows as a break)
@@ -614,7 +616,7 @@ fields to ensure:
   Complete by (date), Checkpoint (date)
 views to ensure: Table, Board, Roadmap
 issues found in the repository: 15; missing: 0
-project exists: #2 https://github.com/users/sct-will/projects/2
+project exists: #2 https://github.com/users/your-user/projects/N
 
 Fields
   Work unit exists with the planned iterations
@@ -641,7 +643,7 @@ Verification (read only)
   view Board: BOARD_LAYOUT, group by none
   view Roadmap: ROADMAP_LAYOUT, group by none
   Work unit iterations: 5
-  project: https://github.com/users/sct-will/projects/2
+  project: https://github.com/users/your-user/projects/N
 
 The API cannot set these. Click them once in the project (see docs/faq.md):
   - Group the Table view by Work unit (View menu, Group by).
@@ -657,10 +659,10 @@ The API cannot set these. Click them once in the project (see docs/faq.md):
 </details>
 
 ```text
-$ python3 scripts/github_project.py --root sample/expense-approvals --repo sct-will/carrydown-sample-test --verify
+$ python3 scripts/github_project.py --root sample/expense-approvals --repo your-user/your-test-repo --verify
 
 carrydown github_project  VERIFY
-project: 'Expense approvals plan'  owner: sct-will  repository: sct-will/carrydown-sample-test
+project: 'Expense approvals plan'  owner: your-user  repository: your-user/your-test-repo
 fields to ensure:
   Work unit (iteration): Work unit 1, Submit an expense report 2027-02-01 +14d; Work unit 2, Route to approvers 2027-02-15 +21d; Work unit 3, Enforce policy 2027-03-08 +14d; Work unit 4, Pilot with one team 2027-03-29 +14d; Work unit 5, Release 2027-04-12 +12d
     gap left for break 'Offsite and planning week': 2027-03-22 to 2027-03-28 (shows as a break)
@@ -668,7 +670,7 @@ fields to ensure:
   Complete by (date), Checkpoint (date)
 views to ensure: Table, Board, Roadmap
 issues found in the repository: 15; missing: 0
-project exists: #2 https://github.com/users/sct-will/projects/2
+project exists: #2 https://github.com/users/your-user/projects/N
 
 Fields
   Work unit exists with the planned iterations
@@ -694,7 +696,7 @@ Verification (read only)
   view Board: BOARD_LAYOUT, group by none
   view Roadmap: ROADMAP_LAYOUT, group by none
   Work unit iterations: 5
-  project: https://github.com/users/sct-will/projects/2
+  project: https://github.com/users/your-user/projects/N
 
 The API cannot set these. Click them once in the project (see docs/faq.md):
   - Group the Table view by Work unit (View menu, Group by).
@@ -725,7 +727,7 @@ issues in repository: 15
   sub-issue links in total: 14
   labels present: ['expense-approvals', 'experience', 'sub-epic', 'workflow']
   work item bodies with a Depends on section resolved: 9 of 9
-project: Expense approvals plan  https://github.com/users/sct-will/projects/2
+project: Expense approvals plan  https://github.com/users/your-user/projects/N
   items on the board: 15
   field Work unit (ITERATION) Work unit 1 2027-02-01 +14d; Work unit 2 2027-02-15 +21d; Work unit 3 2027-03-08 +14d; Work unit 4 2027-03-29 +14d; Work unit 5 2027-04-12 +12d
   field Track (SINGLE_SELECT) options Workflow, Experience

@@ -3,3 +3,4 @@ __pycache__/
 .env
 token.txt
 github_token
+my-test/

@@ -24,7 +24,7 @@ npx skills add sct-will/carrydown --all
 npx skills add sct-will/carrydown --skill '*' -a claude-code
 ```
 
-Replace `claude-code` with your agent's name from the list below. Add `-g` to install for your user instead of the current project. Run `npx skills add sct-will/carrydown` with no options to choose from a list. Run `npx skills add sct-will/carrydown --list` to see the skills first.
+Replace `claude-code` with your agent's name from the table below. Add `-g` to install for your user instead of the current project. Run `npx skills add sct-will/carrydown` with no options to choose from a list. Run `npx skills add sct-will/carrydown --list` to see the skills first.
 
 The installer is the Vercel Labs `skills` command line tool. Its documentation is at https://github.com/vercel-labs/skills. You need Node.js. The scripts in the skills need Python 3.9 or later. Reading Word files needs the `lxml` package (`pip install lxml`).
 
@@ -63,17 +63,15 @@ Planning decisions stay with people. The skills set up, draft to templates, vali
 
 ## Say it to your agent
 
-After installing, open your agent in your project folder and say:
+After installing, open your agent in your project folder and say these three sentences, one at a time, as you reach each stage.
 
-> Use the carrydown-ground-truth skill. My ground truth is in docs/source/architecture.docx. Carry it down into a plan.
+> Set up a project plan from this document.
 
-Then:
+> Create the GitHub issues and the board.
 
-> Use the carrydown-plan-to-github skill. Put this plan in your-org/your-repo.
+> Generate the developer skill.
 
-Then:
-
-> Use the carrydown-dev-skill skill. Generate the developer skill.
+If your agent does not pick the skill up on its own, put the skill name first: "Use the carrydown-ground-truth skill. Set up a project plan from this document." The other two skills are `carrydown-plan-to-github` and `carrydown-dev-skill`.
 
 ## What you get
 
@@ -115,79 +113,19 @@ The installer copies only a skill's folder, so each skill carries its own copy o
 
 ## Supported agents
 
-These are the agents the skills installer supports at the time of writing, from its documentation at https://github.com/vercel-labs/skills/blob/main/docs/agents.md. The list grows. Run `npx skills add --help` for the current one. The name in the second column is the value for `-a`.
+These agents are tested paths. The name in the second column is the value for `-a`.
 
-| Agent | `--agent` value | Project folder | User folder |
+| Agent | `-a` value | Project folder | User folder |
 | --- | --- | --- | --- |
-| AiderDesk | `aider-desk` | `.aider-desk/skills/` | `~/.aider-desk/skills/` |
-| Amp, Replit, Universal | `amp`, `replit`, `universal` | `.agents/skills/` | `~/.config/agents/skills/` |
-| Antigravity | `antigravity` | `.agents/skills/` | `~/.gemini/antigravity/skills/` |
-| Antigravity CLI | `antigravity-cli` | `.agents/skills/` | `~/.gemini/antigravity-cli/skills/` |
-| AstrBot | `astrbot` | `data/skills/` | `~/.astrbot/data/skills/` |
-| Autohand Code CLI | `autohand-code` | `.autohand/skills/` | `~/.autohand/skills/` |
-| Augment | `augment` | `.augment/skills/` | `~/.augment/skills/` |
-| IBM Bob | `bob` | `.bob/skills/` | `~/.bob/skills/` |
 | Claude Code | `claude-code` | `.claude/skills/` | `~/.claude/skills/` |
-| OpenClaw | `openclaw` | `skills/` | `~/.openclaw/skills/` |
-| Cline, Codex, Dexto, fx, Kimi Code CLI, Loaf, Pi, Sarvam Code, Warp, Zed | `cline`, `codex`, `dexto`, `fx`, `kimi-code-cli`, `loaf`, `pi`, `sarvam-code`, `warp`, `zed` | `.agents/skills/` | `~/.agents/skills/` |
-| CodeArts Agent | `codearts-agent` | `.codeartsdoer/skills/` | `~/.codeartsdoer/skills/` |
-| CodeBuddy | `codebuddy` | `.codebuddy/skills/` | `~/.codebuddy/skills/` |
-| Codemaker | `codemaker` | `.codemaker/skills/` | `~/.codemaker/skills/` |
-| Code Studio | `codestudio` | `.codestudio/skills/` | `~/.codestudio/skills/` |
-| Command Code | `command-code` | `.commandcode/skills/` | `~/.commandcode/skills/` |
-| Continue | `continue` | `.continue/skills/` | `~/.continue/skills/` |
-| Cortex Code | `cortex` | `.cortex/skills/` | `~/.snowflake/cortex/skills/` |
-| Crush | `crush` | `.crush/skills/` | `~/.config/crush/skills/` |
-| Cursor | `cursor` | `.agents/skills/` | `~/.cursor/skills/` |
-| Deep Agents | `deepagents` | `.agents/skills/` | `~/.deepagents/agent/skills/` |
-| Devin for Terminal | `devin` | `.devin/skills/` | `~/.config/devin/skills/` |
-| Droid | `droid` | `.agents/skills/` | `~/.factory/skills/` |
-| Eve | `eve` | `agent/skills/` | N/A (project-only) |
-| Firebender | `firebender` | `.agents/skills/` | `~/.firebender/skills/` |
-| ForgeCode | `forgecode` | `.forge/skills/` | `~/.forge/skills/` |
-| Gemini CLI | `gemini-cli` | `.agents/skills/` | `~/.gemini/skills/` |
 | GitHub Copilot | `github-copilot` | `.agents/skills/` | `~/.copilot/skills/` |
-| Goose | `goose` | `.goose/skills/` | `~/.config/goose/skills/` |
-| Grok Build | `grok` | `.grok/skills/` | `~/.grok/skills/` |
-| Hermes Agent | `hermes-agent` | `.hermes/skills/` | `~/.hermes/skills/` |
-| inference.sh | `inference-sh` | `.inferencesh/skills/` | `~/.inferencesh/skills/` |
-| Jazz | `jazz` | `.jazz/skills/` | `~/.jazz/skills/` |
-| Junie | `junie` | `.junie/skills/` | `~/.junie/skills/` |
-| iFlow CLI | `iflow-cli` | `.iflow/skills/` | `~/.iflow/skills/` |
-| Kilo Code | `kilo` | `.agents/skills/` | `~/.kilo/skills/` |
-| Kimchi | `kimchi` | `.kimchi/skills/` | `~/.config/kimchi/harness/skills/` |
-| Kiro CLI | `kiro-cli` | `.kiro/skills/` | `~/.kiro/skills/` |
-| Kode | `kode` | `.kode/skills/` | `~/.kode/skills/` |
-| Lingma | `lingma` | `.lingma/skills/` | `~/.lingma/skills/` |
-| MCPJam | `mcpjam` | `.mcpjam/skills/` | `~/.mcpjam/skills/` |
-| MiniMax Code | `minimax-code` | `.minimax/skills/` | `~/.minimax/skills/` |
-| Mistral Vibe | `mistral-vibe` | `.vibe/skills/` | `~/.vibe/skills/` |
-| Moxby | `moxby` | `.moxby/skills/` | `~/.moxby/skills/` |
-| Mux | `mux` | `.mux/skills/` | `~/.mux/skills/` |
-| OpenCode | `opencode` | `.agents/skills/` | `~/.config/opencode/skills/` |
-| OpenHands | `openhands` | `.openhands/skills/` | `~/.openhands/skills/` |
-| Ona | `ona` | `.ona/skills/` | `~/.ona/skills/` |
-| Posit Assistant | `posit-assistant` | `.posit/assistant/skills/` | `~/.posit/assistant/skills/` |
-| Qoder | `qoder` | `.qoder/skills/` | `~/.qoder/skills/` |
-| Qoder CN | `qoder-cn` | `.qoder/skills/` | `~/.qoder-cn/skills/` |
-| Qwen Code | `qwen-code` | `.qwen/skills/` | `~/.qwen/skills/` |
-| Reasonix | `reasonix` | `.reasonix/skills/` | `~/.reasonix/skills/` |
-| Rovo Dev | `rovodev` | `.rovodev/skills/` | `~/.rovodev/skills/` |
-| Roo Code | `roo` | `.roo/skills/` | `~/.roo/skills/` |
-| Tabnine CLI | `tabnine-cli` | `.tabnine/agent/skills/` | `~/.tabnine/agent/skills/` |
-| Terramind | `terramind` | `.terramind/skills/` | `~/.terramind/skills/` |
-| Tinycloud | `tinycloud` | `.tinycloud/skills/` | `~/.tinycloud/skills/` |
-| Trae | `trae` | `.trae/skills/` | `~/.trae/skills/` |
-| Trae CN | `trae-cn` | `.trae/skills/` | `~/.trae-cn/skills/` |
-| Windsurf | `windsurf` | `.windsurf/skills/` | `~/.codeium/windsurf/skills/` |
-| ZCode | `zcode` | `.zcode/skills/` | `~/.zcode/skills/` |
-| Zencoder, Zenflow | `zencoder`, `zenflow` | `.zencoder/skills/` | `~/.zencoder/skills/` |
-| Neovate | `neovate` | `.neovate/skills/` | `~/.neovate/skills/` |
-| Pochi | `pochi` | `.pochi/skills/` | `~/.pochi/skills/` |
-| PromptScript | `promptscript` | `.agents/skills/` | N/A (project-only) |
-| AdaL | `adal` | `.adal/skills/` | `~/.adal/skills/` |
+| Cursor | `cursor` | `.agents/skills/` | `~/.cursor/skills/` |
+| Codex | `codex` | `.agents/skills/` | `~/.agents/skills/` |
+| Gemini CLI | `gemini-cli` | `.agents/skills/` | `~/.gemini/skills/` |
 
-Any other agent that reads the Agent Skills format (https://agentskills.io) can use the skills by placing the three skill folders where it looks for skills, or by being told to read `skills/<name>/SKILL.md`.
+The installer supports many more agents. The full and current list is in the skills command line tool documentation: https://github.com/vercel-labs/skills/blob/main/docs/agents.md. Run `npx skills add --help` for the options.
+
+Generic path. Any other agent that reads the Agent Skills format (https://agentskills.io) can use the skills. Copy the three folders in `skills/` into the folder where that agent looks for skills, or tell the agent to read `skills/<name>/SKILL.md`.
 
 ## Documents
 
