@@ -20,6 +20,22 @@ Any agent that reads Agent Skills. The installer supports more than seventy. The
 
 Node.js 22.20 or later, for the install command. Python 3.9 or later, for the scripts. Nothing else, not even for Word files. Your agent can check these and tell you.
 
+## Isn't this just prompts?
+
+No. The checker is code, and it fails continuous integration when a specification breaks the rules. The board is built through the GitHub API by scripts. The specifications and the plan are files in Git that you can read, diff and review. The prompts are the smallest part.
+
+## Isn't this waterfall?
+
+No. The plan is files in Git, so changing it is cheap. Work units stretch to fit the work and are not fixed-length boxes. Every contradiction found in the document or the plan goes back into the next version of that document. You can plan, build a little, learn and change the plan as often as you need.
+
+## How does this compare with plan mode, spec-driven tools, Superpowers and CCPM?
+
+Plan mode and spec-driven tools plan one task or one feature from a specification. Superpowers is a library of skills for how an agent works. CCPM is a project management workflow that turns requirement documents into GitHub issues. Carrydown carries one agreed ground truth across every task. It dates the plan around named people with their allocation, checks every specification against that plan, fills the board and generates the per-project skill. It can sit beside any of them.
+
+## What does it cost in tokens?
+
+The planning run reads the whole document once and writes one specification per item, so the cost grows with the number of items. The generated skill loads one specification and the cited sections each time an engineer starts an item, not the whole document. The three skill descriptions are kept short so they stay in every session's listing.
+
 ## Does it write the code?
 
 No. It carries the plan down to the point where an engineer and their agent can start work. The developer skill then makes each work item start from its specification.
