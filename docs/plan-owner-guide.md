@@ -33,7 +33,7 @@ Things to ask for now, because they can take days:
 
 - **Permission to create a Project** in your GitHub organisation, and to create issues in the repository. Ask an organisation administrator. If you do not have it yet, planning carries on. You only need it at the GitHub step.
 - **Single sign-on approval.** If your organisation enforces single sign-on (SSO), your token must be approved for it. You do that yourself in two clicks (see "The token" below), but some organisations route it through an administrator.
-- **Node.js and Python 3** on the computer where your agent runs. The README's Requirements and access section says what each is for. Your agent can check both.
+- **Node.js and Python 3** on the computer where your agent runs. The README's Prerequisites section says what each is for. Your agent can check both.
 
 Things to gather:
 

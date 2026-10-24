@@ -4,13 +4,56 @@
 
 Turn your architecture document into a plan your team and its AI coding agents can follow: dated milestones, one spec per task tied to the paragraph it came from, GitHub issues, a filled project board, and a skill that makes each developer's agent read the spec first.
 
-[![Licence](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Last commit](https://img.shields.io/github/last-commit/sct-will/carrydown?v=2)](https://github.com/sct-will/carrydown/commits/main) [![Issues](https://img.shields.io/github/issues/sct-will/carrydown?v=2)](https://github.com/sct-will/carrydown/issues) [![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-blue)](LICENSE-CONTENT.md) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-3%20skills-teal)](https://agentskills.io) [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](#requirements-and-access) [![Open in Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sct-will/carrydown)
+[![Licence](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Last commit](https://img.shields.io/github/last-commit/sct-will/carrydown?v=2)](https://github.com/sct-will/carrydown/commits/main) [![Issues](https://img.shields.io/github/issues/sct-will/carrydown?v=2)](https://github.com/sct-will/carrydown/issues) [![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-blue)](LICENSE-CONTENT.md) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-3%20skills-teal)](https://agentskills.io) [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](#prerequisites) [![Open in Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sct-will/carrydown)
 
-[Getting started](#getting-started) · [How it works](#how-it-works) · [What you get](#what-you-get) · [Install options](#install-options) · [Requirements and access](#requirements-and-access) · [Sample](#sample) · [FAQ](#faq) · [Contributing](#contributing) · [Licence](#licence) · [For agents](AGENTS.md)
+[How it works](#how-it-works) · [Getting started](#getting-started) · [Prerequisites](#prerequisites) · [What you get](#what-you-get) · [Install options](#install-options) · [Sample](#sample) · [FAQ](#faq) · [Contributing](#contributing) · [Licence](#licence) · [For agents](AGENTS.md)
+
+## How it works
+
+![How carrydown works](docs/images/flow.png)
+
+Planning decisions stay with people. The skills set up, draft to templates, validate and populate.
+
+**`carrydown-ground-truth`**
+- Interviews you, renders your documents to Markdown with stable section anchors, and scaffolds `docs/spec/` with `plan.yaml`.
+- Drafts the plan with you: milestones, work units, tracks, dates, dependencies, load table, critical path, program boundary.
+- Writes one specification per work item to a template, runs the checker, and gives review prompts for the document and the plan.
+- Run by: the Plan owner. Reviewed by the Lead reviewer.
+
+**`carrydown-plan-to-github`**
+- Walks you through a GitHub token safely and runs a dry run before anything is written.
+- After your yes, creates labels, one sub-epic per milestone, one issue per work item with sub-issue links, dependency links and an Epic roll-up comment that states the target delivery and the people by track.
+- Builds the project board with work unit, track and date fields and three views, verifies the counts, and lists what you click by hand.
+- Run by: the Plan owner or a delivery manager with permission to create issues and a Project.
+
+**`carrydown-dev-skill`**
+- Generates the developer skill for your project from the specification folder.
+- The skill makes each developer's agent read the spec, the cited sections and the conventions before it changes code.
+- Its README shows each teammate how to install it in their agent.
+- Run by: the Plan owner, once, to generate the skill. The generated skill is installed and used every day by the Engineers, who start an item by naming it, for example "Work on WI-07".
+
+**Roles**
+
+| Role | What they do | Which skill |
+| --- | --- | --- |
+| Plan owner | The engineering lead or product manager who owns the plan. Gives the documents and any constraints, answers the interview, approves the plan, says yes before anything is written to GitHub, and generates the developer skill. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
+| Lead reviewer | A senior engineer who spends about an hour reading the generated specifications as the person who will build them. | Reviews the output of `carrydown-ground-truth` |
+| Engineers | The people building the work items, each with their own coding agent. They start an item by naming it, for example "Work on WI-07". | The generated developer skill, made by `carrydown-dev-skill` |
+| Program | The people who watch the demonstrations and decide pass or fail. They run nothing. They attend. | None |
 
 ## Getting started
 
-**Before you start.** You need a terminal, Node.js (only for the install line), Python 3.9 or later and git. Pick your system. The full steps are in [docs/setup.md](docs/setup.md).
+### Prerequisites
+
+- **Inputs.** The ground truth is required. Your project constraints are optional: the people with their percent allocation, and the target date or weeks. Give both and the plan fits them. Give one and the skill backs into the other. Give neither and it proposes a default and asks.
+- **A terminal and Node.js**, only to run the install line. Get Node.js from https://nodejs.org (choose LTS). Nothing in the skills needs it after that.
+- **Python 3.9 or later**, to run the scripts. Check with `python3 --version`. Nothing else to install, not even for Word files.
+- **git**, to keep the plan under version control.
+- **GitHub permission** to create issues in the repository and to create a Project in the organisation or account. Ask an organisation admin if you do not have it. Planning works without it. Only the GitHub step needs it.
+- **Single sign-on (SSO).** If your organisation enforces it, authorise the token: github.com/settings/tokens, click the token's "Configure SSO" button, click "Authorize" next to the organisation.
+- **A token**, created with the pre-filled link https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown. It ticks `repo` and `project`. A fine-grained token also works for a project owned by an organisation, with Issues read and write, Metadata read, and the organisation permission Projects read and write. It does not work for a project owned by a user account. Use a classic token there.
+
+Pick your system. Each block takes you from nothing to a project folder. The full steps are in [docs/setup.md](docs/setup.md): [macOS](docs/setup.md#macos), [Windows](docs/setup.md#windows), [Linux](docs/setup.md#linux).
 
 <details>
 <summary>macOS</summary>
@@ -47,6 +90,8 @@ Turn your architecture document into a plan your team and its AI coding agents c
 5. Run the install line below.
 
 </details>
+
+To run the scripts outside a skill, see the [contributing guide](CONTRIBUTING.md#run-the-scripts-yourself).
 
 Install the agent skills:
 
@@ -119,39 +164,6 @@ Restart your agent.
 
 The long form, with the interview, the review hour, the token and the team rhythm, is [docs/plan-owner-guide.md](docs/plan-owner-guide.md).
 
-## How it works
-
-![How carrydown works](docs/images/flow.png)
-
-Planning decisions stay with people. The skills set up, draft to templates, validate and populate.
-
-**`carrydown-ground-truth`**
-- Interviews you, renders your documents to Markdown with stable section anchors, and scaffolds `docs/spec/` with `plan.yaml`.
-- Drafts the plan with you: milestones, work units, tracks, dates, dependencies, load table, critical path, program boundary.
-- Writes one specification per work item to a template, runs the checker, and gives review prompts for the document and the plan.
-- Run by: the Plan owner. Reviewed by the Lead reviewer.
-
-**`carrydown-plan-to-github`**
-- Walks you through a GitHub token safely and runs a dry run before anything is written.
-- After your yes, creates labels, one sub-epic per milestone, one issue per work item with sub-issue links, dependency links and an Epic roll-up comment that states the target delivery and the people by track.
-- Builds the project board with work unit, track and date fields and three views, verifies the counts, and lists what you click by hand.
-- Run by: the Plan owner or a delivery manager with permission to create issues and a Project.
-
-**`carrydown-dev-skill`**
-- Generates the developer skill for your project from the specification folder.
-- The skill makes each developer's agent read the spec, the cited sections and the conventions before it changes code.
-- Its README shows each teammate how to install it in their agent.
-- Run by: the Plan owner, once, to generate the skill. The generated skill is installed and used every day by the Engineers, who start an item by naming it, for example "Work on WI-07".
-
-**Roles**
-
-| Role | What they do | Which skill |
-| --- | --- | --- |
-| Plan owner | The engineering lead or product manager who owns the plan. Gives the documents and any constraints, answers the interview, approves the plan, says yes before anything is written to GitHub, and generates the developer skill. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
-| Lead reviewer | A senior engineer who spends about an hour reading the generated specifications as the person who will build them. | Reviews the output of `carrydown-ground-truth` |
-| Engineers | The people building the work items, each with their own coding agent. They start an item by naming it, for example "Work on WI-07". | The generated developer skill, made by `carrydown-dev-skill` |
-| Program | The people who watch the demonstrations and decide pass or fail. They run nothing. They attend. | None |
-
 ## What you get
 
 ```text
@@ -190,18 +202,6 @@ The installer supports many more agents. The full and current list is in its doc
 Generic path. Any other agent that reads the Agent Skills format (https://agentskills.io) can use the skills. Copy the three folders in `skills/` into the folder where that agent looks for skills, or tell the agent to read `skills/<name>/SKILL.md`.
 
 No Node.js? Skip the installer. Copy the three folders in `skills/` into your agent's skills folder from the table above. They are self-contained.
-
-## Requirements and access
-
-- **Setup from nothing**, step by step: [macOS](docs/setup.md#macos), [Windows](docs/setup.md#windows), [Linux](docs/setup.md#linux).
-- **Inputs.** The ground truth is required. Your project constraints are optional: the people with their percent allocation, and the target date or weeks. Give both and the plan fits them. Give one and the skill backs into the other. Give neither and it proposes a default and asks.
-- **Node.js**, only to run the install line. Get it from https://nodejs.org (choose LTS). Nothing in the skills needs it after that.
-- **Python 3.9 or later**, to run the scripts. Check with `python3 --version`. Nothing else to install, not even for Word files.
-- **GitHub permission** to create issues in the repository and to create a Project in the organisation or account. Ask an organisation admin if you do not have it. Planning works without it. Only the GitHub step needs it.
-- **Single sign-on (SSO).** If your organisation enforces it, authorise the token: github.com/settings/tokens, click the token's "Configure SSO" button, click "Authorize" next to the organisation.
-- **A token**, created with the pre-filled link https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown. It ticks `repo` and `project`. A fine-grained token also works for a project owned by an organisation, with Issues read and write, Metadata read, and the organisation permission Projects read and write. It does not work for a project owned by a user account. Use a classic token there.
-
-To run the scripts outside a skill, see the [contributing guide](CONTRIBUTING.md#run-the-scripts-yourself).
 
 ## Sample
 
