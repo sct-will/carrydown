@@ -79,6 +79,22 @@ def fixtures(tmp):
     step("markdown: the sample renders with every heading numbered", [PY, "scripts/render_ground_truth.py", f"{SAMPLE}/ground-truth/architecture.md", "--root", SAMPLE, "--version", "0.3", "--dry-run"], absent=("Traceback", "have no number"))
 
 
+def citations(tmp):
+    """The checker checks section citations, and says so when it cannot."""
+    proj = tmp / "citations"
+    shutil.copytree(ROOT / SAMPLE, proj)
+    spec = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
+    spec.write_text(spec.read_text(encoding="utf-8").replace("| Ground truth | Sections 3.1, 3.2, 5.1, 7.1 |", "| Ground truth | Sections 3.1, 9.9 |"), encoding="utf-8")
+    chk = [PY, "scripts/check_specs.py", "--root", str(proj)]
+    step("a specification citing a section that does not exist fails", chk, expect=1, contains=["Ground truth cites section 9.9, which is not a heading in the rendered document"])
+    gt = proj / "docs/ground-truth/architecture.md"
+    import re
+    gt.write_text(re.sub(r"(?m)^(#{2,6}) \d+(?:\.\d+)*\.? ", r"\1 ", gt.read_text(encoding="utf-8")), encoding="utf-8")
+    step("an unnumbered ground truth is reported, not passed", chk, expect=1, contains=["ground truth citations not checked: the rendered document has no numbered headings"])
+    gt.unlink()
+    step("a missing ground truth is reported, not passed", chk, expect=1, contains=["ground truth citations not checked: the rendered document docs/ground-truth/architecture.md was not found"])
+
+
 def main():
     if "--help" in sys.argv or "-h" in sys.argv:
         print(__doc__)
@@ -150,6 +166,7 @@ def main():
             else:
                 step(f"installed copy of {skill} runs {script}", [PY, str(dst / "scripts" / script), "--root", str(ROOT / SAMPLE)])
         fixtures(Path(tmp))
+        citations(Path(tmp))
     failed = [n for ok, n in results if not ok]
     print(f"\n{len(results) - len(failed)} of {len(results)} steps passed")
     return 1 if failed else 0

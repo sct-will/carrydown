@@ -65,7 +65,7 @@ def ground_truth_headings(plan, root):
         return None
     heads = []
     fence = False
-    for line in p.read_text(encoding="utf-8").split("\n"):
+    for line in p.read_text(encoding="utf-8-sig").split("\n"):
         if line.strip().startswith("```"):
             fence = not fence
         if fence:
@@ -74,6 +74,22 @@ def ground_truth_headings(plan, root):
         if m:
             heads.append(m.group(2).strip())
     return heads
+
+
+def numbered_headings(gt_heads):
+    return [h for h in (gt_heads or []) if re.match(r"^\d+(\.\d+)*\.?\s", h)]
+
+
+def citation_findings(plan, gt_heads):
+    """Say when the section citations could not be checked, instead of passing silently."""
+    if not plan["items"]:
+        return []
+    if gt_heads is None:
+        return [f"ground truth citations not checked: the rendered document {plan['project'].get('ground_truth')} was not found. Render it with render_ground_truth.py"]
+    if not numbered_headings(gt_heads):
+        return ["ground truth citations not checked: the rendered document has no numbered headings. "
+                "Specifications cite sections by number, so number the headings in the source document and render it again"]
+    return []
 
 
 def check_item(plan, root, it, banned, gt_heads):
@@ -181,12 +197,11 @@ def check_item(plan, root, it, banned, gt_heads):
             issues.append(f"broken relative link {m.group(1)}")
     # ground truth citations
     cite = rows.get("Ground truth", "")
-    if gt_heads is not None and cite and "to be " not in cite.lower():
-        numbered = [h for h in gt_heads if re.match(r"^\d+(\.\d+)*\.?\s", h)]
-        if numbered:
-            for num in re.findall(r"\b(\d+(?:\.\d+)*)\b", cite):
-                if not any(h.startswith(num + " ") or h.startswith(num + ". ") for h in numbered):
-                    issues.append(f"Ground truth cites section {num}, which is not a heading in the rendered document")
+    numbered = numbered_headings(gt_heads)
+    if numbered and cite and "to be " not in cite.lower():
+        for num in re.findall(r"\b(\d+(?:\.\d+)*)\b", cite):
+            if not any(h.startswith(num + " ") or h.startswith(num + ". ") for h in numbered):
+                issues.append(f"Ground truth cites section {num}, which is not a heading in the rendered document")
     return issues, rel
 
 
@@ -418,6 +433,9 @@ def main(argv=None):
         results["plan.yaml"] = plan_problems
     if load_issues:
         results["load and target"] = load_issues
+    cites = citation_findings(plan, gt_heads)
+    if cites and not a.item:
+        results["ground truth"] = cites
     items = [it for it in plan["items"] if not a.item or it["id"] in a.item]
     for it in items:
         issues, rel = check_item(plan, root, it, banned, gt_heads)
