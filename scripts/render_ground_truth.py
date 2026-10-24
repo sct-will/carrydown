@@ -138,6 +138,9 @@ def strip_old_index(lines):
 # ---------------------------------------------------------------------------
 
 
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp"}
+
+
 def render_markdown(src, figures_dir, fig_prefix, write):
     text = Path(src).read_text(encoding="utf-8-sig")
     text = text.replace("\r\n", "\n").replace("\r", "\n").replace("\t", "    ")
@@ -166,8 +169,14 @@ def render_markdown(src, figures_dir, fig_prefix, write):
             alt, target = mo.group(1), mo.group(2).strip()
             if re.match(r"^[a-z]+://", target) or target.startswith("#") or target.startswith("data:"):
                 return mo.group(0)
-            local = (Path(src).parent / target.split(" ")[0]).resolve()
-            if not local.exists():
+            base = Path(src).parent.resolve()
+            local = (base / target.split(" ")[0]).resolve()
+            # copy only images that sit in the document's own folder or below it, so a link such as
+            # ../../.env or /home/me/.ssh/id_ed25519 can never put a private file into the repository
+            if base not in local.parents or local.suffix.lower() not in IMAGE_EXTENSIONS:
+                notes.append(f"not copied (outside the document folder or not an image): {target}")
+                return mo.group(0)
+            if not local.is_file():
                 notes.append(f"image not found: {target}")
                 return mo.group(0)
             figs += 1
@@ -899,8 +908,8 @@ def main(argv=None):
     a = ap.parse_args(argv)
     if a.name and len(a.inputs) > 1:
         ap.error("--name works with a single input")
-    root = Path(a.root)
-    out_dir = root / a.out_dir
+    root = Path(a.root).resolve()
+    out_dir = L.inside(root, root / a.out_dir, "--out-dir")
     total = 0
     for src in a.inputs:
         srcp = Path(src)
@@ -912,7 +921,7 @@ def main(argv=None):
             print(f"error: {src}: only .docx and .md are supported", file=sys.stderr)
             return 2
         name = a.name or name_from_path(srcp)
-        fig_dir = out_dir / "figures" / name
+        fig_dir = L.inside(out_dir, out_dir / "figures" / name, "figures")
         fig_prefix = f"figures/{name}"
         write = not a.dry_run
         try:
@@ -925,8 +934,8 @@ def main(argv=None):
             return 2
         text, index_txt, n_head = finish(body, srcp.name, a.version, a.date)
         notes += unnumbered_notes(text)
-        out_md = out_dir / f"{name}.md"
-        out_idx = out_dir / f"{name}.index.txt"
+        out_md = L.inside(out_dir, out_dir / f"{name}.md", "--name")
+        out_idx = L.inside(out_dir, out_dir / f"{name}.index.txt", "--name")
         verb = "would write" if a.dry_run else "wrote"
         if write:
             out_dir.mkdir(parents=True, exist_ok=True)

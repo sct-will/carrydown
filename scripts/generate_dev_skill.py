@@ -235,7 +235,7 @@ def main(argv=None):
     if a.only == "references":
         # the references follow plan.yaml and the specs; SKILL.md and README.md may hold hand edits
         outputs = {k: v for k, v in outputs.items() if k.startswith("references/")}
-    dest = root / skill_path
+    dest = L.inside(root, root / skill_path, "project.dev_skill_path")
     L.say(f"developer skill: {skill_name}  ->  {skill_path}")
     L.say(f"description length: {len(description)} characters (target under {DESCRIPTION_TARGET}, limit 1024)")
     if len(description) > DESCRIPTION_WARN:
@@ -243,7 +243,7 @@ def main(argv=None):
     n = 0
     for rel, make in outputs.items():
         content = make()
-        p = dest / rel
+        p = L.inside(dest, dest / rel, "output")
         if p.exists() and not (a.force or a.only == "references"):
             L.say(f"  skip (exists): {rel}")
             continue

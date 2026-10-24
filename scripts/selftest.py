@@ -197,6 +197,37 @@ def frontmatter(tmp, plan_text):
     step("a description over 300 characters is flagged", gen, contains=["warning: the description is over 300 characters"])
 
 
+def path_safety(tmp, plan_text):
+    """Nothing is copied or written outside the folders it belongs in."""
+    d = tmp / "paths"
+    (d / "doc/img").mkdir(parents=True)
+    (d / "secret.txt").write_text("not for the repository", encoding="utf-8")
+    (d / "doc/img/ok.png").write_bytes(b"\x89PNG\r\n")
+    (d / "doc/notes.txt").write_text("text", encoding="utf-8")
+    md = d / "doc/design.md"
+    md.write_text("# Design\n\n## 1. Figures\n\n![ok](img/ok.png)\n\n![up](../secret.txt)\n\n"
+                  f"![abs]({(d / 'secret.txt').resolve()})\n\n![text](notes.txt)\n", encoding="utf-8")
+    out = d / "out"
+    step("images outside the document folder, or not images, are not copied",
+         [PY, "scripts/render_ground_truth.py", str(md), "--root", str(out)],
+         contains=["not copied (outside the document folder or not an image): ../secret.txt", "not copied (outside the document folder or not an image): notes.txt", "1 figures"])
+    figs = sorted(x.name for x in (out / "docs/ground-truth/figures/design").iterdir())
+    ok = figs == ["ok.png"]
+    results.append((ok, "only the image inside the document folder was copied"))
+    print(("PASS " if ok else "FAIL ") + "only the image inside the document folder was copied" + ("" if ok else f" (found {figs})"))
+    step("--out-dir outside the project is refused", [PY, "scripts/render_ground_truth.py", str(md), "--root", str(out), "--out-dir", "../elsewhere"], expect=2, contains=["outside the project folder"])
+    proj = d / "proj"
+    shutil.copytree(ROOT / SAMPLE, proj)
+    plan = proj / "docs/spec/plan.yaml"
+    plan.write_text(plan_text.replace("folder: m4-pilot", "folder: ../../../m4-pilot"), encoding="utf-8")
+    step("a milestone folder outside the project is refused", [PY, "scripts/scaffold_spec.py", "--root", str(proj), "--allow-no-git"], expect=2, contains=["outside the project folder"])
+    plan.write_text(plan_text.replace("dev_skill_path: docs/dev/skills/expense-approvals-dev", "dev_skill_path: ../../expense-approvals-dev"), encoding="utf-8")
+    step("a developer skill path outside the project is refused", [PY, "scripts/generate_dev_skill.py", "--root", str(proj)], expect=2, contains=["outside the project folder"])
+    leaked = [x for x in (d.parent.iterdir()) if x.name in ("m4-pilot", "expense-approvals-dev", "elsewhere")]
+    results.append((not leaked, "nothing was written outside the project"))
+    print(("PASS " if not leaked else "FAIL ") + "nothing was written outside the project")
+
+
 def main():
     if "--help" in sys.argv or "-h" in sys.argv:
         print(__doc__)
@@ -283,6 +314,7 @@ def main():
         error_paths(Path(tmp), plan_text)
         maintenance(Path(tmp))
         frontmatter(Path(tmp), plan_text)
+        path_safety(Path(tmp), plan_text)
     failed = [n for ok, n in results if not ok]
     print(f"\n{len(results) - len(failed)} of {len(results)} steps passed")
     return 1 if failed else 0

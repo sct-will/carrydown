@@ -364,9 +364,10 @@ def main(argv=None):
         for p in problems:
             print("  - " + p)
         return 1
-    spec_dir = root / plan["project"]["spec_dir"]
+    spec_dir = L.inside(root, root / plan["project"]["spec_dir"], "project.spec_dir")
 
     def plan_write(path, content, kind):
+        path = L.inside(root, path, kind)
         exists = path.exists()
         if exists and not a.force:
             actions.append(("skip (exists)", path, kind))
@@ -384,7 +385,7 @@ def main(argv=None):
                 if it["milestone"] == ms["number"]:
                     plan_write(L.spec_path(plan, root, it), build_stub(plan, it), "stub")
         elif a.apply:
-            (spec_dir / ms["folder"]).mkdir(parents=True, exist_ok=True)
+            L.inside(root, spec_dir / ms["folder"], "milestone folder").mkdir(parents=True, exist_ok=True)
     if a.ci:
         gt_dir = str(Path(plan["project"]["ground_truth"]).parent)
         wf = L.fill(L.read_template("check-specs-workflow.yml"), {"spec_dir": plan["project"]["spec_dir"], "ground_truth_dir": gt_dir, "branch": plan["project"]["branch"]})
