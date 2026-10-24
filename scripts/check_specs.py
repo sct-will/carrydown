@@ -383,6 +383,29 @@ def report(plan):
             print(f"  Critical path ends {fmt(end_date)} (derived from the critical path). {why}, so this is the derived target: the plan's end date, not a constraint.")
             if tdate and tdate != end_date:
                 print(f"  The derived target in plan.yaml says {fmt(tdate)}. Update it to {fmt(end_date)}.")
+    print("\nFit (working days each item needs, from its size and its owner's allocation, against its window)")
+    fits = L.fit_findings(plan)
+    if not any(L.sized_days(it) for it in plan["items"]):
+        print("  No item is sized yet. Write sizes as \"about N days\" to check the windows.")
+    elif fits:
+        for f in fits:
+            print("  " + f)
+    else:
+        print("  Every sized item fits between its last dependency and its complete_by date.")
+    times, chain = L.earliest_finish(plan)
+    if chain:
+        fin = times[chain[-1]][1]
+        print("\nEarliest finish (forward pass over the dependencies, from sizes and allocation)")
+        print("  " + " -> ".join(L.tag(plan, n) for n in chain) + f"  ends {fmt(fin)}")
+        for n in chain:
+            st, en = times[n]
+            print(f"    {L.tag(plan, n)} {fmt(st)} to {fmt(en)}, about {L.needed_days(plan, items[n]):.1f} working days")
+        tdate, _ = L.target_date(plan)
+        if tdate and L.target_is_constraint(plan):
+            gap = (tdate - fin).days
+            print(f"  " + (f"It meets the target {fmt(tdate)} with {gap} day(s) to spare. The planned dates add the slack between items."
+                           if gap >= 0 else f"It misses the target {fmt(tdate)} by {-gap} day(s): no order of the dates can meet it with these sizes."))
+        print("  Owners are not serialised in this pass. The load table above shows whether each person's work fits each work unit.")
     pitems = plan["program"]["items"]
     if pitems:
         print("\nProgram-owned items (outside the development plan; referenced only as program input)")
@@ -394,7 +417,7 @@ def report(plan):
         print(f"  {c['date']}  {c['name']}: {', '.join(due) or 'none closing'}")
 
 
-PLAN_ERRORS = (KeyError, ValueError, TypeError, AttributeError, IndexError)
+PLAN_ERRORS = (KeyError, ValueError, TypeError, AttributeError, IndexError, ZeroDivisionError)
 
 
 def print_plan_problems(problems):
@@ -427,6 +450,11 @@ def run_checks(plan, root, a):
             load_issues.append(f"the last work item completes {L.fmt_date(last)}, after the target {L.fmt_date(tdate)}")
         if not L.target_is_constraint(plan) and last != tdate:
             load_issues.append(f"the derived target {L.fmt_date(tdate)} is out of date. The last work item completes {L.fmt_date(last)}, so write that date under target")
+    load_issues += L.fit_findings(plan)
+    times, chain = L.earliest_finish(plan)
+    if chain and tdate and L.target_is_constraint(plan) and times[chain[-1]][1] > tdate:
+        load_issues.append(f"from sizes and allocation the earliest finish is {L.fmt_date(times[chain[-1]][1])}, after the target {L.fmt_date(tdate)} "
+                           f"(chain {' -> '.join(L.tag(plan, n) for n in chain)})")
     banned = banned_patterns(plan)
     gt_heads = ground_truth_headings(plan, root)
     if load_issues:

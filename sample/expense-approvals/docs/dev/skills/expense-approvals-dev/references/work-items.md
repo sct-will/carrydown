@@ -23,8 +23,8 @@ Exit gate. A staff member creates a report with a receipt in the web client and 
 
 | Id | Work item | Track | Complete by | Depends on | File |
 | --- | --- | --- | --- | --- | --- |
-| WI-01 | Service scaffold, flag and API contract | Workflow | 2027-02-04 | None | `docs/spec/m1-submit-report/wi-01-service-scaffold.md` |
-| WI-02 | Report form and receipt upload | Experience | 2027-02-10 | WI-01 | `docs/spec/m1-submit-report/wi-02-report-form.md` |
+| WI-01 | Service scaffold, flag and API contract | Workflow | 2027-02-03 | None | `docs/spec/m1-submit-report/wi-01-service-scaffold.md` |
+| WI-02 | Report form and receipt upload | Experience | 2027-02-12 | WI-01 | `docs/spec/m1-submit-report/wi-02-report-form.md` |
 
 ## Milestone 2, Route to approvers (`m2-route-to-approvers`)
 
@@ -33,7 +33,7 @@ Exit gate. A submitted report reaches the right approvers in order and an approv
 | Id | Work item | Track | Complete by | Depends on | File |
 | --- | --- | --- | --- | --- | --- |
 | WI-03 | Approval routing engine | Workflow | 2027-02-24 | WI-01 | `docs/spec/m2-route-to-approvers/wi-03-routing-engine.md` |
-| WI-04 | Approver inbox and decisions | Experience | 2027-03-03 | WI-02, WI-03 | `docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md` |
+| WI-04 | Approver inbox and decisions | Experience | 2027-03-05 | WI-02, WI-03 | `docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md` |
 
 ## Milestone 3, Enforce policy (`m3-enforce-policy`)
 
@@ -41,9 +41,9 @@ Exit gate. Every decision obeys the approval limits and separation of duties, ev
 
 | Id | Work item | Track | Complete by | Depends on | File |
 | --- | --- | --- | --- | --- | --- |
-| WI-06 | Approval limits and separation of duties | Workflow | 2027-03-12 | WI-03 | `docs/spec/m3-enforce-policy/wi-06-limits-and-duties.md` |
+| WI-06 | Approval limits and separation of duties | Workflow | 2027-03-10 | WI-03 | `docs/spec/m3-enforce-policy/wi-06-limits-and-duties.md` |
 | WI-07 | Audit log and retention | Workflow | 2027-03-17 | WI-03 | `docs/spec/m3-enforce-policy/wi-07-audit-log.md` |
-| WI-08 | Notifications and delegates | Experience | 2027-03-18 | WI-04, WI-06 | `docs/spec/m3-enforce-policy/wi-08-notifications-delegates.md` |
+| WI-08 | Notifications and delegates | Experience | 2027-03-19 | WI-04, WI-06 | `docs/spec/m3-enforce-policy/wi-08-notifications-delegates.md` |
 
 ## Milestone 4, Pilot with one team (`m4-pilot`)
 
@@ -63,7 +63,7 @@ Exit gate. The flag is on in production, the runbook is handed to operations and
 
 ## Program items and program inputs
 
-These are owned by the program, not by the developers. They have no work item file. An item that needs one says "program input" in its Depends on row. If the input is missing, say so in the pull request and do not invent it.
+These are owned by the program, not by the engineers. They have no work item file. An item that needs one says "program input" in its Depends on row. If the input is missing, say so in the pull request and do not invent it.
 
 | Id | Program item | Note |
 | --- | --- | --- |

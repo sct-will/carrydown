@@ -1,6 +1,6 @@
 ---
 name: expense-approvals-dev
-description: Use when working on a work item of the Expense approvals project in this repository, named by id (for example WI-01 or WI-11), by a file name such as wi-01-service-scaffold, or by its specification under docs/spec/. Gives the steps to orient on one item. The agent reads its specification, the ground truth sections it cites and the project conventions before changing code. Covers the definition of done, the test and lint commands, the work item index (9 items), the contract headings and the ground truth map.
+description: "Orients on one Expense approvals work item before any code change, reading its spec, the ground truth sections it cites and the conventions. Use when the user names WI-01 to WI-11, a file such as wi-01-service-scaffold, or docs/spec/."
 ---
 
 # Expense approvals development
@@ -46,19 +46,14 @@ How to use a specification.
 A work item is done when all of these hold.
 
 - [ ] Every acceptance criterion in the work item file is proven by a named test or a recorded check, and the pull request lists each one with its proof.
-- [ ] `npm test` and `npm run lint` pass, and the continuous integration run is green.
-- [ ] With `EXPENSE_APPROVALS_ENABLED` off, existing behaviour and responses are unchanged.
-- [ ] Contract tests pass with `npm run test:contract`, and a change to `contracts/openapi.yaml` is its own pull request.
-- [ ] Secrets and personal data never appear in code, tests, logs or fixtures.
+- [ ] The project conventions above hold, the test and lint commands pass, and the continuous integration run is green.
 - [ ] Departures from the file are recorded under "Decisions recorded" with the pull request number. A conflict with the ground truth is fixed in the work item file in the same pull request.
-- [ ] The closing comment on the issue follows the template in the specification folder README (Demo, Evidence, Decisions, Handoff) and carries every artifact named under "Evidence of completion". The agent assembles it, the developer checks and posts it.
+- [ ] The closing comment on the issue follows the template in the specification folder README (Demo, Evidence, Decisions, Handoff) and carries every artifact named under "Evidence of completion". The agent assembles it, the engineer checks and posts it.
 - [ ] The joint check named under "Integration points" has run at the item's checkpoint with both tracks present, or the Handoff line says what still needs to run.
 
 ## Tests and workflow
 
-- Run the tests with `npm test` before every commit. New work gets new tests.
-- Run `npm run lint`. Fix findings instead of silencing them.
-- Keep new behaviour behind `EXPENSE_APPROVALS_ENABLED`. With the flag off, existing behaviour is unchanged.
+- Run the test and lint commands above before every commit. New work gets new tests. Fix findings instead of silencing them.
 - Commit messages are in the imperative. The pull request description lists the acceptance criteria and the proof for each.
 - Raw outputs, run records and screenshots go on the GitHub issue, not into the repository, unless the work item file says otherwise.
 

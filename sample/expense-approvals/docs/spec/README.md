@@ -123,23 +123,23 @@ Milestone 1, Submit an expense report (`m1-submit-report`), work unit 1
 
 | Id | Work item | Track | Complete by |
 | --- | --- | --- | --- |
-| [wi-01-service-scaffold](m1-submit-report/wi-01-service-scaffold.md) | Service scaffold, flag and API contract | Workflow | 2027-02-04 |
-| [wi-02-report-form](m1-submit-report/wi-02-report-form.md) | Report form and receipt upload | Experience | 2027-02-10 |
+| [wi-01-service-scaffold](m1-submit-report/wi-01-service-scaffold.md) | Service scaffold, flag and API contract | Workflow | 2027-02-03 |
+| [wi-02-report-form](m1-submit-report/wi-02-report-form.md) | Report form and receipt upload | Experience | 2027-02-12 |
 
 Milestone 2, Route to approvers (`m2-route-to-approvers`), work unit 2
 
 | Id | Work item | Track | Complete by |
 | --- | --- | --- | --- |
 | [wi-03-routing-engine](m2-route-to-approvers/wi-03-routing-engine.md) | Approval routing engine | Workflow | 2027-02-24 |
-| [wi-04-approver-inbox](m2-route-to-approvers/wi-04-approver-inbox.md) | Approver inbox and decisions | Experience | 2027-03-03 |
+| [wi-04-approver-inbox](m2-route-to-approvers/wi-04-approver-inbox.md) | Approver inbox and decisions | Experience | 2027-03-05 |
 
 Milestone 3, Enforce policy (`m3-enforce-policy`), work unit 3
 
 | Id | Work item | Track | Complete by |
 | --- | --- | --- | --- |
-| [wi-06-limits-and-duties](m3-enforce-policy/wi-06-limits-and-duties.md) | Approval limits and separation of duties | Workflow | 2027-03-12 |
+| [wi-06-limits-and-duties](m3-enforce-policy/wi-06-limits-and-duties.md) | Approval limits and separation of duties | Workflow | 2027-03-10 |
 | [wi-07-audit-log](m3-enforce-policy/wi-07-audit-log.md) | Audit log and retention | Workflow | 2027-03-17 |
-| [wi-08-notifications-delegates](m3-enforce-policy/wi-08-notifications-delegates.md) | Notifications and delegates | Experience | 2027-03-18 |
+| [wi-08-notifications-delegates](m3-enforce-policy/wi-08-notifications-delegates.md) | Notifications and delegates | Experience | 2027-03-19 |
 
 Milestone 4, Pilot with one team (`m4-pilot`), work unit 4
 

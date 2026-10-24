@@ -137,7 +137,7 @@ items:
     milestone: 1
     track: workflow
     owner: tamsin
-    complete_by: 2027-02-04
+    complete_by: 2027-02-03
     size: "Medium, about 3 days"
     depends: []
     checkpoint: 2027-02-05
@@ -148,7 +148,7 @@ items:
     milestone: 1
     track: experience
     owner: idris
-    complete_by: 2027-02-10
+    complete_by: 2027-02-12
     size: "Medium, about 4 days"
     depends: [1]
     checkpoint: 2027-02-12
@@ -170,7 +170,7 @@ items:
     milestone: 2
     track: experience
     owner: idris
-    complete_by: 2027-03-03
+    complete_by: 2027-03-05
     size: "Medium, about 4 days"
     depends: [2, 3]
     checkpoint: 2027-03-05
@@ -181,7 +181,7 @@ items:
     milestone: 3
     track: workflow
     owner: tamsin
-    complete_by: 2027-03-12
+    complete_by: 2027-03-10
     size: "Medium, about 3 days"
     depends: [3]
     checkpoint: 2027-03-12
@@ -203,7 +203,7 @@ items:
     milestone: 3
     track: experience
     owner: idris
-    complete_by: 2027-03-18
+    complete_by: 2027-03-19
     size: "Medium, about 4 days"
     depends: [4, 6]
     checkpoint: 2027-03-19

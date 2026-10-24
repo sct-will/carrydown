@@ -684,6 +684,8 @@ def validate_plan(plan):
             own = people.get(it.get("owner"))
             if own and it["complete_by"] in [str(x) for x in (own.get("days_off") or [])]:
                 P.append(f"item {iid}: complete_by {it['complete_by']} is a day off for {own['id']}")
+        if it.get("size") and not re.search(r"about \d+(?:\.\d+)?", str(it["size"])):
+            P.append(f"item {iid}: size must say how many days, as in \"Medium, about 4 days\", got {it['size']!r}")
         if it.get("checkpoint") and it["checkpoint"] not in cps:
             P.append(f"item {iid}: checkpoint {it['checkpoint']!r} is not in checkpoints")
         elif it.get("checkpoint") and it.get("complete_by") and _is_date(it["complete_by"]):
@@ -1139,6 +1141,138 @@ def capacity_days(person, milestone):
 def sized_days(item):
     m = re.search(r"about (\d+(?:\.\d+)?)", item.get("size", "") or "")
     return float(m.group(1)) if m else 0.0
+
+
+def allocation_of(plan, item):
+    """Percent of working time the item's owner gives the plan, 100 when there is no owner."""
+    for p in plan["people"]:
+        if p.get("id") == item.get("owner"):
+            al = p.get("allocation", 100)
+            # an invalid allocation is reported by validate_plan; count it as 100 here
+            return al if isinstance(al, int) and not isinstance(al, bool) and 1 <= al <= 100 else 100
+    return 100
+
+
+def needed_days(plan, item):
+    """Working days an item takes on the calendar: its size in days over its owner's allocation.
+    "about 4 days" at 60 percent is 4 / 0.6, about 6.7 working days."""
+    return sized_days(item) * 100.0 / allocation_of(plan, item)
+
+
+def _off_days(plan, item):
+    off = set()
+    for p in plan["people"]:
+        if p.get("id") == item.get("owner"):
+            off |= {str(d) for d in (p.get("days_off") or [])}
+    for br in plan["breaks"]:
+        if _is_date(br.get("start")) and _is_date(br.get("end")):
+            d, e = parse_date(br["start"]), parse_date(br["end"])
+            while d <= e:
+                off.add(fmt_date(d))
+                d += _dt.timedelta(days=1)
+    return off
+
+
+def _is_working(d, off):
+    return d.weekday() < 5 and fmt_date(d) not in off
+
+
+def _owner_start(plan, item):
+    for p in plan["people"]:
+        if p.get("id") == item.get("owner") and p.get("start"):
+            return parse_date(p["start"])
+    return None
+
+
+def item_window(plan, item):
+    """(first day, working days) an item has: from the day after its latest dependency completes,
+    or from the start of its work unit when it has no dependency, to its complete_by date,
+    without weekends, breaks and its owner's days off."""
+    items = item_by_id(plan)
+    deps = [items[d] for d in item["depends"] if d in items]
+    if deps:
+        start = max(parse_date(d["complete_by"]) for d in deps) + _dt.timedelta(days=1)
+    else:
+        start = parse_date(milestone_by_num(plan)[item["milestone"]]["start"])
+    own = _owner_start(plan, item)
+    if own and own > start:
+        start = own
+    end = parse_date(item["complete_by"])
+    off = _off_days(plan, item)
+    n, d = 0, start
+    while d <= end:
+        n += _is_working(d, off)
+        d += _dt.timedelta(days=1)
+    return start, n
+
+
+def fit_findings(plan):
+    """Items whose window is shorter than the working days their size and allocation need."""
+    out = []
+    items = item_by_id(plan)
+    for it in plan["items"]:
+        need = needed_days(plan, it)
+        if need <= 0:
+            continue
+        start, have = item_window(plan, it)
+        if have + 1e-9 < need:
+            deps = [d for d in it["depends"] if d in items]
+            last = max(deps, key=lambda d: parse_date(items[d]["complete_by"])) if deps else None
+            frm = (f"from {fmt_date(start)}, the day after {tag(plan, last)} completes," if last
+                   else f"from {fmt_date(start)}, the start of work unit {it['milestone']},")
+            out.append(f"{tag(plan, it['id'])} needs about {need:.1f} working days ({sized_days(it):g} days at {allocation_of(plan, it)} percent) "
+                       f"but has {have} {frm} to its complete_by {it['complete_by']}")
+    return out
+
+
+def earliest_finish(plan):
+    """Forward pass over the dependencies with durations from size and allocation.
+
+    Returns ({id: (earliest start, earliest finish)}, chain of ids to the latest finish), or
+    ({}, []) when no item is sized. An item starts no earlier than the first work unit and its
+    owner's start, and the working day after its last dependency finishes. Owners are not
+    serialised here: the load table covers that."""
+    if not plan["items"] or not any(sized_days(it) for it in plan["items"]):
+        return {}, []
+    items = item_by_id(plan)
+    first = parse_date(plan["milestones"][0]["start"]) if plan["milestones"] else min(parse_date(it["complete_by"]) for it in plan["items"])
+    memo, via = {}, {}
+
+    def visit(n, stack=()):
+        if n in memo:
+            return memo[n]
+        it = items[n]
+        off = _off_days(plan, it)
+        start, prev = first, None
+        own = _owner_start(plan, it)
+        if own and own > start:
+            start = own
+        for d in it["depends"]:
+            if d in items and d not in stack:
+                fin = visit(d, stack + (n,))[1] + _dt.timedelta(days=1)
+                if fin > start:
+                    start, prev = fin, d
+        while not _is_working(start, off):
+            start += _dt.timedelta(days=1)
+        need = needed_days(plan, it)
+        finish, done = start, 0.0
+        while True:
+            if _is_working(finish, off):
+                done += 1
+                if done + 1e-9 >= need:
+                    break
+            finish += _dt.timedelta(days=1)
+        memo[n], via[n] = (start, finish), prev
+        return memo[n]
+
+    for n in items:
+        visit(n)
+    end = max(memo, key=lambda n: (memo[n][1], n))
+    chain, n = [], end
+    while n is not None:
+        chain.append(n)
+        n = via[n]
+    return memo, chain[::-1]
 
 
 def load_rows(plan):
