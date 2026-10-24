@@ -11,7 +11,7 @@ demonstration_audience: "Head of finance operations and the product owner, in a 
 program_owned:                     # work the program owns, kept outside the development plan
   - "Pilot team recruitment"
   - "Finance sign-off on the ledger export format and retention period"
-repository: sample-org/expense-approvals     # replace with your own
+repository: sct-will/carrydown-sample     # replace with your own
 epic: none
 agents: ["two agentic editors that read Agent Skills"]
 conventions:

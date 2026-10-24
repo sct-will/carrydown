@@ -6,7 +6,7 @@ project:
   name: "Expense approvals"
   slug: expense-approvals
   id_prefix: WI
-  repo: sample-org/expense-approvals
+  repo: sct-will/carrydown-sample
   branch: main
   epic: null
   epic_title: "Expense approvals, development plan"

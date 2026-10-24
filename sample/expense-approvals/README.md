@@ -4,6 +4,8 @@ This is a sample. The project is fictional. The people, the company and the numb
 
 It shows what the three carrydown skills produce from a short ground truth.
 
+This folder is published twice. It lives in the kit repository at `sample/expense-approvals/`, and it is the root of the repository https://github.com/sct-will/carrydown-sample, where the kit scripts created the real issues and the project board from this plan. Read the summary in the kit's `docs/sample.md`.
+
 ## What is here
 
 | Path | What it is | Made by |

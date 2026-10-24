@@ -26,11 +26,11 @@ Choose one option. Install it once per computer or once per project. Then start 
 Run one line for your agent. Add `-g` to install for your user instead of this project. The tool copies the folder, so run the line again after the skill changes.
 
 ```bash
-npx skills add https://github.com/sample-org/expense-approvals/tree/main/docs/dev/skills/expense-approvals-dev -a claude-code
-npx skills add https://github.com/sample-org/expense-approvals/tree/main/docs/dev/skills/expense-approvals-dev -a github-copilot
-npx skills add https://github.com/sample-org/expense-approvals/tree/main/docs/dev/skills/expense-approvals-dev -a cursor
-npx skills add https://github.com/sample-org/expense-approvals/tree/main/docs/dev/skills/expense-approvals-dev -a codex
-npx skills add https://github.com/sample-org/expense-approvals/tree/main/docs/dev/skills/expense-approvals-dev -a gemini-cli
+npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev -a claude-code
+npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev -a github-copilot
+npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev -a cursor
+npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev -a codex
+npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev -a gemini-cli
 ```
 
 The general form is `npx skills add <repository tree url for this folder> -a <agent>`. The agent names come from the skills tool; run `npx skills add --help` or see https://skills.sh for the full list. If the repository is private, the tool uses the Git credentials already configured on your computer.
