@@ -96,7 +96,7 @@ The agent builds the plan around people and the part of the system each one owns
 
 ## How it compares
 
-Plan mode and spec-driven tools plan one task from one specification, and Claude Code Project Management (CCPM) turns requirements into issues. carrydown carries one agreed ground truth across every task, dates the plan around named people and checks every specification against it, so it sits beside any of them. The FAQ has [the longer comparison](docs/faq.md#how-does-this-compare-with-plan-mode-spec-driven-tools-superpowers-and-claude-code-project-management-ccpm) and [whether this is just prompts](docs/faq.md#isnt-this-just-prompts).
+Plan mode, an agent's built-in planning step, plans one task. Spec-driven tools, which start from a written specification, plan one task from that specification. Claude Code Project Management (CCPM) turns requirements into issues. carrydown carries one agreed ground truth across every task, dates the plan around named people and checks every specification against it, so it sits beside any of them. The FAQ has [the longer comparison](docs/faq.md#how-does-this-compare-with-plan-mode-spec-driven-tools-superpowers-and-claude-code-project-management-ccpm) and [whether this is just prompts](docs/faq.md#isnt-this-just-prompts).
 
 It is not waterfall: the plan is files in Git, the work units stretch to fit the work, and [changing the plan is cheap](docs/faq.md#isnt-this-waterfall).
 

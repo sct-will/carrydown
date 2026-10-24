@@ -23,7 +23,7 @@ You bring a document that says how the project must work, such as an architectur
 - one specification file for each piece of work (a work item), each tied to the sections of your document it comes from,
 - GitHub issues, one per work item, grouped under one issue per milestone,
 - a GitHub Project board with the dates and the people filled in,
-- a small skill linked from every issue, so each engineer's agent reads the specification before it writes code.
+- the engineers' skill, linked from every issue, so each engineer's agent reads the specification before it writes code.
 
 Nothing is written to GitHub until you say yes. To see a finished result first, open [the sample board](https://github.com/users/sct-will/projects/2) and [issue 9](https://github.com/sct-will/carrydown-sample/issues/9), part of a fictional sample. Work items are numbered WI-01, WI-02 and so on.
 

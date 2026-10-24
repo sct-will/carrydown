@@ -1,6 +1,8 @@
 # The method
 
-Carrydown carries a ground truth document down into a governed plan. The plan has one specification per work item, a set of GitHub issues, a project board and the engineers' skill that every issue links to. This page explains the four steps and what each one produces, which parts the carrydown skills do for you and which stay with the plan owner and the engineers. Two skills you install, one skill is generated for your engineers.
+An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent. Two skills you install, one skill is generated for your engineers.
+
+Carrydown carries a ground truth document down into a governed plan. The plan has one specification per work item, a set of GitHub issues, a project board and the engineers' skill that every issue links to. This page explains the four steps and what each one produces, which parts the carrydown skills do for you and which stay with the plan owner and the engineers.
 
 The idea is old in systems engineering, where it is called flow-down: a requirement at the top is traced to every part below it. The carrydown skills apply the same idea to software work done with coding agents. One document, one unbroken line through the plan, the specifications, the issues, the board and the agent.
 

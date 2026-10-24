@@ -4,7 +4,7 @@ One file per work item, named `<id>-<slug>.md` and placed in the milestone folde
 
 ## What a specification is for
 
-It orients the engineer and their coding agent so that they can finish one item without opening the original documents. It is not a summary of the ground truth. It is the part of the ground truth that this item must honour, in the form an engineer starts from.
+It orients the engineer and their coding agent so that they can finish one item without opening the original documents. It is the part of the ground truth that this item must honour, in the form an engineer starts from.
 
 ## Header table
 
