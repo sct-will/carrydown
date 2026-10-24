@@ -285,7 +285,7 @@ This project follows the Contributor Covenant. See [CODE_OF_CONDUCT.md](CODE_OF_
 
 ## Security
 
-Report a vulnerability privately through GitHub. See [SECURITY.md](SECURITY.md). The carrydown skills store only your GitHub token file, and they never print or commit the token. The installer's scanners may rate `carrydown-plan-to-github` as a medium risk because it uses a token and reads the issues in your repository. [docs/security.md](docs/security.md) explains why.
+Report a vulnerability privately through GitHub. See [SECURITY.md](SECURITY.md). The carrydown skills store only your GitHub token file, and they never print or commit the token. The installer's scanners may rate `carrydown-plan-to-github` as a medium risk because it uses a token and reads the issues in your repository. [docs/security.md](docs/security.md) explains why. `carrydown-plan-to-github` is the only skill with network or token code, and it may show a scanner label on skills.sh for reading issues in your repository.
 
 ## Licence
 
