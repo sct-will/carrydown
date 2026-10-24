@@ -36,6 +36,35 @@ The installer copies only a skill's own folder, so each skill carries copies of 
 python3 scripts/sync_skill_assets.py --apply
 ```
 
+## Run the scripts yourself
+
+You need no agent and no token for these three commands.
+
+```bash
+git clone https://github.com/sct-will/carrydown.git
+cd carrydown
+python3 scripts/check_specs.py --root sample/expense-approvals --report
+python3 scripts/github_sync.py --root sample/expense-approvals --offline
+python3 scripts/github_project.py --root sample/expense-approvals --offline
+```
+
+Or open the repository in Codespaces. It opens on the sample output and runs the first two commands for you.
+
+| Script | Purpose |
+| --- | --- |
+| `scripts/render_ground_truth.py` | `.docx` or `.md` to Markdown with a section index and figures. |
+| `scripts/scaffold_spec.py` | Create `plan.yaml`, the README, milestone folders and stubs. Refresh headers. Add the checker to CI. |
+| `scripts/check_specs.py` | Check specifications against `plan.yaml`. Print the load table and critical path. |
+| `scripts/github_token.py` | Create and store a GitHub token safely, and check what it can do. |
+| `scripts/github_sync.py` | Labels, sub-epics, issues, links and the Epic comment. |
+| `scripts/github_project.py` | The GitHub Project board. |
+| `scripts/generate_dev_skill.py` | The developer skill folder. |
+| `scripts/selftest.py` | The repository's own checks, with no token. |
+| `scripts/lint_prose.py` | The prose style checks. |
+| `scripts/sync_skill_assets.py` | Maintainers: copy scripts and templates into each skill folder. |
+
+Every script has `--help`. The ones that write are dry runs unless you pass `--apply`. The installer copies only a skill's folder, so each skill carries its own copy of the scripts and templates it runs. The top-level `scripts/` and `templates/` are the canonical copies.
+
 ## Run the checks locally
 
 You need Python 3.11 or later. You do not need a GitHub token. No check writes to GitHub.

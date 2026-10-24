@@ -6,7 +6,7 @@ Turn your architecture document into a plan your team and its AI coding agents c
 
 [![Licence](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Last commit](https://img.shields.io/github/last-commit/sct-will/carrydown?v=2)](https://github.com/sct-will/carrydown/commits/main) [![Issues](https://img.shields.io/github/issues/sct-will/carrydown?v=2)](https://github.com/sct-will/carrydown/issues) [![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-blue)](LICENSE-CONTENT.md) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-3%20skills-teal)](https://agentskills.io) [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](#requirements-and-access) [![Open in Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sct-will/carrydown)
 
-[Getting started](#getting-started) · [How it works](#how-it-works) · [What you get](#what-you-get) · [Install options](#install-options) · [Requirements and access](#requirements-and-access) · [Sample](#sample) · [Run the scripts yourself](#run-the-scripts-yourself) · [FAQ](#faq) · [Contributing](#contributing) · [Licence](#licence) · [For agents](AGENTS.md)
+[Getting started](#getting-started) · [How it works](#how-it-works) · [What you get](#what-you-get) · [Install options](#install-options) · [Requirements and access](#requirements-and-access) · [Sample](#sample) · [FAQ](#faq) · [Contributing](#contributing) · [Licence](#licence) · [For agents](AGENTS.md)
 
 ## Getting started
 
@@ -197,6 +197,8 @@ No Node.js? Skip the installer. Copy the three folders in `skills/` into your ag
 - **Single sign-on (SSO).** If your organisation enforces it, authorise the token: github.com/settings/tokens, click the token's "Configure SSO" button, click "Authorize" next to the organisation.
 - **A token**, created with the pre-filled link https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown. It ticks `repo` and `project`. A fine-grained token also works for a project owned by an organisation, with Issues read and write, Metadata read, and the organisation permission Projects read and write. It does not work for a project owned by a user account. Use a classic token there.
 
+To run the scripts outside a skill, see the [contributing guide](CONTRIBUTING.md#run-the-scripts-yourself).
+
 ## Sample
 
 The sample is a fictional expense approvals service: requirements, two governance rules, a development standard, a business analyst note, two people and eleven weeks. The carrydown skills turned that ground truth into a plan, specifications, issues and a board.
@@ -205,35 +207,6 @@ The sample is a fictional expense approvals service: requirements, two governanc
 - The issues the skills created: https://github.com/sct-will/carrydown-sample/issues
 - The public project board: https://github.com/users/sct-will/projects/2
 - Its README, which holds the renderings and the sample output: https://github.com/sct-will/carrydown-sample#readme
-
-## Run the scripts yourself
-
-No agent and no token needed for these three commands.
-
-```bash
-git clone https://github.com/sct-will/carrydown.git
-cd carrydown
-python3 scripts/check_specs.py --root sample/expense-approvals --report
-python3 scripts/github_sync.py --root sample/expense-approvals --offline
-python3 scripts/github_project.py --root sample/expense-approvals --offline
-```
-
-Or open the repository in Codespaces. It opens on the sample output and runs the first two commands for you.
-
-| Script | Purpose |
-| --- | --- |
-| `scripts/render_ground_truth.py` | `.docx` or `.md` to Markdown with a section index and figures. |
-| `scripts/scaffold_spec.py` | Create `plan.yaml`, the README, milestone folders and stubs. Refresh headers. Add the checker to CI. |
-| `scripts/check_specs.py` | Check specifications against `plan.yaml`. Print the load table and critical path. |
-| `scripts/github_token.py` | Create and store a GitHub token safely, and check what it can do. |
-| `scripts/github_sync.py` | Labels, sub-epics, issues, links and the Epic comment. |
-| `scripts/github_project.py` | The GitHub Project board. |
-| `scripts/generate_dev_skill.py` | The developer skill folder. |
-| `scripts/selftest.py` | The repository's own checks, with no token. |
-| `scripts/lint_prose.py` | The prose style checks. |
-| `scripts/sync_skill_assets.py` | Maintainers: copy scripts and templates into each skill folder. |
-
-Every script has `--help`. The ones that write are dry runs unless you pass `--apply`. The installer copies only a skill's folder, so each skill carries its own copy of the scripts and templates it runs. The top-level `scripts/` and `templates/` are the canonical copies.
 
 ## FAQ
 
