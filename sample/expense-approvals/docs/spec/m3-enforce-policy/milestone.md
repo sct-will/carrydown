@@ -16,6 +16,15 @@ Finance policy and internal audit each own a rule that this milestone implements
 The demonstration proves that a refused decision names its rule and changes nothing, and that every change leaves a trace.
 It feeds the pilot in work unit 4.
 
+## Why these items form this milestone
+
+<!-- Written from plan.yaml. Change it there, then run scaffold_spec.py --refresh-headers --apply. -->
+
+Policy can be seen only when a decision is refused, recorded and told to the submitter, so the rules, the audit log and the notifications form one milestone. The rules come first because the delegates and the error display depend on GOV-1. The audit log shares the transaction of each state change (D1, GOV-2.1), so it stays with the rules in the service.
+
+- Workflow: WI-06 (expense service), WI-07 (expense service).
+- Experience: WI-08 (notification worker).
+
 ## Expected outcomes
 
 - Every decision passes the seven checks of GOV-1 on the server, and a refusal names the rule number.
@@ -32,6 +41,15 @@ The milestone is accepted when the program has seen each of these at the demonst
 - [ ] The audit trail of one report listed every state change in order, and reading it produced an audit.viewed event.
 - [ ] An attempt to update or delete an audit row from the application account failed.
 - [ ] The submitter received an email for the decision, and the email carried no amount and no comment text.
+
+## Joint demonstration
+
+<!-- Written from plan.yaml. Change it there, then run scaffold_spec.py --refresh-headers --apply. -->
+
+The Experience engineer makes a decision that GOV-1 refuses and shows the rule number in the web client. The Workflow engineer shows the audit event of an allowed decision, and the submitter's email from the same run is opened.
+
+Given together on 2027-03-19 by the engineers of the Workflow and Experience tracks.
+The joint check for that date, Milestone 3 demonstration: A decision produces an audit event and a notification, and the submitter sees the new state. Workflow shows the audit event and Experience shows the notification and the submitter's view.
 
 ## Demonstration expectations
 

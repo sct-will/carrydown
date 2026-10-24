@@ -6,7 +6,7 @@ One file per development work item, plus `milestone.md` per milestone folder. Th
 
 | Path | What it is |
 | --- | --- |
-| `README.md` | This page. Conventions, schedule, checkpoint and comment templates, the index of work items. |
+| `README.md` | This page. Conventions, how the plan was composed, schedule, checkpoint and comment templates, the index of work items. |
 | `plan.yaml` | The schedule as data: milestones, work items, owners, dates, dependencies, checkpoints. The checker and the GitHub scripts read it. |
 | `m1-.../` and the other milestone folders | The work item files, one per item, and `milestone.md` for each milestone. |
 
@@ -40,6 +40,40 @@ The shortest route is the developer skill. It makes a coding agent read the righ
 
 Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the program. A program input is something the program provides outside this plan.
 
+## How this plan was composed
+
+<!-- Written from plan.yaml. Change it there, then run scaffold_spec.py --refresh-headers --apply. -->
+
+The plan follows ten rules. The reasons below are written in `plan.yaml`, so a reviewer can argue with each one against the dates in the schedule.
+
+1. A milestone is the thinnest vertical slice that proves one user-visible capability end to end, named for what a user can do after it. The first proves the whole path with the least behaviour, and the last proves the project can be released and run.
+2. A milestone holds items from every track the capability crosses, and the tracks meet at a named joint check before the demonstration. A milestone that stays inside one track says why.
+3. The exit gate is one sentence the program can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show.
+4. Inside a milestone the shared contract comes first, so both tracks can start without waiting. The first week leaves nobody idle.
+5. Each engineer's consecutive items stay in one part of the system, a theme. Related items for the same person sit in adjacent days to cut context switching.
+6. Size in days divided by allocation gives calendar working days: four days at 60 percent is nearly seven working days. Nobody is planned past 100 percent of allocated capacity in a work unit, aim for about 80, and days off and breaks are real.
+7. Slack sits before every checkpoint and demonstration. An item that completes on its checkpoint date has none.
+8. The critical path is read for single points of failure. If it runs through one person, the plan says so and offers an alternative.
+9. Program-owned work stays outside the plan as id gaps.
+10. The plan records its rationale where a reviewer can argue with it: for each milestone, why these items form it and what the joint demonstration proves, and for each track, why its items are in this order. The plan owner reads the plan week by week, adversarially, before anything is scaffolded.
+
+### Order of work per track
+
+| Track | Items in date order | Why this order |
+| --- | --- | --- |
+| Workflow | WI-01, WI-03, WI-06, WI-07, WI-09 | The scaffold and the API contract come first because both tracks build against contracts/openapi.yaml (DS-1.4). Routing closes on 2027-02-19, before the day off on 2027-02-22, so the inbox can start the next Monday. The limits close on 2027-03-08 so the delegates item has the GOV-1 rules from the start of work unit 3, and the audit log follows in the same service code because it shares the transaction of each state change (D1). The one theme change, to the export job, falls across the offsite week. |
+| Experience | WI-02, WI-04, WI-08, WI-11 | In the first three days the Experience engineer reviews the draft contract with the Workflow engineer, so nobody is idle in the first week. The report form starts the day after the contract lands and closes on 2027-02-10, two days before the first demonstration. The inbox needs the form and the routing steps, and closes on 2027-03-03. Notifications and delegates need the inbox decisions and the GOV-1.4 delegate rule, so they come third, and release readiness comes last because it rehearses everything. Four of the five items on the critical path sit on this track at 60 percent allocation: if this engineer is away, the Workflow engineer takes the delegate screen of WI-08, whose rules are already theirs. |
+
+### Milestones
+
+| Milestone | Tracks | Why these items | Joint demonstration |
+| --- | --- | --- | --- |
+| 1, Submit an expense report | Workflow and Experience | The service scaffold with the API contract and the report form are the thinnest slice that proves the whole path: a report goes from the web client through the API to the database. The contract comes first so the form starts from a frozen shape at the Contract freeze checkpoint. Routing, rules and export stay out, so the path is proven with the least behaviour. | The Experience engineer creates a report with one receipt in the web client and submits it. The Workflow engineer shows the Submitted state and the stored receipt in the database from the same run. |
+| 2, Route to approvers | Workflow and Experience | Routing and the inbox are the two halves of one capability: a submitted report reaches its approvers and they decide it. Neither can be shown alone, because the steps mean nothing without an inbox and the inbox is empty without steps. The Routing meets inbox checkpoint on 2027-02-26 joins them a week before the demonstration. | The Workflow engineer submits reports in each band of section 3.5 and shows the steps built for them. The Experience engineer approves one report as two approvers in turn from the inbox, and it reaches Approved only after the last step. |
+| 3, Enforce policy | Workflow and Experience | Policy can be seen only when a decision is refused, recorded and told to the submitter, so the rules, the audit log and the notifications form one milestone. The rules come first because the delegates and the error display depend on GOV-1. The audit log shares the transaction of each state change (D1, GOV-2.1), so it stays with the rules in the service. | The Experience engineer makes a decision that GOV-1 refuses and shows the rule number in the web client. The Workflow engineer shows the audit event of an allowed decision, and the submitter's email from the same run is opened. |
+| 4, Pilot with one team | Workflow only | The pilot proves the capability finance asked for: approved reports reach the ledger with no manual change (BA-3). The export job is the only new build, and the pilot team's real reports are the test of everything shown so far. Why one track: The pilot adds no screen and no notification. The Experience work it needs is support for the pilot team on the existing web client, which is not a deliverable item. | The Experience engineer walks one pilot report from submit to Approved in the web client. The Workflow engineer runs the nightly job on it and opens the file in the finance tool with no manual change. |
+| 5, Release | Experience only | Release proves the project can be released and run: the rehearsal with the flag on, the runbook handed to operations and the finance sign-off. It holds one item because everything it rehearses was built and shown in milestones 1 to 4. Why one track: Release readiness is one item of rehearsal and runbook work. It sits on the Experience track because the rehearsal runs through the web client. The Workflow engineer takes part in the rehearsal and owns no new item. | The Experience engineer shows the rehearsal record, then submits and approves a report in staging with the flag on. The Workflow engineer shows the nightly file, its checksum and the audit events from the same run, then switches the flag off. |
+
 ## Schedule
 
 Work is organised in work units of variable length, each with an exit gate. Work items carry a completion date and name the checkpoint and the demonstration they feed.
@@ -72,13 +106,13 @@ Checkpoints. A 30-minute integration check every week with all tracks present. T
 | Date | Checkpoint | Items due | Joint check |
 | --- | --- | --- | --- |
 | 2027-02-05 | Contract freeze | WI-01 | The web client creates a draft against the service stub and the response validates against contracts/openapi.yaml. |
-| 2027-02-12 | Milestone 1 demonstration | WI-02 | A report with one receipt goes from the form to the Submitted state, with the audit-ready state change visible in the database. |
+| 2027-02-12 | Milestone 1 demonstration | WI-02 | A report with one receipt goes from the form to the Submitted state, with the audit-ready state change visible in the database. Experience drives the form and Workflow shows the database. |
 | 2027-02-26 | Routing meets inbox | WI-03 | A submitted report produces the approval steps of section 3.5, and the inbox contract returns them for the first approver. |
-| 2027-03-05 | Milestone 2 demonstration | WI-04 | A report is approved by two approvers in order from the inbox in the web client. |
+| 2027-03-05 | Milestone 2 demonstration | WI-04 | A report is approved by two approvers in order from the inbox in the web client. Workflow starts a report with two steps and Experience approves it at both. |
 | 2027-03-12 | Rules meet routing | WI-06 | A refused decision shows the rule number in the web client error message, and the report state does not change. |
-| 2027-03-19 | Milestone 3 demonstration | WI-07, WI-08 | A decision produces an audit event and a notification, and the submitter sees the new state. |
-| 2027-04-09 | Pilot readout | WI-09 | The nightly file for the pilot team's reports opens in the finance tool with no manual change. |
-| 2027-04-23 | Release | WI-11 | The release rehearsal passes with the flag on in the staging environment. |
+| 2027-03-19 | Milestone 3 demonstration | WI-07, WI-08 | A decision produces an audit event and a notification, and the submitter sees the new state. Workflow shows the audit event and Experience shows the notification and the submitter's view. |
+| 2027-04-09 | Pilot readout | WI-09 | The nightly file for the pilot team's reports opens in the finance tool with no manual change. Workflow produces the file, and Workflow and Experience open it together and verify the checksum. |
+| 2027-04-23 | Release | WI-11 | The release rehearsal passes with the flag on in the staging environment. Experience runs it through the web client and Workflow shows the file, the checksum and the audit events. |
 
 ### Closing comment on an issue
 

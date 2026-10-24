@@ -185,6 +185,38 @@ def maintenance(tmp):
     step("--refresh-headers is stable on a second run", run, contains=["0 file(s) written"])
 
 
+def composition(tmp, plan_text):
+    """The sections written from the plan's rationale follow plan.yaml and leave hand edits alone."""
+    proj = tmp / "composition"
+    shutil.copytree(ROOT / SAMPLE, proj)
+    plan = proj / "docs/spec/plan.yaml"
+    old = 'rationale: "Routing and the inbox are the two halves of one capability'
+    plan.write_text(plan_text.replace(old, 'rationale: "Changed reason for milestone two. Routing and the inbox are the two halves of one capability'), encoding="utf-8")
+    import re
+    ms2 = proj / "docs/spec/m2-route-to-approvers/milestone.md"
+    ms2.write_text(ms2.read_text(encoding="utf-8").replace("## Expected outcomes\n", "## Expected outcomes\n\n- A line a person added by hand.\n", 1), encoding="utf-8")
+    ms3 = proj / "docs/spec/m3-enforce-policy/milestone.md"
+    t = ms3.read_text(encoding="utf-8")
+    for head in ("Why these items form this milestone", "Joint demonstration"):
+        t = re.sub(r"(?ms)^## " + head + r"\n.*?(?=^## )", "", t)
+    ms3.write_text(t, encoding="utf-8")
+    readme = proj / "docs/spec/README.md"
+    r = readme.read_text(encoding="utf-8")
+    readme.write_text(re.sub(r"(?ms)^## How this plan was composed\n.*?(?=^## )", "", r), encoding="utf-8")
+    run = [PY, "scripts/scaffold_spec.py", "--root", str(proj), "--refresh-headers", "--apply", "--allow-no-git"]
+    step("--refresh-headers rewrites the rationale sections and adds missing ones", run,
+         contains=["refresh header: docs/spec/m2-route-to-approvers/milestone.md", "refresh header: docs/spec/m3-enforce-policy/milestone.md", "refresh tables: docs/spec/README.md", "3 file(s) written"],
+         files={ms2: ["Changed reason for milestone two.", "- A line a person added by hand."],
+                ms3: ["## Why these items form this milestone\n", "## Joint demonstration\n", "- Workflow: WI-06 (expense service), WI-07 (expense service)."],
+                readme: ["## How this plan was composed\n", "Changed reason for milestone two.", "| Workflow | WI-01, WI-03, WI-06, WI-07, WI-09 |"]})
+    order = ("import sys; t = open(sys.argv[1], encoding='utf-8').read(); "
+             "o = [t.index(h) for h in ('## Purpose', '## Why these items', '## Expected outcomes', '## Joint demonstration', '## Demonstration expectations')]; "
+             "r = open(sys.argv[2], encoding='utf-8').read(); sys.exit(0 if o == sorted(o) and r.index('## How this plan') < r.index('## Schedule') else 1)")
+    step("the added sections sit in the template order", [PY, "-c", order, str(ms3), str(readme)])
+    step("the refreshed sample still checks clean", [PY, "scripts/check_specs.py", "--root", str(proj), "--quiet"])
+    step("the rationale refresh is stable on a second run", run, contains=["0 file(s) written"])
+
+
 def frontmatter(tmp, plan_text):
     """The generated SKILL.md frontmatter parses whatever the project is called."""
     proj = tmp / "frontmatter"
@@ -352,6 +384,7 @@ def main():
         citations(Path(tmp))
         error_paths(Path(tmp), plan_text)
         maintenance(Path(tmp))
+        composition(Path(tmp), plan_text)
         frontmatter(Path(tmp), plan_text)
         path_safety(Path(tmp), plan_text)
         names(Path(tmp), plan_text)
