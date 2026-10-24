@@ -1,0 +1,84 @@
+name: Bug report
+description: A script or a skill did not do what the documentation says.
+title: "Bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for the report. Remove any token, password or private text from what you paste. For a security problem, do not use this form. Use private vulnerability reporting instead.
+  - type: dropdown
+    id: skill
+    attributes:
+      label: Which skill or part of the kit
+      options:
+        - carrydown-ground-truth
+        - carrydown-plan-to-github
+        - carrydown-dev-skill
+        - A script run by hand
+        - The sample
+        - The documentation
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Which coding agent
+      description: The name and version of the agent you used, or "none, I ran the script by hand".
+    validations:
+      required: true
+  - type: input
+    id: script
+    attributes:
+      label: Which script and command
+      description: The exact command line, with your token and private paths removed.
+      placeholder: python3 scripts/check_specs.py --root sample/expense-approvals
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: dryrun
+    attributes:
+      label: Dry run output
+      description: Paste the output of the dry run, or of the command with `--help`. The scripts never print the token, but check anyway.
+      render: text
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 15, Windows 11, Ubuntu 24.04
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      description: Run `node --version`. Write "not installed" if it is not.
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      description: Run `python3 --version`.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you send
+      options:
+        - label: I removed tokens, passwords and private text.
+          required: true
+        - label: I searched the existing issues.
+          required: true

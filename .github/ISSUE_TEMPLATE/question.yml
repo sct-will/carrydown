@@ -1,0 +1,36 @@
+name: Question
+description: Ask how to use the kit.
+title: "Question: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read [START-HERE.md](https://github.com/sct-will/carrydown/blob/main/START-HERE.md) and the [FAQ](https://github.com/sct-will/carrydown/blob/main/docs/faq.md) first. They answer most questions.
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true
+  - type: dropdown
+    id: skill
+    attributes:
+      label: Which skill or part of the kit
+      options:
+        - carrydown-ground-truth
+        - carrydown-plan-to-github
+        - carrydown-dev-skill
+        - A script run by hand
+        - The sample
+        - Not sure
+  - type: input
+    id: agent
+    attributes:
+      label: Which coding agent you use
+  - type: textarea
+    id: tried
+    attributes:
+      label: What you tried
+      description: Include the command you ran, with your token and private paths removed.
+      render: text

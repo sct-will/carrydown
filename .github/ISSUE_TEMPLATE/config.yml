@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Start here
+    url: https://github.com/sct-will/carrydown/blob/main/START-HERE.md
+    about: Read the step by step guide before you open an issue.
+  - name: Report a security problem privately
+    url: https://github.com/sct-will/carrydown/security/advisories/new
+    about: Do not open a public issue for a vulnerability.

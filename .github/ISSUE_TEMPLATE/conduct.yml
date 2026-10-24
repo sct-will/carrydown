@@ -1,0 +1,25 @@
+name: Conduct report
+description: Report a problem with someone's behavior. See the code of conduct.
+title: "Conduct: "
+labels: ["conduct"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue is public. Keep this first message short and leave out sensitive details. The maintainer will reply and, if the details are sensitive, will move the conversation to a private channel. Read the [code of conduct](https://github.com/sct-will/carrydown/blob/main/CODE_OF_CONDUCT.md).
+  - type: textarea
+    id: summary
+    attributes:
+      label: A short summary
+      description: Where it happened and roughly when. No private details here.
+    validations:
+      required: true
+  - type: dropdown
+    id: contact
+    attributes:
+      label: How should the maintainer continue
+      options:
+        - Reply on this issue
+        - Move to a private channel, I will say which in a reply
+    validations:
+      required: true

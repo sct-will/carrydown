@@ -1,0 +1,46 @@
+name: Feature request
+description: Suggest a change that makes the kit easier to use or the plan better.
+title: "Feature: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: What are you trying to do
+      description: Describe the situation before you describe the change.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like the kit to do
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where it would live
+      options:
+        - carrydown-ground-truth
+        - carrydown-plan-to-github
+        - carrydown-dev-skill
+        - A script
+        - A template
+        - The documentation
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Which coding agent you use
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do today, or other ways to solve it
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contribution
+      options:
+        - label: I am willing to open a pull request for this.
