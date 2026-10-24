@@ -4,19 +4,30 @@
 Contents
 - Where the token is stored, and a reader for it that never prints it.
 - A minimal client for the GitHub REST and GraphQL APIs at api.github.com.
+- One-line messages, each with its fix, for the failures people meet: a rejected token,
+  single sign-on, rate limits, server errors and timeouts.
 
 Only github_token.py, github_sync.py and github_project.py import this module, and it
 ships only with the carrydown-plan-to-github skill. The shared library carrydown_lib.py
 holds no network or token code. This module is not run on its own.
 """
+import datetime as _dt
+import http.client
 import json
 import os
+import socket
+import sys
 import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 
+API = "https://api.github.com"
 DEFAULT_TOKEN_FILE = "~/.config/carrydown/github_token"
+# The token script that sits next to this file, so messages name a path that exists
+# wherever the skill is installed.
+TOKEN_SCRIPT = Path(__file__).resolve().parent / "github_token.py"
+TOKENS_PAGE = "https://github.com/settings/tokens"
 
 
 def token_candidates(explicit=None):
@@ -35,12 +46,12 @@ def read_token(explicit=None, required=True):
     for _, p in token_candidates(explicit):
         try:
             if p.exists():
-                return p.read_text(encoding="utf-8").strip()
+                return p.read_text(encoding="utf-8-sig").strip()
         except OSError:
             continue
     if required:
         raise SystemExit(
-            "No GitHub token found. Run: python3 scripts/github_token.py\n"
+            f"No GitHub token found. Run: python3 {TOKEN_SCRIPT}\n"
             f"It stores the token at {DEFAULT_TOKEN_FILE} with mode 600. "
             "Or pass --token-file PATH, or set CARRYDOWN_GITHUB_TOKEN."
         )
@@ -54,19 +65,80 @@ def redact(text, secret):
 
 
 class GitHubError(RuntimeError):
-    pass
+    """One failed GitHub call. str(e) is one line; e.fix is the one-line fix when it is known.
+
+    kind is one of: auth (401), sso (403, single sign-on), rate_limit (primary limit used up),
+    secondary (secondary rate limit still in force after retries), forbidden (other 403),
+    server (5xx), network (no answer or a timeout), http (anything else)."""
+
+    def __init__(self, message, status=None, kind="http", fix=""):
+        super().__init__(message)
+        self.status, self.kind, self.fix = status, kind, fix
+
+    def line(self):
+        return str(self) + (f" Fix: {self.fix}" if self.fix else "")
+
+
+def report(e):
+    """Print a GitHubError as one line on standard error and return exit status 1."""
+    print(f"error: {e.line()}", file=sys.stderr, flush=True)
+    return 1
+
+
+def sso_fix(headers=None):
+    url = ""
+    for part in str((headers or {}).get("X-GitHub-SSO") or "").split(";"):
+        part = part.strip()
+        if part.startswith("url=https://github.com/"):
+            url = part[4:]
+    where = f"open {url} and authorise the token" if url else (
+        f"open {TOKENS_PAGE}, choose Configure SSO next to the token and authorise the organisation")
+    return f"your organisation uses single sign-on, so {where}. Then rerun."
+
+
+def _reset_time(headers):
+    try:
+        reset = int(headers.get("X-RateLimit-Reset"))
+        return _dt.datetime.fromtimestamp(reset).strftime("%H:%M")
+    except (TypeError, ValueError, OverflowError, OSError):
+        return ""
+
+
+RERUN = "a rerun picks up where this one stopped and creates nothing twice"
+
+
+def classify(code, raw_message, headers, method, path):
+    """Turn an HTTP error into a GitHubError with a one-line fix."""
+    msg = f"{method} {path} -> {code}: {raw_message}"
+    headers = headers or {}
+    remaining = str(headers.get("X-RateLimit-Remaining") or "")
+    if code == 401:
+        return GitHubError(msg, code, "auth", f"the token is wrong, expired or revoked. Make a new one and store it with python3 {TOKEN_SCRIPT}")
+    if code == 403 and headers.get("X-GitHub-SSO"):
+        return GitHubError(msg, code, "sso", sso_fix(headers))
+    if code in (403, 429) and remaining == "0":
+        at = _reset_time(headers)
+        return GitHubError(msg, code, "rate_limit", f"the rate limit for this token is used up{' until ' + at if at else ''}. Wait, then rerun; {RERUN}")
+    if code == 429 or (code == 403 and ("secondary rate limit" in raw_message.lower() or headers.get("Retry-After"))):
+        return GitHubError(msg, code, "secondary", f"GitHub is slowing this token down (secondary rate limit). Wait a few minutes, then rerun; {RERUN}")
+    if code == 403:
+        return GitHubError(msg, code, "forbidden", f"the token lacks a permission this step needs. Check it with python3 {TOKEN_SCRIPT} --check --repo owner/name")
+    if code in (500, 502, 503, 504):
+        return GitHubError(msg, code, "server", f"GitHub had a server error. Rerun in a few minutes; {RERUN}")
+    return GitHubError(msg, code, "http")
 
 
 class GitHub:
     """Minimal GitHub client. The token never leaves this object and never appears in messages."""
 
-    def __init__(self, token, api="https://api.github.com", pause=0.4, log=None):
+    def __init__(self, token, api=API, pause=0.4, log=None):
         self._token = token
         self.api = api.rstrip("/")
         self.pause = pause
         self._last = 0.0
         self.log = log
         self.scopes = None
+        self._me = None
 
     def _headers(self):
         return {
@@ -79,6 +151,7 @@ class GitHub:
 
     def _send(self, method, url, data=None, ok=(200, 201, 202, 204), retries=4):
         body = json.dumps(data).encode() if data is not None else None
+        path = url.replace(self.api, "")
         for attempt in range(retries + 1):
             wait = self.pause - (time.time() - self._last)
             if wait > 0 and method != "GET":
@@ -93,11 +166,6 @@ class GitHub:
             except urllib.error.HTTPError as e:
                 raw = e.read().decode("utf-8", "replace")
                 self._last = time.time()
-                retry_after = e.headers.get("Retry-After")
-                secondary = e.code in (403, 429) and ("secondary rate limit" in raw.lower() or retry_after)
-                if (e.code in (502, 503, 504) or secondary) and attempt < retries:
-                    time.sleep(float(retry_after) if retry_after else 5 * (attempt + 1))
-                    continue
                 if e.code in ok:
                     return e.code, None, e.headers
                 try:
@@ -108,19 +176,32 @@ class GitHub:
                 except ValueError:
                     msg = raw
                 msg = redact(" ".join(str(msg).split())[:500], self._token)
-                raise GitHubError(f"{method} {url.replace(self.api, '')} -> {e.code}: {msg}")
-            except urllib.error.URLError as e:
+                err = classify(e.code, msg, e.headers, method, path)
+                retry_after = e.headers.get("Retry-After")
+                if err.kind in ("secondary", "server") and attempt < retries:
+                    try:
+                        delay = float(retry_after) if retry_after else 5 * (attempt + 1)
+                    except ValueError:
+                        delay = 5 * (attempt + 1)
+                    time.sleep(min(delay, 120))
+                    continue
+                raise err
+            except (urllib.error.URLError, socket.timeout, TimeoutError, ConnectionError, http.client.HTTPException) as e:
+                reason = getattr(e, "reason", None) or e
+                if isinstance(reason, (socket.timeout, TimeoutError)) or "timed out" in str(reason):
+                    reason = "no answer within 60 seconds"
                 if attempt < retries:
                     time.sleep(3 * (attempt + 1))
                     continue
-                raise GitHubError(f"{method} {url.replace(self.api, '')} failed: {redact(e.reason, self._token)}")
+                raise GitHubError(f"{method} {path} failed: {redact(reason, self._token)}", None, "network",
+                                  f"check the network connection, then rerun; {RERUN}")
 
     def rest(self, method, path, data=None, ok=(200, 201, 202, 204)):
         status, js, _ = self._send(method, self.api + path, data, ok)
         return js
 
     def rest_status(self, method, path, data=None):
-        """Return (status, json) and treat 404 as a normal answer."""
+        """Return (status, json) and treat 404, 409 and 422 as normal answers."""
         status, js, _ = self._send(method, self.api + path, data, ok=(200, 201, 202, 204, 404, 409, 422))
         return status, js
 
@@ -144,6 +225,8 @@ class GitHub:
         return js["data"]
 
     def whoami(self):
-        status, js, headers = self._send("GET", self.api + "/user")
-        self.scopes = headers.get("X-OAuth-Scopes", "")
-        return js
+        if self._me is None:
+            status, js, headers = self._send("GET", self.api + "/user")
+            self.scopes = headers.get("X-OAuth-Scopes", "")
+            self._me = js
+        return self._me

@@ -288,6 +288,13 @@ class Sync:
 
 
 def run(argv=None):
+    try:
+        return _run(argv)
+    except G.GitHubError as e:
+        return G.report(e)
+
+
+def _run(argv=None):
     ap = argparse.ArgumentParser(
         description="Create labels, sub-epics, work item issues, links and the Epic roll-up comment from plan.yaml. Dry run unless --apply.",
         epilog="The token is read from --token-file, CARRYDOWN_GITHUB_TOKEN or ~/.config/carrydown/github_token. It is never printed.",
@@ -334,10 +341,13 @@ def run(argv=None):
     plan["project"]["repo"] = f"{owner}/{repo}"
     proj = plan["project"]
     gh = None
+    unchecked = "--offline"
     if not a.offline:
         token = G.read_token(a.token_file, required=a.apply or a.verify)
         if token:
             gh = G.GitHub(token)
+        else:
+            unchecked = "no token"
     L.say("")
     L.say(f"carrydown github_sync  {'APPLY' if a.apply else 'VERIFY (read only)' if a.verify else 'DRY RUN (nothing will be written)'}")
     plan_shown = plan_path.relative_to(root) if root in plan_path.parents else plan_path.name
@@ -347,7 +357,9 @@ def run(argv=None):
     for line in constraints_lines(plan):
         L.say("  " + line)
     if gh is None:
-        L.say("no token available or --offline: showing the plan only, nothing is read from GitHub")
+        L.say(f"not checked against GitHub ({unchecked}): showing the plan only, nothing is read from GitHub")
+        if unchecked == "no token":
+            L.say(f"To compare with what is on GitHub, set up a token: python3 {G.TOKEN_SCRIPT}")
     s = Sync(plan, root, gh, owner, repo, a.apply)
     if gh:
         status, js = gh.rest_status("GET", s.base)
@@ -356,6 +368,7 @@ def run(argv=None):
             if a.apply or a.verify:
                 return 1
             gh = s.gh = None
+            unchecked = "repository not reachable"
         elif not a.apply:
             L.say(f"repository found (private: {js.get('private')}). Reading existing labels and issues.")
     if a.verify:
@@ -396,7 +409,10 @@ def run(argv=None):
         has_epic = bool(epic) or a.create_epic
         L.say("\nSummary")
         L.say(f"{1 if has_epic else 0} Epic, {len(plan['milestones'])} sub-epics, {len(plan['items'])} work item issues")
-        L.say(f"  to create now: {n_epic} Epic, {n_sub} sub-epics, {n_it} work item issues. Already on GitHub: the rest.")
+        if gh:
+            L.say(f"  to create now: {n_epic} Epic, {n_sub} sub-epics, {n_it} work item issues. Already on GitHub: the rest.")
+        else:
+            L.say(f"  not checked against GitHub ({unchecked}), so this counts every issue as new: {n_epic} Epic, {n_sub} sub-epics, {n_it} work item issues.")
         L.say("Would then link each work item under its sub-epic" + (" and each sub-epic under the Epic" if epic or a.create_epic else "") + ",")
         L.say("rewrite dependency ids in the bodies to issue links, update the sub-epic work item lists,")
         L.say("and " + ("post" if not a.skip_comment and (epic or a.create_epic) else "skip") + " the Epic roll-up comment.")
@@ -460,7 +476,7 @@ def run(argv=None):
     L.say("  sub-epics: #" + ", #".join(sub_epic_numbers))
     L.say(f"  work items: {len(plan['items'])} ({s.numbers[L.tag(plan, plan['items'][0]['id'])]} to {max(s.numbers[L.tag(plan, i['id'])] for i in plan['items'])})")
     L.say(f"  new sub-issue links: {s.counts['links']}, bodies rewritten: {s.counts['bodies']}")
-    L.say("Next: python3 scripts/github_project.py to build the board. Then run this script with --verify.")
+    L.say(f"Next: python3 {Path(__file__).resolve().parent / 'github_project.py'} to build the board. Then run this script with --verify.")
     return 0
 
 

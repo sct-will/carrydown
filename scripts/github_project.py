@@ -143,6 +143,13 @@ def load_items(gh, pid):
 
 
 def run(argv=None):
+    try:
+        return _run(argv)
+    except G.GitHubError as e:
+        return G.report(e)
+
+
+def _run(argv=None):
     ap = argparse.ArgumentParser(
         description="Create or configure a GitHub Project (v2) from plan.yaml and fill it with the plan's issues. Dry run unless --apply.",
         epilog="The token needs the project scope (classic) or Projects read and write (fine-grained), plus repo access. It is never printed.",
@@ -191,7 +198,7 @@ def run(argv=None):
         return 0
     token = G.read_token(a.token_file, required=a.apply or a.verify)
     if not token:
-        L.say("no token available: showing the intended configuration only. Run scripts/github_token.py to set one up.")
+        L.say(f"not checked against GitHub (no token): showing the intended configuration only. To set one up, run: python3 {G.TOKEN_SCRIPT}")
         return 0
     gh = G.GitHub(token, pause=0.3)
     st, ujs = gh.rest_status("GET", f"/users/{owner}")
