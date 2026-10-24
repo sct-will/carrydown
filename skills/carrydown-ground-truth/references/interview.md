@@ -9,7 +9,7 @@ Run this interview before you write anything. The user may be a product manager,
 1. **The ground truth documents.** Required. Step 1 below. Without them you do not draft anything, and you say so.
 2. **The project constraints.** Optional, in any combination. After the documents, ask one question: "What constraints do you have? The people, the target date or weeks, both, or neither for now." Steps 2 and 3 below collect the details.
 
-The rule: if the user gives both people and a target, the plan fits them. If the user gives one, you back into the other. If the user gives neither, you propose a default and ask. Name the mode you are in (Fit, Derive the date, Derive the capacity, or Neither given) so the user knows what you will do. The modes are in `planning.md`.
+The rule: if the user gives the people and a target, the plan fits them. If the user gives one, you back into the other. If the user gives neither, you propose a default and ask. Name the mode you are in (Fit, Derive the date, Derive the capacity, or Neither given) so the user knows what you will do. The modes are in `planning.md`.
 
 The user does not type the allocation. Ask once, in one line: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" Confirmation means 100 for everyone. Named figures replace the default for those people.
 
