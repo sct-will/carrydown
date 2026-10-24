@@ -150,10 +150,10 @@ def error_paths(tmp, plan_text):
          contains=["Placeholders still to fill in plan.yaml:", "project.repo is still your-org/your-repo", "project.dev_skill is acme-pay-phase-2-core-dev"],
          files={proj / "docs/spec/plan.yaml": ['name: "Acme \\"Pay\\": phase 2 #core"', "slug: acme-pay-phase-2-core", "dev_skill_path: docs/dev/skills/acme-pay-phase-2-core-dev"]})
     step("the plan written by --init reads back", [PY, "scripts/check_specs.py", "--root", str(proj), "--report"], contains=['Plan: Acme "Pay": phase 2 #core'])
-    step("the dry run counts the stubs --stubs would add", scaffold + ["--allow-no-git"], contains=["1 specification stub(s) do not exist yet. Add --stubs to include them."])
+    step("the dry run counts the stubs --stubs would add", scaffold + ["--allow-no-git"], contains=["2 specification stub(s) do not exist yet. Add --stubs to include them."])
     step("scaffold writes stubs", scaffold + ["--allow-no-git", "--apply", "--stubs"], contains=["file(s) written"])
     plan_path = proj / "docs/spec/plan.yaml"
-    plan_path.write_text(plan_path.read_text(encoding="utf-8").replace("complete_by: 2027-01-08", "complete_by: 2027-01-09"), encoding="utf-8")
+    plan_path.write_text(plan_path.read_text(encoding="utf-8").replace("complete_by: 2027-01-06", "complete_by: 2027-01-09"), encoding="utf-8")
     step("plan findings come before unfinished stubs, one line per stub", [PY, "scripts/check_specs.py", "--root", str(proj)], expect=1,
          contains=["file(s) still hold template text (TODO)", "other finding(s) that usually go when the template text is replaced"],
          order=["plan.yaml:", "complete_by 2027-01-09 is a weekend", "unfinished template text (TODO)"])
