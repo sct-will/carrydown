@@ -510,7 +510,7 @@ def report(plan):
             gap = (tdate - fin).days
             print(f"  " + (f"It meets the target {fmt(tdate)} with {gap} day(s) to spare. The planned dates add the slack between items."
                            if gap >= 0 else f"It misses the target {fmt(tdate)} by {-gap} day(s): no order of the dates can meet it with these sizes."))
-        print("  Owners are not serialised in this pass. The load table above shows whether each person's work fits each work unit.")
+        print("  Owners are not serialized in this pass. The load table above shows whether each person's work fits each work unit.")
     pitems = plan["external"]["items"]
     if pitems:
         print("\nExternal items (outside the development plan; referenced only as external input)")

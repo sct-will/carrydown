@@ -25,7 +25,7 @@ Checker result on the sample (paste the summary line):
 ## Documentation
 
 - [ ] README, START-HERE, docs or skill references updated where the change affects them.
-- [ ] CHANGELOG.md has an entry under the next version, if behaviour changed.
+- [ ] CHANGELOG.md has an entry under the next version, if behavior changed.
 
 ## Style
 

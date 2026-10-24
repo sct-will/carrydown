@@ -4,7 +4,7 @@
 
 The GitHub scripts need a token that can write issues and projects. A token is a password.
 
-- Use a 7-day expiry. For a board owned by an organisation, create a fine-grained token limited to the one repository, with Issues (read and write), Metadata (read) and the organisation permission Projects (read and write). For a board on your own account, create a classic token with the scopes `repo` and `project`, because GitHub does not let fine-grained tokens use those boards. See [the token walkthrough](../skills/carrydown-plan-to-github/references/token-walkthrough.md) in the plan-to-github skill.
+- Use a 7-day expiry. For a board owned by an organization, create a fine-grained token limited to the one repository, with Issues (read and write), Metadata (read) and the organization permission Projects (read and write). For a board on your own account, create a classic token with the scopes `repo` and `project`, because GitHub does not let fine-grained tokens use those boards. See [the token walkthrough](../skills/carrydown-plan-to-github/references/token-walkthrough.md) in the plan-to-github skill.
 - Store it with `python3 scripts/github_token.py`. The script reads it from a hidden prompt, a plain text file you name (`--from-file`), or standard input. It writes `~/.config/carrydown/github_token` in a folder with mode 700 and a file with mode 600.
 - Before anything is sent, the script checks that the text looks like a GitHub personal access token (it starts with `ghp_` or `github_pat_`). If it does not, nothing is sent.
 - With `--from-file`, the script keeps your file and tells you to delete it. It deletes the file only when you pass `--delete-after`.
@@ -12,7 +12,7 @@ The GitHub scripts need a token that can write issues and projects. A token is a
 - The scripts never write the token into the project. The token lives outside the repository.
 - Do not paste the token into a chat with an agent. Do not commit it. If you did either, revoke it on [your GitHub tokens page](https://github.com/settings/tokens) and make a new one.
 - Revoke the token when the GitHub step is done.
-- If your organisation uses single sign-on, authorise the token for it: on [your GitHub tokens page](https://github.com/settings/tokens), click Configure SSO next to the token. The token check and the GitHub scripts say so in one line when GitHub asks for it.
+- If your organization uses single sign-on, authorize the token for it: on [your GitHub tokens page](https://github.com/settings/tokens), click Configure SSO next to the token. The token check and the GitHub scripts say so in one line when GitHub asks for it.
 
 ## Dry run first
 

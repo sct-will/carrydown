@@ -88,6 +88,7 @@ If you change something that talks to GitHub, say in the pull request how you te
 
 - Sentence-case headings.
 - Short sentences. One idea each.
+- US English spelling.
 - No em dashes or en dashes. Use a comma, a period or the word "to".
 - Spell out an acronym the first time it appears on a page.
 - No marketing words.
@@ -95,7 +96,7 @@ If you change something that talks to GitHub, say in the pull request how you te
 - No credit lines for tools, in files or in commit messages.
 - Dates are written YYYY-MM-DD.
 
-`lint_prose.py` enforces the dash, vendor name and credit rules. The rest is for review.
+`lint_prose.py` enforces the dash, vendor name, credit line and US spelling rules. The rest is for review.
 
 ## Commits
 
@@ -110,9 +111,9 @@ If you change something that talks to GitHub, say in the pull request how you te
 2. The maintainer reads the change, usually within a week. This is a one-person project, so replies may take time.
 3. You may be asked for changes. Push them as new commits on the same branch.
 4. When the change is approved the maintainer merges it. Squash merges are the default.
-5. Changes that alter a script's behaviour or a template get an entry in [CHANGELOG.md](CHANGELOG.md) under the next version.
+5. Changes that alter a script's behavior or a template get an entry in [CHANGELOG.md](CHANGELOG.md) under the next version.
 
-## Licence of contributions
+## License of contributions
 
 By contributing you agree that:
 

@@ -352,8 +352,21 @@ def names(tmp, plan_text):
     step("a person named Will Long does not flag the words will and long", chk, contains=["0 with findings"])
     spec = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
     spec.write_text(spec.read_text(encoding="utf-8") + "\nLong reviewed this with idris.\n", encoding="utf-8")
-    step("a capitalised name part and a handle are still flagged", chk, expect=1,
+    step("a capitalized name part and a handle are still flagged", chk, expect=1,
          contains=["person name or handle from the plan at line", "Long reviewed this with idris."])
+
+
+def lint_spelling(tmp):
+    """The prose lint flags British spellings and leaves real words that end in -ise alone. The words are built
+    from parts so that this file does not spell them."""
+    d = tmp / "lint"
+    d.mkdir()
+    bad, good = d / "british.md", d / "us.md"
+    bad.write_text("The organi" + "sation changed its behavio" + "ur. We author" + "ise it and label" + "led it.\n", encoding="utf-8")
+    good.write_text("The organization changed its behavior. We authorize it and labeled it. Advise, promise, exercise, enterprise, otherwise.\n", encoding="utf-8")
+    lint = [PY, "scripts/lint_prose.py"]
+    step("lint: British spellings are flagged", lint + [str(bad)], expect=1, contains=["British spelling, use US English (organi" + "sation)", "(behavio" + "ur)", "(author" + "ise)", "(label" + "led)"])
+    step("lint: US spellings and real -ise words are clean", lint + [str(good)], contains=["0 findings"])
 
 
 def main():
@@ -404,7 +417,7 @@ def main():
         step("a derived target that matches the critical path passes", chk + ["--plan", variant("derivedok", plan_text.replace("  date: 2027-04-23\n", "  date: 2027-04-21\n  derived: true\n"))], contains=["0 with findings", "target derived"])
         step("a stale derived target is reported", chk + ["--plan", variant("derivedstale", plan_text.replace("  date: 2027-04-23\n", "  date: 2027-04-23\n  derived: true\n"))], expect=1, contains=["derived target 2027-04-23 is out of date"])
         derived_people = plan_text.replace("Tamsin Hale", "Engineer 1").replace("Idris Okoye", "Engineer 2").replace("tamsin", "eng1").replace("idris", "eng2").replace("    allocation: 100\n", "    allocation: 100\n    derived: true\n").replace("    allocation: 60\n", "    allocation: 60\n    derived: true\n").replace("  date: 2027-04-23\n", "  date: 2027-04-21\n  derived: true\n")
-        step("derived people and a derived target are summarised", chk + ["--plan", variant("derivedboth", derived_people)], contains=["2 people derived, target derived"])
+        step("derived people and a derived target are summarized", chk + ["--plan", variant("derivedboth", derived_people)], contains=["2 people derived, target derived"])
         i0 = plan_text.index("people:\n"); i1 = plan_text.index("advisors:")
         nobody = plan_text[:i0] + "people: []\n\n" + plan_text[i1:]
         nobody = nobody.replace("    owner: tamsin\n", "").replace("    owner: idris\n", "")
@@ -472,6 +485,7 @@ def main():
         frontmatter(Path(tmp), plan_text)
         path_safety(Path(tmp), plan_text)
         names(Path(tmp), plan_text)
+        lint_spelling(Path(tmp))
     step("dry run without a token says nothing was checked against GitHub", [PY, "scripts/github_sync.py", "--root", SAMPLE],
          contains=["not checked against GitHub (no token)", f"python3 {ROOT / 'scripts' / 'github_token.py'}"], absent=["Already on GitHub: the rest"])
     step("board dry run without a token says nothing was checked against GitHub", [PY, "scripts/github_project.py", "--root", SAMPLE],
@@ -487,7 +501,7 @@ def main():
         ("sso", "mock: single sign-on gives a one-line message with the fix"),
         ("timeout", "mock: a timeout gives a one-line message"),
         ("public", "mock: --apply to a public repository needs --allow-public"),
-        ("ownership", "mock: only labelled issues and own comments count"),
+        ("ownership", "mock: only labeled issues and own comments count"),
         ("project", "mock: renamed issues are found by their marker"),
         ("tokenfile", "mock: the token file is kept and checked before sending"),
         ("tokenenv", "mock: the token check reads CARRYDOWN_GITHUB_TOKEN like the GitHub scripts"),

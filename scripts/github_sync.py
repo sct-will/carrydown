@@ -296,7 +296,7 @@ class Sync:
         return self.issues
 
     def find(self, key, title):
-        """The labelled issue for a plan key: by its marker first, then by exact title."""
+        """The labeled issue for a plan key: by its marker first, then by exact title."""
         issues = self.load_issues() if self.gh else {}
         return self.by_key.get(key) or issues.get(title)
 
@@ -399,7 +399,7 @@ def _run(argv=None):
     ap.add_argument("--update-bodies", action="store_true", help="also rewrite the bodies of issues that already exist")
     ap.add_argument("--skip-comment", action="store_true", help="do not post or update the Epic roll-up comment")
     ap.add_argument("--skip-check", action="store_true", help="do not run the specification checker first")
-    ap.add_argument("--issue-type", default="", help="GitHub issue type for work items, for example Task (organisations only)")
+    ap.add_argument("--issue-type", default="", help="GitHub issue type for work items, for example Task (organizations only)")
     ap.add_argument("--show-body", metavar="ID", help="print the issue body for one work item or sub-epic and exit (no network). Accepts WI-07, 7 or M2")
     a = ap.parse_args(argv)
 

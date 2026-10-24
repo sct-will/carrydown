@@ -54,11 +54,11 @@ git log origin/<branch>..HEAD --oneline -- docs/spec
 
 The first and the last command must print nothing. If the first prints a file, the plan or a specification is not committed. If the last prints a commit, it is not pushed. Ask the user to commit and push the plan and the specifications, and say they can tell you to do the commit and push for them. Then check again.
 
-Confirm with the user, in plain words: the repository (`owner/name`) and whether it is public, whether a parent Epic issue exists (its number) or may be created, the people's GitHub logins if they should be assigned, and which account owns the project board (the user's own GitHub account or the organisation). Put the repository, Epic number and project title in `plan.yaml` under `project`.
+Confirm with the user, in plain words: the repository (`owner/name`) and whether it is public, whether a parent Epic issue exists (its number) or may be created, the people's GitHub logins if they should be assigned, and which account owns the project board (the user's own GitHub account or the organization). Put the repository, Epic number and project title in `plan.yaml` under `project`.
 
 ### 2. Token
 
-Read `references/token-walkthrough.md` and relay it in your own words. For a board owned by an organisation: a fine-grained token for the one repository. Only for a board owned by a user account: a classic token with `repo` and `project`. Expiry 7 days, revoked when the plan is on GitHub. The user saves the token in a plain text file outside the project and tells you the path. You never open that file. Run:
+Read `references/token-walkthrough.md` and relay it in your own words. For a board owned by an organization: a fine-grained token for the one repository. Only for a board owned by a user account: a classic token with `repo` and `project`. Expiry 7 days, revoked when the plan is on GitHub. The user saves the token in a plain text file outside the project and tells you the path. You never open that file. Run:
 
 ```bash
 python3 <skill>/scripts/github_token.py --from-file <path> --repo owner/name
@@ -83,7 +83,7 @@ python3 <skill>/scripts/github_sync.py --root . --repo owner/name --create-epic 
 python3 <skill>/scripts/github_sync.py --root . --repo owner/name --create-epic --verify
 ```
 
-Add `--issue-type Task` if the organisation uses issue types, `--update-bodies` only if the user wants existing bodies rewritten. `references/verification.md` lists what `--verify` checks and the expected counts.
+Add `--issue-type Task` if the organization uses issue types, `--update-bodies` only if the user wants existing bodies rewritten. `references/verification.md` lists what `--verify` checks and the expected counts.
 
 ### 5. Project board
 

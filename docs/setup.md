@@ -11,7 +11,7 @@ A note on version numbers. The skills installer needs Node.js 22.20 or later. In
 1. **Open Terminal.** Press Command and Space, type `Terminal`, press Return. A window opens with a line that ends in `%` or `$`. You type commands there and press Return after each one.
 2. **Install Node.js.** Go to [the Node.js website](https://nodejs.org), download the LTS installer (a `.pkg` file), open it and click Continue until it finishes. If you already use Homebrew, run `brew install node` instead.
 3. **Check Node.js.** Close Terminal and open it again, then run `node --version` and `npm --version`. Each prints a version number such as `v24.11.1` and `11.6.2`. `command not found` means the installer did not finish or Terminal was not reopened.
-4. **Check Python.** Run `python3 --version`. If Python is missing, macOS opens a window asking to install the command line developer tools. Click Install, accept the licence, wait a few minutes, and run the command again. It prints `Python 3.` followed by 9 or higher.
+4. **Check Python.** Run `python3 --version`. If Python is missing, macOS opens a window asking to install the command line developer tools. Click Install, accept the license, wait a few minutes, and run the command again. It prints `Python 3.` followed by 9 or higher.
 5. **Check git.** Run `git --version`. The same developer tools window may appear. Once it prints `git version 2.` and a number, tell git who you are, once:
    `git config --global user.name "Your Name"` and `git config --global user.email "you@example.com"`.
 6. **Make your project folder.** Run `mkdir my-plan`, then `cd my-plan`, then `git init`. You will see `Initialized empty Git repository`. To use an existing folder, `cd` into it instead. If it is not yet a git repository, run `git init` there.
@@ -56,7 +56,7 @@ The skills are self-contained, so nothing else needs copying.
 
 ## When something does not work
 
-- **`npx: command not found` or `npx` is not recognised.** Node.js is not installed, or your terminal was opened before the install. Close the terminal, open a new one and try again. See the [FAQ](faq.md#npx-command-not-found).
+- **`npx: command not found` or `npx` is not recognized.** Node.js is not installed, or your terminal was opened before the install. Close the terminal, open a new one and try again. See the [FAQ](faq.md#npx-command-not-found).
 - **`python3: command not found` on Windows.** Use `python`. If neither works, rerun the Python installer, choose Modify, and tick Add Python to environment variables.
 - **The agent does not see the skills.** Restart it. Check that the skill folders are in the agent's skills folder from the table under [Install options](../README.md#install-options) in the README.
 - **`fatal: not a git repository`.** Run `git init` in your project folder, or `cd` into the folder you made.

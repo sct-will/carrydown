@@ -14,7 +14,7 @@
 
 ## Why this work item exists
 
-Staff approve money, so the finance policy team set two things in GOV-1, the rule on approval limits and separation of duties (section 4.1). Nobody may decide their own report, people in one route must differ, delegates have limits, and nothing above 25,000.00 is approved in the service. Routing (WI-03) puts the right people in the steps, but it does not stop a wrong person from calling the decision endpoint. The control must sit on the server for every decision (GOV-1.7), so it is a separate item with one test per rule. Without it the delegate work in WI-08 has no limit to honour, and goal G3 in section 1.2 is not met.
+Staff approve money, so the finance policy team set two things in GOV-1, the rule on approval limits and separation of duties (section 4.1). Nobody may decide their own report, people in one route must differ, delegates have limits, and nothing above 25,000.00 is approved in the service. Routing (WI-03) puts the right people in the steps, but it does not stop a wrong person from calling the decision endpoint. The control must sit on the server for every decision (GOV-1.7), so it is a separate item with one test per rule. Without it the delegate work in WI-08 has no limit to honor, and goal G3 in section 1.2 is not met.
 
 ## Outcome
 

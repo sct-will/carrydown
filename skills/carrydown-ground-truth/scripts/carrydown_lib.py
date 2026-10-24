@@ -524,8 +524,8 @@ def load_plan(path):
             it["unblocks"] = it["_derived_unblocks"]
     # banned names come only from the plan: the people and advisors in it, and banned.names.
     # Full names match in any case. A single part of a name ("Will", "Long") matches only as a
-    # capitalised word, and handles and ids only as written, so the words "will" and "long" in
-    # ordinary prose are not findings. A capitalised name part at the start of a sentence still is.
+    # capitalized word, and handles and ids only as written, so the words "will" and "long" in
+    # ordinary prose are not findings. A capitalized name part at the start of a sentence still is.
     names = [str(n) for n in b["names"] if n]
     exact = []
     for p in list(plan["people"]) + list(plan["advisors"]):
@@ -884,12 +884,12 @@ def header_markdown(plan, it):
 
 
 # ---------------------------------------------------------------------------
-# Planning rigour: the rules a plan is composed by, and the helpers that read them
+# Planning rigor: the rules a plan is composed by, and the helpers that read them
 # ---------------------------------------------------------------------------
 
 PLANNING_RULES = (
     "A milestone is the thinnest vertical slice that proves one user-visible capability end to end, named for what a user can do after it. "
-    "The first proves the whole path with the least behaviour, and the last proves the project can be released and run.",
+    "The first proves the whole path with the least behavior, and the last proves the project can be released and run.",
     "A milestone holds items from every track the capability crosses, and the tracks meet at a named joint check before the demonstration. "
     "A milestone that stays inside one track says why.",
     "The exit gate is one sentence the stakeholders can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show.",
@@ -1037,7 +1037,7 @@ def conventions_text(plan):
     c = plan["conventions"]
     lines = []
     if c.get("feature_flag"):
-        lines.append(f"- Feature flag. `{c['feature_flag']}` gates the new behaviour. Off by default until the release. With the flag off, nothing existing changes.")
+        lines.append(f"- Feature flag. `{c['feature_flag']}` gates the new behavior. Off by default until the release. With the flag off, nothing existing changes.")
     if c.get("test_command"):
         lines.append(f"- Tests. Run `{c['test_command']}`. New suites accompany each work item.")
     if c.get("lint_command"):
@@ -1045,7 +1045,7 @@ def conventions_text(plan):
     for extra in c.get("extra") or []:
         lines.append(f"- {extra}")
     lines.append("- Documentation style in this folder. Sentence-case headings, short sentences, no em dashes or en dashes, no names of people. Owners and dates live in the GitHub issues.")
-    lines.append("- Existing behaviour is not changed by a work item unless its file says so.")
+    lines.append("- Existing behavior is not changed by a work item unless its file says so.")
     return "\n".join(lines)
 
 
@@ -1235,7 +1235,7 @@ def earliest_finish(plan):
     Returns ({id: (earliest start, earliest finish)}, chain of ids to the latest finish), or
     ({}, []) when no item is sized. An item starts no earlier than the first work unit and its
     owner's start, and the working day after its last dependency finishes. Owners are not
-    serialised here: the load table covers that."""
+    serialized here: the load table covers that."""
     if not plan["items"] or not any(sized_days(it) for it in plan["items"]):
         return {}, []
     items = item_by_id(plan)

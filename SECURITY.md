@@ -52,4 +52,4 @@ Reports of these are welcome:
 
 ## Your part
 
-Create the token with only the permissions the carrydown skills need. For a board owned by an organisation, that is a fine-grained token for the one repository with Issues (read and write), Metadata (read) and Projects (read and write). For a board on your own account, it is a classic token with `repo` and `project`. Set a 7-day expiry. Revoke it when you finish. If you think a token leaked, revoke it in [your GitHub token settings](https://github.com/settings/tokens) and make a new one. More guidance is in [docs/security.md](docs/security.md).
+Create the token with only the permissions the carrydown skills need. For a board owned by an organization, that is a fine-grained token for the one repository with Issues (read and write), Metadata (read) and Projects (read and write). For a board on your own account, it is a classic token with `repo` and `project`. Set a 7-day expiry. Revoke it when you finish. If you think a token leaked, revoke it in [your GitHub token settings](https://github.com/settings/tokens) and make a new one. More guidance is in [docs/security.md](docs/security.md).

@@ -50,7 +50,7 @@ Fields used by this item. These are the targets and rules the checks must prove.
 
 Section 3.6. The service runs as one container behind the company gateway, in three environments: test, staging and production. Database migrations only move forward. The export job runs at 02:00 UTC and writes to the ledger drop folder. The whole feature sits behind the flag EXPENSE_APPROVALS_ENABLED (section 5.1). With the flag off the service starts, answers its health check and refuses every other request with the status 404.
 
-DS-1.1. All new behaviour sits behind EXPENSE_APPROVALS_ENABLED, off by default. With the flag off, nothing observable changes except the health check.
+DS-1.1. All new behavior sits behind EXPENSE_APPROVALS_ENABLED, off by default. With the flag off, nothing observable changes except the health check.
 
 Section 7.3, first paragraph. One file per night, named `expenses-YYYYMMDD.csv`, with a second file `expenses-YYYYMMDD.sha256` that holds the SHA-256 checksum of the first. One row per approved line item of every report that moved to Approved since the last export. After writing, the job moves those reports to Exported.
 

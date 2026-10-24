@@ -14,7 +14,7 @@
 
 ## Why this work item exists
 
-Finance staff re-key every line of every approved report into the ledger today (1.1). Goal G5 and the functional requirement FR-9 (1.2, 2.1) ask for a nightly file in the format of 7.3. The business analyst finding BA-3 (6.1) asks for one line per approved line item, with the cost centre, so nobody splits totals by hand. This item is separate because it is a scheduled job with its own file contract and its own failure behaviour (3.6), and because it moves reports to a final state with an audit event (3.4, 4.2). It waits on WI-07 so that the move to Exported is audited in the same transaction. Without it the gate of milestone 4, a pilot team's approved reports reach the ledger, cannot be shown, and WI-11 has no job to put in the runbook.
+Finance staff re-key every line of every approved report into the ledger today (1.1). Goal G5 and the functional requirement FR-9 (1.2, 2.1) ask for a nightly file in the format of 7.3. The business analyst finding BA-3 (6.1) asks for one line per approved line item, with the cost center, so nobody splits totals by hand. This item is separate because it is a scheduled job with its own file contract and its own failure behavior (3.6), and because it moves reports to a final state with an audit event (3.4, 4.2). It waits on WI-07 so that the move to Exported is audited in the same transaction. Without it the gate of milestone 4, a pilot team's approved reports reach the ledger, cannot be shown, and WI-11 has no job to put in the runbook.
 
 ## Outcome
 
@@ -32,7 +32,7 @@ Finance staff re-key every line of every approved report into the ledger today (
 - WI-01 creates the migrations for the six tables of 3.3 (report, line_item, receipt, approval_step, delegate, audit_event), `src/config/flags.js`, the contract test runner and the continuous integration workflow.
 - WI-03 creates the state machine of 3.4. Verify at implementation that Approved to Exported, caused by the export job, is in it, and use it instead of updating state directly.
 - WI-07 creates `src/audit/writer.js` and the migration that gives the application account insert and select rights only. The job writes its audit events through the writer and runs under that account.
-- This item has an external input, the pilot team, named by the stakeholders. The stakeholders also confirm their cost centres before work unit 4. The pilot readout on 2027-04-09 uses that team's approved reports. Build and test with made-up reports and cost centres. Hard code no team and no cost centre. If the team is not named when the item is due on 2027-04-06, say so on the issue.
+- This item has an external input, the pilot team, named by the stakeholders. The stakeholders also confirm their cost centers before work unit 4. The pilot readout on 2027-04-09 uses that team's approved reports. Build and test with made-up reports and cost centers. Hard code no team and no cost center. If the team is not named when the item is due on 2027-04-06, say so on the issue.
 - The service runs as one container (3.6). The name of the setting for the drop folder is not in the ground truth. Choose it and document it for WI-11.
 - Commands are `npm test`, `npm run test:contract` and `npm run lint`. The job sits behind `EXPENSE_APPROVALS_ENABLED`, off by default (DS-1, the delivery standard).
 
@@ -45,7 +45,7 @@ Fields used by this item, quoted from 7.3, 3.4, 3.6 and 4.2. One file per night,
 | report_id | UUID of the report |
 | line_item_id | UUID of the line item |
 | employee_id | Submitter |
-| cost_centre | Cost centre of the submitter at approval time |
+| cost_center | Cost center of the submitter at approval time |
 | spent_on | Date of the expense, YYYY-MM-DD |
 | category | Category code |
 | amount_cents | Amount in the line currency, integer |
@@ -67,7 +67,7 @@ Fields used by this item, quoted from 7.3, 3.4, 3.6 and 4.2. One file per night,
 
 ## Implementation guide
 
-1. Read the migrations from WI-01 for report, line_item and approval_step. Find where the cost centre and the category code live. If the cost centre is missing, settle it with the owner of WI-01 before coding (see Watch out for).
+1. Read the migrations from WI-01 for report, line_item and approval_step. Find where the cost center and the category code live. If the cost center is missing, settle it with the owner of WI-01 before coding (see Watch out for).
 2. Put the file format in one place, the ten column names in order and the row builder. Add `tests/contract/ledger-format.test.js`, which checks the header and order against the table above. Run `npm run test:contract`.
 3. Select the reports in Approved with their line items in a fixed order (`approved_at`, `report_id`, `line_item_id`) so a repeat run gives the same bytes. Check with `tests/export-ledger-job.test.js` on fixtures, including a mixed currency report and reports in every other state, which must not appear.
 4. Write the CSV and the `.sha256` file to a staging place outside the drop folder, on the same file system. Check that the checksum file equals a fresh SHA-256 of the CSV.
@@ -82,7 +82,7 @@ Fields used by this item, quoted from 7.3, 3.4, 3.6 and 4.2. One file per night,
 - [ ] The files are named `expenses-YYYYMMDD.csv` and `expenses-YYYYMMDD.sha256`, and the second holds the SHA-256 checksum of the first (`tests/export-ledger-job.test.js`).
 - [ ] The header and the order are the ten columns of 7.3 and nothing else (`tests/contract/ledger-format.test.js`).
 - [ ] The file has one row per line item of every Approved report and no row for a report in any other state (`tests/export-ledger-job.test.js`).
-- [ ] Amounts are the stored integers, and `cost_centre` is the value at approval time, not at export time (`tests/export-ledger-job.test.js`).
+- [ ] Amounts are the stored integers, and `cost_center` is the value at approval time, not at export time (`tests/export-ledger-job.test.js`).
 - [ ] Each exported report is Exported with one audit_event from Approved to Exported, and a failing audit write leaves it Approved with no file published (GOV-2.1, `tests/export-ledger-job.test.js`).
 - [ ] After a failure at any step, a rerun leaves one file for the night with no duplicate and no lost row (`tests/export-ledger-job.test.js`).
 - [ ] The file holds no merchant, note, name, email address or receipt content, and captured log lines hold no amount (GOV-2.3, GOV-2.6, `tests/export-ledger-job.test.js`).
@@ -101,7 +101,7 @@ Attach to the closing comment on the issue, in the template from the folder READ
 - Unit tests, `npm test`: `tests/export-ledger-job.test.js`. Contract tests, `npm run test:contract`: `tests/contract/ledger-format.test.js`. The `npm run lint` result.
 - The CSV header, the row count and the checksum check output, and a before and after table of report ids and states.
 - The audit_event rows for the exported reports, identifiers only, and the failure injection test output.
-- Redactions. Attach made-up rows only. For real pilot data attach the header, the row count and the checksum, never employee ids, cost centres or amounts.
+- Redactions. Attach made-up rows only. For real pilot data attach the header, the row count and the checksum, never employee ids, cost centers or amounts.
 
 The coding agent produces these from the commands above. The engineer checks them before posting.
 
@@ -118,12 +118,12 @@ The counterpart item on the Experience track is WI-11 Release readiness and runb
 - The retention job and any deletion (GOV-2.4, GOV-2.5) belong to WI-07. The export deletes nothing.
 - Finance sign-off on the export format and the retention period belongs to the stakeholders. A format change after sign-off is new work (R3).
 - Paying the employee and loading the file into the ledger belong to the finance system (1.4).
-- Naming the pilot team and confirming its cost centres belong to the stakeholders.
+- Naming the pilot team and confirming its cost centers belong to the stakeholders.
 - The runbook, alerting on a failed night and restore from backup belong to WI-11.
 
 ## Watch out for
 
-- `cost_centre` is "of the submitter at approval time", but no table of 3.3 holds it. Do not read it live at export time, since it may have changed. If a column is needed, add it by a forward migration with its test (DS-1.5) and record it under Decisions recorded.
+- `cost_center` is "of the submitter at approval time", but no table of 3.3 holds it. Do not read it live at export time, since it may have changed. If a column is needed, add it by a forward migration with its test (DS-1.5) and record it under Decisions recorded.
 - 7.3 does not give a header row, a delimiter, quoting, a timestamp format, the layout of the `.sha256` file or the rule for a night with no reports. Choose a header row, commas, ISO 8601 UTC timestamps, a lowercase hexadecimal digest, and a file even on an empty night. Record each choice and confirm it with the stakeholders before the readout. Keep the format in one module (R3).
 - Never append to a published file and never export an Exported report. Once a file is in the drop folder the ledger may already have read it, so a duplicate row cannot be taken back.
 - Line amounts are stored integers, and the report total is rounded after summing (6.2 item 2). The rows of a report may differ from its `base_total_cents` by a cent. Export the stored values, never recompute them, and tell the stakeholders.

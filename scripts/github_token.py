@@ -6,17 +6,17 @@ walks you through creating one, stores it in a file only you can read, and check
 that it has what the scripts need. It never prints the token.
 
 Steps it prints and follows
-  1. Create a token with a 7-day expiry. For a board owned by an organisation, use a
+  1. Create a token with a 7-day expiry. For a board owned by an organization, use a
      fine-grained token limited to the one repository, with Issues (read and write),
-     Metadata (read) and the organisation permission Projects (read and write). GitHub
+     Metadata (read) and the organization permission Projects (read and write). GitHub
      does not let fine-grained tokens use projects that belong to a user account, so
      for a board owned by your own account use a classic token with the scopes "repo"
      and "project".
   2. Paste it when asked. The input is hidden. It is written to
      ~/.config/carrydown/github_token with mode 600 in a folder with mode 700.
   3. The script asks GitHub who the token belongs to and which scopes it has.
-  4. If your organisation enforces single sign-on (SSO), the token must be
-     authorised for it. The script tells you how if GitHub says so.
+  4. If your organization enforces single sign-on (SSO), the token must be
+     authorized for it. The script tells you how if GitHub says so.
 
 Usage
   python3 scripts/github_token.py                    walk through it
@@ -51,16 +51,16 @@ FINE_URL = "https://github.com/settings/personal-access-tokens/new"
 SSO_URL = "https://github.com/settings/tokens"
 TOKEN_RE = re.compile(r"^(ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,255})$")
 NOT_A_TOKEN = "that is not a GitHub personal access token (it starts with ghp_ or github_pat_). Nothing was sent."
-NEW_TOKEN = (f"make a new token (fine-grained for an organisation board: {FINE_URL}; "
+NEW_TOKEN = (f"make a new token (fine-grained for an organization board: {FINE_URL}; "
              f"classic for a board on your own account: {CLASSIC_URL}) and store it again")
 
 
 def walkthrough(say):
     """The token steps, fine-grained first. Printed before the prompt and by --dry-run."""
     say("Create a token first, with a 7-day expiry. Pick the kind by who owns the board:")
-    say(f"  Board owned by an organisation: a fine-grained token. {FINE_URL}")
-    say("    Resource owner: the organisation. Expiration: 7 days. Repository access: only the one repository.")
-    say("    Repository permissions: Issues read and write, Metadata read. Organisation permission: Projects read and write.")
+    say(f"  Board owned by an organization: a fine-grained token. {FINE_URL}")
+    say("    Resource owner: the organization. Expiration: 7 days. Repository access: only the one repository.")
+    say("    Repository permissions: Issues read and write, Metadata read. Organization permission: Projects read and write.")
     say(f"  Board owned by your own account: a classic token. This link ticks repo and project and names it: {CLASSIC_URL}")
     say("    Set Expiration to 7 days. GitHub does not let fine-grained tokens use boards on a personal account.")
     say("  Copy the token. GitHub shows it once. Revoke it when the GitHub step is done.")
@@ -110,7 +110,7 @@ def check(token, repo=None):
             L.say("  note: this token can delete repositories. The carrydown scripts never use that power. Consider a token without it.")
     else:
         L.say("This looks like a fine-grained token (GitHub shows no scope list for those).")
-        L.say("It needs Issues (read and write) and Metadata (read) on the repository, and Projects (read and write) for an organisation-owned project.")
+        L.say("It needs Issues (read and write) and Metadata (read) on the repository, and Projects (read and write) for an organization-owned project.")
     if repo:
         org = repo.split("/")[0]
         sso = False
@@ -126,16 +126,16 @@ def check(token, repo=None):
             L.say(f"Repository {repo}: found (private: {js.get('private')}), push access: {perms.get('push')}.")
             if not perms.get("push", True):
                 ok = False
-                L.say(f"  Fix: ask an organisation admin of {org} for permission to create issues and Projects in it. The token cannot push to this repository.")
+                L.say(f"  Fix: ask an organization admin of {org} for permission to create issues and Projects in it. The token cannot push to this repository.")
         elif sso:
             ok = False
-            L.say(f"Repository {repo}: not reachable with this token (HTTP {status}): {org} uses single sign-on and the token is not authorised for it.")
+            L.say(f"Repository {repo}: not reachable with this token (HTTP {status}): {org} uses single sign-on and the token is not authorized for it.")
             L.say(f"  Fix: open {SSO_URL}, click Configure SSO next to the token, then click Authorize next to {org}. Then run this check again.")
         else:
             ok = False
             L.say(f"Repository {repo}: not reachable with this token (HTTP {status}). There are two usual causes.")
             L.say(f"  Fix 1, single sign-on: open {SSO_URL}, click Configure SSO next to the token, then click Authorize next to {org}.")
-            L.say(f"  Fix 2, missing permission: check the repository name, or ask an organisation admin of {org} for permission to create issues and Projects.")
+            L.say(f"  Fix 2, missing permission: check the repository name, or ask an organization admin of {org} for permission to create issues and Projects.")
             L.say("  Then run this check again.")
     L.say("Token check " + ("passed." if ok else "found problems."))
     return 0 if ok else 1
@@ -177,7 +177,7 @@ def _main(argv=None):
         L.say("2. Paste it when the script asks. The input is hidden.")
         L.say(f"3. The script writes it to {short(dest)} with mode 600.")
         L.say("4. The script asks GitHub who you are and which scopes the token has.")
-        L.say(f"5. If your organisation uses single sign-on, open {SSO_URL}, choose Configure SSO next to the token and authorise the organisation.")
+        L.say(f"5. If your organization uses single sign-on, open {SSO_URL}, choose Configure SSO next to the token and authorize the organization.")
         L.say("Nothing was asked, stored or sent.")
         return 0
 

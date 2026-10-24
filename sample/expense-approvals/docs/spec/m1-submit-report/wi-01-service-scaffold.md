@@ -32,7 +32,7 @@ Staff submit reports by email and spreadsheet, and nothing in the company can sh
 - The sample repository is new and empty. This item creates every file named in this specification. Nothing exists to read first.
 - This item creates the layout the other items fill in. Top-level folders are `contracts/`, `src/`, `migrations/`, `web/src/` and `tests/`. Do not add others.
 - The modules `src/routing/engine.js`, `src/rules/index.js`, `src/audit/writer.js`, `src/export/ledgerJob.js` and `src/notify/worker.js` are not created here. WI-03, WI-06, WI-07, WI-09 and WI-08 create them with their logic.
-- The stub is the first version of the API handlers. It keeps data in memory and has no database logic. WI-03 and later items replace the stub answers with real behaviour, behind the same contract.
+- The stub is the first version of the API handlers. It keeps data in memory and has no database logic. WI-03 and later items replace the stub answers with real behavior, behind the same contract.
 - The database is PostgreSQL (decision D1, section 8.2). API means application programming interface. UUID means universally unique identifier. Identifiers are UUIDs and timestamps are UTC (section 3.3).
 - The flag is one process-wide setting in version 1 (decision D4). Read it once at start-up.
 - The ground truth gives no path for the health check, no shape for "a page" and no rule for a missing `X-Employee-Id` header. See Watch out for.

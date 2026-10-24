@@ -40,7 +40,7 @@ The Ground truth row in a work item's header lists the sections the item is buil
 
 ## Schedule
 
-Work is organised in work units of variable length, each with an exit gate. Work items carry a completion date and name the checkpoint and the demonstration they feed.
+Work is organized in work units of variable length, each with an exit gate. Work items carry a completion date and name the checkpoint and the demonstration they feed.
 
 {{schedule_table}}
 

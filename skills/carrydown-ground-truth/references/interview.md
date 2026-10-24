@@ -17,7 +17,7 @@ Never ask the user to paste a secret. A GitHub token is handled later by `carryd
 
 ## Step 1 of 6. The ground truth
 
-Begin your reply with `carrydown: interview, step 1 of 6`. Before the questions below, ask this: "Can you create a Project in your GitHub organisation? If you are not sure, we carry on. It only matters at the GitHub step, and an organisation admin can grant it later."
+Begin your reply with `carrydown: interview, step 1 of 6`. Before the questions below, ask this: "Can you create a Project in your GitHub organization? If you are not sure, we carry on. It only matters at the GitHub step, and an organization admin can grant it later."
 
 Ask.
 
@@ -60,7 +60,7 @@ Begin with `carrydown: interview, step 4 of 6`.
 
 Ask. Do not touch GitHub in this skill.
 
-1. Which organisation or user, and which repository, will hold the issues?
+1. Which organization or user, and which repository, will hold the issues?
 2. Does a parent Epic issue already exist? If yes, its number. If no, may the plan script create one later?
 3. Which labels already exist that the plan should reuse or avoid?
 4. Do the people have GitHub logins for assignment? If yes, collect them.
@@ -92,7 +92,7 @@ Begin with `carrydown: interview, step 6 of 6`.
 Ask.
 
 1. What command runs the tests? Lint? Format?
-2. Is new behaviour hidden behind a feature flag? What is its name and its default?
+2. Is new behavior hidden behind a feature flag? What is its name and its default?
 3. Which branch do changes merge to? Is there a pull request size or review rule?
 4. Are there rules for secrets, logs or personal data that every change must obey?
 5. Where does the existing code live that the work touches, if any?

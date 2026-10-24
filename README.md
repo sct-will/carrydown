@@ -4,7 +4,7 @@
 
 Give your coding agent the architecture document, or other context, and optionally the project constraints: the number of engineers who will work on the project and the target duration. It drafts the plan, writes one specification per work item, carries both into GitHub as an epic, a sub-epic per milestone, issues and a project board, and generates an agent skill every engineer's agent uses to read the right sections before it writes code. Two skills you install, one skill is generated for your engineers.
 
-[![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![Licence](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
+[![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
 
 ## Getting started
 
@@ -22,7 +22,7 @@ To look before you install, open [the sample board](https://github.com/users/sct
 
 ## How it works
 
-![How carrydown works. Two lanes. Plan owner, an engineering or product manager: step 1 Generate, the plan owner runs carrydown-ground-truth in their agent, in: architecture document plus people and dates, out: plan.yaml and one spec per work item; step 2 Review, the plan and specs are human reviewed, with the agent making the edits; step 3 Carry down to GitHub, the plan owner runs carrydown-plan-to-github in their agent, out: epic, a sub-epic per milestone, issues with specs, board, engineers' skill, with the note dry run first, nothing is written until you say yes. One install line goes down to the Engineers lane: step 4 Work the issues, the engineer says "Work on WI-03" for work item WI-03, the agent invokes the skill, reads the spec and the cited sections, then plans the code. The ground truth document is the only amber element. A thin amber thread, labelled ground truth, cited by section, runs from it through steps 1 and 3 into step 4.](docs/images/handoff.png)
+![How carrydown works. Two lanes. Plan owner, an engineering or product manager: step 1 Generate, the plan owner runs carrydown-ground-truth in their agent, in: architecture document plus people and dates, out: plan.yaml and one spec per work item; step 2 Review, the plan and specs are human reviewed, with the agent making the edits; step 3 Carry down to GitHub, the plan owner runs carrydown-plan-to-github in their agent, out: epic, a sub-epic per milestone, issues with specs, board, engineers' skill, with the note dry run first, nothing is written until you say yes. One install line goes down to the Engineers lane: step 4 Work the issues, the engineer says "Work on WI-03" for work item WI-03, the agent invokes the skill, reads the spec and the cited sections, then plans the code. The ground truth document is the only amber element. A thin amber thread, labeled ground truth, cited by section, runs from it through steps 1 and 3 into step 4.](docs/images/handoff.png)
 
 1. **Generate.** You have the ground truth, usually an architecture document. Your agent interviews you about people, time and dates, then writes the plan and one specification per work item. Skill: [carrydown-ground-truth](skills/carrydown-ground-truth/SKILL.md).
 2. **Review.** You read the plan, `docs/spec/plan.yaml`, and the specifications in the folders under `docs/spec/`, and edit them with the agent until they are right. No separate reviewer.
@@ -102,7 +102,7 @@ It is not waterfall: the plan is files in Git, the work units stretch to fit the
 
 ## Why "carrydown"
 
-Systems engineers call it flow-down: a requirement at the top of a system traced to every part below that must honour it. [The method](docs/method.md) carries it to the keyboard.
+Systems engineers call it flow-down: a requirement at the top of a system traced to every part below that must honor it. [The method](docs/method.md) carries it to the keyboard.
 
 ## Prerequisites
 
@@ -140,7 +140,7 @@ The installer prints third-party security scans; [docs/security.md](docs/securit
 
 </details>
 
-## Contributing and licence
+## Contributing and license
 
 [CONTRIBUTING.md](CONTRIBUTING.md) shows how to run the scripts and checks yourself, under the [code of conduct](CODE_OF_CONDUCT.md); [SECURITY.md](SECURITY.md) covers private reports. Code is under [Apache 2.0](LICENSE) and the words and images under [CC BY 4.0](LICENSE-CONTENT.md), so reuse the diagrams with attribution to Will Scott. More: [plan owner guide](docs/plan-owner-guide.md), [FAQ](docs/faq.md), [method](docs/method.md), [changelog](CHANGELOG.md).
 

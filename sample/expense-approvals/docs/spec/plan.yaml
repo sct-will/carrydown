@@ -71,7 +71,7 @@ milestones:
     end: 2027-02-12
     demo: 2027-02-12
     gate: "A staff member creates a report with a receipt in the web client and submits it through the service."
-    rationale: "The service scaffold with the API contract and the report form are the thinnest slice that proves the whole path: a report goes from the web client through the API to the database. The contract comes first so the form starts from a frozen shape at the Contract freeze checkpoint. Routing, rules and export stay out, so the path is proven with the least behaviour."
+    rationale: "The service scaffold with the API contract and the report form are the thinnest slice that proves the whole path: a report goes from the web client through the API to the database. The contract comes first so the form starts from a frozen shape at the Contract freeze checkpoint. Routing, rules and export stay out, so the path is proven with the least behavior."
     joint_demonstration: "The Experience engineer creates a report with one receipt in the web client and submits it. The Workflow engineer shows the Submitted state and the stored receipt in the database from the same run."
   - number: 2
     name: "Route to approvers"
@@ -262,7 +262,7 @@ external:
   items:
     - id: 5
       label: "Pilot team recruitment"
-      note: "The stakeholders name the pilot team and confirm their cost centres before work unit 4."
+      note: "The stakeholders name the pilot team and confirm their cost centers before work unit 4."
     - id: 10
       label: "Finance sign-off"
       note: "Finance operations approves the export format and the retention period before the release."

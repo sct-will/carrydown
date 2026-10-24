@@ -30,13 +30,13 @@ The shortest route is the engineers' skill. It makes a coding agent read the rig
 
 ## Project conventions
 
-- Feature flag. `EXPENSE_APPROVALS_ENABLED` gates the new behaviour. Off by default until the release. With the flag off, nothing existing changes.
+- Feature flag. `EXPENSE_APPROVALS_ENABLED` gates the new behavior. Off by default until the release. With the flag off, nothing existing changes.
 - Tests. Run `npm test`. New suites accompany each work item.
 - Lint and format. `npm run lint` passes on every pull request.
 - Contract tests pass with `npm run test:contract`, and a change to `contracts/openapi.yaml` is its own pull request.
 - Secrets and personal data never appear in code, tests, logs or fixtures.
 - Documentation style in this folder. Sentence-case headings, short sentences, no em dashes or en dashes, no names of people. Owners and dates live in the GitHub issues.
-- Existing behaviour is not changed by a work item unless its file says so.
+- Existing behavior is not changed by a work item unless its file says so.
 
 Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a dated integration check between the tracks. Its joint check is the one-sentence test the tracks run together there to prove the parts they built fit. A demonstration is the milestone roll-up that the engineers give to the stakeholders. An external input is something an item needs from an external item, work outside the plan that is owned outside the team.
 
@@ -48,7 +48,7 @@ The Ground truth row in a work item's header lists the sections the item is buil
 
 The plan follows ten rules. The reasons below are written in `plan.yaml`, so anyone can argue with each one against the dates in the schedule.
 
-1. A milestone is the thinnest vertical slice that proves one user-visible capability end to end, named for what a user can do after it. The first proves the whole path with the least behaviour, and the last proves the project can be released and run.
+1. A milestone is the thinnest vertical slice that proves one user-visible capability end to end, named for what a user can do after it. The first proves the whole path with the least behavior, and the last proves the project can be released and run.
 2. A milestone holds items from every track the capability crosses, and the tracks meet at a named joint check before the demonstration. A milestone that stays inside one track says why.
 3. The exit gate is one sentence the stakeholders can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show.
 4. Inside a milestone the shared contract comes first, so both tracks can start without waiting. The first week leaves nobody idle.
@@ -70,7 +70,7 @@ The plan follows ten rules. The reasons below are written in `plan.yaml`, so any
 
 | Milestone | Tracks | Why these items | Joint demonstration |
 | --- | --- | --- | --- |
-| 1, Submit an expense report | Workflow and Experience | The service scaffold with the API contract and the report form are the thinnest slice that proves the whole path: a report goes from the web client through the API to the database. The contract comes first so the form starts from a frozen shape at the Contract freeze checkpoint. Routing, rules and export stay out, so the path is proven with the least behaviour. | The Experience engineer creates a report with one receipt in the web client and submits it. The Workflow engineer shows the Submitted state and the stored receipt in the database from the same run. |
+| 1, Submit an expense report | Workflow and Experience | The service scaffold with the API contract and the report form are the thinnest slice that proves the whole path: a report goes from the web client through the API to the database. The contract comes first so the form starts from a frozen shape at the Contract freeze checkpoint. Routing, rules and export stay out, so the path is proven with the least behavior. | The Experience engineer creates a report with one receipt in the web client and submits it. The Workflow engineer shows the Submitted state and the stored receipt in the database from the same run. |
 | 2, Route to approvers | Workflow and Experience | Routing and the inbox are the two halves of one capability: a submitted report reaches its approvers and they decide it. Neither can be shown alone, because the steps mean nothing without an inbox and the inbox is empty without steps. The Routing meets inbox checkpoint on 2027-02-26 joins them a week before the demonstration. | The Workflow engineer submits reports in each band of section 3.5 and shows the steps built for them. The Experience engineer approves one report as two approvers in turn from the inbox, and it reaches Approved only after the last step. |
 | 3, Enforce policy | Workflow and Experience | Policy can be seen only when a decision is refused, recorded and told to the submitter, so the rules, the audit log and the notifications form one milestone. The rules come first because the delegates and the error display depend on GOV-1. The audit log shares the transaction of each state change (D1, GOV-2.1), so it stays with the rules in the service. | The Experience engineer makes a decision that GOV-1 refuses and shows the rule number in the web client. The Workflow engineer shows the audit event of an allowed decision, and the submitter's email from the same run is opened. |
 | 4, Pilot with one team | Workflow only | The pilot proves the capability finance asked for: approved reports reach the ledger with no manual change (BA-3). The export job is the only new build, and the pilot team's real reports are the test of everything shown so far. Why one track: The pilot adds no screen and no notification. The Experience work it needs is support for the pilot team on the existing web client, which is not a deliverable item. | The Experience engineer walks one pilot report from submit to Approved in the web client. The Workflow engineer runs the nightly job on it and opens the file in the finance tool with no manual change. |
@@ -78,7 +78,7 @@ The plan follows ten rules. The reasons below are written in `plan.yaml`, so any
 
 ## Schedule
 
-Work is organised in work units of variable length, each with an exit gate. Work items carry a completion date and name the checkpoint and the demonstration they feed.
+Work is organized in work units of variable length, each with an exit gate. Work items carry a completion date and name the checkpoint and the demonstration they feed.
 
 | Work unit | Dates | Gate |
 | --- | --- | --- |
@@ -148,7 +148,7 @@ Some items depend on inputs from outside the team, such as pilot teams, approval
 
 | Id | External item | Note |
 | --- | --- | --- |
-| WI-05 | Pilot team recruitment | The stakeholders name the pilot team and confirm their cost centres before work unit 4. |
+| WI-05 | Pilot team recruitment | The stakeholders name the pilot team and confirm their cost centers before work unit 4. |
 | WI-10 | Finance sign-off | Finance operations approves the export format and the retention period before the release. |
 
 ## Index

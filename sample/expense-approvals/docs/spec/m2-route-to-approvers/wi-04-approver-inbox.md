@@ -31,7 +31,7 @@ Approvers cannot decide a report that they cannot see. A report waits 11 days on
 - WI-03 creates `src/routing/engine.js`, the approval_step rows and the state machine of 3.4, so a submitted report has steps and a first approver. The Workflow track owns the handlers `src/api/inbox.js` and `src/api/decisions.js`. Until they are merged, work against the stub.
 - WI-06 creates `src/rules/index.js`, due 2027-03-08, after this item's target of 2027-03-03. Until then the service may not refuse a decision, so test the E_FORBIDDEN display with a fixture that follows the envelope.
 - The caller's identity comes from the gateway header `X-Employee-Id`. The client never decides who the caller is. How the stub takes an identity is in the WI-01 output (verify at implementation).
-- Verify at implementation the shape of the page that `GET /inbox` returns. 7.1 says "200 with a page" and lists no fields. The row needs the submitter, the base total and the submitted date. If the contract lacks one, change it in its own pull request (DS-1.4, the contracts first rule of the delivery standard DS-1). Commands are `npm test`, `npm run test:contract` and `npm run lint`, and new behaviour sits behind `EXPENSE_APPROVALS_ENABLED`, off by default.
+- Verify at implementation the shape of the page that `GET /inbox` returns. 7.1 says "200 with a page" and lists no fields. The row needs the submitter, the base total and the submitted date. If the contract lacks one, change it in its own pull request (DS-1.4, the contracts first rule of the delivery standard DS-1). Commands are `npm test`, `npm run test:contract` and `npm run lint`, and new behavior sits behind `EXPENSE_APPROVALS_ENABLED`, off by default.
 
 ## Contract
 

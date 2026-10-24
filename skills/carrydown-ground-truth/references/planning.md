@@ -31,7 +31,7 @@ Aim for three to six milestones. Put contracts that two tracks share into the fi
 
 Three rules decide what goes into a milestone. Apply every one of them each time.
 
-1. A milestone is the thinnest vertical slice that proves one user-visible capability end to end. Name it for what a user can do after it. The first milestone proves the whole path with the least behaviour. The last proves the project can be released and run.
+1. A milestone is the thinnest vertical slice that proves one user-visible capability end to end. Name it for what a user can do after it. The first milestone proves the whole path with the least behavior. The last proves the project can be released and run.
 2. A milestone holds items from every track the capability crosses. The tracks meet at a checkpoint before the demonstration, and its `joint_check` says what they run together there. The joint check names each track that meets there. A milestone that stays inside one track says why, in `single_track_reason`.
 3. The exit gate is one sentence the stakeholders can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show together, in `joint_demonstration`.
 

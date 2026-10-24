@@ -4,7 +4,7 @@ One file per work item, named `<id>-<slug>.md` and placed in the milestone folde
 
 ## What a specification is for
 
-It orients the engineer and their coding agent so that they can finish one item without opening the original documents. It is the part of the ground truth that this item must honour, in the form an engineer starts from.
+It orients the engineer and their coding agent so that they can finish one item without opening the original documents. It is the part of the ground truth that this item must honor, in the form an engineer starts from.
 
 ## Header table
 
@@ -13,7 +13,7 @@ Written by the scaffold script from `plan.yaml`. Do not edit it by hand. After a
 ## Sections, in this order
 
 1. Why this work item exists. Three to six sentences. The problem in the ground truth, why it is its own item, what waits without it. Cite sections by number.
-2. Outcome. Five to nine bullets of observable results that name files, endpoints, screens or behaviours.
+2. Outcome. Five to nine bullets of observable results that name files, endpoints, screens or behaviors.
 3. Context for the agent. What exists today, which earlier items create what this one needs, which files and functions to read, which commands to run. Mark anything unverified "verify at implementation". Name only things you have seen.
 4. Contract (or Protocol for items with no interface, such as a pilot). Copy the exact schemas, tables, rule texts, message texts and error codes from the ground truth. Word for word. Add a short lead-in, not new rules.
 5. Implementation guide. Numbered steps in working order. Each names files and the check that proves it.

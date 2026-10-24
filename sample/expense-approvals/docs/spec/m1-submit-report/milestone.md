@@ -20,7 +20,7 @@ It feeds the start of work unit 2. The routing engine takes real submitted repor
 
 <!-- Written from plan.yaml. Change it there, then run scaffold_spec.py --refresh-headers --apply. -->
 
-The service scaffold with the API contract and the report form are the thinnest slice that proves the whole path: a report goes from the web client through the API to the database. The contract comes first so the form starts from a frozen shape at the Contract freeze checkpoint. Routing, rules and export stay out, so the path is proven with the least behaviour.
+The service scaffold with the API contract and the report form are the thinnest slice that proves the whole path: a report goes from the web client through the API to the database. The contract comes first so the form starts from a frozen shape at the Contract freeze checkpoint. Routing, rules and export stay out, so the path is proven with the least behavior.
 
 - Workflow: WI-01 (expense service).
 - Experience: WI-02 (web client).

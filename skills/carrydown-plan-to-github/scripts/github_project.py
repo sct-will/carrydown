@@ -157,7 +157,7 @@ def _run(argv=None):
     ap.add_argument("--root", default=".", help="project root (default: current directory)")
     ap.add_argument("--plan", help="path to plan.yaml (default: <root>/docs/spec/plan.yaml)")
     ap.add_argument("--repo", help="owner/name of the repository whose issues go on the board")
-    ap.add_argument("--owner", help="user or organisation that owns the project (default: the repository owner)")
+    ap.add_argument("--owner", help="user or organization that owns the project (default: the repository owner)")
     ap.add_argument("--title", help="project title (default: project.project_title in plan.yaml)")
     ap.add_argument("--project-number", type=int, help="configure this existing project instead of finding or creating one by title")
     ap.add_argument("--token-file", help="file that holds the GitHub token")

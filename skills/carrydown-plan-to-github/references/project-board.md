@@ -1,13 +1,13 @@
 # The project board
 
-`github_project.py` creates or configures one GitHub Project (v2) for the plan. The project belongs to the GitHub account or organisation you name with `--owner` (default: the repository owner) and is linked to the repository.
+`github_project.py` creates or configures one GitHub Project (v2) for the plan. The project belongs to the GitHub account or organization you name with `--owner` (default: the repository owner) and is linked to the repository.
 
 ## Fields
 
 | Field | Type | Values |
 | --- | --- | --- |
 | Work unit | Iteration | One iteration per milestone, titled `Work unit N, <name>`, with the start date and length from `plan.yaml`. |
-| Track | Single select | One option per track, with the colour from `plan.yaml`. |
+| Track | Single select | One option per track, with the color from `plan.yaml`. |
 | Complete by | Date | The completion date of the item. For a sub-epic, the milestone end. |
 | Checkpoint | Date | The date of the item's checkpoint. For a sub-epic, the demonstration date. |
 

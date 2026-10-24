@@ -33,7 +33,7 @@ Submitters do not learn what happened to a report, and reports wait when a manag
 - 7.2 says the API puts one event on the queue for each state change. The plan names no Workflow item as the publisher. Verify at implementation which merged item publishes it. Until then build against fixture events that follow 7.2.
 - The ground truth does not say which queue product is used, how the worker turns an employee id into an email address, or how the service account signs in. Verify these with the Workflow track. No address goes into an event or an audit record.
 - WI-03 creates business day counting in `src/routing/engine.js`, including the weekend rule of 6.2 item 4. Verify the exported name and reuse it.
-- Commands are `npm test`, `npm run test:contract` and `npm run lint`. All new behaviour sits behind `EXPENSE_APPROVALS_ENABLED`, off by default (DS-1, the delivery standard). The reminder comes after 3 business days, and finance asked for 2 (see Watch out for).
+- Commands are `npm test`, `npm run test:contract` and `npm run lint`. All new behavior sits behind `EXPENSE_APPROVALS_ENABLED`, off by default (DS-1, the delivery standard). The reminder comes after 3 business days, and finance asked for 2 (see Watch out for).
 
 ## Contract
 

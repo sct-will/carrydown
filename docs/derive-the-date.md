@@ -50,7 +50,7 @@ Earliest finish (forward pass over the dependencies, from sizes and allocation)
     WI-04 2027-02-11 to 2027-02-19, about 6.7 working days
     WI-08 2027-02-22 to 2027-03-02, about 6.7 working days
     WI-11 2027-03-03 to 2027-03-10, about 5.0 working days
-  Owners are not serialised in this pass. The load table above shows whether each person's work fits each work unit.
+  Owners are not serialized in this pass. The load table above shows whether each person's work fits each work unit.
 
 External items (outside the development plan; referenced only as external input)
   WI-05 Pilot team recruitment

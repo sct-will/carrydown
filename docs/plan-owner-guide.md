@@ -35,8 +35,8 @@ How long it takes. The interview and the plan review take an hour or two of your
 
 Things to ask for now, because they can take days:
 
-- **Permission to create a Project** in your GitHub organisation, and to create issues in the repository. Ask an organisation administrator. If you do not have it yet, planning carries on. You only need it at the GitHub step.
-- **Single sign-on approval.** If your organisation enforces single sign-on (SSO), your token must be approved for it. You do that yourself in two clicks (see "The token" below), but some organisations route it through an administrator.
+- **Permission to create a Project** in your GitHub organization, and to create issues in the repository. Ask an organization administrator. If you do not have it yet, planning carries on. You only need it at the GitHub step.
+- **Single sign-on approval.** If your organization enforces single sign-on (SSO), your token must be approved for it. You do that yourself in two clicks (see "The token" below), but some organizations route it through an administrator.
 - **Node.js and Python 3** on the computer where your agent runs. Node.js runs the install line once, and Python runs the scripts. Your agent can check both, and [setup.md](setup.md) has the steps for each system.
 
 Things to gather:
@@ -92,7 +92,7 @@ The checker compares every specification to the plan. It runs on your computer, 
 
 A token is a long password that lets the scripts create issues and a Project for you. The agent gives you the link. Open it yourself.
 
-1. **Pick the kind.** If an organisation owns the board, create a fine-grained token on [GitHub's new fine-grained token page](https://github.com/settings/personal-access-tokens/new) for the one repository, with Issues read and write, Metadata read, and the organisation permission Projects read and write. Only if your own user account owns the board, use a classic token from [the pre-filled classic token page](https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown). It ticks `repo` and `project` for you.
+1. **Pick the kind.** If an organization owns the board, create a fine-grained token on [GitHub's new fine-grained token page](https://github.com/settings/personal-access-tokens/new) for the one repository, with Issues read and write, Metadata read, and the organization permission Projects read and write. Only if your own user account owns the board, use a classic token from [the pre-filled classic token page](https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown). It ticks `repo` and `project` for you.
 2. **Set the expiry to 7 days.** Click Generate token. Copy the token. GitHub shows it once.
 3. **Save it in a plain text file outside your project**, for example `Downloads/token.txt`. In TextEdit, choose Format, then Make Plain Text, before you save.
 4. **Tell the agent the file path.** Do not paste the token into the chat. The agent never opens the file. It runs the token script with `--from-file`. The script reads the file, stores the token at `~/.config/carrydown/github_token` where only you can read it, and checks what the token can do. It keeps your file.
@@ -105,8 +105,8 @@ Instead of steps 3, 4 and 6 you can run the token script yourself in a terminal 
 
 If the check fails, it names the fix:
 
-- **Single sign-on.** Go to [your GitHub tokens page](https://github.com/settings/tokens), find the token, click its "Configure SSO" button, and click "Authorize" next to your organisation. Then ask the agent to run the check again.
-- **Missing organisation permission.** Ask an organisation administrator for permission to create issues and Projects.
+- **Single sign-on.** Go to [your GitHub tokens page](https://github.com/settings/tokens), find the token, click its "Configure SSO" button, and click "Authorize" next to your organization. Then ask the agent to run the check again.
+- **Missing organization permission.** Ask an organization administrator for permission to create issues and Projects.
 
 If you think the token leaked, revoke it on [your GitHub tokens page](https://github.com/settings/tokens) and make a new one. [security.md](security.md) has the details.
 
@@ -128,7 +128,7 @@ To change the plan later, change `plan.yaml` with your agent and run the checker
 
 - A script fails. Ask the agent to show the message and explain it. Nothing is written until you say yes, and no script deletes anything unless you pass `--delete-after` to the token script.
 - `npx: command not found`. Node.js is missing. See [faq.md](faq.md).
-- A GitHub step is refused. The usual cause is single sign-on or a missing organisation permission. The token check names the fix.
+- A GitHub step is refused. The usual cause is single sign-on or a missing organization permission. The token check names the fix.
 - The agent does not pick up a skill. Put the skill name in front of the sentence, as the [FAQ](faq.md#how-do-i-start-each-skill) shows.
 - You want to start over. Delete the `docs/spec/` folder in your project and ask again. The scripts never touch your source documents.
 

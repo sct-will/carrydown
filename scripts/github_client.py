@@ -94,9 +94,9 @@ def sso_fix(headers=None):
         part = part.strip()
         if part.startswith("url=https://github.com/"):
             url = part[4:]
-    where = f"open {url} and authorise the token" if url else (
-        f"open {TOKENS_PAGE}, choose Configure SSO next to the token and authorise the organisation")
-    return f"your organisation uses single sign-on, so {where}. Then rerun"
+    where = f"open {url} and authorize the token" if url else (
+        f"open {TOKENS_PAGE}, choose Configure SSO next to the token and authorize the organization")
+    return f"your organization uses single sign-on, so {where}. Then rerun"
 
 
 def _reset_time(headers):

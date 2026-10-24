@@ -206,7 +206,7 @@ Owner: internal audit. Applies to every table named below.
 
 Owner: the platform engineering team. Applies to every pull request.
 
-1. Feature flag. All new behaviour sits behind EXPENSE_APPROVALS_ENABLED, off by default. With the flag off, nothing observable changes except the health check.
+1. Feature flag. All new behavior sits behind EXPENSE_APPROVALS_ENABLED, off by default. With the flag off, nothing observable changes except the health check.
 2. Tests. `npm test` runs the unit tests. `npm run test:contract` runs the contract tests against `contracts/openapi.yaml`. Both pass before a pull request merges.
 3. Lint. `npm run lint` passes with no warnings.
 4. Contracts first. `contracts/openapi.yaml` is the interface between the Workflow track and the Experience track. A change to it is its own pull request, announced at the next checkpoint.
@@ -225,7 +225,7 @@ Notes from eight interviews with submitters, managers and finance staff. They ex
 | --- | --- |
 | BA-1 | Submitters want to start a report on a phone and finish it on a laptop. Drafts must be saved without a submit. |
 | BA-2 | Managers decide in the gaps of their day. They want one inbox, the oldest report first, with the total and the submitter visible without opening it. |
-| BA-3 | Finance wants one line in the ledger file per approved line item, with the cost centre, so nobody splits totals by hand. |
+| BA-3 | Finance wants one line in the ledger file per approved line item, with the cost center, so nobody splits totals by hand. |
 | BA-4 | Managers on leave leave reports waiting. A delegate for a date range fixes most of it. |
 | BA-5 | Submitters want to know why a report was returned. A comment is not optional on a return. |
 | BA-6 | Finance wants reminders early. Two business days is their preference. |
@@ -314,7 +314,7 @@ One file per night, named `expenses-YYYYMMDD.csv`, with a second file `expenses-
 | report_id | UUID of the report |
 | line_item_id | UUID of the line item |
 | employee_id | Submitter |
-| cost_centre | Cost centre of the submitter at approval time |
+| cost_center | Cost center of the submitter at approval time |
 | spent_on | Date of the expense, YYYY-MM-DD |
 | category | Category code |
 | amount_cents | Amount in the line currency, integer |

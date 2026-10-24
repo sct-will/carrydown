@@ -92,16 +92,16 @@ The token was stored earlier with `github_token.py --from-file`. The dry run pri
 $ python3 scripts/github_token.py --dry-run
 Dry run. These are the steps:
 1. Create a token first, with a 7-day expiry. Pick the kind by who owns the board:
-     Board owned by an organisation: a fine-grained token. https://github.com/settings/personal-access-tokens/new
-       Resource owner: the organisation. Expiration: 7 days. Repository access: only the one repository.
-       Repository permissions: Issues read and write, Metadata read. Organisation permission: Projects read and write.
+     Board owned by an organization: a fine-grained token. https://github.com/settings/personal-access-tokens/new
+       Resource owner: the organization. Expiration: 7 days. Repository access: only the one repository.
+       Repository permissions: Issues read and write, Metadata read. Organization permission: Projects read and write.
      Board owned by your own account: a classic token. This link ticks repo and project and names it: https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown
        Set Expiration to 7 days. GitHub does not let fine-grained tokens use boards on a personal account.
      Copy the token. GitHub shows it once. Revoke it when the GitHub step is done.
 2. Paste it when the script asks. The input is hidden.
 3. The script writes it to ~/.config/carrydown/github_token with mode 600.
 4. The script asks GitHub who you are and which scopes the token has.
-5. If your organisation uses single sign-on, open https://github.com/settings/tokens, choose Configure SSO next to the token and authorise the organisation.
+5. If your organization uses single sign-on, open https://github.com/settings/tokens, choose Configure SSO next to the token and authorize the organization.
 Nothing was asked, stored or sent.
 [exit 0]
 ```
@@ -270,7 +270,7 @@ Earliest finish (forward pass over the dependencies, from sizes and allocation)
     WI-08 2027-02-22 to 2027-03-02, about 6.7 working days
     WI-11 2027-03-03 to 2027-03-10, about 5.0 working days
   It meets the target 2027-04-23 with 44 day(s) to spare. The planned dates add the slack between items.
-  Owners are not serialised in this pass. The load table above shows whether each person's work fits each work unit.
+  Owners are not serialized in this pass. The load table above shows whether each person's work fits each work unit.
 
 External items (outside the development plan; referenced only as external input)
   WI-05 Pilot team recruitment

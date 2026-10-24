@@ -194,7 +194,7 @@ def scenario_public():
 
 
 def scenario_ownership():
-    # an unlabelled issue with a plan title, and a roll-up comment from someone else on the Epic
+    # an unlabeled issue with a plan title, and a roll-up comment from someone else on the Epic
     M.labels.append({"name": "expense-approvals"})
     stray = M.add_issue("Milestone 1, Submit an expense report", "not ours")
     epic = M.add_issue("An Epic renamed by hand", "Body edited by hand.\n\n<!-- carrydown:EPIC -->", ["expense-approvals"])
@@ -202,9 +202,9 @@ def scenario_ownership():
     epic_title = [i["title"] for i in M.issues if i["number"] == epic["number"]][0]
     check(rc == 0, f"apply exits 0 (got {rc})")
     m1 = [i for i in M.issues if i["title"] == stray["title"]]
-    check(len(m1) == 2 and stray["body"] == "not ours", "the unlabelled issue with the same title was not adopted or changed")
+    check(len(m1) == 2 and stray["body"] == "not ours", "the unlabeled issue with the same title was not adopted or changed")
     check(stray["number"] not in {n for v in M.subs.values() for n in v} and stray["number"] not in M.subs,
-          "the unlabelled issue got no links")
+          "the unlabeled issue got no links")
     check("not ours" not in out, "no text fetched from GitHub is printed")
     ours = [i for i in M.issues if "<!-- carrydown:EPIC -->" in (i["body"] or "")]
     check(len(ours) == 1 and epic_title == "An Epic renamed by hand", "the renamed Epic was found by its marker, not created again")

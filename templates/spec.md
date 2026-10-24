@@ -8,7 +8,7 @@ TODO: Two to five sentences. Name the problem in the ground truth that this item
 
 ## Outcome
 
-TODO: A bullet list of what exists when the item is done. Each bullet names a file, endpoint, table, screen or behaviour that someone can point at.
+TODO: A bullet list of what exists when the item is done. Each bullet names a file, endpoint, table, screen or behavior that someone can point at.
 
 ## Context for the agent
 
@@ -16,7 +16,7 @@ TODO: Facts the coding agent needs before it writes code. What exists today, whi
 
 ## Contract
 
-TODO: Copy the exact schemas, field tables, message texts and rules from the ground truth that this item must honour. Quote them faithfully. Do not paraphrase a schema. Use "## Protocol" instead of "## Contract" for items that have no interface, such as a pilot or a measurement.
+TODO: Copy the exact schemas, field tables, message texts and rules from the ground truth that this item must honor. Quote them faithfully. Do not paraphrase a schema. Use "## Protocol" instead of "## Contract" for items that have no interface, such as a pilot or a measurement.
 
 ## Implementation guide
 

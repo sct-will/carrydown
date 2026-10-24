@@ -67,5 +67,5 @@ These are owned outside the team, not by the engineers. They have no work item f
 
 | Id | External item | Note |
 | --- | --- | --- |
-| WI-05 | Pilot team recruitment | The stakeholders name the pilot team and confirm their cost centres before work unit 4. |
+| WI-05 | Pilot team recruitment | The stakeholders name the pilot team and confirm their cost centers before work unit 4. |
 | WI-10 | Finance sign-off | Finance operations approves the export format and the retention period before the release. |

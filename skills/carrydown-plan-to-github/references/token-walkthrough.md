@@ -8,15 +8,15 @@ The scripts need a GitHub token that can write issues and projects. The token is
 
 Pick by who owns the project board.
 
-Fine-grained token, for a board owned by an organisation. Use this whenever you can. It reaches only the one repository.
+Fine-grained token, for a board owned by an organization. Use this whenever you can. It reaches only the one repository.
 
 - Create it on [the new fine-grained token page](https://github.com/settings/personal-access-tokens/new).
 - Token name: carrydown. Expiration: 7 days.
-- Resource owner: the organisation that owns the repository.
+- Resource owner: the organization that owns the repository.
 - Repository access: only the one repository.
 - Repository permissions: Issues read and write, Metadata read.
-- Organisation permissions: Projects read and write.
-- Some organisations must approve a fine-grained token before it works. If yours does, the token waits for an administrator.
+- Organization permissions: Projects read and write.
+- Some organizations must approve a fine-grained token before it works. If yours does, the token waits for an administrator.
 
 Classic token, only for a board owned by your user account. GitHub does not let fine-grained tokens use projects that belong to a user account.
 
@@ -59,20 +59,20 @@ python3 <skill>/scripts/github_token.py --check --repo owner/name
 
 The output says who owns the token, what it can do, and whether the repository is reachable with push access.
 
-If it says the repository is not reachable, or that the token cannot push, the usual causes are single sign-on (next section) and a missing organisation permission. Ask an organisation administrator for permission to create issues and Projects in the organisation. Then run the check again.
+If it says the repository is not reachable, or that the token cannot push, the usual causes are single sign-on (next section) and a missing organization permission. Ask an organization administrator for permission to create issues and Projects in the organization. Then run the check again.
 
 ## Single sign-on
 
-Many organisations require single sign-on (SSO). A classic token that works for your own repositories can still be refused by the organisation's. A fine-grained token is tied to the organisation when you create it, so this section is mainly for classic tokens. The signs are an HTTP 403 or 404 on the organisation's repository and a message that mentions SAML or SSO.
+Many organizations require single sign-on (SSO). A classic token that works for your own repositories can still be refused by the organization's. A fine-grained token is tied to the organization when you create it, so this section is mainly for classic tokens. The signs are an HTTP 403 or 404 on the organization's repository and a message that mentions SAML or SSO.
 
 To fix it:
 
 1. Open [your GitHub tokens page](https://github.com/settings/tokens).
 2. Find the token and click its Configure SSO button.
-3. Click Authorize next to the organisation and complete the sign-in.
+3. Click Authorize next to the organization and complete the sign-in.
 4. Run `github_token.py --check --repo owner/name` again.
 
-If you do not see the organisation, your administrator may need to allow tokens. Ask them; do not work around it.
+If you do not see the organization, your administrator may need to allow tokens. Ask them; do not work around it.
 
 ## Where the scripts look
 

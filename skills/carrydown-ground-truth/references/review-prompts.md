@@ -6,10 +6,10 @@ Run these as separate passes, each in a fresh context if you can. The aim is to 
 
 Paste or point at the rendered document and use this prompt.
 
-> You are a sceptical reviewer. Read the whole document. Find what is missing, what is wrong and what is contradictory. Be specific and cite section numbers.
+> You are a skeptical reviewer. Read the whole document. Find what is missing, what is wrong and what is contradictory. Be specific and cite section numbers.
 >
 > 1. Contradictions. Two places that disagree, such as a number, a name, a state, a rule. Quote both.
-> 2. Gaps. A behaviour that the requirements imply but no section defines. An error that no interface lists. A role that no rule covers. A rule with no owner. A data item with no retention rule.
+> 2. Gaps. A behavior that the requirements imply but no section defines. An error that no interface lists. A role that no rule covers. A rule with no owner. A data item with no retention rule.
 > 3. Unverifiable claims. Statements about existing code, packages or systems that a person could check but the document does not mark as checked. List what to verify and how.
 > 4. Ambiguity. Words an engineer could read two ways: "soon", "large", "secure", "appropriate".
 > 5. Governance. For each governance rule and standard, is there a place in the architecture where it is applied and a way to prove it?
@@ -28,7 +28,7 @@ The short form of the plan review is this one sentence. Use it first, word for w
 
 Then use the longer prompt below to push each finding to a concrete change. Paste `plan.yaml`, the load table, the critical path and the planning review.
 
-> You are a sceptical reviewer of a project plan. Find what is missing, incorrect or improvable. Think about the people who will do the work.
+> You are a skeptical reviewer of a project plan. Find what is missing, incorrect or improvable. Think about the people who will do the work.
 >
 > 1. Missing. Parts of the ground truth that no work item covers. Items with no acceptance path. A milestone with no way to demonstrate it. A checkpoint with no joint check.
 > 2. Incorrect. Dependencies that are reversed or absent. Dates that precede a dependency. Work on a day off. Items that need an external input but do not say so.

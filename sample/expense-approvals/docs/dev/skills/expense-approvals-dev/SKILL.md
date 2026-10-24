@@ -28,13 +28,13 @@ The specification folder `docs/spec/` is canonical. Where the skill and the fold
 
 Copied from `docs/spec/README.md` and `plan.yaml`.
 
-- Feature flag. `EXPENSE_APPROVALS_ENABLED` gates the new behaviour. Off by default until the release. With the flag off, nothing existing changes.
+- Feature flag. `EXPENSE_APPROVALS_ENABLED` gates the new behavior. Off by default until the release. With the flag off, nothing existing changes.
 - Tests. Run `npm test`. New suites accompany each work item.
 - Lint and format. `npm run lint` passes on every pull request.
 - Contract tests pass with `npm run test:contract`, and a change to `contracts/openapi.yaml` is its own pull request.
 - Secrets and personal data never appear in code, tests, logs or fixtures.
 - Documentation style in this folder. Sentence-case headings, short sentences, no em dashes or en dashes, no names of people. Owners and dates live in the GitHub issues.
-- Existing behaviour is not changed by a work item unless its file says so.
+- Existing behavior is not changed by a work item unless its file says so.
 
 - Run the test and lint commands above before every commit. New work gets new tests. Fix findings instead of silencing them.
 - Commit messages are in the imperative. The pull request description lists the acceptance criteria and the proof for each.
