@@ -29,6 +29,8 @@ Usage
 Exit status is 0 when clean and 1 when there are findings. The script never writes files.
 """
 import argparse
+import contextlib
+import io
 import json
 import re
 import sys
@@ -51,7 +53,10 @@ def banned_patterns(plan):
         pats.append((re.compile("[" + chr(0x2014) + chr(0x2013) + "]"), "em or en dash"))
     if plan["_banned_names"]:
         alt = "|".join(re.escape(n) for n in plan["_banned_names"])
-        pats.append((re.compile(r"(?i)\b(" + alt + r")\b"), "person name or handle from the plan"))
+        pats.append((re.compile(r"(?i)(?<![\w-])(" + alt + r")(?![\w-])"), "person name or handle from the plan"))
+    if plan.get("_banned_exact"):
+        alt = "|".join(re.escape(n) for n in plan["_banned_exact"])
+        pats.append((re.compile(r"(?<![\w-])(" + alt + r")(?![\w-])"), "person name or handle from the plan"))
     for key, why in (("vendors", "AI vendor or model reference"), ("words", "banned word"), ("phrases", "banned phrase")):
         pats_list = b.get(key) or []
         if pats_list:
@@ -65,7 +70,7 @@ def ground_truth_headings(plan, root):
         return None
     heads = []
     fence = False
-    for line in p.read_text(encoding="utf-8").split("\n"):
+    for line in L.read_text(p).split("\n"):
         if line.strip().startswith("```"):
             fence = not fence
         if fence:
@@ -74,6 +79,22 @@ def ground_truth_headings(plan, root):
         if m:
             heads.append(m.group(2).strip())
     return heads
+
+
+def numbered_headings(gt_heads):
+    return [h for h in (gt_heads or []) if re.match(r"^\d+(\.\d+)*\.?\s", h)]
+
+
+def citation_findings(plan, gt_heads):
+    """Say when the section citations could not be checked, instead of passing silently."""
+    if not plan["items"]:
+        return []
+    if gt_heads is None:
+        return [f"ground truth citations not checked: the rendered document {plan['project'].get('ground_truth')} was not found. Render it with render_ground_truth.py"]
+    if not numbered_headings(gt_heads):
+        return ["ground truth citations not checked: the rendered document has no numbered headings. "
+                "Specifications cite sections by number, so number the headings in the source document and render it again"]
+    return []
 
 
 def check_item(plan, root, it, banned, gt_heads):
@@ -181,12 +202,11 @@ def check_item(plan, root, it, banned, gt_heads):
             issues.append(f"broken relative link {m.group(1)}")
     # ground truth citations
     cite = rows.get("Ground truth", "")
-    if gt_heads is not None and cite and "to be " not in cite.lower():
-        numbered = [h for h in gt_heads if re.match(r"^\d+(\.\d+)*\.?\s", h)]
-        if numbered:
-            for num in re.findall(r"\b(\d+(?:\.\d+)*)\b", cite):
-                if not any(h.startswith(num + " ") or h.startswith(num + ". ") for h in numbered):
-                    issues.append(f"Ground truth cites section {num}, which is not a heading in the rendered document")
+    numbered = numbered_headings(gt_heads)
+    if numbered and cite and "to be " not in cite.lower():
+        for num in re.findall(r"\b(\d+(?:\.\d+)*)\b", cite):
+            if not any(h.startswith(num + " ") or h.startswith(num + ". ") for h in numbered):
+                issues.append(f"Ground truth cites section {num}, which is not a heading in the rendered document")
     return issues, rel
 
 
@@ -196,7 +216,7 @@ def check_milestone(plan, root, ms):
     rel = path.relative_to(root) if path.is_relative_to(root) else path
     if not path.exists():
         return [f"MISSING {rel}"], rel
-    text = path.read_text(encoding="utf-8")
+    text = L.read_text(path)
     first = text.split("\n", 1)[0].strip()
     expected = f"# Milestone {ms['number']}, {ms['name']}"
     if first != expected:
@@ -247,7 +267,7 @@ def check_readme(plan, root):
     rel = path.relative_to(root) if path.is_relative_to(root) else path
     if not path.exists():
         return [f"MISSING {rel}"], rel
-    text = path.read_text(encoding="utf-8")
+    text = L.read_text(path)
     for it in plan["items"]:
         if L.tag(plan, it["id"]).lower() not in text.lower():
             issues.append(f"index lacks {L.tag(plan, it['id'])}")
@@ -363,6 +383,29 @@ def report(plan):
             print(f"  Critical path ends {fmt(end_date)} (derived from the critical path). {why}, so this is the derived target: the plan's end date, not a constraint.")
             if tdate and tdate != end_date:
                 print(f"  The derived target in plan.yaml says {fmt(tdate)}. Update it to {fmt(end_date)}.")
+    print("\nFit (working days each item needs, from its size and its owner's allocation, against its window)")
+    fits = L.fit_findings(plan)
+    if not any(L.sized_days(it) for it in plan["items"]):
+        print("  No item is sized yet. Write sizes as \"about N days\" to check the windows.")
+    elif fits:
+        for f in fits:
+            print("  " + f)
+    else:
+        print("  Every sized item fits between its last dependency and its complete_by date.")
+    times, chain = L.earliest_finish(plan)
+    if chain:
+        fin = times[chain[-1]][1]
+        print("\nEarliest finish (forward pass over the dependencies, from sizes and allocation)")
+        print("  " + " -> ".join(L.tag(plan, n) for n in chain) + f"  ends {fmt(fin)}")
+        for n in chain:
+            st, en = times[n]
+            print(f"    {L.tag(plan, n)} {fmt(st)} to {fmt(en)}, about {L.needed_days(plan, items[n]):.1f} working days")
+        tdate, _ = L.target_date(plan)
+        if tdate and L.target_is_constraint(plan):
+            gap = (tdate - fin).days
+            print(f"  " + (f"It meets the target {fmt(tdate)} with {gap} day(s) to spare. The planned dates add the slack between items."
+                           if gap >= 0 else f"It misses the target {fmt(tdate)} by {-gap} day(s): no order of the dates can meet it with these sizes."))
+        print("  Owners are not serialised in this pass. The load table above shows whether each person's work fits each work unit.")
     pitems = plan["program"]["items"]
     if pitems:
         print("\nProgram-owned items (outside the development plan; referenced only as program input)")
@@ -372,6 +415,81 @@ def report(plan):
     for c in plan["checkpoints"]:
         due = [L.tag(plan, it["id"]) for it in plan["items"] if it["checkpoint"] == c["date"]]
         print(f"  {c['date']}  {c['name']}: {', '.join(due) or 'none closing'}")
+
+
+PLAN_ERRORS = (KeyError, ValueError, TypeError, AttributeError, IndexError, ZeroDivisionError)
+
+
+def print_plan_problems(problems):
+    print("plan.yaml has problems:")
+    for p in problems:
+        print("  - " + p)
+
+
+def collapse_unfinished(issues):
+    """A file that still holds template text gets one line, not one per unfilled row."""
+    todo = [i for i in issues if i.startswith("unfinished template text (TODO)")]
+    if not todo or len(issues) == 1:
+        return issues, bool(todo)
+    others = len(issues) - 1
+    return [f"{todo[0]}, and {others} other finding(s) that usually go when the template text is replaced"], True
+
+
+def run_checks(plan, root, a):
+    results = {}
+    ok = 0
+    unfinished = 0
+    load_issues = []
+    for pid, mnum, sized, cap, pct in L.load_rows(plan):
+        if pct is not None and pct > 100:
+            load_issues.append(f"{pid} is over 100 percent of allocated capacity in work unit {mnum}: {sized:g} sized days against {cap:.1f} allocated days")
+    tdate, _ = L.target_date(plan)
+    if tdate and plan["items"]:
+        last = max(L.parse_date(it["complete_by"]) for it in plan["items"])
+        if L.target_is_constraint(plan) and last > tdate:
+            load_issues.append(f"the last work item completes {L.fmt_date(last)}, after the target {L.fmt_date(tdate)}")
+        if not L.target_is_constraint(plan) and last != tdate:
+            load_issues.append(f"the derived target {L.fmt_date(tdate)} is out of date. The last work item completes {L.fmt_date(last)}, so write that date under target")
+    load_issues += L.fit_findings(plan)
+    times, chain = L.earliest_finish(plan)
+    if chain and tdate and L.target_is_constraint(plan) and times[chain[-1]][1] > tdate:
+        load_issues.append(f"from sizes and allocation the earliest finish is {L.fmt_date(times[chain[-1]][1])}, after the target {L.fmt_date(tdate)} "
+                           f"(chain {' -> '.join(L.tag(plan, n) for n in chain)})")
+    banned = banned_patterns(plan)
+    gt_heads = ground_truth_headings(plan, root)
+    if load_issues:
+        results["load and target"] = load_issues
+    cites = citation_findings(plan, gt_heads)
+    if cites and not a.item:
+        results["ground truth"] = cites
+    items = [it for it in plan["items"] if not a.item or it["id"] in a.item]
+    for it in items:
+        issues, rel = check_item(plan, root, it, banned, gt_heads)
+        issues, todo = collapse_unfinished(issues)
+        unfinished += todo
+        if issues:
+            results[f"{L.tag(plan, it['id'])} {rel}"] = issues
+        else:
+            ok += 1
+    if not a.item:
+        for ms in plan["milestones"]:
+            issues, rel = check_milestone(plan, root, ms)
+            issues, todo = collapse_unfinished(issues)
+            unfinished += todo
+            if issues:
+                results[f"milestone {ms['number']} {rel}"] = issues
+            else:
+                ok += 1
+        issues, rel = check_readme(plan, root)
+        if issues:
+            results[str(rel)] = issues
+        else:
+            ok += 1
+        orphans = orphan_files(plan, root)
+        if orphans:
+            results["orphan files"] = [f"{o} is not in plan.yaml" for o in orphans]
+    n_files = len(items) + (0 if a.item else len(plan["milestones"]) + 1)
+    return results, ok, n_files, len(items), unfinished
 
 
 def main(argv=None):
@@ -389,62 +507,47 @@ def main(argv=None):
     root = Path(a.root).resolve()
     plan_path = L.find_plan(root, a.plan)
     if not plan_path.exists():
-        print(f"error: plan not found at {plan_path}", file=sys.stderr)
+        print(f"error: plan not found at {plan_path}. Run from the project root or pass --root; "
+              "write a first plan with scaffold_spec.py --init", file=sys.stderr)
         return 2
     plan, plan_problems = L.load_plan(plan_path)
     if a.report:
-        report(plan)
+        # plan problems first: the report is only as good as the plan it reads
         if plan_problems:
-            print("\nPlan problems")
-            for p in plan_problems:
-                print("  - " + p)
+            print_plan_problems(plan_problems)
+            print()
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf):
+                report(plan)
+        except PLAN_ERRORS:
+            if not plan_problems:
+                raise
+            print("The report needs the problems above fixed first.")
+            return 1
+        sys.stdout.write(buf.getvalue())
         return 1 if plan_problems else 0
-    load_issues = []
-    for pid, mnum, sized, cap, pct in L.load_rows(plan):
-        if pct is not None and pct > 100:
-            load_issues.append(f"{pid} is over 100 percent of allocated capacity in work unit {mnum}: {sized:g} sized days against {cap:.1f} allocated days")
-    tdate, _ = L.target_date(plan)
-    if tdate and plan["items"]:
-        last = max(L.parse_date(it["complete_by"]) for it in plan["items"])
-        if L.target_is_constraint(plan) and last > tdate:
-            load_issues.append(f"the last work item completes {L.fmt_date(last)}, after the target {L.fmt_date(tdate)}")
-        if not L.target_is_constraint(plan) and last != tdate:
-            load_issues.append(f"the derived target {L.fmt_date(tdate)} is out of date. The last work item completes {L.fmt_date(last)}, so write that date under target")
-    banned = banned_patterns(plan)
-    gt_heads = ground_truth_headings(plan, root)
-    results = {}
-    ok = 0
+    try:
+        results, ok, n_files, n_items, unfinished = run_checks(plan, root, a)
+    except PLAN_ERRORS:
+        if not plan_problems:
+            raise
+        if a.json:
+            print(json.dumps({"clean": 0, "files": 0, "findings": {"plan.yaml": plan_problems}}, indent=2))
+        else:
+            print_plan_problems(plan_problems)
+            print("The specifications were not checked: fix plan.yaml first.")
+        return 1
     if plan_problems:
-        results["plan.yaml"] = plan_problems
-    if load_issues:
-        results["load and target"] = load_issues
-    items = [it for it in plan["items"] if not a.item or it["id"] in a.item]
-    for it in items:
-        issues, rel = check_item(plan, root, it, banned, gt_heads)
-        if issues:
-            results[f"{L.tag(plan, it['id'])} {rel}"] = issues
-        else:
-            ok += 1
-    if not a.item:
-        for ms in plan["milestones"]:
-            issues, rel = check_milestone(plan, root, ms)
-            if issues:
-                results[f"milestone {ms['number']} {rel}"] = issues
-            else:
-                ok += 1
-        issues, rel = check_readme(plan, root)
-        if issues:
-            results[str(rel)] = issues
-        else:
-            ok += 1
-        orphans = orphan_files(plan, root)
-        if orphans:
-            results["orphan files"] = [f"{o} is not in plan.yaml" for o in orphans]
-    n_files = len(items) + (0 if a.item else len(plan["milestones"]) + 1)
+        results = {"plan.yaml": plan_problems, **results}
     if a.json:
         print(json.dumps({"clean": ok, "files": n_files, "findings": results}, indent=2))
     else:
-        print(f"{ok} files clean, {len(results)} with findings ({len(items)} work items, {0 if a.item else len(plan['milestones'])} milestones)")
+        print(f"{ok} files clean, {len(results)} with findings ({n_items} work items, {0 if a.item else len(plan['milestones'])} milestones)")
+        if plan_problems:
+            print(f"plan.yaml: {len(plan_problems)} problem(s), listed first.")
+        if unfinished:
+            print(f"{unfinished} file(s) still hold template text (TODO). That is expected until the specifications are written.")
         if L.derived_summary(plan):
             print(f"Derived inputs: {L.derived_summary(plan)}.")
         if not a.quiet:

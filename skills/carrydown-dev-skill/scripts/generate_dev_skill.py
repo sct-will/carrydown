@@ -14,28 +14,27 @@ after generating: add the topics and contracts only a person knows to be importa
 Dry run unless --apply. Existing files are replaced only with --force.
 
 Usage
-  python3 scripts/generate_dev_skill.py --root .            dry run
-  python3 scripts/generate_dev_skill.py --root . --apply    write
+  python3 scripts/generate_dev_skill.py --root .                              dry run
+  python3 scripts/generate_dev_skill.py --root . --apply                      write
+  python3 scripts/generate_dev_skill.py --root . --only references --apply    refresh only the references
 """
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
-import scaffold_spec as SC  # noqa: E402
 
-
-def md_table(headers, rows):
-    return SC.md_table(headers, rows)
+md_table = L.md_table
 
 
 def work_items_md(plan, root):
     out = ["# Work item index", "",
            "Generated from `plan.yaml`. The GitHub issues hold the owners, status and dates of record.", "",
            "## Work units and milestones", "",
-           SC.schedule_table(plan), ""]
+           L.schedule_table(plan), ""]
     tdate, ttext = L.target_date(plan)
     by_track = {}
     for person in plan["people"]:
@@ -67,7 +66,7 @@ def work_items_md(plan, root):
         out += [md_table(["Id", "Work item", "Track", "Complete by", "Depends on", "File"], rows), ""]
     if plan["program"]["items"]:
         out += ["## Program items and program inputs", "",
-                "These are owned by the program, not by the developers. They have no work item file. An item that needs one says \"program input\" in its Depends on row. If the input is missing, say so in the pull request and do not invent it.", "",
+                "These are owned by the program, not by the engineers. They have no work item file. An item that needs one says \"program input\" in its Depends on row. If the input is missing, say so in the pull request and do not invent it.", "",
                 md_table(["Id", "Program item", "Note"], [[L.tag(plan, p["id"]), p["label"], p.get("note", "")] for p in plan["program"]["items"]]), ""]
     return "\n".join(out).rstrip() + "\n"
 
@@ -110,10 +109,9 @@ def ground_truth_map_md(plan, root):
            f"Headings of `{plan['project']['ground_truth']}` with GitHub anchors and line numbers, then the sections each work item cites. "
            "Regenerating the rendering may move line numbers. Run `generate_dev_skill.py` again then.", ""]
     if gt.exists():
-        import render_ground_truth as R
-        lines = gt.read_text(encoding="utf-8").split("\n")
-        heads = R.collect_headings(lines)
-        anchors = R.anchors_for(heads)
+        lines = L.read_text(gt).split("\n")
+        heads = L.collect_headings(lines)
+        anchors = L.anchors_for(heads)
         out += ["## By heading", ""]
         rows = [[f"{ln}", "#" * lvl, text, f"`#{anc}`"] for (ln, lvl, text), anc in zip(heads, anchors) if lvl > 1]
         out += [md_table(["Line", "Level", "Heading", "Anchor"], rows), ""]
@@ -124,32 +122,34 @@ def ground_truth_map_md(plan, root):
     return "\n".join(out).rstrip() + "\n"
 
 
+DESCRIPTION_TARGET = 250
+DESCRIPTION_WARN = 300
+
+
 def make_description(plan):
+    """The description agents read to decide when to load the skill: what it does, then the words
+    that should trigger it (the id range, one file name, the specification folder). Short, because
+    every description of every installed skill shares one listing budget."""
     proj = plan["project"]
-    pre = proj["id_prefix"]
-    n = len(plan["items"])
-    first = plan["items"][0]
+    items = plan["items"]
+    first, last = items[0], items[-1]
     stem = f"{L.tag(plan, first['id']).lower()}-{first['slug']}"
-    d = (f"Use when working on a work item of the {proj['name']} project in this repository, named by id (for example "
-         f"{L.tag(plan, plan['items'][0]['id'])} or {L.tag(plan, plan['items'][-1]['id'])}), by a file name such as {stem}, "
-         f"or by its specification under {proj['spec_dir']}/. "
-         f"Gives the steps to orient on one item. The agent reads its specification, the ground truth sections it cites and the project conventions "
-         f"before changing code. Covers the definition of done, the test and lint commands, the work item index ({n} items), "
-         f"the contract headings and the ground truth map.")
+    ids = L.tag(plan, first["id"]) if first is last else f"{L.tag(plan, first['id'])} to {L.tag(plan, last['id'])}"
+    d = (f"Orients on one {proj['name']} work item before any code change, reading its spec, the ground truth sections it cites "
+         f"and the conventions. Use when the user names {ids}, a file such as {stem}, or {proj['spec_dir']}/.")
+    d = d.replace("<", "").replace(">", "")      # angle brackets are not allowed in a skill description
     if len(d) >= 1024:
         d = d[:1020].rsplit(" ", 1)[0] + "."
     return d
 
 
 def tests_text(plan):
+    """Only what the conventions do not already say. The commands, the flag and the extra rules
+    are printed once, by conventions_text, which is the single source for them."""
     c = plan["conventions"]
     lines = []
-    if c.get("test_command"):
-        lines.append(f"- Run the tests with `{c['test_command']}` before every commit. New work gets new tests.")
-    if c.get("lint_command"):
-        lines.append(f"- Run `{c['lint_command']}`. Fix findings instead of silencing them.")
-    if c.get("feature_flag"):
-        lines.append(f"- Keep new behaviour behind `{c['feature_flag']}`. With the flag off, existing behaviour is unchanged.")
+    if c.get("test_command") or c.get("lint_command"):
+        lines.append("- Run the test and lint commands above before every commit. New work gets new tests. Fix findings instead of silencing them.")
     lines.append("- Commit messages are in the imperative. The pull request description lists the acceptance criteria and the proof for each.")
     lines.append("- Raw outputs, run records and screenshots go on the GitHub issue, not into the repository, unless the work item file says otherwise.")
     return "\n".join(lines)
@@ -158,15 +158,10 @@ def tests_text(plan):
 def dod_checkboxes(plan):
     c = plan["conventions"]
     items = ["Every acceptance criterion in the work item file is proven by a named test or a recorded check, and the pull request lists each one with its proof."]
-    cmds = [f"`{c[k]}`" for k in ("test_command", "lint_command") if c.get(k)]
-    if cmds:
-        items.append(" and ".join(cmds) + " pass, and the continuous integration run is green.")
-    if c.get("feature_flag"):
-        items.append(f"With `{c['feature_flag']}` off, existing behaviour and responses are unchanged.")
-    for extra in c.get("extra") or []:
-        items.append(extra)
+    if c.get("test_command") or c.get("lint_command") or c.get("feature_flag") or c.get("extra"):
+        items.append("The project conventions above hold, the test and lint commands pass, and the continuous integration run is green.")
     items.append("Departures from the file are recorded under \"Decisions recorded\" with the pull request number. A conflict with the ground truth is fixed in the work item file in the same pull request.")
-    items.append("The closing comment on the issue follows the template in the specification folder README (Demo, Evidence, Decisions, Handoff) and carries every artifact named under \"Evidence of completion\". The agent assembles it, the developer checks and posts it.")
+    items.append("The closing comment on the issue follows the template in the specification folder README (Demo, Evidence, Decisions, Handoff) and carries every artifact named under \"Evidence of completion\". The agent assembles it, the engineer checks and posts it.")
     items.append("The joint check named under \"Integration points\" has run at the item's checkpoint with both tracks present, or the Handoff line says what still needs to run.")
     return "\n".join(f"- [ ] {i}" for i in items)
 
@@ -179,6 +174,8 @@ def main(argv=None):
     ap.add_argument("--plan", help="path to plan.yaml (default: <root>/docs/spec/plan.yaml)")
     ap.add_argument("--apply", action="store_true", help="write the files. Without it this is a dry run")
     ap.add_argument("--force", action="store_true", help="replace files that already exist")
+    ap.add_argument("--only", choices=["references"], help="write only references/ (always replaced: they are generated). "
+                    "Use it after plan.yaml or a specification changes; SKILL.md and README.md keep their hand edits")
     a = ap.parse_args(argv)
     root = Path(a.root).resolve()
     plan_path = L.find_plan(root, a.plan)
@@ -197,35 +194,50 @@ def main(argv=None):
         L.die("project.dev_skill and project.dev_skill_path are required in plan.yaml")
     if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", skill_name):
         L.die("project.dev_skill must be lowercase words joined by hyphens")
+    if len(skill_name) > 64:
+        L.die(f"project.dev_skill is {len(skill_name)} characters. A skill name has at most 64")
+    if Path(skill_path).name != skill_name:
+        L.die(f"the last folder of project.dev_skill_path ({Path(skill_path).name}) must equal project.dev_skill ({skill_name}). "
+              "Agents load a skill only when its folder and its name match")
+    if not plan["items"]:
+        L.die("plan.yaml has no items yet, so there is nothing for a developer skill to describe")
     first = plan["items"][0]
     ms1 = L.milestone_by_num(plan)[first["milestone"]]
     stem = f"{L.tag(plan, first['id']).lower()}-{first['slug']}"
     gt = proj["ground_truth"]
+    description = make_description(plan)
     values = {
-        "skill_name": skill_name, "project_name": proj["name"], "description": make_description(plan),
+        # a JSON string is a valid YAML double-quoted value, so ": " or " #" in a project name cannot break the frontmatter
+        "skill_name": skill_name, "project_name": proj["name"], "description": json.dumps(description, ensure_ascii=False),
         "purpose_extra": "Its conventions come from the plan folder, and its references are generated from the same files.",
         "spec_dir": proj["spec_dir"], "example_id": L.tag(plan, first["id"]), "example_stem": stem,
         "example_path": f"{proj['spec_dir']}/{ms1['folder']}/{stem}.md",
         "ground_truth": gt, "ground_truth_index": re.sub(r"\.md$", ".index.txt", gt),
-        "conventions": SC.conventions_text(plan), "branch": proj["branch"],
+        "conventions": L.conventions_text(plan), "branch": proj["branch"],
         "definition_of_done": dod_checkboxes(plan), "tests": tests_text(plan),
         "item_count": len(plan["items"]), "skill_path": skill_path, "skill_path_win": skill_path.replace("/", "\\"),
         "tree_url": L.github_tree_url(plan, skill_path) if proj.get("repo") else "<repository tree url for this folder>",
     }
     outputs = {
-        "SKILL.md": L.fill(L.read_template("dev-skill", "SKILL.md"), values),
-        "README.md": L.fill(L.read_template("dev-skill", "README.md"), values),
-        "references/work-items.md": work_items_md(plan, root),
-        "references/contracts.md": contracts_md(plan, root),
-        "references/ground-truth-map.md": ground_truth_map_md(plan, root),
+        "SKILL.md": lambda: L.fill(L.read_template("dev-skill", "SKILL.md.tmpl"), values),
+        "README.md": lambda: L.fill(L.read_template("dev-skill", "README.md.tmpl"), values),
+        "references/work-items.md": lambda: work_items_md(plan, root),
+        "references/contracts.md": lambda: contracts_md(plan, root),
+        "references/ground-truth-map.md": lambda: ground_truth_map_md(plan, root),
     }
-    dest = root / skill_path
+    if a.only == "references":
+        # the references follow plan.yaml and the specs; SKILL.md and README.md may hold hand edits
+        outputs = {k: v for k, v in outputs.items() if k.startswith("references/")}
+    dest = L.inside(root, root / skill_path, "project.dev_skill_path")
     L.say(f"developer skill: {skill_name}  ->  {skill_path}")
-    L.say(f"description length: {len(values['description'])} characters (limit 1024)")
+    L.say(f"description length: {len(description)} characters (target under {DESCRIPTION_TARGET}, limit 1024)")
+    if len(description) > DESCRIPTION_WARN:
+        L.say(f"warning: the description is over {DESCRIPTION_WARN} characters. Shorten project.name: long descriptions are the first to be dropped when an agent lists many skills")
     n = 0
-    for rel, content in outputs.items():
-        p = dest / rel
-        if p.exists() and not a.force:
+    for rel, make in outputs.items():
+        content = make()
+        p = L.inside(dest, dest / rel, "output")
+        if p.exists() and not (a.force or a.only == "references"):
             L.say(f"  skip (exists): {rel}")
             continue
         L.say(f"  {'write' if a.apply else 'would write'}: {rel} ({len(content.splitlines())} lines)")

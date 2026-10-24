@@ -22,6 +22,7 @@ Usage
   python3 scripts/scaffold_spec.py --root . --apply --refresh-headers    sync headers with the plan
 """
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -30,39 +31,9 @@ sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
 
 
-def md_table(headers, rows):
-    out = ["| " + " | ".join(headers) + " |", "| " + " | ".join("---" for _ in headers) + " |"]
-    for r in rows:
-        out.append("| " + " | ".join(str(c).replace("|", "\\|") for c in r) + " |")
-    return "\n".join(out)
-
-
-def conventions_text(plan):
-    c = plan["conventions"]
-    lines = []
-    if c.get("feature_flag"):
-        lines.append(f"- Feature flag. `{c['feature_flag']}` gates the new behaviour. Off by default until the release. With the flag off, nothing existing changes.")
-    if c.get("test_command"):
-        lines.append(f"- Tests. Run `{c['test_command']}`. New suites accompany each work item.")
-    if c.get("lint_command"):
-        lines.append(f"- Lint and format. `{c['lint_command']}` passes on every pull request.")
-    for extra in c.get("extra") or []:
-        lines.append(f"- {extra}")
-    lines.append("- Documentation style in this folder. Sentence-case headings, short sentences, no em dashes or en dashes, no names of people. Owners and dates live in the GitHub issues.")
-    lines.append("- Existing behaviour is not changed by a work item unless its file says so.")
-    return "\n".join(lines)
-
-
-def schedule_table(plan):
-    rows = []
-    entries = []
-    for m in plan["milestones"]:
-        entries.append((m["start"], f"{m['number']}, {m['name']}", f"{m['start']} to {m['end']}", m["gate"]))
-    for br in plan["breaks"]:
-        entries.append((br["start"], br["name"], f"{br['start']} to {br['end']}", "None committed."))
-    for _, a, b, c in sorted(entries):
-        rows.append([a, b, c])
-    return md_table(["Work unit", "Dates", "Gate"], rows)
+md_table = L.md_table
+conventions_text = L.conventions_text
+schedule_table = L.schedule_table
 
 
 def milestone_table(plan):
@@ -192,6 +163,169 @@ def replace_section_table(text, heading, new_table):
     return head + "\n".join(lines[:start] + new_table.split("\n") + lines[end:])
 
 
+PLACEHOLDERS = (
+    ("project.name", '"Your project name"', "the project name, or pass --name"),
+    ("project.slug", "your-project", "lowercase words joined by hyphens, derived from --name"),
+    ("project.repo", "your-org/your-repo", "the GitHub repository for issues, as owner/name"),
+    ("project.dev_skill", "your-project-dev", "the name of the generated developer skill"),
+)
+
+
+def init_plan(root, a, git_top):
+    """Write a starter plan.yaml from the template, with the project name filled in."""
+    target = L.find_plan(root, a.plan) if a.plan else root / "docs/spec/plan.yaml"
+    target = L.inside(root, target, "plan.yaml")
+    text = L.read_template("plan.yaml")
+    if a.name:
+        slug = L.slugify(a.name) or "your-project"
+        q = lambda v: json.dumps(v, ensure_ascii=False)   # a JSON string is a valid YAML double-quoted value
+        text = text.replace('name: "Your project name"', f"name: {q(a.name)}", 1)
+        text = text.replace('project_title: "Your project plan"', f"project_title: {q(a.name + ' plan')}", 1)
+        text = text.replace('epic_title: "Your project, development plan"', f"epic_title: {q(a.name + ', development plan')}", 1)
+        text = text.replace("your-project-dev", f"{slug}-dev")
+        text = re.sub(r"(?m)^(  slug: )your-project\b", lambda m: m.group(1) + slug, text)
+    if target.exists() and not a.force:
+        print(f"plan.yaml already exists at {target}. Use --force to replace it.")
+        return 1
+    rel = target.relative_to(root)
+    if (git_top is not None and git_top != root) or root.name == "docs":
+        where = f"the top folder of its git repository is {git_top}" if git_top else "it is named docs"
+        print(f"warning: this writes {rel} under {root}, but {where}. If {root} is not the project folder "
+              f"(a docs folder would end up with docs/docs/spec), run from the project folder or pass --root.", file=sys.stderr)
+    print(f"{'writing' if a.apply else 'would write'} {rel}")
+    if a.apply:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding="utf-8")
+    todo = []
+    for key, value, what in PLACEHOLDERS:
+        if re.search(rf"(?m)^  {key.split('.')[1]}: {re.escape(value)}(\s|$)", text):
+            todo.append(f"  {key} is still {value}: {what}")
+    if a.name:
+        dev = re.search(r"(?m)^  dev_skill: (\S+)", text).group(1)
+        todo.append(f"  project.dev_skill is {dev}, derived from the name. Change it, and dev_skill_path with it, if the developer skill needs another name")
+    print("Placeholders still to fill in plan.yaml:")
+    for t in todo:
+        print(t)
+    print("The people, milestones, checkpoints and items in the file are examples to replace.")
+    if a.apply:
+        print("Fill in plan.yaml, then run this script again without --init.")
+    return 0
+
+
+def is_placeholder(value):
+    return not value.strip() or "to be " in value.lower() or "TODO" in value
+
+
+def refreshed_header(plan, it, old):
+    """The header table of a work item file, from plan.yaml, keeping what a person filled in.
+
+    The plan decides the rows it holds values for. A Size or Ground truth row a person filled in
+    stays when the plan has no value for it, and rows the template does not have stay at the end."""
+    have = dict(L.table_rows(old))
+    rows = []
+    for name, value in L.expected_header(plan, it):
+        if name in ("Size", "Ground truth") and is_placeholder(value) and not is_placeholder(have.get(name, "")):
+            value = have[name]
+        rows.append((name, value))
+    known = {n for n, _ in rows}
+    rows += [(n, v) for n, v in L.table_rows(old) if n not in known]
+    return "\n".join(["| | |", "| --- | --- |"] + [f"| {n} | {v} |" for n, v in rows])
+
+
+def template_demonstration(plan, ms):
+    """The Demonstration row of the milestone template, filled in for ms."""
+    for n, v in L.table_rows(L.read_template("milestone.md").split("## ", 1)[0]):
+        if n == "Demonstration":
+            return L.fill(v, {"demo": ms["demo"], "number": ms["number"], "name": ms["name"]})
+    return ms["demo"]
+
+
+def refreshed_milestone_header(plan, ms, old):
+    """Due, Exit gate and Work items come from plan.yaml. The Demonstration row keeps its wording
+    and only takes the new date. Other rows a person added stay."""
+    have = L.table_rows(old)
+    its = ", ".join(L.tag(plan, it["id"]) for it in plan["items"] if it["milestone"] == ms["number"])
+    demo = dict(have).get("Demonstration")
+    if demo is None:
+        demo = template_demonstration(plan, ms)
+    elif re.match(r"^\d{4}-\d\d-\d\d", demo):
+        demo = ms["demo"] + demo[10:]
+    else:
+        demo = f"{ms['demo']}, {demo}"
+    rows = [("Due", ms["end"]), ("Exit gate", ms["gate"]), ("Work items", its), ("Demonstration", demo)]
+    known = {n for n, _ in rows}
+    rows += [(n, v) for n, v in have if n not in known]
+    return "\n".join(["| | |", "| --- | --- |"] + [f"| {n} | {v} |" for n, v in rows])
+
+
+README_TABLES = ("| Work unit | Dates | Gate |", "| Sub-epic |", "| Date | Checkpoint | Items due | Joint check |",
+                 "| Id | Work item | Track | Complete by |", "| Id | Program item | Note |")
+
+
+def tables_of(lines):
+    """[(start, end, header line)] of the tables outside code fences."""
+    out = []
+    fence = False
+    i = 0
+    while i < len(lines):
+        if lines[i].lstrip().startswith("```"):
+            fence = not fence
+        if not fence and lines[i].startswith("|"):
+            j = i
+            while j < len(lines) and lines[j].startswith("|"):
+                j += 1
+            out.append((i, j, lines[i]))
+            i = j
+            continue
+        i += 1
+    return out
+
+
+def refreshed_readme(plan, old):
+    """Refresh the generated tables of the specification README (schedule, sub-epics, checkpoints,
+    index, program items) and leave every other line alone. Return (text, kinds not refreshed)."""
+    lines = old.split("\n")
+    fresh = build_readme(plan).split("\n")
+    have, want = tables_of(lines), tables_of(fresh)
+    swaps, skipped = [], []
+    for head in README_TABLES:
+        o = [t for t in have if t[2].startswith(head)]
+        f = [t for t in want if t[2].startswith(head)]
+        if len(o) != len(f):
+            skipped.append(head.strip("| ").split(" |")[0])
+            continue
+        swaps += list(zip(o, f))
+    for (s0, e0, _), (s1, e1, _) in sorted(swaps, key=lambda x: -x[0][0]):
+        lines[s0:e0] = fresh[s1:e1]
+    return "\n".join(lines), skipped
+
+
+def refresh(plan, root, a, actions):
+    def put(path, old, new, kind, what="refresh header"):
+        if new != old:
+            actions.append((what, path, kind))
+            if a.apply:
+                L.inside(root, path, kind).write_text(new, encoding="utf-8")
+    for it in plan["items"]:
+        p = L.spec_path(plan, root, it)
+        if p.exists():
+            old = L.read_text(p)
+            put(p, old, replace_first_table(old, refreshed_header(plan, it, old)), "spec")
+    for ms in plan["milestones"]:
+        p = L.milestone_path(plan, root, ms)
+        if p.exists():
+            old = L.read_text(p)
+            new = replace_first_table(old, refreshed_milestone_header(plan, ms, old))
+            put(p, old, replace_section_table(new, "Work items", work_table(plan, ms)), "milestone")
+    p = root / plan["project"]["spec_dir"] / "README.md"
+    if p.exists():
+        old = L.read_text(p)
+        new, skipped = refreshed_readme(plan, old)
+        put(p, old, new, "README", "refresh tables")
+        for kind in skipped:
+            print(f"note: README.md: the {kind} tables do not match the plan's shape, so they were left alone. Edit them by hand.")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Scaffold the specification folder from plan.yaml. Dry run unless --apply is given.",
@@ -210,30 +344,15 @@ def main(argv=None):
     a = ap.parse_args(argv)
     root = Path(a.root).resolve()
     actions = []
-    if a.apply and not a.allow_no_git and not any((d / ".git").exists() for d in [root, *root.parents]):
-        print(f"error: {root} is not inside a git repository, so nothing was written.\n"
+    # the same check for a dry run as for --apply, so a dry run never promises what --apply refuses
+    git_top = next((d for d in [root, *root.parents] if (d / ".git").exists()), None)
+    if git_top is None and not a.allow_no_git:
+        print(f"error: {root} is not inside a git repository, so nothing {'was' if a.apply else 'would be'} written.\n"
               "The plan, the specifications and every later change belong in git, so that each change is reviewed and can be undone.\n"
               "Run `git init` in the project folder (or ask your agent to), then run this command again.", file=sys.stderr)
         return 2
-
     if a.init:
-        target = L.find_plan(root, a.plan)
-        if not a.plan:
-            target = root / "docs/spec/plan.yaml"
-        text = L.read_template("plan.yaml")
-        if a.name:
-            text = text.replace('name: "Your project name"', f'name: "{a.name}"')
-            text = text.replace('project_title: "Your project plan"', f'project_title: "{a.name} plan"')
-            text = text.replace('epic_title: "Your project, development plan"', f'epic_title: "{a.name}, development plan"')
-        if target.exists() and not a.force:
-            print(f"plan.yaml already exists at {target}. Use --force to replace it.")
-            return 1
-        print(f"{'writing' if a.apply else 'would write'} {target.relative_to(root)}")
-        if a.apply:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(text, encoding="utf-8")
-            print("Fill in plan.yaml, then run this script again without --init.")
-        return 0
+        return init_plan(root, a, git_top)
 
     plan_path = L.find_plan(root, a.plan)
     if not plan_path.exists():
@@ -245,9 +364,10 @@ def main(argv=None):
         for p in problems:
             print("  - " + p)
         return 1
-    spec_dir = root / plan["project"]["spec_dir"]
+    spec_dir = L.inside(root, root / plan["project"]["spec_dir"], "project.spec_dir")
 
     def plan_write(path, content, kind):
+        path = L.inside(root, path, kind)
         exists = path.exists()
         if exists and not a.force:
             actions.append(("skip (exists)", path, kind))
@@ -265,7 +385,7 @@ def main(argv=None):
                 if it["milestone"] == ms["number"]:
                     plan_write(L.spec_path(plan, root, it), build_stub(plan, it), "stub")
         elif a.apply:
-            (spec_dir / ms["folder"]).mkdir(parents=True, exist_ok=True)
+            L.inside(root, spec_dir / ms["folder"], "milestone folder").mkdir(parents=True, exist_ok=True)
     if a.ci:
         gt_dir = str(Path(plan["project"]["ground_truth"]).parent)
         wf = L.fill(L.read_template("check-specs-workflow.yml"), {"spec_dir": plan["project"]["spec_dir"], "ground_truth_dir": gt_dir, "branch": plan["project"]["branch"]})
@@ -273,33 +393,14 @@ def main(argv=None):
         for name in ("check_specs.py", "carrydown_lib.py"):
             plan_write(root / "tools/carrydown" / name, (Path(__file__).resolve().parent / name).read_text(encoding="utf-8"), "checker copy")
     if a.refresh_headers:
-        for it in plan["items"]:
-            p = L.spec_path(plan, root, it)
-            if p.exists():
-                old = p.read_text(encoding="utf-8")
-                new = replace_first_table(old, L.header_markdown(plan, it))
-                if new != old:
-                    actions.append(("refresh header", p, "spec"))
-                    if a.apply:
-                        p.write_text(new, encoding="utf-8")
-        for ms in plan["milestones"]:
-            p = L.milestone_path(plan, root, ms)
-            if p.exists():
-                old = p.read_text(encoding="utf-8")
-                its = ", ".join(L.tag(plan, it["id"]) for it in plan["items"] if it["milestone"] == ms["number"])
-                table = "\n".join([
-                    "| | |", "| --- | --- |", f"| Due | {ms['end']} |", f"| Exit gate | {ms['gate']} |", f"| Work items | {its} |",
-                    f"| Demonstration | {ms['demo']}, both people, in a meeting session with the program. |",
-                ])
-                new = replace_section_table(replace_first_table(old, table), "Work items", work_table(plan, ms))
-                if new != old:
-                    actions.append(("refresh header", p, "milestone"))
-                    if a.apply:
-                        p.write_text(new, encoding="utf-8")
+        refresh(plan, root, a, actions)
     verb = "" if a.apply else "would "
     for what, path, kind in actions:
         print(f"{verb}{what}: {path.relative_to(root)}  [{kind}]")
-    created = sum(1 for w, _, _ in actions if w in ("create", "overwrite"))
+    missing = [it for it in plan["items"] if not L.spec_path(plan, root, it).exists()]
+    if missing and not a.stubs:
+        print(f"{len(missing)} specification stub(s) do not exist yet. Add --stubs to {'write' if a.apply else 'include'} them.")
+    created = sum(1 for w, _, _ in actions if w in ("create", "overwrite", "refresh header", "refresh tables"))
     print(f"{len(actions)} action(s), {created} file(s) {'written' if a.apply else 'would be written'}." + ("" if a.apply else " Dry run. Add --apply to write."))
     return 0
 
