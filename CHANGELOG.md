@@ -18,6 +18,29 @@ All notable changes to this project are written here. The format follows Keep a 
 - One statement of versions everywhere: Python 3.9 or later, Node.js 22.20 or later.
 - `docs/inputs.md` explains the size format, "Small, about 2 days".
 - The project board reference says what the script does not set yet, instead of what the API cannot set.
+- The generated developer skill ships only the scripts it runs: `generate_dev_skill.py` and `check_specs.py`.
+- `scaffold_spec.py --refresh-headers` keeps rows a person filled in or added, and `generate_dev_skill.py --only references` refreshes just the references.
+- The generated skill description is quoted and checked: the name length, the folder name, a target under 250 characters and a warning above 300.
+- The window and earliest-finish checks compare each item with its size and allocation, and the sample dates are adjusted to fit.
+- The name check uses the plan's people.
+- The self test grew to 137 steps, with a loopback GitHub mock and built Word fixtures.
+
+### Security
+
+- The GitHub client moved to its own module, `scripts/github_client.py`, which ships only with `carrydown-plan-to-github`.
+- `github_token.py` keeps the token file unless you pass `--delete-after`, and it checks the token format before any request.
+- Sign-on, rate limit and timeout errors from GitHub print as one-line messages that say how to fix them.
+- GitHub requests are retried only for reads. Issues are matched by a hidden marker, so a failed create does not make a duplicate.
+- A rerun of `github_sync.py` repairs missing links, and `--verify` fails on unlinked ids.
+- `--apply` to a public repository stops unless you pass `--allow-public`.
+- The workflow actions are pinned by commit.
+- The renderer copies images only from the document folder, and every script writes only inside the project.
+
+### Fixed
+
+- Word automatic heading numbers are rendered, headings without a number are reported, and citations are reported as unchecked when the rendered document has no numbers.
+- The plan is validated before `--report` and every other check, and bad input gives one-line findings, not tracebacks.
+- A byte order mark in a file and a Windows console encoding no longer stop a script.
 
 ## 0.1.0
 
