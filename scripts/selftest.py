@@ -120,9 +120,9 @@ def error_paths(tmp, plan_text):
     chk = [PY, "scripts/check_specs.py", "--root", SAMPLE]
     bad = {
         "unknown milestone": (plan_text.replace("    milestone: 5\n", "    milestone: 7\n"), "item 11: unknown milestone 7"),
-        "non-ISO date": (plan_text.replace("complete_by: 2027-02-24", "complete_by: 24 Feb 2027"), "complete_by is not a date: '24 Feb 2027'"),
-        "short date": (plan_text.replace("complete_by: 2027-02-24", "complete_by: 2027-2-24"), "complete_by is not a date: '2027-2-24'"),
-        "impossible date": (plan_text.replace("complete_by: 2027-02-24", "complete_by: 2027-02-30"), "complete_by is not a date: '2027-02-30'"),
+        "non-ISO date": (plan_text.replace("complete_by: 2027-02-19", "complete_by: 24 Feb 2027"), "complete_by is not a date: '24 Feb 2027'"),
+        "short date": (plan_text.replace("complete_by: 2027-02-19", "complete_by: 2027-2-24"), "complete_by is not a date: '2027-2-24'"),
+        "impossible date": (plan_text.replace("complete_by: 2027-02-19", "complete_by: 2027-02-30"), "complete_by is not a date: '2027-02-30'"),
         "allocation 60%": (plan_text.replace("allocation: 60", 'allocation: "60%"'), "idris allocation must be a whole percent from 1 to 100, got '60%'"),
         "allocation full": (plan_text.replace("allocation: 60", "allocation: full"), "idris allocation must be a whole percent from 1 to 100, got 'full'"),
         "weekend start": (plan_text.replace("    start: 2027-02-01\n    days_off: [2027-02-22]", "    start: 2027-01-31\n    days_off: [2027-02-22]"), "tamsin start 2027-01-31 is a weekend"),
@@ -166,7 +166,7 @@ def maintenance(tmp):
     plan = proj / "docs/spec/plan.yaml"
     text = plan.read_text(encoding="utf-8")
     text = text.replace('    size: "Medium, about 3 days"\n    depends: []\n', "    depends: []\n")      # WI-01 loses its size in the plan
-    text = text.replace("complete_by: 2027-02-24", "complete_by: 2027-02-23")                               # WI-03 moves a day
+    text = text.replace("complete_by: 2027-02-19", "complete_by: 2027-02-18")                               # WI-03 moves a day
     plan.write_text(text, encoding="utf-8")
     ms3 = proj / "docs/spec/m3-enforce-policy/milestone.md"
     custom = "| Demonstration | 2027-03-19, the engineers with the finance advisor, in the review room. |"
@@ -178,8 +178,8 @@ def maintenance(tmp):
     run = [PY, "scripts/scaffold_spec.py", "--root", str(proj), "--refresh-headers", "--apply", "--allow-no-git"]
     step("--refresh-headers follows the plan and counts what it wrote", run, contains=["refresh header: docs/spec/m2-route-to-approvers/wi-03-routing-engine.md",
          "refresh header: docs/spec/m2-route-to-approvers/milestone.md", "refresh tables: docs/spec/README.md", "3 file(s) written"],
-         files={proj / "docs/spec/m2-route-to-approvers/wi-03-routing-engine.md": ["Complete by 2027-02-23"],
-                proj / "docs/spec/README.md": ["| 2027-02-23 |"]})
+         files={proj / "docs/spec/m2-route-to-approvers/wi-03-routing-engine.md": ["Complete by 2027-02-18"],
+                proj / "docs/spec/README.md": ["| 2027-02-18 |"]})
     step("--refresh-headers keeps a filled Size row, an added row and a custom demonstration", [PY, "scripts/check_specs.py", "--root", str(proj), "--quiet"],
          files={wi1: ["| Size | Medium, about 3 days |", "| Reviewer | Security review booked |"], ms3: [custom]})
     step("--refresh-headers is stable on a second run", run, contains=["0 file(s) written"])
@@ -320,12 +320,12 @@ def main():
         step("a target in weeks is accepted", chk + ["--report", "--plan", variant("weeks", plan_text.replace("  date: 2027-04-23\n", "  weeks: 11\n"))], contains=["11 working weeks plus 1 break week(s)", "meets the target"])
         step("over 100 percent of allocated capacity is flagged", chk + ["--plan", variant("overload", plan_text.replace("allocation: 60", "allocation: 10"))], expect=1, contains=["over 100 percent of allocated capacity"])
         step("a missed target is reported", chk + ["--report", "--plan", variant("late", plan_text.replace("  date: 2027-04-23\n", "  date: 2027-04-16\n"))], contains=["misses the target"])
-        step("the report checks every window against size and allocation", chk + ["--report"], contains=["Every sized item fits between its last dependency and its complete_by date.", "Earliest finish", "ends 2027-03-12"])
-        squeezed = plan_text.replace("complete_by: 2027-03-19\n    size: \"Medium, about 4 days\"", "complete_by: 2027-03-18\n    size: \"Medium, about 4 days\"")
+        step("the report checks every window against size and allocation", chk + ["--report"], contains=["Every sized item fits between its last dependency and its complete_by date.", "Earliest finish", "ends 2027-03-10"])
+        squeezed = plan_text.replace("complete_by: 2027-03-17\n    size: \"Medium, about 4 days\"", "complete_by: 2027-03-16\n    size: \"Medium, about 4 days\"")
         step("an item whose window is too short for its size is flagged", chk + ["--plan", variant("squeezed", squeezed)], expect=1,
-             contains=["WI-08 needs about 6.7 working days (4 days at 60 percent) but has 6 from 2027-03-11, the day after WI-06 completes, to its complete_by 2027-03-18"])
+             contains=["WI-08 needs about 6.7 working days (4 days at 60 percent) but has 6 from 2027-03-09, the day after WI-06 completes, to its complete_by 2027-03-16"])
         step("an earliest finish after the target is flagged", chk + ["--plan", variant("tooearly", plan_text.replace("  date: 2027-04-23\n", "  date: 2027-03-05\n"))], expect=1,
-             contains=["from sizes and allocation the earliest finish is 2027-03-12, after the target 2027-03-05"])
+             contains=["from sizes and allocation the earliest finish is 2027-03-10, after the target 2027-03-05"])
         step("a size without a number of days is flagged", chk + ["--plan", variant("nosize", plan_text.replace('size: "Large, about 5 days"', 'size: "Large"'))], expect=1,
              contains=["size must say how many days"])
         for skill, script in (("carrydown-ground-truth", "check_specs.py"), ("carrydown-plan-to-github", "github_sync.py"), ("carrydown-dev-skill", "generate_dev_skill.py")):

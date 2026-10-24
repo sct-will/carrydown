@@ -4,7 +4,7 @@
 | --- | --- |
 | Milestone | Milestone 2, Route to approvers (`m2-route-to-approvers`), work unit 2 |
 | Track | Workflow |
-| Target | Complete by 2027-02-24 (work unit 2, Route to approvers, 2027-02-15 to 2027-03-05) |
+| Target | Complete by 2027-02-19 (work unit 2, Route to approvers, 2027-02-15 to 2027-03-05) |
 | Checkpoint | 2027-02-26, Routing meets inbox |
 | Demonstration | 2027-03-05, milestone 2 demonstration (acceptance criteria in `milestone.md` in this folder) |
 | Size | Large, about 5 days |

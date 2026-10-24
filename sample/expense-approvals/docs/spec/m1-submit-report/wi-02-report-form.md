@@ -4,10 +4,10 @@
 | --- | --- |
 | Milestone | Milestone 1, Submit an expense report (`m1-submit-report`), work unit 1 |
 | Track | Experience |
-| Target | Complete by 2027-02-12 (work unit 1, Submit an expense report, 2027-02-01 to 2027-02-12) |
+| Target | Complete by 2027-02-10 (work unit 1, Submit an expense report, 2027-02-01 to 2027-02-12) |
 | Checkpoint | 2027-02-12, Milestone 1 demonstration |
 | Demonstration | 2027-02-12, milestone 1 demonstration (acceptance criteria in `milestone.md` in this folder) |
-| Size | Medium, about 4 days |
+| Size | Medium, about 3 days |
 | Depends on | WI-01 |
 | Unblocks | WI-04 |
 | Ground truth | Sections 2.1, 3.3, 6.2, 7.1 |
