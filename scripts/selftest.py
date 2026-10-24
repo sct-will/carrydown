@@ -19,6 +19,9 @@ CARRYDOWN_GITHUB_TOKEN, so no stored token is ever read.
   8. Builds small Word documents with tests/fixtures/make_numbered_docx.py and renders them,
      and runs the scripts on broken variants of the sample to prove they fail with a message,
      not a traceback.
+  9. Runs the planning review on variants of the sample: a milestone on one track without a
+     reason, missing rationale, an item with no slack, theme switches, a critical path owned by
+     one person and a load ratio above two to one.
 
 Usage
   python3 scripts/selftest.py
@@ -217,6 +220,48 @@ def composition(tmp, plan_text):
     step("the rationale refresh is stable on a second run", run, contains=["0 file(s) written"])
 
 
+def planning_review(chk, variant, plan_text):
+    """The planning review in the checker and in --report."""
+    import re
+    step("the sample's planning review is clean and shows each part", chk + ["--report"],
+         contains=["Planning review", "Milestone 1, Submit an expense report: Workflow (WI-01), Experience (WI-02).", "The joint check on 2027-02-12 names Workflow and Experience.",
+                   "Milestone 4, Pilot with one team: Workflow (WI-09) only.", "tamsin: 1 switch, 0 inside a milestone.", "WI-07 (expense service) to WI-09 (export job), across milestones 3 and 4.",
+                   "Every item completes before its checkpoint.", "WI-01 -> WI-02 -> WI-04 -> WI-08 -> WI-11: tamsin (WI-01), idris (WI-02, WI-04, WI-08, WI-11).",
+                   "Highest to lowest is 1.3 to 1", "0 finding(s)."])
+    one_track = re.sub(r"(?m)^    single_track_reason: .*Pilot.*\n|^    single_track_reason: \"The pilot.*\n", "", plan_text, count=1)
+    step("a milestone covering one track without a reason fails", chk + ["--plan", variant("onetrack", one_track)], expect=1,
+         contains=["planning review:", "milestone 4 covers one track (Workflow) and has no single_track_reason"])
+    no_why = re.sub(r"(?m)^    rationale: \"Routing and the inbox.*\n", "", plan_text)
+    no_why = re.sub(r"(?m)^    order_rationale: \"The scaffold.*\n", "", no_why)
+    no_why = re.sub(r"(?m)^    joint_demonstration: \"The Experience engineer walks.*\n", "", no_why)
+    step("missing rationale, joint demonstration and order rationale fail", chk + ["--plan", variant("nowhy", no_why)], expect=1,
+         contains=["milestone 2 has no rationale", "milestone 4 has no joint_demonstration", "track workflow has no order_rationale"])
+    step("the report marks the same lines as findings and still exits 0", chk + ["--report", "--plan", variant("nowhyreport", no_why)],
+         contains=["finding: milestone 2 has no rationale", "3 finding(s). Run the checker without --report to fail on them."])
+    late = plan_text.replace("    complete_by: 2027-02-10\n", "    complete_by: 2027-02-12\n")
+    step("a zero-slack item is reported", chk + ["--report", "--plan", variant("noslack", late)],
+         contains=["WI-02 completes on its checkpoint date 2027-02-12: no slack."], absent=("Traceback", "Every item completes before its checkpoint."))
+    step("a zero-slack item is advice, not a finding", chk + ["--plan", variant("noslackcheck", late)], expect=1,
+         contains=["Target row is"], absent=("Traceback", "planning review:"))   # the only finding is the stale header of WI-02
+    themed = plan_text.replace('    slug: limits-and-duties\n', '    slug: limits-and-duties\n', 1)
+    i = themed.index("    slug: limits-and-duties\n")
+    themed = themed[:i] + themed[i:].replace('    theme: "expense service"\n', '    theme: "rules module"\n', 1)
+    step("theme switches are counted per owner", chk + ["--report", "--plan", variant("themes", themed)],
+         contains=["tamsin: 3 switches, 1 inside a milestone.", "WI-06 (rules module) to WI-07 (expense service), inside milestone 3."])
+    no_themes = re.sub(r"(?m)^    theme: .*\n", "", plan_text)
+    step("without themes the report says how to add them", chk + ["--report", "--plan", variant("nothemes", no_themes)],
+         contains=["No item has a theme. Add theme to the items to count the switches."])
+    solo = plan_text.replace("    track: experience\n    owner: idris\n", "    track: workflow\n    owner: tamsin\n")
+    step("a critical path owned by one person is reported", chk + ["--report", "--plan", variant("solo", solo)],
+         contains=["The critical path runs through one person, tamsin, on the Workflow track.", "idris has no sized work, so the ratio is not defined."])
+    step("a load ratio above two to one is reported", chk + ["--report", "--plan", variant("ratio", plan_text.replace("allocation: 60", "allocation: 20"))],
+         contains=["Highest to lowest is 3.9 to 1 (idris to tamsin). Above two to one"])
+    step("a joint check that does not name a track is reported", chk + ["--report", "--plan", variant("unnamed", plan_text.replace(" Experience drives the form and Workflow shows the database.", ""))],
+         contains=["The joint check on 2027-02-12 does not name Workflow or Experience."])
+    step("a rationale that is not text is a plan problem", chk + ["--plan", variant("notext", plan_text.replace('    theme: "release"\n', "    theme: [release]\n"))], expect=1,
+         contains=["item 11: theme must be text"])
+
+
 def frontmatter(tmp, plan_text):
     """The generated SKILL.md frontmatter parses whatever the project is called."""
     proj = tmp / "frontmatter"
@@ -360,6 +405,7 @@ def main():
              contains=["from sizes and allocation the earliest finish is 2027-03-10, after the target 2027-03-05"])
         step("a size without a number of days is flagged", chk + ["--plan", variant("nosize", plan_text.replace('size: "Large, about 5 days"', 'size: "Large"'))], expect=1,
              contains=["size must say how many days"])
+        planning_review(chk, variant, plan_text)
         for skill, script in (("carrydown-ground-truth", "check_specs.py"), ("carrydown-plan-to-github", "github_sync.py"), ("carrydown-dev-skill", "generate_dev_skill.py")):
             dst = Path(tmp) / skill
             shutil.copytree(ROOT / "skills" / skill, dst)
