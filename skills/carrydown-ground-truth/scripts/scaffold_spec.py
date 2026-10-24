@@ -152,11 +152,11 @@ def program_section(plan):
         return ""
     rows = [[L.tag(plan, p["id"]), p["label"], p.get("note", "")] for p in items]
     return (
-        "## Program-owned items\n\n"
-        "Some items depend on inputs the program provides outside this plan, such as pilot teams, approvals and reviews. "
-        "Those are marked \"program input\" in the item files. Their ids are left as gaps in the numbering on purpose. "
-        "They are tracked by the program, not as issues in this plan.\n\n"
-        + md_table(["Id", "Program item", "Note"], rows) + "\n\n"
+        "## Work the plan does not schedule\n\n"
+        "Some items depend on inputs from outside the team, such as pilot teams, approvals and reviews. "
+        "Those are marked \"program input\" in the item files. The work that provides them is owned outside the team, "
+        "so the plan does not schedule it. Its ids are left as gaps in the numbering on purpose, and it is not tracked as issues in this plan.\n\n"
+        + md_table(["Id", "Outside item", "Note"], rows) + "\n\n"
     )
 
 
@@ -374,7 +374,9 @@ MILESTONE_SECTIONS = (
 
 
 README_TABLES = ("| Work unit | Dates | Gate |", "| Sub-epic |", "| Date | Checkpoint | Items due | Joint check |",
-                 "| Id | Work item | Track | Complete by |", "| Id | Program item | Note |")
+                 "| Id | Work item | Track | Complete by |", "| Id | Outside item | Note |")
+# Older headers of the same tables, so a README written before a rename is still refreshed.
+README_TABLE_ALIASES = {"| Id | Outside item | Note |": ("| Id | Program item | Note |",)}
 
 
 def tables_of(lines):
@@ -398,13 +400,13 @@ def tables_of(lines):
 
 def refreshed_readme(plan, old):
     """Refresh the generated tables of the specification README (schedule, sub-epics, checkpoints,
-    index, program items) and leave every other line alone. Return (text, kinds not refreshed)."""
+    index, work the plan does not schedule) and leave every other line alone. Return (text, kinds not refreshed)."""
     lines = old.split("\n")
     fresh = build_readme(plan).split("\n")
     have, want = tables_of(lines), tables_of(fresh)
     swaps, skipped = [], []
     for head in README_TABLES:
-        o = [t for t in have if t[2].startswith(head)]
+        o = [t for t in have if t[2].startswith((head,) + README_TABLE_ALIASES.get(head, ()))]
         f = [t for t in want if t[2].startswith(head)]
         if len(o) != len(f):
             skipped.append(head.strip("| ").split(" |")[0])

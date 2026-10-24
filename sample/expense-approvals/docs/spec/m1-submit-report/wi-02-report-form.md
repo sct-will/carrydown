@@ -155,7 +155,7 @@ The counterpart on the other track is WI-01, Service scaffold, flag and API cont
 
 ## Watch out for
 
-- The ground truth has no endpoint that lists a person's own reports. BA-1 asks to finish on another device, so the page address carries the report id and a person reopens the draft by that link. A list endpoint is a contract change in its own pull request, raised with the program.
+- The ground truth has no endpoint that lists a person's own reports. BA-1 asks to finish on another device, so the page address carries the report id and a person reopens the draft by that link. A list endpoint is a contract change in its own pull request, raised with the stakeholders.
 - Never use floating point for money. Amounts are integer cents. Format by the currency's minor unit and verify at implementation how the service treats currencies without two decimals, because the ground truth only says cents.
 - PUT /reports/{id} replaces the line items, so line item ids may change and a receipt link may point at an old id. Re-read the report after every save and never cache line ids.
 - The client checks for type, size and count are for convenience. The service is the control. In the spirit of GOV-1.7, the web client is never the control. The ground truth does not say whether 10 MB means 10,000,000 or 10,485,760 bytes. Agree one value with the Workflow track and write it in the contract.

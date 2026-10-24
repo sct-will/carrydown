@@ -30,7 +30,7 @@ The shortest route is the developer skill. It makes a coding agent read the righ
 
 {{conventions}}
 
-Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the program. A program input is something the program provides outside this plan.
+Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the people accountable for the outcome. A program input is something an item needs from work the plan does not schedule, owned outside the team.
 
 ## How this plan was composed
 

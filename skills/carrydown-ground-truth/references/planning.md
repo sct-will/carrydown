@@ -19,7 +19,7 @@ Read the rendered document, using its section index. Make a plain list of what m
 
 ## 2. Milestones
 
-A milestone is a step the program can see working. Each one has:
+A milestone is a step the people accountable for the outcome can see working. Each one has:
 
 - a name that says what the product's users can do after it,
 - an exit gate, one sentence that a person can check live at the demonstration,
@@ -33,7 +33,7 @@ Three rules decide what goes into a milestone. They are rules, not advice.
 
 1. A milestone is the thinnest vertical slice that proves one user-visible capability end to end. Name it for what a user can do after it. The first milestone proves the whole path with the least behaviour. The last proves the project can be released and run.
 2. A milestone holds items from every track the capability crosses. The tracks meet at a named joint check, a checkpoint with a `joint_check`, before the demonstration. The joint check names each track that meets there. A milestone that stays inside one track says why, in `single_track_reason`.
-3. The exit gate is one sentence the program can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show together, in `joint_demonstration`.
+3. The exit gate is one sentence the people accountable for the outcome can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show together, in `joint_demonstration`.
 
 A milestone that fails one of these is split, merged or explained before you go on. The checker's planning review lists the tracks each milestone covers and whether its demonstration's joint check names them.
 
@@ -47,7 +47,7 @@ Check: the sum of the work units plus breaks fits the time frame, and no work un
 
 A work item is the smallest piece of work that an engineer can finish, show and close. Aim for two to five days. Each has:
 
-- an id, a number that stays fixed. Leave gaps for program-owned items,
+- an id, a number that stays fixed. Leave gaps for work the plan does not schedule,
 - a short label in plain words,
 - a milestone, a track and an owner on that track,
 - a theme, a short label for the part of the system it touches, such as "web client" or "export job",
@@ -82,9 +82,9 @@ python3 <skill>/scripts/check_specs.py --root . --report
 
 It prints the schedule, each person's allocation, their sized days against allocated capacity per work unit (with a flag over 100 percent), the critical path, the target and whether the critical path meets it, the checkpoints and the planning review. Read it with the user. A load of 100 percent or more leaves no slack, so aim for about 80 percent at most. If one person carries much more than the other, move items across tracks where the skills allow, or stretch the date. The planning review flags a load ratio above two to one. Read the critical path for single points of failure. If it runs through one person, the plan says so and offers an alternative, in that track's `order_rationale`. Ask the user whether to change it.
 
-## 8. The program boundary
+## 8. Work the plan does not schedule
 
-Program-owned work stays outside the plan, as id gaps. Give each such item an id from the gap (for example 5 and 10) and list it under `program.items`. In an item that waits for one, set `program_input` to a phrase that says what is needed, without the id. Specifications never mention a program id. The checker fails if they do.
+Work owned outside the team stays out of the plan, as id gaps. Give each such piece an id from the gap (for example 5 and 10) and list it under `program.items`. In an item that waits for one, set `program_input` to a phrase that says what is needed, without the id. Specifications never mention these ids. The checker fails if they do.
 
 ## 9. Review the plan
 

@@ -7,7 +7,7 @@ Sub-epic of the Expense approvals Epic. Work unit 3, 2027-03-08 to 2027-03-19 (`
 | Due | 2027-03-19 |
 | Exit gate | Every decision obeys the approval limits and separation of duties, every change is in the audit trail, and submitters are notified. |
 | Work items | WI-06, WI-07, WI-08 |
-| Demonstration | 2027-03-19, both people, in a meeting session with the program. |
+| Demonstration | 2027-03-19, both people, in a meeting session with the stakeholders. |
 
 ## Purpose
 
@@ -34,7 +34,7 @@ Policy can be seen only when a decision is refused, recorded and told to the sub
 
 ## Acceptance criteria
 
-The milestone is accepted when the program has seen each of these at the demonstration.
+The milestone is accepted when the stakeholders have seen each of these at the demonstration.
 
 - [ ] An approver trying to decide their own report was refused with E_FORBIDDEN and the rule number GOV-1.1.
 - [ ] A delegate acting outside the dates of the delegate record was refused.
@@ -53,7 +53,7 @@ The joint check for that date, Milestone 3 demonstration: A decision produces an
 
 ## Demonstration expectations
 
-- Given on 2027-03-19 by the people who own the items, to the program, in one meeting session, showing the work items of this milestone working together.
+- Given on 2027-03-19 by the people who own the items, to the stakeholders, in one meeting session, showing the work items of this milestone working together.
 - Nothing about the session is automated. The people decide what to show. The acceptance criteria above say what must be seen.
 - The outcome, pass or fail against the acceptance criteria, is noted as a comment on this sub-epic the same day.
 

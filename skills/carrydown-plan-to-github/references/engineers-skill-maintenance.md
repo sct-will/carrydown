@@ -1,4 +1,4 @@
-# Keeping the skill current
+# Keeping the engineers' skill current
 
 The skill copies conventions and indexes from files that change. Treat it as a build product of the specification folder.
 
@@ -12,7 +12,7 @@ The skill copies conventions and indexes from files that change. Treat it as a b
 | The conventions in the spec README change | Update `SKILL.md` in the same pull request. |
 | An item is added or removed | Regenerate everything and review `README.md`. |
 
-This skill does not ship `scaffold_spec.py`. The header refresh lives only in the carrydown-ground-truth skill. Run it from that skill's folder:
+`carrydown-plan-to-github` does not ship `scaffold_spec.py`. The header refresh lives only in the carrydown-ground-truth skill. Run it from that skill's folder:
 
 ```bash
 python3 <ground-truth-skill>/scripts/scaffold_spec.py --root . --refresh-headers --apply

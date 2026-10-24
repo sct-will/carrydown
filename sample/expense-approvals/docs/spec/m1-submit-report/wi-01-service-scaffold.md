@@ -150,7 +150,7 @@ The counterpart on the other track is WI-02, Report form and receipt upload (Exp
 - The approval limits and separation of duties checks. WI-06 owns them.
 - The audit writer and the rule that the application account has insert and select rights only. WI-07 owns them. This item only creates the empty `audit_event` table.
 - Sending email and the delegate screen (WI-08), and the nightly ledger job and its file (WI-09).
-- Pilot recruitment and finance sign-off. The program owns them.
+- Pilot recruitment and finance sign-off. The stakeholders own them.
 
 ## Watch out for
 

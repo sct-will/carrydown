@@ -38,7 +38,7 @@ The shortest route is the developer skill. It makes a coding agent read the righ
 - Documentation style in this folder. Sentence-case headings, short sentences, no em dashes or en dashes, no names of people. Owners and dates live in the GitHub issues.
 - Existing behaviour is not changed by a work item unless its file says so.
 
-Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the program. A program input is something the program provides outside this plan.
+Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the people accountable for the outcome. A program input is something an item needs from work the plan does not schedule, owned outside the team.
 
 ## How this plan was composed
 
@@ -48,13 +48,13 @@ The plan follows ten rules. The reasons below are written in `plan.yaml`, so a r
 
 1. A milestone is the thinnest vertical slice that proves one user-visible capability end to end, named for what a user can do after it. The first proves the whole path with the least behaviour, and the last proves the project can be released and run.
 2. A milestone holds items from every track the capability crosses, and the tracks meet at a named joint check before the demonstration. A milestone that stays inside one track says why.
-3. The exit gate is one sentence the program can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show.
+3. The exit gate is one sentence the people accountable for the outcome can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show.
 4. Inside a milestone the shared contract comes first, so both tracks can start without waiting. The first week leaves nobody idle.
 5. Each engineer's consecutive items stay in one part of the system, a theme. Related items for the same person sit in adjacent days to cut context switching.
 6. Size in days divided by allocation gives calendar working days: four days at 60 percent is nearly seven working days. Nobody is planned past 100 percent of allocated capacity in a work unit, aim for about 80, and days off and breaks are real.
 7. Slack sits before every checkpoint and demonstration. An item that completes on its checkpoint date has none.
 8. The critical path is read for single points of failure. If it runs through one person, the plan says so and offers an alternative.
-9. Program-owned work stays outside the plan as id gaps.
+9. Work the plan does not schedule, owned outside the team, stays out of the plan as id gaps.
 10. The plan records its rationale where a reviewer can argue with it: for each milestone, why these items form it and what the joint demonstration proves, and for each track, why its items are in this order. The plan owner reads the plan week by week, adversarially, before anything is scaffolded.
 
 ### Order of work per track
@@ -140,13 +140,13 @@ Posted after each checkpoint by one of the engineers, taking turns. The outcome 
 **Blocked or at risk.** Items, cause, owner, or "none".
 ```
 
-## Program-owned items
+## Work the plan does not schedule
 
-Some items depend on inputs the program provides outside this plan, such as pilot teams, approvals and reviews. Those are marked "program input" in the item files. Their ids are left as gaps in the numbering on purpose. They are tracked by the program, not as issues in this plan.
+Some items depend on inputs from outside the team, such as pilot teams, approvals and reviews. Those are marked "program input" in the item files. The work that provides them is owned outside the team, so the plan does not schedule it. Its ids are left as gaps in the numbering on purpose, and it is not tracked as issues in this plan.
 
-| Id | Program item | Note |
+| Id | Outside item | Note |
 | --- | --- | --- |
-| WI-05 | Pilot team recruitment | The program names the pilot team and confirms their cost centres before work unit 4. |
+| WI-05 | Pilot team recruitment | The stakeholders name the pilot team and confirm their cost centres before work unit 4. |
 | WI-10 | Finance sign-off | Finance operations approves the export format and the retention period before the release. |
 
 ## Index

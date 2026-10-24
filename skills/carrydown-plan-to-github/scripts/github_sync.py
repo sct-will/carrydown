@@ -244,7 +244,7 @@ def build_rollup(plan, numbers, epic_number):
     intro = (f"{len(plan['milestones'])} sub-epics, one per milestone, each holding its work item issues as sub-issues. A box is checked when its issue closes. "
              f"Conventions, the checkpoint schedule and the comment templates are in [{proj['spec_dir']}/README.md]({readme}).")
     if plan["program"]["items"]:
-        intro += " Program items are tracked outside these issues."
+        intro += " Work the plan does not schedule is owned outside the team and tracked outside these issues."
     out = [MARKER, f"## Development plan, {proj['name']}", "", "**Constraints**", ""] + [f"- {l}" for l in constraints_lines(plan)] + ["", intro, ""]
     people = {pp["id"]: pp for pp in plan["people"]}
     for ms in plan["milestones"]:

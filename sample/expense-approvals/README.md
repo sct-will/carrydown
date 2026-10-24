@@ -2,7 +2,7 @@
 
 This is a sample. The project is fictional. The people, the company and the numbers are made up. Replace all of it with your own material.
 
-It shows what the three carrydown skills produce from a short ground truth.
+It shows what the two carrydown skills produce from a short ground truth, including the skill they generate for the engineers.
 
 This folder is published twice. It lives in the main carrydown repository at `sample/expense-approvals/`, and it is the root of the repository https://github.com/sct-will/carrydown-sample, where the carrydown scripts created the real issues and the project board from this plan. The README of that repository shows the renderings and the sample output.
 
@@ -12,17 +12,17 @@ This folder is published twice. It lives in the main carrydown repository at `sa
 | --- | --- | --- |
 | `ground-truth/architecture.md` | The source document. About eight pages: context, requirements, architecture, two governance rules, a development standard, a business analyst note, interfaces and risks. | The plan owner |
 | `people.yaml` | Two people with tracks, percent allocation (one at 100, one at 60), days off, and an advisor. | The interview |
-| `timeline.yaml` | Start date, target date, 11 weeks of work, a pause week, the program-owned items, conventions. | The interview |
+| `timeline.yaml` | Start date, target date, 11 weeks of work, a pause week, the work owned outside the team, conventions. | The interview |
 | `docs/ground-truth/architecture.md` | The rendering with a section index. | `render_ground_truth.py` |
 | `docs/ground-truth/architecture.index.txt` | One line per heading with its line number. | `render_ground_truth.py` |
 | `docs/spec/plan.yaml` | The plan: five milestones, nine work items, two tracks, one pause, checkpoints. | The plan owner and the agent |
 | `docs/spec/README.md` | Conventions, schedule, comment templates and the index. | `scaffold_spec.py` |
 | `docs/spec/m*/milestone.md` | One file per milestone: the sub-epic content. | `scaffold_spec.py`, then written |
 | `docs/spec/m*/wi-NN-*.md` | One specification per work item. | `scaffold_spec.py --stubs`, then written |
-| `docs/dev/skills/expense-approvals-dev/` | The developer skill for this project. | `generate_dev_skill.py` |
+| `docs/dev/skills/expense-approvals-dev/` | The engineers' skill for this project. | `generate_dev_skill.py`, the last step of `carrydown-plan-to-github` |
 | `.github/workflows/check-specs.yml` and `tools/carrydown/` | The checker in continuous integration, and its copy. | `scaffold_spec.py --ci` |
 
-Ids 5 and 10 are missing on purpose. They belong to the program (pilot team recruitment, finance sign-off) and appear in the specifications only as a "program input".
+Ids 5 and 10 are missing on purpose. They are work the plan does not schedule, owned outside the team (pilot team recruitment, finance sign-off), and appear in the specifications only as a "program input".
 
 ## Run it
 

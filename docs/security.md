@@ -40,7 +40,7 @@ The scripts send nothing anywhere else. They have no telemetry and no analytics.
 
 ## Network and token code
 
-carrydown-plan-to-github is the only skill with network or token code. That code is in `github_client.py`, which ships with that skill only. It calls `api.github.com` and nothing else. carrydown-ground-truth and carrydown-dev-skill contain no network or token code, and neither does the checker copy that `scaffold_spec.py --ci` puts in your project.
+carrydown-plan-to-github is the only skill with network or token code. That code is in `github_client.py`, which ships with that skill only. It calls `api.github.com` and nothing else. carrydown-ground-truth contains no network or token code, and neither does the engineers' skill that carrydown-plan-to-github generates, or the checker copy that `scaffold_spec.py --ci` puts in your project.
 
 To avoid creating anything twice, carrydown-plan-to-github reads back from your repository:
 

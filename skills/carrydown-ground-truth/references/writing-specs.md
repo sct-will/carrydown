@@ -20,7 +20,7 @@ Written by the scaffold script from `plan.yaml`. Do not edit it by hand. After a
 6. Acceptance criteria. Checkbox lines. Each is provable by a named test or a recorded check. Include criteria that come from governance rules and the development standard.
 7. Evidence of completion. Starts with a paragraph beginning `Demo.` that says what can be shown at the checkpoint and how to see it in under two minutes. Then the list of artifacts to attach to the closing comment: pull requests, test suites with the run line, the artifact that proves the outcome, and any redaction.
 8. Integration points. One sentence naming the counterpart items on the other track. Then bullets that start with `Crosses the boundary.`, `Joint check.` and `Handoff on close.` The joint check is this item's share of the checkpoint's joint check. Add `Timing.` when the counterpart is due within three working days.
-9. Out of scope. What a reasonable person might add and should not, with a pointer to the item that has it, or a note that it belongs to the program.
+9. Out of scope. What a reasonable person might add and should not, with a pointer to the item that has it, or a note that it is owned outside the team.
 10. Watch out for. Traps, ordering risks, security and data rules, contradictions found in the ground truth and which side wins.
 11. References. Links to the ground truth sections (use the anchors in the section index), and to dependency and dependent specifications. Every link must resolve.
 12. Decisions recorded. `None yet.` At the start. Later the engineer adds dated lines when the implementation departs from the file: `- 2027-03-02. What changed and why, with the pull request number.`
@@ -29,10 +29,10 @@ Written by the scaffold script from `plan.yaml`. Do not edit it by hand. After a
 
 - Sentence-case headings. Short sentences. Spell out an acronym on first use in each file.
 - No em dashes or en dashes.
-- No names of people or handles. Say "the engineer", "the program", "the Workflow track".
+- No names of people or handles. Say "the engineer", "the stakeholders", "the Workflow track".
 - No AI vendor or model names. Say "the coding agent".
 - No sprint vocabulary. Use work units.
-- Do not mention program-owned ids.
+- Do not mention the ids of work the plan does not schedule.
 - Dates are absolute, YYYY-MM-DD.
 - Avoid colons inside prose sentences.
 - Never guess. A wrong specific detail costs more than an honest "verify at implementation".

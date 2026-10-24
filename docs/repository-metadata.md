@@ -10,7 +10,7 @@ A proposal for the maintainer to apply by hand. Nothing here has been written to
 Give every AI coding agent the architecture, not just the ticket.
 ```
 
-The current description, "Carry ground truth down to every agent, every engineer, every issue and the AI-crafted project board. Includes three agent skills for an AI engineering team operating model.", is a third tagline and should go.
+The current description, a longer line that also gives an out-of-date count of the skills, is a third tagline and should go.
 
 **Homepage:** `[ARTICLE URL]`, the published article, once it is live. Until then, leave the field empty rather than pointing it at the sample.
 
@@ -28,6 +28,8 @@ The current description, "Carry ground truth down to every agent, every engineer
 10. `requirements-traceability`
 
 Compared with today's six topics, this keeps `agent-skills`, `github-projects` and `spec-driven-development`, replaces the broad `architecture`, `enterprise` and `planning` with terms people search for, and adds `product-management` so the product managers and designers the README speaks to can find it.
+
+**Skills badge:** the Agent Skills badge under the README title reads `2 skills`: two skills you install, one skill is generated for your engineers. The badge address is `https://img.shields.io/badge/Agent%20Skills-2%20skills-teal`.
 
 **Social preview image:** upload [`docs/images/hero.png`](images/hero.png) in Settings, General, Social preview. It is 4800 by 2400 pixels, the 2 to 1 ratio GitHub asks for, and about 400 KB, under the 1 MB limit. It carries the name, the tagline and the install line, so a shared link reads on its own.
 

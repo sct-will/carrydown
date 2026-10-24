@@ -11,7 +11,7 @@ Checks, per work item
   the file is within the length bounds
   banned vocabulary (dashes, people named in the plan, AI vendor names, sprint words,
   "open questions", "non-goals"; the lists are in plan.yaml under banned)
-  no reference to a program-owned id, no reference to an unknown id
+  no reference to the id of work the plan does not schedule, no reference to an unknown id
   no broken relative link
   ground truth sections cited in the header exist in the rendered document
 Per milestone: milestone.md exists with the required parts and lists every item.
@@ -513,7 +513,7 @@ def report(plan):
         print("  Owners are not serialised in this pass. The load table above shows whether each person's work fits each work unit.")
     pitems = plan["program"]["items"]
     if pitems:
-        print("\nProgram-owned items (outside the development plan; referenced only as program input)")
+        print("\nWork the plan does not schedule (owned outside the team; referenced only as program input)")
         for pi in pitems:
             print(f"  {L.tag(plan, pi['id'])} {pi['label']}")
     print("\nCheckpoints")

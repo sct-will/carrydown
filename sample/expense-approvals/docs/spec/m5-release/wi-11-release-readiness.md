@@ -32,7 +32,7 @@ The service goes to production behind the flag `EXPENSE_APPROVALS_ENABLED` (sect
 - The sample repository is new and empty. By this item the earlier items have created the service (WI-01), the report form (WI-02), the routing engine (WI-03), the inbox (WI-04), the rules module (WI-06), the audit writer (WI-07), the notification worker and the delegate screen (WI-08) and the ledger job (WI-09). Read those specifications first.
 - This item creates `docs/runbook.md`, the load check script under `tests/` and the records. It does not add product features.
 - WCAG means the Web Content Accessibility Guidelines. The recovery point objective (RPO) is 15 minutes and the recovery time objective (RTO) is 4 hours (NFR-5).
-- A program input is something the program provides outside this plan. This item has one, the finance sign-off on the export format and retention period. The program obtains it. This item only records whether it has arrived.
+- A program input is something an item needs from work the plan does not schedule, owned outside the team. This item has one, the finance sign-off on the export format and retention period. The stakeholders obtain it. This item only records whether it has arrived.
 - The three environments are test, staging and production (section 3.6). The rehearsal, load check and restore run in staging. Production is changed only by operations, with the runbook, after the checkpoint passes.
 - The service is one container in all three environments. Migrations only move forward, so a failed release is handled by turning the flag off, not by undoing a migration.
 - The ground truth does not give the load duration, the request mix, the backup tool or how operations pages someone. Verify each at implementation with the platform engineering team and record the answer.
@@ -102,7 +102,7 @@ Attach to the closing comment on the issue, in the template from the folder READ
 - `npm test`, `npm run test:contract` and `npm run lint` output for the release candidate.
 - The load check output with request count, duration and the 95th percentile, and the accessibility record by page.
 - The rehearsal, restore and risk review tables, with identifiers only and no names, amounts or receipts.
-- A line stating whether the finance sign-off has arrived, as told by the program.
+- A line stating whether the finance sign-off has arrived, as told by the stakeholders.
 
 The coding agent produces these from the commands above. The developer checks them before posting.
 
@@ -117,15 +117,15 @@ The counterpart on the other track is WI-09, Ledger export job (Workflow). Its j
 ## Out of scope
 
 - New features, and fixes to defects that need design work. Raise an issue for the owning item.
-- The finance sign-off and the decision to turn the production flag on. The program owns them.
+- The finance sign-off and the decision to turn the production flag on. The stakeholders own them.
 - Monitoring and alerting for the 99.5 percent availability target (NFR-2). The platform engineering team owns them.
 - Push delivery of the inbox. Decision D2 puts it after version 1.
-- Pilot readout work and the pilot measurements. The program and the pilot checkpoint own them.
+- Pilot readout work and the pilot measurements. The stakeholders and the pilot checkpoint own them.
 - Changes to `contracts/openapi.yaml`. They are their own pull request (DS-1.4).
 
 ## Watch out for
 
-- Section 3.5 rule 4 says steps do not change after routing except by escalation, and R1 says finance can ask for a re-route. Section 7.1 has no re-route endpoint. The ground truth does not define the path, so the runbook says what the service does today and names the program as the owner of the gap.
+- Section 3.5 rule 4 says steps do not change after routing except by escalation, and R1 says finance can ask for a re-route. Section 7.1 has no re-route endpoint. The ground truth does not define the path, so the runbook says what the service does today and names the stakeholders as the owners of the gap.
 - The business analyst note asks for a reminder after 2 business days and section 3.5 says 3. The work items use 3. The runbook and the R2 review must say 3, and the next version of the architecture document should settle the number.
 - Do not replace the 02:00 UTC run with a manual run in the rehearsal. It needs the real schedule once, so start early enough (see Implementation guide step 3).
 - NFR-5 covers the database. The ground truth is silent on backups of the receipt store. Ask the platform engineering team and record the answer in the restore record.

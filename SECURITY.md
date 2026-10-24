@@ -27,7 +27,7 @@ Please do not include a real token, a real password or real personal data in the
 
 ## Network access
 
-carrydown-plan-to-github is the only skill with network or token code, and it calls only `api.github.com`. carrydown-ground-truth and carrydown-dev-skill contain none. To avoid duplicates, carrydown-plan-to-github reads this repository's issues that carry the project label and its own roll-up comment. It treats that text as data and never follows it. The scripts have no telemetry and no analytics.
+carrydown-plan-to-github is the only skill with network or token code, and it calls only `api.github.com`. carrydown-ground-truth contains none, and neither does the engineers' skill that carrydown-plan-to-github generates. To avoid duplicates, carrydown-plan-to-github reads this repository's issues that carry the project label and its own roll-up comment. It treats that text as data and never follows it. The scripts have no telemetry and no analytics.
 
 ## What the carrydown skills never do
 

@@ -220,7 +220,7 @@ The checker found problems. Run check_specs.py to see them, fix them, or pass --
 
 ## 5. Check
 
-The checker finds the worked sample clean. The report shows the schedule, the load table, the critical path, the program items, the checkpoints and the planning review.
+The checker finds the worked sample clean. The report shows the schedule, the load table, the critical path, the work the plan does not schedule, the checkpoints and the planning review.
 
 ```text
 $ python3 scripts/check_specs.py --root sample/expense-approvals
@@ -272,7 +272,7 @@ Earliest finish (forward pass over the dependencies, from sizes and allocation)
   It meets the target 2027-04-23 with 44 day(s) to spare. The planned dates add the slack between items.
   Owners are not serialised in this pass. The load table above shows whether each person's work fits each work unit.
 
-Program-owned items (outside the development plan; referenced only as program input)
+Work the plan does not schedule (owned outside the team; referenced only as program input)
   WI-05 Pilot team recruitment
   WI-10 Finance sign-off
 
@@ -380,7 +380,7 @@ and post the Epic roll-up comment.
   WI-06  workflow     2027-03-08  depends: WI-03
   WI-07  workflow     2027-03-17  depends: WI-03
   WI-08  experience   2027-03-17  depends: WI-04, WI-06
-  WI-09  workflow     2027-04-06  depends: WI-07  program input: the pilot team, named by the program
+  WI-09  workflow     2027-04-06  depends: WI-07  program input: the pilot team, named by the stakeholders
   WI-11  experience   2027-04-21  depends: WI-08, WI-09  program input: finance sign-off on the export format and retention period
 
 Dry run complete. Read it, then add --apply to write.
@@ -803,9 +803,9 @@ project: Expense approvals plan  https://github.com/users/your-user/projects/N
 [exit 0]
 ```
 
-## 9. Developer skill
+## 9. The engineers' skill
 
-The sample already has its generated skill, so the dry run skips every file.
+The last step of `carrydown-plan-to-github` generates the skill the engineers install. It needs no token. The sample already has its generated skill, so the dry run skips every file.
 
 ```text
 $ python3 scripts/generate_dev_skill.py --root sample/expense-approvals

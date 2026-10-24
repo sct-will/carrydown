@@ -65,9 +65,9 @@ def work_items_md(plan, root):
                          f"`{spec_dir}/{m['folder']}/{L.tag(plan, it['id']).lower()}-{it['slug']}.md`"])
         out += [md_table(["Id", "Work item", "Track", "Complete by", "Depends on", "File"], rows), ""]
     if plan["program"]["items"]:
-        out += ["## Program items and program inputs", "",
-                "These are owned by the program, not by the engineers. They have no work item file. An item that needs one says \"program input\" in its Depends on row. If the input is missing, say so in the pull request and do not invent it.", "",
-                md_table(["Id", "Program item", "Note"], [[L.tag(plan, p["id"]), p["label"], p.get("note", "")] for p in plan["program"]["items"]]), ""]
+        out += ["## Work the plan does not schedule", "",
+                "This work is owned outside the team, not by the engineers. It has no work item file. An item that needs its result says \"program input\" in its Depends on row. If the input is missing, say so in the pull request and do not invent it.", "",
+                md_table(["Id", "Outside item", "Note"], [[L.tag(plan, p["id"]), p["label"], p.get("note", "")] for p in plan["program"]["items"]]), ""]
     return "\n".join(out).rstrip() + "\n"
 
 

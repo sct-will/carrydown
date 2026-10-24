@@ -1,6 +1,6 @@
 ---
 name: carrydown-plan-to-github
-description: Publishes an approved docs/spec/plan.yaml to GitHub as labels, sub-epics, one issue per work item and a Projects board, dry run first. Use for "Create the GitHub issues and the board" or "put the plan on GitHub".
+description: Carries an approved docs/spec/plan.yaml into GitHub as sub-epics, one issue per work item and a Projects board, dry run first, then generates the skill each engineer installs. Use for "put the plan on GitHub" or "generate the engineers' skill".
 license: Apache-2.0
 compatibility: Needs Python 3.9 or later, network access to api.github.com only, and a GitHub token the user creates.
 metadata:
@@ -10,15 +10,17 @@ metadata:
 
 # Put the plan on GitHub
 
-Start phrase: "Create the GitHub issues and the board."
+Start phrase: "Put the plan on GitHub." (or "Create the GitHub issues and the board."). For the last step on its own: "Generate the engineers' skill." (or "Generate the developer skill.").
 
-Run by: Plan owner, or someone they name who can create issues and a Project.
+Run by: plan owner. The generated skill is used by: engineers.
 
 In this skill, the user is the plan owner.
 
 ## What this skill does
 
-It reads `docs/spec/plan.yaml` and the specification folder and builds on GitHub: labels, one sub-epic per milestone, one issue per work item as a sub-issue of its sub-epic, dependency links, an Epic roll-up comment, and a GitHub Project (v2) board with its fields and views. `references/github-structure.md` describes each part. Issues are matched by a hidden marker in the body, and by title for issues made before the marker existed, so a rerun creates nothing twice.
+Two skills you install, one skill is generated for your engineers. This is the second of the two. It reads `docs/spec/plan.yaml` and the specification folder and builds on GitHub: labels, one sub-epic per milestone, one issue per work item as a sub-issue of its sub-epic, dependency links, an Epic roll-up comment, and a GitHub Project (v2) board with its fields and views. `references/github-structure.md` describes each part. Issues are matched by a hidden marker in the body, and by title for issues made before the marker existed, so a rerun creates nothing twice.
+
+Then it generates the engineers' skill: a small folder in the Agent Skills format under `project.dev_skill_path`. Each engineer installs it once and says "Work on WI-03". Their agent reads the specification and the ground truth sections it cites, then plans the code. The specification folder stays canonical. The generated skill points at it.
 
 ## Rules that never bend
 
@@ -30,6 +32,7 @@ It reads `docs/spec/plan.yaml` and the specification folder and builds on GitHub
 - Give the user each link to open themselves. Do not open it with a browser tool.
 - Do not delete issues, labels, projects or repositories. If something must be removed, tell the user how to do it themselves.
 - Keep to the repository and owner the user named.
+- Do not put secrets, tokens or personal data in the generated skill, and ask before you write outside `docs/`.
 
 ## Where the files are
 
@@ -86,7 +89,24 @@ The script does not yet set grouping, sorting, the board column field, the roadm
 
 ### 7. After
 
-Show the user the counts and the project link. Remind them of the rhythm: closing comment on every issue, a checkpoint comment each week, a demonstration note on each sub-epic. Suggest the next skill: `carrydown-dev-skill`.
+Show the user the counts and the project link. Remind them of the rhythm: closing comment on every issue, a checkpoint comment each week, a demonstration note on each sub-epic.
+
+### 8. Generate the engineers' skill
+
+Needs no token and makes no network call. When the user asks only for this step, run the checker from step 1 and skip steps 2 to 7. In `plan.yaml`, `project.dev_skill` (by default `<slug>-dev`) and `project.dev_skill_path` (by default `docs/dev/skills/<slug>-dev`) are set, and the last folder of the path equals the name.
+
+```bash
+python3 <skill>/scripts/generate_dev_skill.py --root .            # dry run
+python3 <skill>/scripts/generate_dev_skill.py --root . --apply    # write
+```
+
+It writes `SKILL.md`, `README.md` and three references, skips files that exist unless you pass `--force`, and prints the length of the description. Go through `references/engineers-skill-review.md` with the user and add what only they know. Then print the install line for the engineers, from the generated README, for example:
+
+```bash
+npx skills add https://github.com/<owner>/<repo>/tree/<branch>/<dev_skill_path> -a <agent>
+```
+
+The line works once the folder is on `project.branch` on GitHub, so ask the user to commit and push it. `references/engineers-skill-install.md` has every agent, the copy and link options and the team rollout. `references/engineers-skill-maintenance.md` says when to regenerate. The engineers review every change their agent makes.
 
 ## When something fails
 

@@ -129,7 +129,7 @@ The counterpart items on the Workflow track are WI-03 Approval routing engine, w
 - The delegate screen, the notification emails and reminders belong to WI-08.
 - Enforcing approval limits and separation of duties belongs to WI-06, and building steps, reminders and escalation belongs to WI-03. The client only displays the results.
 - Creating, editing and submitting reports belongs to WI-02. The audit trail endpoint belongs to WI-07.
-- Push updates (D2) and bulk decisions are not in the ground truth. The program decides them.
+- Push updates (D2) and bulk decisions are not in the ground truth. The stakeholders decide them.
 
 ## Watch out for
 

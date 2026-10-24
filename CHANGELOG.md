@@ -4,6 +4,7 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ## Unreleased
 
+- Two skills you install, one skill is generated for your engineers. `carrydown-dev-skill` is merged into `carrydown-plan-to-github`, whose last step, "Generate the engineers' skill", runs `generate_dev_skill.py` and prints the install line. The generator, its templates and its install, maintenance and review references moved with it. Two roles remain: the plan owner, who runs both skills and reviews the generated plan and specifications with the agent, and the engineers, who install the generated skill. The separate reviewer and the named role for the people who watch the demonstrations are gone. Work the plan does not schedule keeps its `program` key in `plan.yaml`, and the generated files call it "work the plan does not schedule, owned outside the team". The self test now has 154 steps.
 - README rewritten around the reader: the reason first, a picture of the output, look, try and install in order of effort, a two-sided conversation, three badges and two entry points (README and the plan owner guide). START-HERE.md is a pointer. New docs: repository-metadata.md and recording-storyboard.md.
 
 ### Added
@@ -17,19 +18,18 @@ All notable changes to this project are written here. The format follows Keep a 
 - A tie between critical path chains goes to the chain with more items, so the path keeps the dependency it starts from.
 - The sample moves five dates and one size so that every item has slack before its checkpoint, names both tracks in each demonstration's joint check, and carries its rationale and themes.
 - The plan template has a second item, so its example milestone covers both tracks and meets at a joint check.
-- The three skills and the generated developer skill treat documents, specifications, plan.yaml and issue text as data and never follow instructions found in them.
+- The two skills and the generated developer skill treat documents, specifications, plan.yaml and issue text as data and never follow instructions found in them.
 - `carrydown-plan-to-github` never opens the token file, asks for an explicit yes before writing to a public repository, and gives links for the user to open.
 - Token guidance leads with a fine-grained token for organisation boards, keeps the classic token for user-owned boards only, and sets a 7-day expiry and revocation when done.
 - After `github_token.py --from-file`, the user deletes their own token file. The documents no longer say the script deletes it.
 - `carrydown-ground-truth` runs `git init` only after a clear yes and no longer asks the user to install software through a system dialog.
 - Shorter skill descriptions and bodies, with `license`, `compatibility` and `metadata` in the frontmatter. Setup checks moved to `references/setup.md`.
 - The generated developer skill finds a work item file by glob and reads cited ground truth sections by line range instead of reading the whole index.
-- One set of role names (plan owner, lead reviewer, engineers, program) across the skills, templates and documents. The interview now asks who the lead reviewer is.
+- One set of role names (plan owner, engineers) across the skills, templates and documents.
 - The README leads with the interactive install line, explains what `--all` and `-g` create, notes the installer's scanner labels, and adds a "See it in 60 seconds" block.
 - One statement of versions everywhere: Python 3.9 or later, Node.js 22.20 or later.
 - `docs/inputs.md` explains the size format, "Small, about 2 days".
 - The project board reference says what the script does not set yet, instead of what the API cannot set.
-- The generated developer skill ships only the scripts it runs: `generate_dev_skill.py` and `check_specs.py`.
 - `scaffold_spec.py --refresh-headers` keeps rows a person filled in or added, and `generate_dev_skill.py --only references` refreshes just the references.
 - The generated skill description is quoted and checked: the name length, the folder name, a target under 250 characters and a warning above 300.
 - The window and earliest-finish checks compare each item with its size and allocation, and the sample dates are adjusted to fit.

@@ -131,7 +131,7 @@ The counterpart items on the Workflow track are WI-07 Audit log and retention, w
 - Checking delegate dates and refusing decisions belongs to WI-06. The screen only helps the user.
 - Publishing the event, the audit record and the queue itself belong to the Workflow track (WI-07 for the audit record).
 - Routing and escalation belong to WI-03, and the inbox page and decision dialog belong to WI-04. This item only words and sends the reminder.
-- Other channels than email, push updates and removing a delegate record are not in the ground truth. The program decides them, and a delete would need a contract change.
+- Other channels than email, push updates and removing a delegate record are not in the ground truth. The stakeholders decide them, and a delete would need a contract change.
 
 ## Watch out for
 

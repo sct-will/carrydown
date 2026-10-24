@@ -48,8 +48,8 @@ If you cannot or do not want to install Node.js, skip the installer.
 
 1. Open https://github.com/sct-will/carrydown in your browser.
 2. Click the green **Code** button, then **Download ZIP**.
-3. Unzip the file. Inside it is a folder called `skills` with three folders: `carrydown-ground-truth`, `carrydown-plan-to-github` and `carrydown-dev-skill`.
-4. Copy those three folders into your agent's skills folder. The paths for each agent are in the table under [Install options](../README.md#install-options) in the README. Use the project folder column to install for one project, or the user folder column to install for yourself everywhere. Create the skills folder if it does not exist.
+3. Unzip the file. Inside it is a folder called `skills` with two folders: `carrydown-ground-truth` and `carrydown-plan-to-github`.
+4. Copy those two folders into your agent's skills folder. The paths for each agent are in the table under [Install options](../README.md#install-options) in the README. Use the project folder column to install for one project, or the user folder column to install for yourself everywhere. Create the skills folder if it does not exist.
 5. Restart your agent.
 
 The skills are self-contained, so nothing else needs copying.

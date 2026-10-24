@@ -2,11 +2,11 @@
 
 ## npx: command not found
 
-`npx` comes with Node.js, which is not installed on this computer or is not on your path. Go to https://nodejs.org, download the version marked LTS, run its installer, then close and reopen your terminal and your agent, and try again. You can also ask your agent: "Node.js seems to be missing. Tell me how to install it for this computer." If you cannot install Node.js, there is a path without it: copy the three folders in `skills/` of the repository into your agent's skills folder. The README's Install options section lists the folders.
+`npx` comes with Node.js, which is not installed on this computer or is not on your path. Go to https://nodejs.org, download the version marked LTS, run its installer, then close and reopen your terminal and your agent, and try again. You can also ask your agent: "Node.js seems to be missing. Tell me how to install it for this computer." If you cannot install Node.js, there is a path without it: copy the two folders in `skills/` of the repository into your agent's skills folder. The README's Install options section lists the folders.
 
 ## How do I start each skill?
 
-Say one sentence per skill. "Set up a project plan from this document." "Create the GitHub issues and the board." "Generate the developer skill." If your agent does not pick the skill up, put "Use the carrydown-ground-truth skill." (or `carrydown-plan-to-github`, or `carrydown-dev-skill`) in front.
+Two skills you install, one skill is generated for your engineers. Say one sentence per skill: "Set up a project plan from this document." and then "Put the plan on GitHub." The last step of the second skill generates the engineers' skill. To run that step on its own, say "Generate the engineers' skill." If your agent does not pick a skill up, put "Use the carrydown-ground-truth skill." (or `carrydown-plan-to-github`) in front.
 
 ## Do I need a terminal?
 
@@ -34,7 +34,7 @@ Plan mode and spec-driven tools plan one task or one feature from a specificatio
 
 ## What does it cost in tokens?
 
-The planning run reads the whole document once and writes one specification per item, so the cost grows with the number of items. The generated skill loads one specification and the cited sections each time an engineer starts an item, not the whole document. The three skill descriptions are kept short so they stay in every session's listing.
+The planning run reads the whole document once and writes one specification per item, so the cost grows with the number of items. The generated skill loads one specification and the cited sections each time an engineer starts an item, not the whole document. The two skill descriptions are kept short so they stay in every session's listing.
 
 ## Does it write the code?
 
@@ -66,7 +66,7 @@ People change. Names go in `plan.yaml`, and the checker keeps them out of the sp
 
 ## What is a program input?
 
-Something the program provides outside the plan, such as a pilot team, an approval or a review. Items that wait for one say "program input". The program's own items are not issues in the plan. They leave a gap in the numbering.
+Something an item needs from work owned outside the team, such as a pilot team, an approval or a review. Items that wait for one say "program input". The plan does not schedule that work, so it is not an issue in the plan. It keeps an id, left as a gap in the numbering, under `program` in `plan.yaml`.
 
 ## What does the board script leave for me to click?
 

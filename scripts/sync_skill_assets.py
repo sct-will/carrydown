@@ -2,8 +2,9 @@
 """Copy the scripts and templates each skill needs into its own folder.
 
 Installers such as `npx skills add` copy only a skill's folder, not the whole repository.
-So every skill carries the scripts and templates it runs. The canonical copies are in
-scripts/ and templates/ at the top of the repository. This script refreshes the copies.
+So each of the two skills carries the scripts and templates it runs. carrydown-plan-to-github
+also carries the generator of the engineers' skill and its templates. The canonical copies are
+in scripts/ and templates/ at the top of the repository. This script refreshes the copies.
 
 The GitHub client (github_client.py, the only module with network or token code) ships only
 with carrydown-plan-to-github. The check fails if it, or any other script that is not in a
@@ -29,12 +30,8 @@ NEEDS = {
         "templates": ["plan.yaml", "spec.md", "milestone.md", "spec-README.md", "closing-comment.md", "checkpoint-comment.md", "check-specs-workflow.yml"],
     },
     "carrydown-plan-to-github": {
-        "scripts": ["github_token.py", "github_sync.py", "github_project.py", "github_client.py", "check_specs.py"],
-        "templates": ["issue-body.md", "closing-comment.md", "checkpoint-comment.md"],
-    },
-    "carrydown-dev-skill": {
-        "scripts": ["generate_dev_skill.py", "check_specs.py"],
-        "templates": ["dev-skill/SKILL.md.tmpl", "dev-skill/README.md.tmpl"],
+        "scripts": ["github_token.py", "github_sync.py", "github_project.py", "github_client.py", "check_specs.py", "generate_dev_skill.py"],
+        "templates": ["issue-body.md", "closing-comment.md", "checkpoint-comment.md", "dev-skill/SKILL.md.tmpl", "dev-skill/README.md.tmpl"],
     },
 }
 

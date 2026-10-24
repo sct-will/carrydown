@@ -33,7 +33,7 @@ ALWAYS = [
     (re.compile(r"(?i)gener" + r"ated\s+by|co-auth" + r"ored-by"), "credit line"),
     (re.compile(r"(?i)\bc[a]rbon\b"), "design system name that must not appear"),
     (re.compile(r"(?i)copyright\s+(?:\(c\)\s*)?(?:19|20)\d\d"), "copyright line. Use an attribution line instead"),
-    (re.compile(r"(?i)\bk[i]t\b"), "retired word. Say the carrydown skills, the three skills or the repository"),
+    (re.compile(r"(?i)\bk[i]t\b"), "retired word. Say the carrydown skills, the two skills or the repository"),
 ]
 VENDORS = re.compile(
     r"(?i)cl[a]ude|anthrop[i]c|open[a]i|chat[g]pt|\bg[p]t-?\d|gem[i]ni|\bc[o]pilot\b|\bc[o]dex\b|\bcurs[o]r\b|mistr[a]l|\bl[l]ama\b|deeps[e]ek|\bI[B]M\b"
@@ -43,8 +43,7 @@ VENDOR_OK = [
     "README.md", "START-HERE.md",
     "templates/dev-skill/README.md.tmpl",
     "skills/*/templates/dev-skill/README.md.tmpl",
-    "skills/*/templates/dev-skill/README.md",   # the copy from before the rename, until it is removed
-    "skills/carrydown-dev-skill/references/install.md",
+    "skills/carrydown-plan-to-github/references/engineers-skill-install.md",
     "sample/*/docs/dev/skills/*/README.md",
 ]
 

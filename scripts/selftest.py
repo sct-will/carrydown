@@ -416,7 +416,7 @@ def main():
         step("a size without a number of days is flagged", chk + ["--plan", variant("nosize", plan_text.replace('size: "Large, about 5 days"', 'size: "Large"'))], expect=1,
              contains=["size must say how many days"])
         planning_review(chk, variant, plan_text)
-        for skill, script in (("carrydown-ground-truth", "check_specs.py"), ("carrydown-plan-to-github", "github_sync.py"), ("carrydown-dev-skill", "generate_dev_skill.py")):
+        for skill, script in (("carrydown-ground-truth", "check_specs.py"), ("carrydown-plan-to-github", "github_sync.py")):
             dst = Path(tmp) / skill
             shutil.copytree(ROOT / "skills" / skill, dst)
             if script == "check_specs.py":
@@ -430,12 +430,15 @@ def main():
                     step(f"installed copy of {skill} runs {other.name} --help", [PY, str(other), "--help"])
             if (dst / "scripts/scaffold_spec.py").exists():
                 step(f"installed copy of {skill} runs the header refresh", [PY, str(dst / "scripts/scaffold_spec.py"), "--root", str(ROOT / SAMPLE), "--refresh-headers"])
-        dev = Path(tmp) / "carrydown-dev-skill"
-        step("installed copy of carrydown-dev-skill refreshes only the references", [PY, str(dev / "scripts/generate_dev_skill.py"), "--root", str(ROOT / SAMPLE), "--only", "references"],
+        gh = Path(tmp) / "carrydown-plan-to-github"
+        step("installed copy of carrydown-plan-to-github generates the engineers' skill", [PY, str(gh / "scripts/generate_dev_skill.py"), "--root", str(ROOT / SAMPLE)],
+             contains=["developer skill: expense-approvals-dev"])
+        step("installed copy of carrydown-plan-to-github refreshes only the references", [PY, str(gh / "scripts/generate_dev_skill.py"), "--root", str(ROOT / SAMPLE), "--only", "references"],
              contains=["would write: references/work-items.md", "would write: references/ground-truth-map.md"], absent=("Traceback", "SKILL.md"))
-        extra = sorted(x.name for x in (dev / "scripts").glob("*.py") if x.name not in ("generate_dev_skill.py", "check_specs.py", "carrydown_lib.py"))
-        results.append((not extra, "carrydown-dev-skill ships only the scripts it runs"))
-        print(("PASS " if not extra else "FAIL ") + "carrydown-dev-skill ships only the scripts it runs" + (f" (remove {', '.join(extra)})" if extra else ""))
+        ships = ("generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_sync.py", "github_token.py")
+        extra = sorted(x.name for x in (gh / "scripts").glob("*.py") if x.name not in ships)
+        results.append((not extra, "carrydown-plan-to-github ships only the scripts it runs"))
+        print(("PASS " if not extra else "FAIL ") + "carrydown-plan-to-github ships only the scripts it runs" + (f" (remove {', '.join(extra)})" if extra else ""))
         fixtures(Path(tmp))
         citations(Path(tmp))
         error_paths(Path(tmp), plan_text)

@@ -51,7 +51,7 @@ Earliest finish (forward pass over the dependencies, from sizes and allocation)
     WI-11 2027-03-03 to 2027-03-10, about 5.0 working days
   Owners are not serialised in this pass. The load table above shows whether each person's work fits each work unit.
 
-Program-owned items (outside the development plan; referenced only as program input)
+Work the plan does not schedule (owned outside the team; referenced only as program input)
   WI-05 Pilot team recruitment
   WI-10 Finance sign-off
 

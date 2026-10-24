@@ -1,4 +1,4 @@
-# Review checklist for a generated skill
+# Review checklist for the engineers' skill
 
 Go through this with the user before you call the skill done.
 

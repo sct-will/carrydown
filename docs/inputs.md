@@ -74,16 +74,16 @@ Which agentic editors do the engineers use? Any editor or command line agent tha
 
 | Ask yourself | Example | Default |
 | --- | --- | --- |
-| Who is the program, the people who watch the demonstrations and decide pass or fail? | The product manager and the head of operations. | Ask. |
+| Who are the people accountable for the outcome, who watch the demonstrations and decide pass or fail? | The product manager and the head of operations. | Ask. |
 | How long can they give? | 45 minutes. | 45 minutes. |
 | What must they see to say a milestone is done? | "A manager approves a report from the inbox." | Write it in their words. |
 | Who gives each demonstration? | The engineers whose tracks meet in the milestone, together. | That. |
 
-## 7. Program-owned boundary
+## 7. Work the plan does not schedule
 
 | Ask yourself | Example | Default |
 | --- | --- | --- |
-| What does the program own and keep outside the plan? | Recruiting pilot teams. Approvals. Security review. Legal text. | None. |
+| What work is owned outside the team and kept out of the plan? | Recruiting pilot teams. Approvals. Security review. Legal text. | None. |
 | Which development items wait for these? | The pilot item waits for the pilot team. | None. |
 
 ## 8. Engineering conventions
@@ -114,7 +114,7 @@ Agents in use:
 Demonstration audience and length:
 Who gives each demonstration:
 What they must see:
-Program-owned work and the items that wait for it:
+Work owned outside the team and the items that wait for it:
 Test command / lint command / feature flag:
 Other rules for the definition of done:
 ```

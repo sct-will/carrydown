@@ -4,7 +4,7 @@ Read this when you open the carrydown repository.
 
 ## What this repository is
 
-- Three Agent Skills: `carrydown-ground-truth`, `carrydown-plan-to-github` and `carrydown-dev-skill`.
+- Two Agent Skills: `carrydown-ground-truth` and `carrydown-plan-to-github`. The second also generates a third skill, per project, that the engineers install. Two skills you install, one skill is generated for your engineers.
 - The Python scripts and Markdown templates the skills run, each skill carrying its own copy.
 - A fictional sample, `sample/expense-approvals/`, with its worked output.
 
@@ -30,7 +30,7 @@ It does not write application code. Planning decisions (owners, dates, scope, or
 - Every script that writes is a dry run unless you pass `--apply`. Run the dry run, read it, then apply.
 - Ask the user before anything touches GitHub. Never delete issues, labels, projects or repositories.
 - Prose style: sentence-case headings, short sentences, no em or en dashes, spell out acronyms on first use.
-- No AI vendor names outside the agent install lists. One retired word for this product, the three-letter "k" noun for a set of tools, is banned. Say "the carrydown skills", "the three skills" or "the repository". `lint_prose.py` rejects it. No copyright lines, use an attribution line.
+- No AI vendor names outside the agent install lists. One retired word for this product, the three-letter "k" noun for a set of tools, is banned. Say "the carrydown skills", "the two skills" or "the repository". `lint_prose.py` rejects it. No copyright lines, use an attribution line.
 - After you change a file in `scripts/` or `templates/`, refresh the skill copies: `python3 scripts/sync_skill_assets.py --apply`. Check with `--check`.
 - Commits carry a real human author and an imperative message. No generated-by lines and no co-author trailers.
 - Do not rename scripts, skills or folders without an issue.
@@ -49,11 +49,10 @@ The self test runs every script's `--help` and dry run on the sample. If you cha
 
 Install them with the line in the README. Then the plan owner says one sentence per stage:
 
-1. "Set up a project plan from this document." (`carrydown-ground-truth`)
-2. "Create the GitHub issues and the board." (`carrydown-plan-to-github`)
-3. "Generate the developer skill." (`carrydown-dev-skill`)
+1. "Set up a project plan from this document." (`carrydown-ground-truth`) The plan owner then reviews the plan and the specifications with the agent and edits them until they are right.
+2. "Put the plan on GitHub." (`carrydown-plan-to-github`) Its last step generates the engineers' skill. "Generate the engineers' skill." runs that step on its own.
 
-Roles: the plan owner runs the three skills, the lead reviewer reads the generated specifications for about an hour, the engineers use the generated developer skill every day, and the program attends the demonstrations and decides pass or fail. The program runs nothing.
+Roles: the plan owner, an engineering manager or a product manager, runs both skills and reviews what they produce. The engineers install the generated skill once and start a work item by naming it, for example "Work on WI-03". The people accountable for the outcome watch each milestone demonstration and decide pass or fail. They run nothing.
 
 If a skill is not picked up, name it first: "Use the carrydown-ground-truth skill." When a person asks where to start, point them to the README. Its "What it sounds like" section shows what to say and what the agent replies.
 

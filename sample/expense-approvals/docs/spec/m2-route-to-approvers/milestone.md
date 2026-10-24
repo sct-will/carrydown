@@ -7,7 +7,7 @@ Sub-epic of the Expense approvals Epic. Work unit 2, 2027-02-15 to 2027-03-05 (`
 | Due | 2027-03-05 |
 | Exit gate | A submitted report reaches the right approvers in order and an approver decides it from the inbox. |
 | Work items | WI-03, WI-04 |
-| Demonstration | 2027-03-05, both people, in a meeting session with the program. |
+| Demonstration | 2027-03-05, both people, in a meeting session with the stakeholders. |
 
 ## Purpose
 
@@ -34,7 +34,7 @@ Routing and the inbox are the two halves of one capability: a submitted report r
 
 ## Acceptance criteria
 
-The milestone is accepted when the program has seen each of these at the demonstration.
+The milestone is accepted when the stakeholders have seen each of these at the demonstration.
 
 - [ ] Three reports with totals of 400.00, 3,000.00 and 8,000.00 received one, two and three steps.
 - [ ] The first approver saw only the reports waiting for them, oldest first.
@@ -53,7 +53,7 @@ The joint check for that date, Milestone 2 demonstration: A report is approved b
 
 ## Demonstration expectations
 
-- Given on 2027-03-05 by the people who own the items, to the program, in one meeting session, showing the work items of this milestone working together.
+- Given on 2027-03-05 by the people who own the items, to the stakeholders, in one meeting session, showing the work items of this milestone working together.
 - Nothing about the session is automated. The people decide what to show. The acceptance criteria above say what must be seen.
 - The outcome, pass or fail against the acceptance criteria, is noted as a comment on this sub-epic the same day.
 

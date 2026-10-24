@@ -45,7 +45,7 @@ Show the review to the plan owner. Each advisory line is a question for them, no
 - The file length is inside `limits.spec_lines`.
 - No `TODO` markers remain.
 - Banned vocabulary: dashes, names of people from the plan, AI vendor names, sprint words, "open questions", "non-goals".
-- No reference to a program-owned id or to an id that does not exist.
+- No reference to the id of work the plan does not schedule, or to an id that does not exist.
 - No broken relative link.
 - If the ground truth headings are numbered, every section number in the Ground truth row exists.
 

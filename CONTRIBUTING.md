@@ -10,7 +10,7 @@ Thank you for helping. This page tells you how to report a problem, propose a ch
 
 ## Ask a question or suggest a feature
 
-Use the "Question" form for questions. Use the "Feature request" form for ideas. Say what you were trying to do before you say what you want built. The three skills stay small on purpose, so a request that makes the plan, the checker or a skill simpler is more likely to be accepted than one that adds a new concept.
+Use the "Question" form for questions. Use the "Feature request" form for ideas. Say what you were trying to do before you say what you want built. The two skills stay small on purpose, so a request that makes the plan, the checker or a skill simpler is more likely to be accepted than one that adds a new concept.
 
 ## Propose a change
 

@@ -877,14 +877,14 @@ PLANNING_RULES = (
     "The first proves the whole path with the least behaviour, and the last proves the project can be released and run.",
     "A milestone holds items from every track the capability crosses, and the tracks meet at a named joint check before the demonstration. "
     "A milestone that stays inside one track says why.",
-    "The exit gate is one sentence the program can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show.",
+    "The exit gate is one sentence the people accountable for the outcome can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show.",
     "Inside a milestone the shared contract comes first, so both tracks can start without waiting. The first week leaves nobody idle.",
     "Each engineer's consecutive items stay in one part of the system, a theme. Related items for the same person sit in adjacent days to cut context switching.",
     "Size in days divided by allocation gives calendar working days: four days at 60 percent is nearly seven working days. "
     "Nobody is planned past 100 percent of allocated capacity in a work unit, aim for about 80, and days off and breaks are real.",
     "Slack sits before every checkpoint and demonstration. An item that completes on its checkpoint date has none.",
     "The critical path is read for single points of failure. If it runs through one person, the plan says so and offers an alternative.",
-    "Program-owned work stays outside the plan as id gaps.",
+    "Work the plan does not schedule, owned outside the team, stays out of the plan as id gaps.",
     "The plan records its rationale where a reviewer can argue with it: for each milestone, why these items form it and what the joint demonstration proves, "
     "and for each track, why its items are in this order. The plan owner reads the plan week by week, adversarially, before anything is scaffolded.",
 )

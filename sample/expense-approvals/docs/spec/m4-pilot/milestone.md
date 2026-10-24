@@ -7,13 +7,13 @@ Sub-epic of the Expense approvals Epic. Work unit 4, 2027-03-29 to 2027-04-09 (`
 | Due | 2027-04-09 |
 | Exit gate | A pilot team's approved reports reach the ledger by the nightly file. |
 | Work items | WI-09 |
-| Demonstration | 2027-04-09, both people, in a meeting session with the program. |
+| Demonstration | 2027-04-09, both people, in a meeting session with the stakeholders. |
 
 ## Purpose
 
 This milestone puts the service in the hands of one real team. The nightly ledger file carries their approved reports to finance with no re-keying.
-It is the first time outsiders use the product, so the demonstration is also the first reading of the measures that matter to the program.
-It depends on a pilot team that the program names, and the plan holds a place for that input.
+It is the first time outsiders use the product, so the demonstration is also the first reading of the measures that matter to the stakeholders.
+It depends on a pilot team that the stakeholders name, and the plan holds a place for that input.
 It feeds the release decision.
 
 ## Why these items form this milestone
@@ -35,13 +35,13 @@ Why one track: The pilot adds no screen and no notification. The Experience work
 
 ## Acceptance criteria
 
-The milestone is accepted when the program has seen each of these at the demonstration.
+The milestone is accepted when the stakeholders have seen each of these at the demonstration.
 
 - [ ] The file `expenses-YYYYMMDD.csv` for the pilot team opened in the finance tool with no manual change.
 - [ ] The checksum file matched the content of the CSV file.
 - [ ] A rerun after a forced failure produced no duplicate rows.
 - [ ] Every exported report showed the Exported state and an audit event.
-- [ ] The program received the readout of time to decision for the pilot reports.
+- [ ] The stakeholders received the readout of time to decision for the pilot reports.
 
 ## Joint demonstration
 
@@ -54,7 +54,7 @@ The joint check for that date, Pilot readout: The nightly file for the pilot tea
 
 ## Demonstration expectations
 
-- Given on 2027-04-09 by the people who own the items, to the program, in one meeting session, showing the work items of this milestone working together.
+- Given on 2027-04-09 by the people who own the items, to the stakeholders, in one meeting session, showing the work items of this milestone working together.
 - Nothing about the session is automated. The people decide what to show. The acceptance criteria above say what must be seen.
 - The outcome, pass or fail against the acceptance criteria, is noted as a comment on this sub-epic the same day.
 

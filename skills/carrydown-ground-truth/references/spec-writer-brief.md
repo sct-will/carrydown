@@ -34,10 +34,10 @@ Length: <usual range, for example 90 to 150 lines>.
 
 - Sentence-case headings. Short sentences. Spell out an acronym on first use.
 - No em dashes or en dashes. No colons inside prose sentences.
-- No names of people or handles. Say "the engineer", "the program", "the <track> track".
+- No names of people or handles. Say "the engineer", "the stakeholders", "the <track> track".
 - No AI vendor, model or tool names. Say "the coding agent".
 - No sprint vocabulary. Dates are absolute.
-- Never mention these ids, which the program owns: <program ids>. Refer to a program input in words.
+- Never mention these ids of work the plan does not schedule, owned outside the team: <program ids>. Refer to a program input in words.
 - Every command, flag, path and function you name must come from the ground truth, the layout above or code you have read. If a detail cannot be verified, write "verify at implementation" and say what to look for.
 - Remove every TODO marker.
 

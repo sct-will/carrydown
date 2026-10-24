@@ -8,7 +8,7 @@
 | Checkpoint | 2027-04-09, Pilot readout |
 | Demonstration | 2027-04-09, milestone 4 demonstration (acceptance criteria in `milestone.md` in this folder) |
 | Size | Medium, about 4 days |
-| Depends on | WI-07; program input: the pilot team, named by the program |
+| Depends on | WI-07; program input: the pilot team, named by the stakeholders |
 | Unblocks | WI-11 |
 | Ground truth | Sections 3.6, 4.2, 7.3 |
 
@@ -32,7 +32,7 @@ Finance staff re-key every line of every approved report into the ledger today (
 - WI-01 creates the migrations for the six tables of 3.3 (report, line_item, receipt, approval_step, delegate, audit_event), `src/config/flags.js`, the contract test runner and the continuous integration workflow.
 - WI-03 creates the state machine of 3.4. Verify at implementation that Approved to Exported, caused by the export job, is in it, and use it instead of updating state directly.
 - WI-07 creates `src/audit/writer.js` and the migration that gives the application account insert and select rights only. The job writes its audit events through the writer and runs under that account.
-- This item has a program input, the pilot team, named by the program. The program also confirms their cost centres before work unit 4. The pilot readout on 2027-04-09 uses that team's approved reports. Build and test with made-up reports and cost centres. Hard code no team and no cost centre. If the team is not named when the item is due on 2027-04-06, say so on the issue.
+- This item has a program input, the pilot team, named by the stakeholders. The stakeholders also confirm their cost centres before work unit 4. The pilot readout on 2027-04-09 uses that team's approved reports. Build and test with made-up reports and cost centres. Hard code no team and no cost centre. If the team is not named when the item is due on 2027-04-06, say so on the issue.
 - The service runs as one container (3.6). The name of the setting for the drop folder is not in the ground truth. Choose it and document it for WI-11.
 - Commands are `npm test`, `npm run test:contract` and `npm run lint`. The job sits behind `EXPENSE_APPROVALS_ENABLED`, off by default (DS-1, the delivery standard).
 
@@ -116,17 +116,17 @@ The counterpart item on the Experience track is WI-11 Release readiness and runb
 ## Out of scope
 
 - The retention job and any deletion (GOV-2.4, GOV-2.5) belong to WI-07. The export deletes nothing.
-- Finance sign-off on the export format and the retention period belongs to the program. A format change after sign-off is new work (R3).
+- Finance sign-off on the export format and the retention period belongs to the stakeholders. A format change after sign-off is new work (R3).
 - Paying the employee and loading the file into the ledger belong to the finance system (1.4).
-- Naming the pilot team and confirming its cost centres belong to the program.
+- Naming the pilot team and confirming its cost centres belong to the stakeholders.
 - The runbook, alerting on a failed night and restore from backup belong to WI-11.
 
 ## Watch out for
 
 - `cost_centre` is "of the submitter at approval time", but no table of 3.3 holds it. Do not read it live at export time, since it may have changed. If a column is needed, add it by a forward migration with its test (DS-1.5) and record it under Decisions recorded.
-- 7.3 does not give a header row, a delimiter, quoting, a timestamp format, the layout of the `.sha256` file or the rule for a night with no reports. Choose a header row, commas, ISO 8601 UTC timestamps, a lowercase hexadecimal digest, and a file even on an empty night. Record each choice and confirm it through the program before the readout. Keep the format in one module (R3).
+- 7.3 does not give a header row, a delimiter, quoting, a timestamp format, the layout of the `.sha256` file or the rule for a night with no reports. Choose a header row, commas, ISO 8601 UTC timestamps, a lowercase hexadecimal digest, and a file even on an empty night. Record each choice and confirm it with the stakeholders before the readout. Keep the format in one module (R3).
 - Never append to a published file and never export an Exported report. Once a file is in the drop folder the ledger may already have read it, so a duplicate row cannot be taken back.
-- Line amounts are stored integers, and the report total is rounded after summing (6.2 item 2). The rows of a report may differ from its `base_total_cents` by a cent. Export the stored values, never recompute them, and tell the program.
+- Line amounts are stored integers, and the report total is rounded after summing (6.2 item 2). The rows of a report may differ from its `base_total_cents` by a cent. Export the stored values, never recompute them, and tell the stakeholders.
 - The line_item table holds merchant and note. They are not columns of 7.3, so they stay out. Delete staged files after the move and never log row contents.
 - There is no approval per line item. Approval is per report, so every line item of an Approved report is exported. `approved_at` is the decision time of the last approving step, so verify it equals `decided_at` of the report.
 

@@ -7,7 +7,7 @@ Sub-epic of the Expense approvals Epic. Work unit 1, 2027-02-01 to 2027-02-12 (`
 | Due | 2027-02-12 |
 | Exit gate | A staff member creates a report with a receipt in the web client and submits it through the service. |
 | Work items | WI-01, WI-02 |
-| Demonstration | 2027-02-12, both people, in a meeting session with the program. |
+| Demonstration | 2027-02-12, both people, in a meeting session with the stakeholders. |
 
 ## Purpose
 
@@ -34,7 +34,7 @@ The service scaffold with the API contract and the report form are the thinnest 
 
 ## Acceptance criteria
 
-The milestone is accepted when the program has seen each of these at the demonstration.
+The milestone is accepted when the stakeholders have seen each of these at the demonstration.
 
 - [ ] The web client created a draft, added two line items in different currencies and attached one receipt that covers both lines.
 - [ ] The same report was submitted and the service answered 202 with the state Submitted.
@@ -53,7 +53,7 @@ The joint check for that date, Milestone 1 demonstration: A report with one rece
 
 ## Demonstration expectations
 
-- Given on 2027-02-12 by the people who own the items, to the program, in one meeting session, showing the work items of this milestone working together.
+- Given on 2027-02-12 by the people who own the items, to the stakeholders, in one meeting session, showing the work items of this milestone working together.
 - Nothing about the session is automated. The people decide what to show. The acceptance criteria above say what must be seen.
 - The outcome, pass or fail against the acceptance criteria, is noted as a comment on this sub-epic the same day.
 

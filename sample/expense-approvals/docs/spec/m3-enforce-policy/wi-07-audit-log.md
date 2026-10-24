@@ -116,8 +116,8 @@ The counterpart on the Experience track is WI-08, Notifications and delegates, w
 - The rules of GOV-1 and the refusal of decisions belong to WI-06.
 - The notification event, the queue and the email belong to WI-08.
 - The nightly export and its `export` event belong to WI-09, which calls the writer from this item.
-- Setting or releasing a legal hold has no endpoint in section 7.1. It belongs to the program.
-- Changing the retention period, or signing it off, belongs to the program.
+- Setting or releasing a legal hold has no endpoint in section 7.1. It belongs to the stakeholders.
+- Changing the retention period, or signing it off, belongs to the stakeholders.
 - An auditor screen in the web client is not in the plan.
 
 ## Watch out for

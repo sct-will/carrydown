@@ -1,4 +1,4 @@
-# Installing the developer skill
+# Installing the engineers' skill
 
 This page speaks to the plan owner and the engineers. Relay it in your own words.
 

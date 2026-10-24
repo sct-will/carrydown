@@ -23,7 +23,7 @@ body:
       options:
         - carrydown-ground-truth
         - carrydown-plan-to-github
-        - carrydown-dev-skill
+        - The generated engineers' skill
         - A script
         - A template
         - The documentation
