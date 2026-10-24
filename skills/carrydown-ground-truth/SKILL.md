@@ -59,7 +59,7 @@ Start each later group with the same line and the next number. Collect these, in
 - What the program owns and keeps outside the plan.
 - Engineering conventions for the definition of done: test command, feature flag, lint command.
 
-If the user wants to see the whole flow first, point them to the browser links, never to a local folder. An install copies only this skill folder, so the sample is not on their computer. The sample output page is https://github.com/sct-will/carrydown/blob/main/docs/sample.md and the sample repository, with its issues and board, is https://github.com/sct-will/carrydown-sample.
+If the user wants to see the whole flow first, point them to the browser links, never to a local folder. An install copies only this skill folder, so the sample is not on their computer. The sample repository is https://github.com/sct-will/carrydown-sample. Its README holds the renderings and the sample output, and the repository has the live issues and the public board.
 
 ### 2. Render the ground truth
 

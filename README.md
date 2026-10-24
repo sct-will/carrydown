@@ -6,37 +6,15 @@ Turn your architecture document into a plan your team and its AI coding agents c
 
 [![Licence](https://img.shields.io/github/license/sct-will/carrydown)](LICENSE) [![Last commit](https://img.shields.io/github/last-commit/sct-will/carrydown)](https://github.com/sct-will/carrydown/commits/main) [![Issues](https://img.shields.io/github/issues/sct-will/carrydown)](https://github.com/sct-will/carrydown/issues) [![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-blue)](LICENSE-CONTENT.md) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-3%20skills-teal)](https://agentskills.io) [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](#requirements-and-access) [![Open in Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sct-will/carrydown)
 
-## See it in 60 seconds
+[Getting started](#getting-started) · [How it works](#how-it-works) · [What you get](#what-you-get) · [Install options](#install-options) · [Requirements and access](#requirements-and-access) · [Sample](#sample) · [Run the scripts yourself](#run-the-scripts-yourself) · [FAQ](#faq) · [Contributing](#contributing) · [Licence](#licence)
 
-No install. A fictional expense-approvals service, run end to end.
-
-![A rendering of the project board as a table grouped by work unit](docs/images/board-table.png)
-
-*A rendering of the sample output: the board as a table, grouped by work unit.*
-
-![A rendering of the project board as a roadmap](docs/images/board-roadmap.png)
-
-*A rendering of the sample output: the roadmap, with work units of different lengths.*
-
-![A rendering of one issue next to the specification file it links to](docs/images/issue-and-spec.png)
-
-*A rendering of the sample output: one issue and the spec file the agent reads first.*
-
-- [The sample output page](docs/sample.md)
-- [A spec file from the sample (WI-03)](sample/expense-approvals/docs/spec/m2-route-to-approvers/wi-03-routing-engine.md)
-- [The live issues](https://github.com/sct-will/carrydown-sample/issues)
-- [The live board](https://github.com/users/sct-will/projects/2)
-- [The plan summary](docs/sample.md#plan)
-
-## Install in one line
+## Getting started
 
 ```bash
 npx skills add sct-will/carrydown --all
 ```
 
 Restart your agent.
-
-## Getting started
 
 1. Open your coding agent in your project folder. No folder yet? Say:
 
@@ -158,6 +136,15 @@ No Node.js? Skip the installer. Copy the three folders in `skills/` into your ag
 - **Single sign-on (SSO).** If your organisation enforces it, authorise the token: github.com/settings/tokens, click the token's "Configure SSO" button, click "Authorize" next to the organisation.
 - **A token**, created with the pre-filled link https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown. It ticks `repo` and `project`. A fine-grained token also works for a project owned by an organisation, with Issues read and write, Metadata read, and the organisation permission Projects read and write. It does not work for a project owned by a user account. Use a classic token there.
 
+## Sample
+
+The sample is a fictional expense approvals service: requirements, two governance rules, a development standard, a business analyst note, two people and eleven weeks. The carrydown skills turned that ground truth into a plan, specifications, issues and a board.
+
+- The repository, with the ground truth, the plan and every specification: https://github.com/sct-will/carrydown-sample
+- The issues the skills created: https://github.com/sct-will/carrydown-sample/issues
+- The public project board: https://github.com/users/sct-will/projects/2
+- Its README, which holds the renderings and the sample output: https://github.com/sct-will/carrydown-sample#readme
+
 ## Run the scripts yourself
 
 No agent and no token needed for these three commands.
@@ -219,6 +206,7 @@ More answers, including "npx: command not found", are in [docs/faq.md](docs/faq.
 
 ## Contributing
 
+Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to report a problem, propose a change, run the checks (`python3 scripts/selftest.py` and `python3 scripts/lint_prose.py`) and get a review. Issue forms and a pull request template guide you.
 
 ## Code of conduct
 

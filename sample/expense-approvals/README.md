@@ -4,7 +4,7 @@ This is a sample. The project is fictional. The people, the company and the numb
 
 It shows what the three carrydown skills produce from a short ground truth.
 
-This folder is published twice. It lives in the main carrydown repository at `sample/expense-approvals/`, and it is the root of the repository https://github.com/sct-will/carrydown-sample, where the carrydown scripts created the real issues and the project board from this plan. Read the summary in `docs/sample.md` of the main carrydown repository.
+This folder is published twice. It lives in the main carrydown repository at `sample/expense-approvals/`, and it is the root of the repository https://github.com/sct-will/carrydown-sample, where the carrydown scripts created the real issues and the project board from this plan. The README of that repository shows the renderings and the sample output.
 
 ## What is here
 
