@@ -235,51 +235,325 @@ def q(tag, ns=W):
     return "{%s}%s" % (ns, tag)
 
 
+class DocxError(Exception):
+    pass
+
+
+NUMBERED_HEADING = re.compile(r"^\d+(\.\d+)*\.?\s")
+
+
+def _roman(n):
+    vals = ((1000, "m"), (900, "cm"), (500, "d"), (400, "cd"), (100, "c"), (90, "xc"),
+            (50, "l"), (40, "xl"), (10, "x"), (9, "ix"), (5, "v"), (4, "iv"), (1, "i"))
+    out = []
+    for v, s in vals:
+        while n >= v:
+            out.append(s)
+            n -= v
+    return "".join(out) or "0"
+
+
+def _letters(n):
+    out = ""
+    while n > 0:
+        n, r = divmod(n - 1, 26)
+        out = chr(97 + r) + out
+    return out or "0"
+
+
+def format_number(n, fmt):
+    """Format a list counter the way Word does for the common number formats."""
+    if fmt in ("lowerLetter", "upperLetter"):
+        s = _letters(n)
+        return s.upper() if fmt == "upperLetter" else s
+    if fmt in ("lowerRoman", "upperRoman"):
+        s = _roman(n)
+        return s.upper() if fmt == "upperRoman" else s
+    if fmt == "decimalZero":
+        return f"{n:02d}"
+    if fmt in ("bullet", "none"):
+        return ""
+    return str(n)
+
+
+class Numbering:
+    """Word list numbering: abstract definitions from numbering.xml, counters in document order.
+
+    Counters are kept per abstract definition, so two list instances (w:num) that point at the
+    same definition continue each other, as Word does. A w:startOverride restarts a level the
+    first time its instance is used. A level restarts when a higher level is used, unless its
+    w:lvlRestart says otherwise."""
+
+    def __init__(self, root, q, styles):
+        self.levels = {}       # abstractNumId -> {ilvl: level dict}
+        self.nums = {}         # numId -> (abstractNumId, {ilvl: start override})
+        self.counters = {}     # abstractNumId -> {ilvl: current value or None}
+        self.pending = {}      # (abstractNumId, ilvl) -> start value of a restarted level
+        self.used = set()
+        if root is None:
+            return
+        links = {}
+        for a in root.findall(q("abstractNum")):
+            aid = a.get(q("abstractNumId"))
+            lv = {}
+            for l in a.findall(q("lvl")):
+                ilvl = int(l.get(q("ilvl")) or 0)
+
+                def val(tag, default=None):
+                    e = l.find(q(tag))
+                    return e.get(q("val")) if e is not None else default
+                start = val("start", "1")
+                restart = val("lvlRestart")
+                lv[ilvl] = {
+                    "fmt": val("numFmt", "decimal"),
+                    "text": val("lvlText"),
+                    "start": int(start) if str(start).lstrip("-").isdigit() else 1,
+                    "restart": int(restart) if restart is not None and str(restart).isdigit() else None,
+                    "pstyle": val("pStyle"),
+                    "legal": l.find(q("isLgl")) is not None,
+                }
+            self.levels[aid] = lv
+            link = a.find(q("numStyleLink"))
+            if link is not None:
+                links[aid] = link.get(q("val"))
+        for n in root.findall(q("num")):
+            ref = n.find(q("abstractNumId"))
+            ov = {}
+            for o in n.findall(q("lvlOverride")):
+                so = o.find(q("startOverride"))
+                if so is not None and str(so.get(q("val"))).isdigit():
+                    ov[int(o.get(q("ilvl")) or 0)] = int(so.get(q("val")))
+            self.nums[n.get(q("numId"))] = (ref.get(q("val")) if ref is not None else None, ov)
+        # an abstract definition that only links to a numbering style borrows that style's list
+        for aid, sid in links.items():
+            if self.levels.get(aid):
+                continue
+            nid = (styles.get(sid) or {}).get("numId")
+            target = self.nums.get(nid, (None, {}))[0]
+            if target and target != aid:
+                self.levels[aid] = self.levels.get(target, {})
+
+    def abstract_of(self, num_id):
+        return self.nums.get(num_id, (None, {}))[0]
+
+    def level(self, num_id, ilvl):
+        return self.levels.get(self.abstract_of(num_id), {}).get(ilvl)
+
+    def level_for_style(self, num_id, style_id):
+        for ilvl, lv in self.levels.get(self.abstract_of(num_id), {}).items():
+            if lv["pstyle"] == style_id:
+                return ilvl
+        return None
+
+    def advance(self, num_id, ilvl):
+        """Count one paragraph of list num_id at level ilvl. Return (label, format of the level)."""
+        aid = self.abstract_of(num_id)
+        levels = self.levels.get(aid)
+        if not levels or ilvl not in levels:
+            return "", "bullet"
+        c = self.counters.setdefault(aid, {})
+        if num_id not in self.used:
+            self.used.add(num_id)
+            for l, s in self.nums[num_id][1].items():
+                c[l] = None
+                self.pending[(aid, l)] = s
+        lv = levels[ilvl]
+        if c.get(ilvl) is None:
+            c[ilvl] = self.pending.pop((aid, ilvl), lv["start"])
+        else:
+            c[ilvl] += 1
+        for d, dl in levels.items():
+            if d > ilvl:
+                restart = dl["restart"] if dl["restart"] is not None else d
+                if restart != 0 and ilvl + 1 <= restart:
+                    c[d] = None
+        if lv["fmt"] in ("bullet", "none"):
+            return "", lv["fmt"]
+        text = lv["text"] if lv["text"] is not None else f"%{ilvl + 1}."
+
+        def sub(m):
+            k = int(m.group(1)) - 1
+            kl = levels.get(k)
+            if kl is None:
+                return ""
+            v = c.get(k)
+            if v is None:
+                v = kl["start"]
+            return format_number(v, "decimal" if lv["legal"] else kl["fmt"])
+        return re.sub(r"%([1-9])", sub, text).strip(), lv["fmt"]
+
+
 def render_docx(src, figures_dir, fig_prefix, write):
     try:
         from lxml import etree   # optional and faster
     except ImportError:
         import xml.etree.ElementTree as etree
-    z = zipfile.ZipFile(src)
-    doc = etree.fromstring(z.read("word/document.xml"))
+    try:
+        z = zipfile.ZipFile(src)
+    except zipfile.BadZipFile:
+        raise DocxError("not a Word document (the file is not a zip archive)")
+    members = set(z.namelist())
+
+    def read_part(name):
+        """Parse one XML part. A part that declares a DOCTYPE is refused: Word never writes one,
+        and a DOCTYPE is how entity expansion attacks reach an XML parser."""
+        data = z.read(name)
+        if re.search(rb"<!DOCTYPE", data[:4096], re.I):
+            raise DocxError(f"{name} contains a DOCTYPE declaration, which Word never writes. The document was not parsed")
+        return etree.fromstring(data)
+
+    if "word/document.xml" not in members:
+        raise DocxError("word/document.xml is missing, so this is not a Word document")
+    doc = read_part("word/document.xml")
     body = doc.find(q("body"))
     rels = {}
-    if "word/_rels/document.xml.rels" in z.namelist():
-        rels_xml = etree.fromstring(z.read("word/_rels/document.xml.rels"))
+    if "word/_rels/document.xml.rels" in members:
+        rels_xml = read_part("word/_rels/document.xml.rels")
         rels = {r.get("Id"): r.get("Target") for r in rels_xml}
 
-    num_fmt = {}
-    if "word/numbering.xml" in z.namelist():
-        num = etree.fromstring(z.read("word/numbering.xml"))
-        abs_fmt = {}
-        for a in num.findall(q("abstractNum")):
-            lvl = a.find(q("lvl"))
-            f = lvl.find(q("numFmt")) if lvl is not None else None
-            abs_fmt[a.get(q("abstractNumId"))] = f.get(q("val")) if f is not None else "bullet"
-        for n in num.findall(q("num")):
-            num_fmt[n.get(q("numId"))] = abs_fmt.get(n.find(q("abstractNumId")).get(q("val")), "bullet")
+    # styles: id -> name, parent, numbering and outline level
+    styles = {}
+    if "word/styles.xml" in members:
+        for s in read_part("word/styles.xml").findall(q("style")):
+            sid = s.get(q("styleId"))
+            if not sid:
+                continue
+            info = {"name": None, "based": None, "numId": None, "ilvl": None, "outline": None}
+            e = s.find(q("name"))
+            info["name"] = e.get(q("val")) if e is not None else None
+            e = s.find(q("basedOn"))
+            info["based"] = e.get(q("val")) if e is not None else None
+            ppr = s.find(q("pPr"))
+            if ppr is not None:
+                numpr = ppr.find(q("numPr"))
+                if numpr is not None:
+                    e = numpr.find(q("numId"))
+                    info["numId"] = e.get(q("val")) if e is not None else None
+                    e = numpr.find(q("ilvl"))
+                    info["ilvl"] = int(e.get(q("val"))) if e is not None else None
+                e = ppr.find(q("outlineLvl"))
+                if e is not None and str(e.get(q("val"))).isdigit():
+                    info["outline"] = int(e.get(q("val")))
+            styles[sid] = info
+
+    def style_attr(sid, key):
+        seen = set()
+        while sid and sid in styles and sid not in seen:
+            seen.add(sid)
+            v = styles[sid][key]
+            if v is not None:
+                return v
+            sid = styles[sid]["based"]
+        return None
+
+    numbering = Numbering(read_part("word/numbering.xml") if "word/numbering.xml" in members else None, q, styles)
 
     def style_of(p):
         ps = p.find(q("pPr") + "/" + q("pStyle"))
         return ps.get(q("val")) if ps is not None else "Normal"
 
-    def heading_level(st):
-        m = re.fullmatch(r"Heading\s*([1-6])", st or "", re.I)
-        return int(m.group(1)) if m else None
+    def style_name(st):
+        return (styles.get(st) or {}).get("name") or st or ""
 
-    def is_heading_style(st):
-        return st in ("Title",) or heading_level(st) is not None
+    def is_title(st):
+        return st == "Title" or style_name(st).lower() == "title"
+
+    def is_subtitle(st):
+        return st == "Subtitle" or style_name(st).lower() == "subtitle"
+
+    def heading_level(p, st=None):
+        """Heading level 1 to 9, or None. Word stores the built-in style names in English
+        ("heading 1") whatever the language of the user interface, so the name is checked
+        before the style id. A paragraph or style outline level also marks a heading."""
+        st = st or style_of(p)
+        ol = p.find(q("pPr") + "/" + q("outlineLvl"))
+        if ol is not None and str(ol.get(q("val"))).isdigit():
+            v = int(ol.get(q("val")))
+            return v + 1 if v <= 8 else None
+        for cand in (style_name(st), st):
+            m = re.fullmatch(r"(?i)heading\s*([1-9])", cand or "")
+            if m:
+                return int(m.group(1))
+        v = style_attr(st, "outline")
+        if v is not None and v <= 8:
+            return v + 1
+        return None
+
+    def para_numbering(p, st):
+        """(numId, ilvl) of a paragraph, from the paragraph or its style, or None."""
+        numpr = p.find(q("pPr") + "/" + q("numPr"))
+        nid = ilvl = None
+        if numpr is not None:
+            e = numpr.find(q("numId"))
+            nid = e.get(q("val")) if e is not None else None
+            e = numpr.find(q("ilvl"))
+            ilvl = int(e.get(q("val"))) if e is not None and str(e.get(q("val"))).isdigit() else None
+        if nid is None:
+            nid = style_attr(st, "numId")
+            if ilvl is None:
+                ilvl = style_attr(st, "ilvl")
+        if nid in (None, "0"):
+            return None
+        if ilvl is None:
+            ilvl = numbering.level_for_style(nid, st)
+        return nid, (ilvl or 0)
+
+    SKIP_TAGS = (q("del"), q("moveFrom"))
+    # inline elements whose runs are part of the paragraph text
+    CONTAINERS = (q("ins"), q("moveTo"), q("smartTag"), q("fldSimple"), q("customXml"), q("sdt"), q("sdtContent"))
 
     def ptext(p):
         parts = []
-        for node in p.iter():
-            if node.tag == q("t") and node.text:
-                parts.append(node.text)
-            elif node.tag == q("tab"):
-                parts.append("\t")
-            elif node.tag == q("br"):
-                parts.append("\n")
+
+        def walk(node):
+            for child in node:
+                if child.tag in SKIP_TAGS:
+                    continue
+                if child.tag == q("t") and child.text:
+                    parts.append(child.text)
+                elif child.tag == q("tab"):
+                    parts.append("\t")
+                elif child.tag == q("br"):
+                    parts.append("\n")
+                walk(child)
+        walk(p)
         return "".join(parts)
+
+    def blocks(container):
+        """Body-level elements in order. Content controls and custom XML are opened; Word's own
+        table of contents control is skipped (the generated section index replaces it)."""
+        for el in container:
+            if el.tag == q("sdt"):
+                gal = el.find(q("sdtPr") + "/" + q("docPartObj") + "/" + q("docPartGallery"))
+                if gal is not None and "contents" in (gal.get(q("val")) or "").lower():
+                    continue
+                content = el.find(q("sdtContent"))
+                if content is not None:
+                    yield from blocks(content)
+            elif el.tag == q("customXml"):
+                yield from blocks(el)
+            else:
+                yield el
+
+    children = list(blocks(body))
+
+    # numbers in document order. Every numbered paragraph counts, in tables too, as in Word.
+    labels = {}
+    list_fmt = {}
+    for p in body.iter(q("p")):
+        st = style_of(p)
+        np_ = para_numbering(p, st)
+        if np_:
+            label, fmt = numbering.advance(*np_)
+            labels[p] = label
+            list_fmt[p] = (np_[0], np_[1], fmt)
+
+    def heading_text(p):
+        t = norm(ptext(p))
+        label = labels.get(p, "")
+        if label and t and not t.startswith(label + " "):
+            t = f"{label} {t}"
+        return t
 
     def rfont_mono(rf):
         return rf is not None and any(any(m in (rf.get(q(k)) or "") for m in MONO_FONTS) for k in ("ascii", "hAnsi", "cs"))
@@ -325,10 +599,14 @@ def render_docx(src, figures_dir, fig_prefix, write):
         return " ".join(t.split())
 
     # heading slugs in document order, the way GitHub derives anchors
+    def is_heading(p):
+        st = style_of(p)
+        return is_title(st) or heading_level(p, st) is not None
+
     heading_texts = []
-    for p in body.iter(q("p")):
-        if is_heading_style(style_of(p)):
-            t = norm(ptext(p))
+    for p in children:
+        if p.tag == q("p") and is_heading(p):
+            t = heading_text(p)
             if t:
                 heading_texts.append(t)
     counts = {}
@@ -344,16 +622,18 @@ def render_docx(src, figures_dir, fig_prefix, write):
 
     bm_to_slug = {}
     pending = []
-    for p in body.iter(q("p")):
-        names = [b.get(q("name")) for b in p.iter(q("bookmarkStart"))]
-        t = norm(ptext(p))
-        if is_heading_style(style_of(p)) and t:
+    for p in children:
+        if p.tag != q("p"):
+            continue
+        marks = [b.get(q("name")) for b in p.iter(q("bookmarkStart"))]
+        t = heading_text(p) if is_heading(p) else ""
+        if t:
             sl = text_to_slug[t]
-            for n in names + pending:
+            for n in marks + pending:
                 bm_to_slug[n] = sl
             pending = []
         else:
-            pending.extend(names)
+            pending.extend(marks)
 
     def inline(p, in_table=False):
         out = []
@@ -390,21 +670,33 @@ def render_docx(src, figures_dir, fig_prefix, write):
             flush()
             return "".join(buf)
 
-        for child in p:
-            if child.tag == q("r"):
-                out.append(emit_runs([child]))
-            elif child.tag == q("hyperlink"):
-                text = emit_runs(child.findall(q("r")))
-                anchor = child.get(q("anchor"))
-                rid = child.get(q("id", R))
-                if anchor and anchor in bm_to_slug:
-                    out.append(f"[{text}](#{bm_to_slug[anchor]})")
-                elif rid and rid in rels:
-                    out.append(f"[{text}]({rels[rid]})")
-                else:
-                    out.append(text)
-            elif child.tag == q("ins"):
-                out.append(emit_runs(child.findall(q("r"))))
+        def runs_in(node):
+            for child in node:
+                if child.tag in SKIP_TAGS:
+                    continue
+                if child.tag == q("r"):
+                    yield child
+                elif child.tag in CONTAINERS:
+                    yield from runs_in(child)
+
+        def walk(node):
+            for child in node:
+                if child.tag == q("r"):
+                    out.append(emit_runs([child]))
+                elif child.tag == q("hyperlink"):
+                    text = emit_runs(list(runs_in(child)))
+                    anchor = child.get(q("anchor"))
+                    rid = child.get(q("id", R))
+                    if anchor and anchor in bm_to_slug:
+                        out.append(f"[{text}](#{bm_to_slug[anchor]})")
+                    elif rid and rid in rels:
+                        out.append(f"[{text}]({rels[rid]})")
+                    else:
+                        out.append(text)
+                elif child.tag in CONTAINERS:
+                    walk(child)
+
+        walk(p)
         text = "".join(out)
         text = text.replace("****", "").replace("` `", " ")
         text = re.sub(r"`([^`]*)``([^`]*)`", r"`\1\2`", text)
@@ -413,14 +705,20 @@ def render_docx(src, figures_dir, fig_prefix, write):
         return text
 
     def list_prefix(p):
-        numpr = p.find(q("pPr") + "/" + q("numPr"))
-        if numpr is None:
+        """("1." or "-", indent) for a list paragraph, or (None, 0). The indent nests a level under
+        the text of its parent item, as GitHub Flavored Markdown needs."""
+        info = list_fmt.get(p)
+        if info is None:
             return None, 0
-        nid = numpr.find(q("numId"))
-        ilvl = numpr.find(q("ilvl"))
-        fmt = num_fmt.get(nid.get(q("val")) if nid is not None else "", "bullet")
-        level = int(ilvl.get(q("val"))) if ilvl is not None else 0
-        return ("1." if fmt == "decimal" else "-"), level
+        nid, ilvl, fmt = info
+
+        def mark(f):
+            return "-" if f in ("bullet", "none") else "1."
+        indent = 0
+        for k in range(ilvl):
+            lv = numbering.level(nid, k)
+            indent += len(mark(lv["fmt"] if lv else "bullet")) + 1
+        return mark(fmt), indent
 
     def code_lang(lines):
         first = next((l.strip() for l in lines if l.strip()), "")
@@ -463,10 +761,32 @@ def render_docx(src, figures_dir, fig_prefix, write):
 
     md = []
     code_buf = []
-    children = list(body)
     fig_counter = 0
     pending_caption = None
     notes = []
+
+    # footnotes, endnotes and comments are not rendered. Say so, one note each.
+    def part_texts(name, tag):
+        if name not in members:
+            return {}
+        return {e.get(q("id")): norm(ptext(e)) for e in read_part(name).findall(q(tag))}
+    foot = part_texts("word/footnotes.xml", "footnote")
+    endn = part_texts("word/endnotes.xml", "endnote")
+    n_comments = 0
+    for el in children:
+        for ref in el.iter(q("footnoteReference")):
+            fid = ref.get(q("id"))
+            snippet = (foot.get(fid) or "")[:60]
+            notes.append(f"footnote {fid} was not rendered" + (f": {snippet}" if snippet else ""))
+        for ref in el.iter(q("endnoteReference")):
+            fid = ref.get(q("id"))
+            snippet = (endn.get(fid) or "")[:60]
+            notes.append(f"endnote {fid} was not rendered" + (f": {snippet}" if snippet else ""))
+        n_comments += sum(1 for _ in el.iter(q("commentReference")))
+        if any(True for _ in el.iter(q("txbxContent"))):
+            notes.append("text inside a text box was rendered as part of the paragraph that holds it: " + norm(ptext(el))[:60])
+    if n_comments:
+        notes.append(f"{n_comments} comment(s) were not rendered")
 
     def flush_code():
         nonlocal code_buf
@@ -506,7 +826,7 @@ def render_docx(src, figures_dir, fig_prefix, write):
             ext = Path(target).suffix or ".png"
             name = f"figure-{m.group(1)}{ext}" if m else f"figure-{fig_counter}{ext}"
             member = "word/" + target if not target.startswith("/") else target.lstrip("/")
-            if member not in z.namelist():
+            if member not in members:
                 member = "word/media/" + Path(target).name
             if write:
                 figures_dir.mkdir(parents=True, exist_ok=True)
@@ -526,19 +846,19 @@ def render_docx(src, figures_dir, fig_prefix, write):
             flush_code()
             continue
 
-        if st == "Title":
+        if is_title(st):
             flush_code()
-            md.append("# " + esc_prose(stripped))
+            md.append("# " + esc_prose(norm(stripped)))
             md.append("")
             continue
-        if st == "Subtitle":
+        if is_subtitle(st):
             md.append("*" + esc_prose(stripped) + "*")
             md.append("")
             continue
-        lvl = heading_level(st)
+        lvl = heading_level(p, st)
         if lvl:
             flush_code()
-            md.append("#" * (lvl + 1 if lvl < 6 else 6) + " " + esc_prose(stripped))
+            md.append("#" * min(lvl + 1, 6) + " " + esc_prose(heading_text(p)))
             md.append("")
             continue
 
@@ -557,10 +877,10 @@ def render_docx(src, figures_dir, fig_prefix, write):
             continue
         flush_code()
 
-        prefix, level = list_prefix(p)
+        prefix, indent = list_prefix(p)
         if st == "ListParagraph" or prefix:
             prefix = prefix or "-"
-            md.append("  " * level + f"{prefix} " + inline(p))
+            md.append(" " * indent + f"{prefix} " + inline(p))
             nxt = children[i + 1] if i + 1 < len(children) else None
             if nxt is None or nxt.tag != q("p") or (style_of(nxt) != "ListParagraph" and list_prefix(nxt)[0] is None):
                 md.append("")
@@ -586,6 +906,17 @@ def render_docx(src, figures_dir, fig_prefix, write):
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+
+
+def unnumbered_notes(text):
+    """A note when section headings carry no number. The specifications cite sections by number,
+    so a document without numbers leaves them nothing to cite and the checker nothing to check."""
+    heads = [h for h in collect_headings(text.split("\n")) if h[1] > 1]
+    bare = [t for _, _, t in heads if not NUMBERED_HEADING.match(t)]
+    if not bare:
+        return []
+    shown = ", ".join(repr(t) for t in bare[:3]) + (", ..." if len(bare) > 3 else "")
+    return [f"{len(bare)} of {len(heads)} headings have no number; specifications cite sections by number ({shown})"]
 
 
 def main(argv=None):
@@ -619,11 +950,16 @@ def main(argv=None):
         fig_dir = out_dir / "figures" / name
         fig_prefix = f"figures/{name}"
         write = not a.dry_run
-        if ext == ".docx":
-            body, figs, notes = render_docx(srcp, fig_dir, fig_prefix, write)
-        else:
-            body, figs, notes = render_markdown(srcp, fig_dir, fig_prefix, write)
+        try:
+            if ext == ".docx":
+                body, figs, notes = render_docx(srcp, fig_dir, fig_prefix, write)
+            else:
+                body, figs, notes = render_markdown(srcp, fig_dir, fig_prefix, write)
+        except DocxError as e:
+            print(f"error: {src}: {e}", file=sys.stderr)
+            return 2
         text, index_txt, n_head = finish(body, srcp.name, a.version, a.date)
+        notes += unnumbered_notes(text)
         out_md = out_dir / f"{name}.md"
         out_idx = out_dir / f"{name}.index.txt"
         verb = "would write" if a.dry_run else "wrote"

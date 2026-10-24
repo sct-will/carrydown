@@ -9,6 +9,9 @@ It does the following.
   5. Runs the dry run of every script against the sample. Nothing is written.
   6. Copies each skill folder to a temporary folder and runs a script from the copy,
      to prove that an installed skill is self-contained.
+  7. Builds small Word documents with tests/fixtures/make_numbered_docx.py and renders them,
+     and runs the scripts on broken variants of the sample to prove they fail with a message,
+     not a traceback.
 
 Usage
   python3 scripts/selftest.py
@@ -30,18 +33,50 @@ SAMPLE = "sample/expense-approvals"
 results = []
 
 
-def step(name, cmd, cwd=ROOT, expect=0, contains=()):
-    p = subprocess.run(cmd, cwd=cwd, env=ENV, capture_output=True, text=True)
+def step(name, cmd, cwd=ROOT, expect=0, contains=(), absent=("Traceback",), env=None, files=None):
+    """Run cmd and check the exit status, text that must appear, text that must not appear, and,
+    with files, {path: [text, ...]} that must appear in files the command wrote."""
+    run_env = dict(ENV, **(env or {}))
+    p = subprocess.run(cmd, cwd=cwd, env=run_env, capture_output=True, text=True, encoding="utf-8", errors="replace")
     out = (p.stdout or "") + (p.stderr or "")
     missing = [c for c in contains if c not in out]
-    ok = p.returncode == expect and not missing
+    present = [c for c in absent if c in out]
+    for path, wants in (files or {}).items():
+        body = Path(path).read_text(encoding="utf-8") if Path(path).exists() else ""
+        missing += [f"{Path(path).name}: {w}" for w in wants if w not in body]
+    ok = p.returncode == expect and not missing and not present
     results.append((ok, name))
     print(("PASS " if ok else "FAIL ") + name)
     if not ok:
-        print("      exit", p.returncode, ("missing in output: " + repr(missing)) if missing else "")
+        print("      exit", p.returncode, ("missing: " + repr(missing)) if missing else "", ("unexpected: " + repr(present)) if present else "")
         for line in ((p.stdout or "") + (p.stderr or "")).strip().splitlines()[-12:]:
             print("      " + line)
     return ok
+
+
+def fixtures(tmp):
+    """Word documents built on the fly, so no binary file is kept in the repository."""
+    make = [PY, "tests/fixtures/make_numbered_docx.py"]
+    render = [PY, "scripts/render_ground_truth.py"]
+    fx = tmp / "fixtures"
+    fx.mkdir()
+    for mode in ("paragraph", "style", "doctype"):
+        subprocess.run(make + [str(fx / f"{mode}.docx"), mode], cwd=ROOT, env=ENV, check=True)
+    out = fx / "out" / "docs/ground-truth"
+    step("docx: heading numbers set on the paragraphs are rendered", render + [str(fx / "paragraph.docx"), "--root", str(fx / "out"), "--version", "1"],
+         contains=["footnote 1 was not rendered: The footnote text", "3 of 7 headings have no number; specifications cite sections by number"],
+         files={out / "paragraph.md": ["## 1 Overview\n", "### 1.1 Scope\n", "## 2 Architecture\n", "## 3.4 Typed numbered heading\n",
+                                       "## \u00dcberblick\n", "## Outline level heading\n", "Section-ref-in-field and SmartTagText and MovedText",
+                                       "Text inside a block content control", "Inline control text", "Kept INSERTED", "1. first numbered\n   - nested bullet\n1. second numbered"]})
+    step("docx: deleted and moved-away text is left out", [PY, "-c", "import sys; t = open(sys.argv[1], encoding='utf-8').read(); sys.exit(1 if ('DELETED' in t or 'OldPlace' in t) else 0)", str(out / "paragraph.md")])
+    step("docx: heading numbers that come from the heading styles are rendered", render + [str(fx / "style.docx"), "--root", str(fx / "out"), "--version", "1"],
+         contains=["1 of 7 headings have no number"],
+         files={out / "style.md": ["## 1 Overview\n", "### 1.1 Scope\n", "### 1.2 Goals\n", "## 2 Architecture\n", "### 2.1 Data\n", "#### 2.1.1 Interfaces\n", "## Appendix\n"]})
+    step("docx: a part with a DOCTYPE is refused", render + [str(fx / "doctype.docx"), "--root", str(fx / "out"), "--dry-run"], expect=2, contains=["DOCTYPE declaration"])
+    md = fx / "plain.md"
+    md.write_text("# Plain\n\n## Purpose\n\nText.\n\n## 1. Scope\n\nText.\n", encoding="utf-8")
+    step("markdown: unnumbered headings are reported", render + [str(md), "--root", str(fx / "out"), "--dry-run"], contains=["1 of 2 headings have no number; specifications cite sections by number ('Purpose')"])
+    step("markdown: the sample renders with every heading numbered", [PY, "scripts/render_ground_truth.py", f"{SAMPLE}/ground-truth/architecture.md", "--root", SAMPLE, "--version", "0.3", "--dry-run"], absent=("Traceback", "have no number"))
 
 
 def main():
@@ -114,6 +149,7 @@ def main():
                 step(f"installed copy of {skill} runs {script}", [PY, str(dst / "scripts" / script), "--root", str(ROOT / SAMPLE), "--offline", "--show-body", "3"])
             else:
                 step(f"installed copy of {skill} runs {script}", [PY, str(dst / "scripts" / script), "--root", str(ROOT / SAMPLE)])
+        fixtures(Path(tmp))
     failed = [n for ok, n in results if not ok]
     print(f"\n{len(results) - len(failed)} of {len(results)} steps passed")
     return 1 if failed else 0
