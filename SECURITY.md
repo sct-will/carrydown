@@ -23,7 +23,7 @@ Please do not include a real token, a real password or real personal data in the
 ## What the carrydown skills store
 
 - The GitHub token, when you run `github_token.py`. It is written to `~/.config/carrydown/github_token`, in a folder with mode 700, in a file with mode 600. This is the only file written outside your project.
-- The files the scripts write under `docs/` in your project: the scaffold and the skill generator with `--apply`, the renderer unless you pass `--dry-run`. Those files can hold the text of your documents. Treat them as you treat the documents.
+- The files the scripts write in your project: under `docs/` for the scaffold (`--init` writes `docs/spec/plan.yaml`) and the skill generator with `--apply`, and for the renderer unless you pass `--dry-run`. `scaffold_spec.py --ci --apply` also writes `.github/workflows/check-specs.yml` and `tools/carrydown/`. Those files can hold the text of your documents. Treat them as you treat the documents.
 
 ## Network access
 

@@ -52,7 +52,7 @@ git fetch origin <branch>
 git log origin/<branch>..HEAD --oneline -- docs/spec
 ```
 
-The first and the last command must print nothing. If the first prints a file, the plan or a specification is not committed. If the last prints a commit, it is not pushed. Ask the user to commit and push the plan and the specifications, then check again.
+The first and the last command must print nothing. If the first prints a file, the plan or a specification is not committed. If the last prints a commit, it is not pushed. Ask the user to commit and push the plan and the specifications, and say they can tell you to do the commit and push for them. Then check again.
 
 Confirm with the user, in plain words: the repository (`owner/name`) and whether it is public, whether a parent Epic issue exists (its number) or may be created, the people's GitHub logins if they should be assigned, and which account owns the project board (the user's own GitHub account or the organisation). Put the repository, Epic number and project title in `plan.yaml` under `project`.
 

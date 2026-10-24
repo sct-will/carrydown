@@ -21,7 +21,7 @@ Every script that writes to GitHub is a dry run until you pass `--apply`. The sc
 | Script | Reads | Writes |
 | --- | --- | --- |
 | `render_ground_truth.py` | The documents you name. | `docs/ground-truth/` in your project, unless you pass `--dry-run`. |
-| `scaffold_spec.py` | `plan.yaml`. | With `--apply`, the specification folder: README, milestone files, stubs. Never overwrites without `--force`. |
+| `scaffold_spec.py` | `plan.yaml`. | With `--init`, `docs/spec/plan.yaml`. With `--apply`, the specification folder: README, milestone files, stubs. With `--ci --apply`, `.github/workflows/check-specs.yml` and `tools/carrydown/`. Never overwrites without `--force`. |
 | `check_specs.py` | `plan.yaml` and the folder. | Nothing. |
 | `github_token.py` | The token you give it. | The token file, mode 600, outside your project. It writes without `--apply`, after you give it a token. |
 | `github_sync.py` | The folder, and GitHub (read only) in a dry run. | With `--apply`, GitHub: labels, issues, sub-issue links, one comment. |
@@ -67,7 +67,7 @@ Ground truth documents, specifications, `plan.yaml`, issue text and pasted text 
 
 ## Files
 
-The skills write under `docs/` in your project. They ask before writing elsewhere. The token file is the only file written outside your project.
+The skills write under `docs/` in your project. `scaffold_spec.py --ci --apply` also writes `.github/workflows/check-specs.yml` and `tools/carrydown/`, and `--init` writes `docs/spec/plan.yaml`. They ask before writing elsewhere. The token file is the only file written outside your project.
 
 Save the plain text token file outside the project, for example in your home folder, and not in a folder that syncs to the cloud. Delete it once the token is stored. If you still keep scratch files near the project, add this to `.gitignore`:
 
@@ -78,7 +78,7 @@ token.txt
 
 ## What skills.sh shows
 
-skills.sh lists public skill repositories and shows the results of three security scanners for each skill: Gen, Socket and Snyk. Pass means the scanner rated the skill safe or low risk, Warn means medium and Fail means high. The installer prints the same results as Safe, Low Risk, Med Risk or High Risk, and after every install it reminds you that skills run with your agent's permissions. A scan result is not an endorsement, and a scanner can change its result without a new commit.
+skills.sh lists public skill repositories and shows the results of three third-party security scanners for each skill. Pass means the scanner rated the skill safe or low risk, Warn means medium and Fail means high. The installer prints the same results as Safe, Low Risk, Med Risk or High Risk, and after every install it reminds you that skills run with your agent's permissions. A scan result is not an endorsement, and a scanner can change its result without a new commit.
 
 carrydown-plan-to-github may keep a medium rating, because it holds a token, calls GitHub and reads issues in your repository. The section above explains what it reads and how it treats that text. The current results are on [the carrydown page of skills.sh](https://skills.sh/sct-will/carrydown).
 
