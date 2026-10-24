@@ -27,8 +27,8 @@ Usage
   python3 scripts/github_token.py --from-file ~/Downloads/token.txt   no prompt: read a plain text file
 
 The --from-file form is for people who prefer not to use a terminal prompt. Paste the token into
-a plain text file with any editor, give the script the path, then delete that file yourself. The
-script never deletes it and never prints the token.
+a plain text file with any editor and give the script the path. After the token is stored and
+verified, the script deletes that file (use --no-delete-after to keep it). It never prints the token.
 """
 import argparse
 import getpass
@@ -71,7 +71,7 @@ def check(token, repo=None):
         me = gh.whoami()
     except L.GitHubError as e:
         L.say(f"GitHub rejected the token: {str(e)[:200]}")
-        L.say("Check that you pasted the whole token and that it has not expired.")
+        L.say(f"Fix: create a new token with the pre-filled link {CLASSIC_URL} and store it again. Check that you copied the whole token and that it has not expired.")
         return 1
     scopes = [s.strip() for s in (gh.scopes or "").split(",") if s.strip()]
     L.say(f"The token belongs to {me['login']}.")
@@ -81,26 +81,28 @@ def check(token, repo=None):
         for need in ("repo", "project"):
             if need not in scopes:
                 ok = False
-                L.say(f"  missing scope: {need}. Create a new token with the scopes repo and project: {CLASSIC_URL}")
+                L.say(f"  missing scope: {need}.")
+                L.say(f"  Fix: create a new token with the pre-filled link {CLASSIC_URL} (it ticks repo and project), then store it again.")
         if "delete_repo" in scopes:
             L.say("  note: this token can delete repositories. The carrydown scripts never use that power. Consider a token without it.")
     else:
         L.say("This looks like a fine-grained token (GitHub shows no scope list for those).")
         L.say("It needs Issues (read and write) and Metadata (read) on the repository, and Projects (read and write) for an organisation-owned project.")
     if repo:
+        org = repo.split("/")[0]
         status, js = gh.rest_status("GET", f"/repos/{repo}")
         if status == 200:
             perms = js.get("permissions") or {}
             L.say(f"Repository {repo}: found (private: {js.get('private')}), push access: {perms.get('push')}.")
-            ok &= bool(perms.get("push", True))
             if not perms.get("push", True):
-                L.say("  The token cannot push to this repository. Ask an organisation administrator for permission to create issues and Projects in it.")
+                ok = False
+                L.say(f"  Fix: ask an organisation admin of {org} for permission to create issues and Projects in it. The token cannot push to this repository.")
         else:
             ok = False
-            L.say(f"Repository {repo}: not reachable with this token (HTTP {status}).")
-            L.say("  If the repository belongs to an organisation that uses single sign-on (SSO), authorise the token for it:")
-            L.say(f"  open {SSO_URL}, find the token, click its Configure SSO button, then click Authorize next to the organisation.")
-            L.say("  If the repository is still not reachable, you may lack the organisation permission to create issues and Projects. Ask an organisation administrator for it.")
+            L.say(f"Repository {repo}: not reachable with this token (HTTP {status}). There are two usual causes.")
+            L.say(f"  Fix 1, single sign-on: open github.com/settings/tokens, click Configure SSO next to the token, then click Authorize next to {org}.")
+            L.say(f"  Fix 2, missing organisation permission: ask an organisation admin of {org} for permission to create issues and Projects.")
+            L.say("  Then run this check again.")
     L.say("Token check " + ("passed." if ok else "found problems."))
     return 0 if ok else 1
 
@@ -114,7 +116,9 @@ def main(argv=None):
     ap.add_argument("--check", action="store_true", help="check the token already stored, store nothing")
     ap.add_argument("--repo", help="owner/name. Also check that the token reaches this repository")
     ap.add_argument("--stdin", action="store_true", help="read the token from standard input instead of prompting")
-    ap.add_argument("--from-file", metavar="PATH", help="read the token from this plain text file instead of prompting. Delete that file afterwards")
+    ap.add_argument("--from-file", metavar="PATH", help="read the token from this plain text file instead of prompting")
+    ap.add_argument("--delete-after", action=argparse.BooleanOptionalAction, default=None,
+                    help="delete the --from-file file after the token is stored and verified. On by default with --from-file. Use --no-delete-after to keep the file")
     ap.add_argument("--dry-run", action="store_true", help="print the steps and the storage path. Ask for nothing, store nothing, call nothing")
     a = ap.parse_args(argv)
     dest = Path(os.path.expanduser(a.token_file))
@@ -148,7 +152,7 @@ def main(argv=None):
     elif a.stdin:
         token = sys.stdin.read().strip()
     else:
-        L.say("Create a token first.")
+        L.say("Create a token first. This link comes pre-filled with the two scopes and a name:")
         L.say(f"  Classic token (works everywhere): {CLASSIC_URL}")
         L.say("    Tick the scopes repo and project. Set an expiry. Copy the token. GitHub shows it once.")
         L.say(f"  Fine-grained token (organisation-owned projects only): {FINE_URL}")
@@ -172,10 +176,17 @@ def main(argv=None):
     L.say(f"Stored at {short(path)} with mode 600.")
     rc = check(token, a.repo)
     L.say("")
-    L.say("If the organisation that owns your repository uses single sign-on (SSO) and a check above failed,")
-    L.say(f"open {SSO_URL}, choose Configure SSO next to this token, and authorise the organisation. Then run with --check --repo owner/name.")
     if a.from_file:
-        L.say(f"Now delete {a.from_file} yourself. It still holds the token in plain text.")
+        delete = True if a.delete_after is None else a.delete_after
+        src = Path(os.path.expanduser(a.from_file))
+        if delete and src.resolve() != path.resolve():
+            try:
+                src.unlink()
+                L.say(f"Deleted {a.from_file}. The token now lives only at {short(path)}.")
+            except OSError as e:
+                L.say(f"Could not delete {a.from_file} ({e.strerror}). Delete it yourself. It still holds the token in plain text.")
+        elif not delete:
+            L.say(f"Kept {a.from_file} because you asked for --no-delete-after. It still holds the token in plain text, so delete it yourself when you can.")
     L.say("Never paste the token into a chat, a commit or an issue. If you do, revoke it at the same address and make a new one.")
     return rc
 

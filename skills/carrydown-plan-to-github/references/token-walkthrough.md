@@ -7,7 +7,7 @@ The scripts need a GitHub token that can write issues and projects. The token is
 Classic personal access token. The simplest choice. It works for projects owned by a user and by an organisation.
 
 - Scopes: `repo` and `project`.
-- Create it at https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown
+- Create it with the pre-filled link https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown. It ticks `repo` and `project` and names the token for you.
 - Set an expiry. Thirty days is enough for a planning session. Copy the token when GitHub shows it. It is shown once.
 
 Fine-grained token. Fits a stricter policy, with one catch.
@@ -29,7 +29,7 @@ Preferred path, no terminal prompt. Paste the token into a plain text file, for 
 python3 <skill>/scripts/github_token.py --from-file <path> --repo owner/name
 ```
 
-The script reads the file, writes the token to `~/.config/carrydown/github_token` in a folder with mode 700 and a file with mode 600, asks GitHub who the token belongs to, compares the scopes with what the scripts need, and tells you to delete your copy of the file. Delete it. The script never deletes it for you.
+The script reads the file, writes the token to `~/.config/carrydown/github_token` in a folder with mode 700 and a file with mode 600, asks GitHub who the token belongs to, compares the scopes with what the scripts need, and then deletes the file you gave it (add `--no-delete-after` to keep it). It prints a message saying it deleted the file, or saying it could not, in which case you delete the file yourself.
 
 Alternative path. Run the script yourself in a terminal and type the token at the hidden prompt. Nothing appears as you type.
 

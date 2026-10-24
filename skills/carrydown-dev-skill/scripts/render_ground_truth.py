@@ -8,8 +8,9 @@ rendering for readers and agents:
   docs/ground-truth/<name>.index.txt   one line per heading, "line:## heading", for sed-based reading
   docs/ground-truth/figures/<name>/    figures extracted from a .docx, or copied from a .md
 
-Input can be a Word document (.docx) or a Markdown file (.md). Word input needs
-the lxml package (pip install lxml). Markdown input needs nothing extra.
+Input can be a Word document (.docx) or a Markdown file (.md). Nothing needs to be
+installed: Word files are read with the standard library (zipfile and xml.etree). If the
+lxml package happens to be installed, the script uses it because it is faster.
 
 Examples
   python3 scripts/render_ground_truth.py architecture.docx --version 0.2
@@ -236,9 +237,9 @@ def q(tag, ns=W):
 
 def render_docx(src, figures_dir, fig_prefix, write):
     try:
-        from lxml import etree
+        from lxml import etree   # optional and faster
     except ImportError:
-        raise SystemExit("Word input needs lxml. Install it with: pip install lxml")
+        import xml.etree.ElementTree as etree
     z = zipfile.ZipFile(src)
     doc = etree.fromstring(z.read("word/document.xml"))
     body = doc.find(q("body"))
@@ -590,7 +591,7 @@ def render_docx(src, figures_dir, fig_prefix, write):
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Render .docx or .md ground-truth documents as Markdown with stable anchors, a section index and figures.",
-        epilog="Nothing is written with --dry-run. Word input needs lxml.",
+        epilog="Nothing is written with --dry-run. Word files are read with the standard library.",
     )
     ap.add_argument("inputs", nargs="+", help="one or more .docx or .md files")
     ap.add_argument("--root", default=".", help="project root (default: current directory)")

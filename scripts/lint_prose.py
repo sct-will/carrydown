@@ -7,7 +7,8 @@ Rules
   3. No AI vendor or model names, except in the files that hold the install
      instructions (the agent list). The patterns are written with character
      classes so that this file does not spell the names it bans.
-  4. No names of the organisation or design system this kit was modelled on.
+  4. No names of the design system this kit was modelled on, and no company name outside
+     the agent lists.
 
 Usage
   python3 scripts/lint_prose.py            lint the whole repository
@@ -29,11 +30,10 @@ SKIP_FILES = {"LICENSE"}
 ALWAYS = [
     (re.compile("[" + chr(0x2014) + chr(0x2013) + chr(0x2028) + chr(0x2029) + "]"), "em dash, en dash or line separator"),
     (re.compile(r"(?i)gener" + r"ated\s+by|co-auth" + r"ored-by"), "credit line"),
-    (re.compile(r"\bI[B]M\b"), "organisation name that must not appear"),
     (re.compile(r"(?i)\bc[a]rbon\b"), "design system name that must not appear"),
 ]
 VENDORS = re.compile(
-    r"(?i)cl[a]ude|anthrop[i]c|open[a]i|chat[g]pt|\bg[p]t-?\d|gem[i]ni|\bc[o]pilot\b|\bc[o]dex\b|\bcurs[o]r\b|mistr[a]l|\bl[l]ama\b|deeps[e]ek"
+    r"(?i)cl[a]ude|anthrop[i]c|open[a]i|chat[g]pt|\bg[p]t-?\d|gem[i]ni|\bc[o]pilot\b|\bc[o]dex\b|\bcurs[o]r\b|mistr[a]l|\bl[l]ama\b|deeps[e]ek|\bI[B]M\b"
 )
 # Files that hold the install instructions and so may name the agents.
 VENDOR_OK = [

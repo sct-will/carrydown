@@ -206,9 +206,15 @@ def main(argv=None):
     ap.add_argument("--ci", action="store_true", help="also write .github/workflows/check-specs.yml and copy the checker to tools/carrydown/ so the checker runs in continuous integration")
     ap.add_argument("--force", action="store_true", help="overwrite existing files (README, milestone.md, stubs)")
     ap.add_argument("--apply", action="store_true", help="write files. Without it this is a dry run")
+    ap.add_argument("--allow-no-git", action="store_true", help="write even when the project folder is not inside a git repository (not recommended)")
     a = ap.parse_args(argv)
     root = Path(a.root).resolve()
     actions = []
+    if a.apply and not a.allow_no_git and not any((d / ".git").exists() for d in [root, *root.parents]):
+        print(f"error: {root} is not inside a git repository, so nothing was written.\n"
+              "The plan, the specifications and every later change belong in git, so that each change is reviewed and can be undone.\n"
+              "Run `git init` in the project folder (or ask your agent to), then run this command again.", file=sys.stderr)
+        return 2
 
     if a.init:
         target = L.find_plan(root, a.plan)

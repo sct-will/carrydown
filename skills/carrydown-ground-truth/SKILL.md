@@ -31,14 +31,25 @@ The next skill, `carrydown-plan-to-github`, puts the plan on GitHub. The one aft
 
 ## Where the files are
 
-The scripts folder and the templates folder are inside this skill, next to this SKILL.md. In the commands below, `<skill>` stands for the folder that holds this SKILL.md. Run the scripts with `python3` from the user's project root and pass `--root .`. Python 3.9 or later is enough. Reading a Word document needs the `lxml` package (`pip install lxml`). Run any script with `--help` to see its options. The scripts that write files are dry runs unless you pass `--apply`.
+The scripts folder and the templates folder are inside this skill, next to this SKILL.md. In the commands below, `<skill>` stands for the folder that holds this SKILL.md. Run the scripts with `python3` from the user's project root and pass `--root .`. Python 3.9 or later is enough. Word documents are read with the standard library, so nothing needs to be installed. Run any script with `--help` to see its options. The scripts that write files are dry runs unless you pass `--apply`.
 
 ## The flow
 
+### 0. Before you start
+
+1. Check Python. Run `python3 --version`. Python 3.9 or later is required. On macOS, if Python is missing, running the command opens a prompt to install the developer tools. Tell the user to click Install, wait for it to finish (a few minutes), and then run the command again. On Windows or Linux, tell the user how to install Python 3 and stop until it works. If Node.js is also missing, say so, but do not block: Node.js is only needed for the installer.
+2. Check git. Run `git rev-parse --is-inside-work-tree`. If the project folder is not inside a git repository, explain why git matters (the plan, the specifications and every later change are kept in git so that each change is reviewed and can be undone) and offer to run `git init`. Do not scaffold `docs/spec/` outside a git repository. The scaffold script also refuses.
+3. Find the documents. They should be in `docs/source/`. If they are elsewhere, ask.
+
 ### 1. Interview
 
-Read `references/interview.md` and run the interview. Collect these, in small groups, and do not start before the user confirms your summary.
+Read `references/interview.md` and run the interview in six steps. The first line of your first reply is exactly:
 
+`carrydown: interview, step 1 of 6`
+
+Start each later group with the same line and the next number. Collect these, in small groups, and do not start before the user confirms your summary.
+
+- Up front, before anything else: can the user create a Project in the organisation on GitHub? Say that planning continues meanwhile, and that the answer only matters at the GitHub step, where an organisation admin may need to grant the permission.
 - The ground truth documents (any mix, `.docx` or `.md`), and which one wins when they disagree.
 - The people: names or handles, their GitHub logins for assignment, the track each owns, start dates, days off, advisors who own no items.
 - The time frame: a target date or a number of weeks, pause windows, the longest a work unit may run.
@@ -48,7 +59,7 @@ Read `references/interview.md` and run the interview. Collect these, in small gr
 - What the program owns and keeps outside the plan.
 - Engineering conventions for the definition of done: test command, feature flag, lint command.
 
-If the user wants to see the whole flow first, point them to the sample in the kit repository on GitHub: https://github.com/sct-will/carrydown/tree/main/sample/expense-approvals. An install copies only this skill folder, so the sample is not on their computer.
+If the user wants to see the whole flow first, point them to the browser links, never to a local folder. An install copies only this skill folder, so the sample is not on their computer. The sample output page is https://github.com/sct-will/carrydown/blob/main/docs/sample.md and the sample repository, with its issues and board, is https://github.com/sct-will/carrydown-sample.
 
 ### 2. Render the ground truth
 
@@ -64,6 +75,8 @@ Use `--dry-run` first if the user wants to see what will be written. The output 
 ```bash
 python3 <skill>/scripts/scaffold_spec.py --root . --init --name "Project name" --apply
 ```
+
+The script refuses to write outside a git repository and says why. Fix that first with `git init`.
 
 This writes a starter `docs/spec/plan.yaml` from the `plan.yaml` template in the templates folder inside this skill. Fill it in during step 4. When the plan is approved:
 

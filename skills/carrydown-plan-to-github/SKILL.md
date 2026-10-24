@@ -46,7 +46,7 @@ Confirm with the user, in plain words: the repository (`owner/name`), whether a 
 
 ### 2. Token
 
-Read `references/token-walkthrough.md`. The user creates a classic token in the browser with the scopes `repo` and `project` (or a fine-grained token with the equivalent permissions). Then pick one of two paths.
+Read `references/token-walkthrough.md`. The user creates a classic token in the browser with the pre-filled link https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown, which ticks `repo` and `project` for them. They set an expiry and copy the token when GitHub shows it. A fine-grained token also works for a project owned by an organisation, with Issues read and write, Metadata read and the organisation permission Projects read and write. It does not work for a project owned by a user account. Then pick one of two paths.
 
 Preferred path, no terminal prompt. The user pastes the token into a plain text file (in TextEdit, Format then Make Plain Text before saving) and tells you the file path. They never paste the token into the chat. You run:
 
@@ -54,7 +54,7 @@ Preferred path, no terminal prompt. The user pastes the token into a plain text 
 python3 <skill>/scripts/github_token.py --from-file <path> --repo owner/name
 ```
 
-The script reads the file, stores the token at `~/.config/carrydown/github_token` with mode 600, asks GitHub who owns it and which scopes it has, and tells the user to delete their copy of the file. Remind the user to delete it. The script never deletes it for them.
+The script reads the file, stores the token at `~/.config/carrydown/github_token` with mode 600, asks GitHub who owns it and which scopes it has, and then deletes the file (`--no-delete-after` keeps it). It prints a message saying it deleted the file. If the message says it could not, ask the user to delete the file.
 
 Alternative path. The user runs the script themselves in a terminal and types the token at a hidden prompt (nothing appears as they type):
 
@@ -77,9 +77,9 @@ python3 <skill>/scripts/github_token.py --check --repo owner/name
 python3 <skill>/scripts/github_sync.py --root . --repo owner/name
 ```
 
-Show the user the summary: how many labels, sub-epics and issues, which exist already, the Epic decision. Offer `--show-body ID` to print one issue body without any network call. Read `references/github-structure.md` so you can explain what each part is.
+Show the user the summary line, which reads exactly `1 Epic, N sub-epics, N work item issues` with the real numbers, and which of them exist already. Offer `--show-body ID` to print one issue body without any network call. Read `references/github-structure.md` so you can explain what each part is.
 
-Ask: "This will create N issues in owner/name. Shall I go ahead?" Wait for a yes.
+Ask: "This will create 1 Epic, N sub-epics and N work item issues in owner/name. Shall I go ahead?" Wait for a yes ("Go ahead.").
 
 ### 4. Apply
 

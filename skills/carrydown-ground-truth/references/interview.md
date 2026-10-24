@@ -4,7 +4,9 @@ Run this interview before you write anything. The user may be a product manager,
 
 Never ask the user to paste a secret. A GitHub token is handled later by `carrydown-plan-to-github`, in a hidden prompt.
 
-## Group 1. The ground truth
+## Step 1 of 6. The ground truth
+
+Begin your reply with `carrydown: interview, step 1 of 6`. Before the questions below, ask this: "Can you create a Project in your GitHub organisation? If you are not sure, we carry on. It only matters at the GitHub step, and an organisation admin can grant it later."
 
 Ask.
 
@@ -15,7 +17,9 @@ Ask.
 
 Why you ask: the plan is only as good as the document it is carried from. Say so if the document looks thin, and offer the review prompts in `review-prompts.md`.
 
-## Group 2. The people
+## Step 2 of 6. The people
+
+Begin with `carrydown: interview, step 2 of 6`.
 
 Ask.
 
@@ -27,7 +31,9 @@ Ask.
 
 Explain: names stay in `plan.yaml`. The checker keeps them out of the specifications so the files stay valid when people change.
 
-## Group 3. The time frame
+## Step 3 of 6. The time frame
+
+Begin with `carrydown: interview, step 3 of 6`.
 
 Ask.
 
@@ -36,7 +42,9 @@ Ask.
 3. What is the longest a work unit may run? A work unit is a time box with its own length. A default: no longer than three weeks.
 4. How often can the people meet for a short integration check? A default: weekly, 30 minutes.
 
-## Group 4. GitHub
+## Step 4 of 6. GitHub
+
+Begin with `carrydown: interview, step 4 of 6`.
 
 Ask. Do not touch GitHub in this skill.
 
@@ -45,7 +53,9 @@ Ask. Do not touch GitHub in this skill.
 3. Which labels already exist that the plan should reuse or avoid?
 4. Do the people have GitHub logins for assignment? If yes, collect them.
 
-## Group 5. Agents and demonstrations
+## Step 5 of 6. Agents, demonstrations and the program boundary
+
+Begin with `carrydown: interview, step 5 of 6`.
 
 Ask.
 
@@ -53,7 +63,7 @@ Ask.
 2. Who watches the milestone demonstrations, and how long can they give? A default: 45 minutes, once per milestone.
 3. What must the audience see to say "this milestone is done"? Write down their words. They become acceptance criteria.
 
-## Group 6. The program boundary
+### The program boundary
 
 Ask.
 
@@ -62,7 +72,9 @@ Ask.
 
 Explain: program items get an id gap and are never numbered inside the plan. Specifications mention them only as "the program input".
 
-## Group 7. Engineering conventions
+## Step 6 of 6. Engineering conventions
+
+Begin with `carrydown: interview, step 6 of 6`.
 
 Ask.
 

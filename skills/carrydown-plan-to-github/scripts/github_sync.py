@@ -354,8 +354,10 @@ def run(argv=None):
         n_epic = 1 if "EPIC" in s.planned else 0
         n_sub = sum(1 for k in s.planned if re.fullmatch(r"M\d+", k))
         n_it = len(s.planned) - n_epic - n_sub
-        L.say(f"\nSummary: would create {n_epic} Epic, {n_sub} sub-epics and {n_it} work item issues"
-              f" ({len(plan['milestones']) - n_sub} sub-epics and {len(plan['items']) - n_it} issues already exist).")
+        has_epic = bool(epic) or a.create_epic
+        L.say("\nSummary")
+        L.say(f"{1 if has_epic else 0} Epic, {len(plan['milestones'])} sub-epics, {len(plan['items'])} work item issues")
+        L.say(f"  to create now: {n_epic} Epic, {n_sub} sub-epics, {n_it} work item issues. Already on GitHub: the rest.")
         L.say("Would then link each work item under its sub-epic" + (" and each sub-epic under the Epic" if epic or a.create_epic else "") + ",")
         L.say("rewrite dependency ids in the bodies to issue links, update the sub-epic work item lists,")
         L.say("and " + ("post" if not a.skip_comment and (epic or a.create_epic) else "skip") + " the Epic roll-up comment.")

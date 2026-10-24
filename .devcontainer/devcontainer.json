@@ -1,0 +1,13 @@
+{
+  "name": "carrydown sample",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "lts" }
+  },
+  "postCreateCommand": "python3 scripts/check_specs.py --root sample/expense-approvals --report && python3 scripts/github_sync.py --root sample/expense-approvals --offline",
+  "customizations": {
+    "vscode": {
+      "extensions": ["ms-python.python"]
+    }
+  }
+}
