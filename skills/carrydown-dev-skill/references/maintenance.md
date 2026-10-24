@@ -6,19 +6,27 @@ The skill copies conventions and indexes from files that change. Treat it as a b
 
 | Change | Action |
 | --- | --- |
-| A date, owner or dependency changes in `plan.yaml` | `scaffold_spec.py --refresh-headers --apply`, then regenerate `references/work-items.md`. |
+| A date, owner or dependency changes in `plan.yaml` | Refresh the headers with the copy of `scaffold_spec.py` in the carrydown-ground-truth skill (`--refresh-headers --apply`), then regenerate the references. |
 | A new version of the ground truth is rendered | Regenerate `references/ground-truth-map.md`, since line numbers move. |
 | A specification gains or loses a Contract or Protocol section | Regenerate `references/contracts.md`. |
 | The conventions in the spec README change | Update `SKILL.md` in the same pull request. |
 | An item is added or removed | Regenerate everything and review `README.md`. |
 
-Regenerate with:
+This skill does not ship `scaffold_spec.py`. The header refresh lives only in the carrydown-ground-truth skill. Run it from that skill's folder:
 
 ```bash
-python3 <skill>/scripts/generate_dev_skill.py --root . --apply --force
+python3 <ground-truth-skill>/scripts/scaffold_spec.py --root . --refresh-headers --apply
 ```
 
-`--force` replaces `SKILL.md` and `README.md` too. Keep a copy of hand edits first, or regenerate into a scratch folder and merge.
+It rewrites only the header tables and keeps rows that people filled in or added.
+
+Refresh the references with:
+
+```bash
+python3 <skill>/scripts/generate_dev_skill.py --root . --only references --apply
+```
+
+`--only references` replaces the three files under `references/` and nothing else, so it needs no `--force`. It leaves `SKILL.md` and `README.md` alone, so your hand edits stay. Pass `--force` without `--only` only when you want a fresh `SKILL.md` and `README.md`. Keep a copy of hand edits first, or regenerate into a scratch folder and merge.
 
 ## What the issues say
 
