@@ -32,6 +32,7 @@ ALWAYS = [
     (re.compile("[" + chr(0x2014) + chr(0x2013) + chr(0x2028) + chr(0x2029) + "]"), "em dash, en dash or line separator"),
     (re.compile(r"(?i)gener" + r"ated\s+by|co-auth" + r"ored-by"), "credit line"),
     (re.compile(r"(?i)\bc[a]rbon\b"), "design system name that must not appear"),
+    (re.compile(r"(?i)copyright\s+(?:\(c\)\s*)?(?:19|20)\d\d"), "copyright line. Use an attribution line instead"),
     (re.compile(r"(?i)\bk[i]t\b"), "retired word. Say the carrydown skills, the three skills or the repository"),
 ]
 VENDORS = re.compile(

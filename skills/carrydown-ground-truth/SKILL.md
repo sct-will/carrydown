@@ -31,13 +31,13 @@ The next skill, `carrydown-plan-to-github`, puts the plan on GitHub. The one aft
 
 ## Where the files are
 
-The scripts folder and the templates folder are inside this skill, next to this SKILL.md. In the commands below, `<skill>` stands for the folder that holds this SKILL.md. Run the scripts with `python3` from the user's project root and pass `--root .`. Python 3.9 or later is enough. Word documents are read with the standard library, so nothing needs to be installed. Run any script with `--help` to see its options. The scripts that write files are dry runs unless you pass `--apply`.
+The scripts folder and the templates folder are inside this skill, next to this SKILL.md. In the commands below, `<skill>` stands for the folder that holds this SKILL.md. Run the scripts with `python3` from the user's project root and pass `--root .`. On Windows the command is often `python` and not `python3`. Use whichever one runs Python 3.9 or later. Python 3.9 or later is enough. Word documents are read with the standard library, so nothing needs to be installed. Run any script with `--help` to see its options. The scripts that write files are dry runs unless you pass `--apply`.
 
 ## The flow
 
 ### 0. Before you start
 
-1. Check Python. Run `python3 --version`. Python 3.9 or later is required. On macOS, if Python is missing, running the command opens a prompt to install the developer tools. Tell the user to click Install, wait for it to finish (a few minutes), and then run the command again. On Windows or Linux, tell the user how to install Python 3 and stop until it works. If Node.js is also missing, say so, but do not block: Node.js is only needed for the installer.
+1. Check Python. Run `python3 --version` (on Windows try `python --version`). Python 3.9 or later is required. On macOS, if Python is missing, running the command opens a prompt to install the developer tools. Tell the user to click Install, wait for it to finish (a few minutes), and then run the command again. On Windows or Linux, tell the user how to install Python 3 and stop until it works. If Node.js is also missing, say so, but do not block: Node.js is only needed for the installer.
 2. Check git. Run `git rev-parse --is-inside-work-tree`. If the project folder is not inside a git repository, explain why git matters (the plan, the specifications and every later change are kept in git so that each change is reviewed and can be undone) and offer to run `git init`. Do not scaffold `docs/spec/` outside a git repository. The scaffold script also refuses.
 3. Find the documents. They should be in `docs/source/`. If they are elsewhere, ask.
 

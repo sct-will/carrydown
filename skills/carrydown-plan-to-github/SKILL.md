@@ -30,7 +30,7 @@ The scripts are idempotent. Issues are matched by exact title, so a rerun create
 
 ## Where the files are
 
-The scripts folder and the templates folder are inside this skill, next to this SKILL.md. In the commands below, `<skill>` stands for the folder that holds this SKILL.md. Run the scripts with `python3` from the user's project root and pass `--root .`. Python 3.9 or later. No packages to install.
+The scripts folder and the templates folder are inside this skill, next to this SKILL.md. In the commands below, `<skill>` stands for the folder that holds this SKILL.md. Run the scripts with `python3` from the user's project root and pass `--root .`. On Windows the command is often `python` and not `python3`. Use whichever one runs Python 3.9 or later. Python 3.9 or later. No packages to install.
 
 ## The flow
 

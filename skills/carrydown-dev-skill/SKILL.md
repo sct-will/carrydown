@@ -22,7 +22,7 @@ This skill generates that folder from `plan.yaml`, the specifications and the re
 
 ## Where the files are
 
-The scripts folder and the templates folder are inside this skill, next to this SKILL.md. In the commands below, `<skill>` stands for the folder that holds this SKILL.md. Run the scripts with `python3` from the user's project root and pass `--root .`. The generator is `<skill>/scripts/generate_dev_skill.py` and its templates are in the `dev-skill` folder inside the templates folder.
+The scripts folder and the templates folder are inside this skill, next to this SKILL.md. In the commands below, `<skill>` stands for the folder that holds this SKILL.md. Run the scripts with `python3` from the user's project root and pass `--root .`. On Windows the command is often `python` and not `python3`. Use whichever one runs Python 3.9 or later. The generator is `<skill>/scripts/generate_dev_skill.py` and its templates are in the `dev-skill` folder inside the templates folder.
 
 ## The flow
 

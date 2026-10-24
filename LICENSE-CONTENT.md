@@ -1,6 +1,6 @@
 # Content licence
 
-Copyright 2026 Will Scott.
+Attribution: Will Scott, https://github.com/sct-will/carrydown
 
 The following content is licensed under the Creative Commons Attribution 4.0 International licence (CC BY 4.0).
 
