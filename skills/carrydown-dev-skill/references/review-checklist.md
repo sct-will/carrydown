@@ -5,9 +5,9 @@ Go through this with the user before you call the skill done.
 ## Frontmatter
 
 - [ ] `name` is lowercase with hyphens and matches the folder name.
-- [ ] `description` starts with "Use when".
-- [ ] `description` is under 1,024 characters. The generator prints the length.
-- [ ] `description` has no colon followed by a space (some parsers read it as a new key).
+- [ ] `description` says what the skill does, then "Use when" and the triggers.
+- [ ] `description` is short. The generator targets under 250 characters and warns above 300, because long descriptions are the first to be dropped when an agent lists many skills. It prints the length.
+- [ ] `description` stays inside its quotes. The generator quotes it, so a colon is safe. Keep the quotes if you edit it.
 - [ ] `description` names the triggers an engineer would use: the ids, the file names, the folders.
 
 ## SKILL.md
