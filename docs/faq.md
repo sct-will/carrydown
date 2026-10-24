@@ -6,7 +6,7 @@ Two skills you install, one skill is generated for your engineers. Say one sente
 
 ## npx: command not found
 
-`npx` comes with Node.js, which is not installed on this computer or is not on your path. Go to [the Node.js website](https://nodejs.org), download the version marked LTS (long-term support), run its installer, then close and reopen your terminal and your agent, and try again. You can also ask your agent: "Node.js seems to be missing. Tell me how to install it for this computer." If you cannot install Node.js, there is a path without it: copy the two folders in `skills/` of the repository into your agent's skills folder. The README's Install options section lists the folders.
+`npx` comes with Node.js, which is not installed on this computer or is not on your path. Go to [the Node.js website](https://nodejs.org), download the version marked LTS (long-term support), run its installer, then close and reopen your terminal and your agent, and try again. You can also ask your agent: "Node.js seems to be missing. Tell me how to install it for this computer." If you cannot install Node.js, there is a path without it: copy the two folders in `skills/` of the repository into your agent's skills folder. [The README's Install options section](../README.md#install-options) lists the folders.
 
 ## Do I need a terminal?
 
@@ -14,7 +14,7 @@ Only for one command, the install line in the README's [Getting started](../READ
 
 ## Which agents work?
 
-Any agent that reads Agent Skills. The installer supports more than seventy. The README lists six and links [the installer's full list](https://github.com/vercel-labs/skills/blob/main/docs/agents.md). The scripts also run by hand with Python.
+Any agent that reads Agent Skills. The installer supports more than seventy. [The README's Install options section](../README.md#install-options) lists six and links [the installer's full list](https://github.com/vercel-labs/skills/blob/main/docs/agents.md). The scripts also run by hand with Python.
 
 ## What do I need installed?
 

@@ -13,6 +13,8 @@ The idea is old in systems engineering, where it is called flow-down: a requirem
 | 3. Carry down to GitHub, with `carrydown-plan-to-github` | A dry run first. After the plan owner's yes: labels, an Epic, a sub-epic per milestone, an issue per work item as a sub-issue with its specification linked, dependency links and a roll-up comment on the Epic. Then a GitHub Project (v2) board with a work unit iteration field of custom length, track, dates and three views. Last, the engineers' skill is generated from the specifications. | Plan owner, after each dry run | Issues, the board, and the engineers' skill with the install line to send each engineer. |
 | 4. Work the issues | Each engineer installs the engineers' skill once and says "Work on WI-03". The agent reads the specification, the cited sections and the conventions, then plans the code. Evidence is posted on every closed issue, a weekly checkpoint runs a named joint check between tracks, and each milestone ends with one demonstration against criteria written in advance. | Engineers show, the stakeholders decide | Code, closing comments with evidence, checkpoint comments and a demonstration note on each sub-epic. |
 
+To see the four steps on a finished fictional sample, open [the sample board](https://github.com/users/sct-will/projects/2) and [issue 9](https://github.com/sct-will/carrydown-sample/issues/9).
+
 Planning decisions stay with the plan owner. The agent drafts, validates and populates. It does not decide who does what, when, or in which order.
 
 ## Before step 1: a ground truth that holds still

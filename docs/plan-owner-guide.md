@@ -25,7 +25,7 @@ You bring a document that says how the project must work, such as an architectur
 - a GitHub Project board with the dates and the people filled in,
 - a small skill linked from every issue, so each engineer's agent reads the specification before it writes code.
 
-Nothing is written to GitHub until you say yes. Work items are numbered WI-01, WI-02 and so on.
+Nothing is written to GitHub until you say yes. To see a finished result first, open [the sample board](https://github.com/users/sct-will/projects/2) and [issue 9](https://github.com/sct-will/carrydown-sample/issues/9), part of a fictional sample. Work items are numbered WI-01, WI-02 and so on.
 
 Two inputs: the ground truth documents, which are required, and your project constraints, which are optional. Constraints are the people with their percent allocation and the target date or number of weeks plus breaks, in any combination. Give both and the plan fits them. Give one and the agent backs into the other. Give neither and it proposes a default and asks. Allocation is assumed to be 100 percent for everyone. The agent asks you once to confirm, and you only name a figure for someone who is lower.
 
@@ -96,12 +96,12 @@ A token is a long password that lets the scripts create issues and a Project for
 2. **Set the expiry to 7 days.** Click Generate token. Copy the token. GitHub shows it once.
 3. **Save it in a plain text file outside your project**, for example `Downloads/token.txt`. In TextEdit, choose Format, then Make Plain Text, before you save.
 4. **Tell the agent the file path.** Do not paste the token into the chat. The agent never opens the file. It runs the token script with `--from-file`. The script reads the file, stores the token at `~/.config/carrydown/github_token` where only you can read it, and checks what the token can do. It keeps your file.
-5. **Delete your file.** It still holds the token in plain text.
-6. **Read the check.** The agent runs the check. It says who owns the token, what it can do and whether the repository is reachable.
+5. **Read the check.** The agent runs the check. It says who owns the token, what it can do and whether the repository is reachable.
+6. **Delete your file.** It still holds the token in plain text.
 
 When the plan and the board are on GitHub, revoke the token on [your GitHub tokens page](https://github.com/settings/tokens). Make a new one if you need it again.
 
-Instead of steps 3 to 5 you can run the token script yourself in a terminal and type the token at the prompt. The characters do not appear as you type.
+Instead of steps 3, 4 and 6 you can run the token script yourself in a terminal and type the token at the prompt. The characters do not appear as you type.
 
 If the check fails, it names the fix:
 
@@ -112,7 +112,7 @@ If you think the token leaked, revoke it on [your GitHub tokens page](https://gi
 
 ## The GitHub step
 
-Commit and push the plan and the specification folder first. Each issue links its specification on GitHub, and the link only works once the file is pushed. The agent checks this and asks you to do it if it is not done. Then the agent runs a dry run. A dry run changes nothing. It prints a summary line like "1 Epic, 5 sub-epics, 9 work item issues". Read the numbers, then say whether to go ahead. After the write it checks the counts through GitHub, builds the board and fills in the dates. Then it gives you a short list of settings that GitHub only lets a person click, such as how the board groups its cards, and tells you where. Last, it generates the engineers' skill and gives you the install line to send each engineer. Commit and push the generated skill folder too, because the install line reads it from GitHub.
+Commit and push the plan and the specification folder first. Each issue links its specification on GitHub, and the link only works once the file is pushed. The agent checks this and asks you if it is not done. You can tell it to do the commit and push for you. Then the agent runs a dry run. A dry run changes nothing. The board step has its own dry run and its own yes. It prints a summary line like "1 Epic, 5 sub-epics, 9 work item issues". Read the numbers, then say whether to go ahead. After the write it checks the counts through GitHub, builds the board and fills in the dates. Then it gives you a short list of settings that GitHub only lets a person click, such as how the board groups its cards, and tells you where. Last, it generates the engineers' skill and gives you the install line to send each engineer. Commit and push the generated skill folder too, because the install line reads it from GitHub.
 
 ## After that
 
@@ -120,7 +120,7 @@ The engineers follow a rhythm.
 
 - When an item is finished, the engineer posts a closing comment on its issue: what they can demonstrate, the evidence, the decisions, and what the other track needs to know.
 - Every week the engineers meet for 30 minutes and run a joint check.
-- At the end of each work unit the engineers demonstrate the milestone to the stakeholders, against criteria that were written before the work started. They decide pass or fail, and the outcome is noted on the milestone issue the same day.
+- At the end of each work unit the engineers demonstrate the milestone to the stakeholders, against criteria that were written before the work started. They decide pass or fail, and the outcome is noted on the sub-epic the same day.
 
 To change the plan later, change `plan.yaml` with your agent and run the checker again. [faq.md](faq.md) explains how to refresh the files and the issues.
 

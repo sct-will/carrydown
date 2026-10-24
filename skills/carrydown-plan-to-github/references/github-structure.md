@@ -6,7 +6,7 @@ Everything comes from `plan.yaml` and the specification folder. The sync script 
 
 - The project slug, for example `expense-approvals`, on every issue.
 - One label per track, for example `workflow` and `experience`, with the colour from `plan.yaml`.
-- `sub-epic` on milestone issues.
+- `sub-epic` on sub-epics.
 
 Existing labels with the same name are kept.
 

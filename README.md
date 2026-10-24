@@ -26,7 +26,7 @@ To look before you install, open [the sample board](https://github.com/users/sct
 
 1. **Generate.** You have the ground truth, usually an architecture document. Your agent interviews you about people, time and dates, then writes the plan and one specification per work item. Skill: [carrydown-ground-truth](skills/carrydown-ground-truth/SKILL.md).
 2. **Review.** You read the plan, `docs/spec/plan.yaml`, and the specifications in the folders under `docs/spec/`, and edit them with the agent until they are right. No separate reviewer.
-3. **Carry down to GitHub.** Commit and push the plan first (ask your agent to do it), because each issue links its specification on GitHub. Say "put the plan on GitHub". Then the agent generates an epic (one parent issue for the whole plan), a sub-epic per milestone (a milestone is one demonstrable slice of the plan), an issue per work item with its specification, the board and the engineers' skill. It shows a dry run first and writes nothing until you say yes. The agent prints the finished install line for you to send each engineer. Skill: [carrydown-plan-to-github](skills/carrydown-plan-to-github/SKILL.md).
+3. **Carry down to GitHub.** Commit and push the plan first (your agent asks you, and you can tell it to do the commit and push for you), because each issue links its specification on GitHub. Say "put the plan on GitHub". Then the agent generates an epic (one parent issue for the whole plan), a sub-epic per milestone (a milestone is one demonstrable slice of the plan), an issue per work item with its specification, the board and the engineers' skill. It shows a dry run first and writes nothing until you say yes. The agent prints the finished install line for you to send each engineer. Skill: [carrydown-plan-to-github](skills/carrydown-plan-to-github/SKILL.md).
 4. **Work the issues.** The plan owner sends that line to each engineer. Each engineer installs the engineers' skill once, opens an issue, for example work item WI-03, and says "Work on WI-03". Their agent reads the specification and the sections it cites, then plans the code. The install line works once you have committed and pushed the generated skill folder. It names that folder in your repository and the engineer's agent:
 
    ```bash
@@ -62,12 +62,12 @@ The first skill interviews you in six short steps. Nothing is written to GitHub 
 | What must the stakeholders see at each milestone demonstration to call it done? | Their words, which become acceptance criteria |
 | How is the code built, tested and merged here? | The commands and the branch rule |
 
-Then it shows the schedule, each person's load per work unit, the critical path (the chain of items that sets the end date) and the slack (days to spare) before every checkpoint, and asks you to review. If you have a date and no team, say so, and it derives the capacity; if you have a team and no date, it derives the date. [docs/inputs.md](docs/inputs.md) has the details.
+Then it shows the schedule, each person's load per work unit, the critical path (the chain of items that sets the end date) and the slack (days to spare) before every checkpoint (a dated integration check), and asks you to review. If you have a date and no team, say so, and it derives the capacity; if you have a team and no date, it derives the date. [docs/inputs.md](docs/inputs.md) has the details.
 
 ## What you get
 
 - **A plan** in `docs/spec/plan.yaml`: milestones, tracks, owners and dates fitted to your people and time, with a load table and a critical path, and a written reason for every milestone.
-- **One specification per work item**, the smallest piece of work an engineer can finish and show, citing the sections it comes from and checked against the plan by a script that also runs in continuous integration.
+- **One specification per work item**, the smallest piece of work an engineer can finish and show, citing the sections it comes from and checked against the plan by a script that also runs in continuous integration (automatic checks on every pull request).
 - **GitHub issues**, one per work item under a sub-epic per milestone, each telling the engineer's agent what to read.
 - **A GitHub Project board** with work units, tracks, dates and checkpoints filled in.
 - **The engineers' skill**, generated from your specifications and committed in your repository, so "Work on WI-03" tells the coding agent to read the specification and its sections before touching code.
