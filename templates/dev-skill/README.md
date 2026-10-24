@@ -12,7 +12,7 @@ Without the skill, a coding agent tends to invent function names, skip the featu
 
 | File | Contents |
 | --- | --- |
-| `SKILL.md` | When to use the skill, how to orient on a work item, conventions, definition of done, tests and workflow. |
+| `SKILL.md` | How to orient on a work item, the project conventions and tests, the definition of done, and when to read each reference. |
 | `references/work-items.md` | The {{item_count}} work items with track, date, dependencies and specification path, and the program inputs. |
 | `references/contracts.md` | Where each contract is defined and the headings of every Contract or Protocol section. |
 | `references/ground-truth-map.md` | Ground truth headings with anchors and line numbers, and the sections each work item cites. |
