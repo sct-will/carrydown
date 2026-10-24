@@ -32,7 +32,7 @@ Aim for three to six milestones. Put contracts that two tracks share into the fi
 Three rules decide what goes into a milestone. Apply every one of them each time.
 
 1. A milestone is the thinnest vertical slice that proves one user-visible capability end to end. Name it for what a user can do after it. The first milestone proves the whole path with the least behaviour. The last proves the project can be released and run.
-2. A milestone holds items from every track the capability crosses. The tracks meet at a named joint check, a checkpoint with a `joint_check`, before the demonstration. The joint check names each track that meets there. A milestone that stays inside one track says why, in `single_track_reason`.
+2. A milestone holds items from every track the capability crosses. The tracks meet at a checkpoint before the demonstration, and its `joint_check` says what they run together there. The joint check names each track that meets there. A milestone that stays inside one track says why, in `single_track_reason`.
 3. The exit gate is one sentence the stakeholders can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show together, in `joint_demonstration`.
 
 A milestone that fails one of these is split, merged or explained before you go on. The checker's planning review lists the tracks each milestone covers and whether its demonstration's joint check names them.
@@ -70,7 +70,7 @@ Split an item if it spans two tracks or runs past five days. Merge items that ca
 
 ## 6. Checkpoints
 
-A checkpoint is a short weekly integration check with both tracks present. Each has a date, a name and a joint check: what the tracks run together to prove their halves meet. Every item names one checkpoint. Demonstration dates are also checkpoints.
+A checkpoint is a dated integration check between the tracks, with every track present. Each has a date, a name and a joint check: the one-sentence test of what the tracks run together to prove the parts they built fit. Every item names one checkpoint. Demonstration dates are also checkpoints.
 
 ## 7. Load table and critical path
 
@@ -80,7 +80,7 @@ Run:
 python3 <skill>/scripts/check_specs.py --root . --report
 ```
 
-It prints the schedule, each person's allocation, their sized days against allocated capacity per work unit (with a flag over 100 percent), the critical path, the target and whether the critical path meets it, the checkpoints and the planning review. Read it with the user. A load of 100 percent or more leaves no slack, so aim for about 80 percent at most. If one person carries much more than the other, move items across tracks where the skills allow, or stretch the date. The planning review flags a load ratio above two to one. Read the critical path for single points of failure. If it runs through one person, the plan says so and offers an alternative, in that track's `order_rationale`. Ask the user whether to change it.
+It prints the schedule, each person's allocation, their sized days against allocated capacity per work unit (with a flag over 100 percent), the critical path, the target and whether the critical path meets it, the checkpoints and the planning review. Read it with the user. A load of 100 percent or more leaves no slack, so aim for about 80 percent at most. If one person carries much more than the other, move items across tracks where the skills allow, or stretch the date. The planning review flags a load ratio above two to one. Check who owns each item on the critical path, because one absent owner there would move the end date. If it runs through one person, the plan says so and offers an alternative, in that track's `order_rationale`. Ask the user whether to change it.
 
 ## 8. Work outside the plan
 

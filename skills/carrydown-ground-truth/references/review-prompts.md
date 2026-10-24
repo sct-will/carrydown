@@ -34,7 +34,7 @@ Then use the longer prompt below to push each finding to a concrete change. Past
 > 2. Incorrect. Dependencies that are reversed or absent. Dates that precede a dependency. Work on a day off. Items that need an external input but do not say so.
 > 3. Improvable. Items longer than five days. Items that span two tracks. Handoffs that could move earlier. Slack before demonstrations.
 > 4. Context switching. Where a person jumps between themes on consecutive days. Propose a reordering.
-> 5. Load. One person carrying much more than another. Single points of failure on the critical path.
+> 5. Load. One person carrying much more than another. One person owning the critical path, so that one absence would move the end date.
 > 6. The engineers' experience. Is there a day when someone has nothing to do, or three things due? Does the first week let people start without waiting?
 > 7. Milestone composition. Does each milestone prove one user-visible capability end to end, with every track it crosses meeting at a named joint check before the demonstration? Is the reason given for a milestone that stays inside one track true?
 > 8. Rationale. Is each stated reason in `rationale`, `joint_demonstration` and `order_rationale` true of the dates and dependencies? Quote the reason and the date or dependency that contradicts it.

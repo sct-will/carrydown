@@ -62,7 +62,7 @@ The first skill interviews you in six short steps. Nothing is written to GitHub 
 | What must the stakeholders see at each milestone demonstration to call it done? | Their words, which become acceptance criteria |
 | How is the code built, tested and merged here? | The commands and the branch rule |
 
-Then it shows the schedule, each person's load per work unit, the critical path (the chain of items that sets the end date) and the slack (days to spare) before every checkpoint (a dated integration check), and asks you to review. If you have a date and no team, say so, and it derives the capacity; if you have a team and no date, it derives the date. [docs/inputs.md](docs/inputs.md) has the details.
+Then it shows the schedule, each person's load per work unit, the critical path (the chain of items that sets the end date) and the slack (days to spare) before every checkpoint (a dated integration check between the tracks), and asks you to review. If you have a date and no team, say so, and it derives the capacity; if you have a team and no date, it derives the date. [docs/inputs.md](docs/inputs.md) has the details.
 
 ## What you get
 
@@ -92,7 +92,7 @@ docs/
 
 ## How the plan is composed
 
-The agent builds the plan around people and the part of the system each one owns. Each engineer owns one track and stays on one theme, one part of the system, at a time, so they switch context less. A milestone takes items from the tracks it needs. The tracks meet at a named joint check, a short dated integration check between tracks. The milestone ends with one demonstration of integrated functionality, given by the engineers whose tracks meet. An item's size is the working days it needs at full attention. Size divided by allocation gives calendar time, and nobody passes 100 percent of their time in a work unit. Slack, the days to spare, sits before every checkpoint. The critical path, the chain of items that sets the end date, is read for single points of failure. The reason for each milestone is written in the plan, and the checker's "Planning review" reports coverage, theme switches, slack and load so you can argue with it. [The method](docs/method.md) lists the ten rules.
+The agent builds the plan around people and the part of the system each one owns. Each engineer owns one track and stays on one theme, one part of the system, at a time, so they switch context less. A milestone takes items from the tracks it needs. The tracks meet at a checkpoint, a dated integration check between them. There they run a joint check, the one-sentence test in the plan that proves the parts they built fit together. The milestone ends with one demonstration of integrated functionality, given by the engineers whose tracks meet. An item's size is the working days it needs at full attention. Size divided by allocation gives calendar time, and nobody passes 100 percent of their time in a work unit. Slack, the days to spare, sits before every checkpoint. The critical path is the chain of items that sets the end date. It is checked for who owns each item on it, because one absent owner there would move the end date. The reason for each milestone is written in the plan, and the checker's "Planning review" reports coverage, theme switches, slack and load so you can argue with it. [The method](docs/method.md) lists the ten rules.
 
 ## How it compares
 

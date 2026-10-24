@@ -30,7 +30,7 @@ No. The plan is files in Git, so changing it is cheap. Work units stretch to fit
 
 ## How does this compare with plan mode, spec-driven tools, Superpowers and Claude Code Project Management (CCPM)?
 
-Plan mode and spec-driven tools plan one task or one feature from a specification. Superpowers is a library of skills for how an agent works. CCPM is a project management workflow that turns requirement documents into GitHub issues. Carrydown carries one agreed ground truth across every task. It dates the plan around named people with their allocation, checks every specification against that plan, fills the board and generates the engineers' skill. It can sit beside any of them.
+Plan mode and spec-driven tools plan one task or one feature from a specification. Superpowers is a library of skills for how an agent works. CCPM is a project management workflow that turns requirement documents into GitHub issues. The carrydown skills carry one agreed ground truth across every task. They date the plan around named people with their allocation, check every specification against that plan, fill the board and generate the engineers' skill. They can sit beside any of those tools.
 
 ## What does it cost in tokens?
 
@@ -88,6 +88,8 @@ So the scripts run on a stock Python with no installation. `plan.yaml` uses a sm
 
 `npx skills remove`, or delete the skill folders. The files under `docs/` in your project are yours.
 
-## Where do I report a bug?
+## Where do I report a bug or a security issue?
 
-On the repository, without any secret in the report.
+Report a bug with [the bug report form](https://github.com/sct-will/carrydown/issues/new?template=bug_report.yml) on the carrydown repository. Leave out any token, password or private document text.
+
+Report a security issue privately. Do not open a public issue for it. Use GitHub private vulnerability reporting through [the private report form](https://github.com/sct-will/carrydown/security/advisories/new) on the carrydown repository. Only the maintainer can read what you send. [SECURITY.md](../SECURITY.md) says what to put in the report and when to expect a reply.

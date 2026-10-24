@@ -110,7 +110,7 @@ If you change something that talks to GitHub, say in the pull request how you te
 2. The maintainer reads the change, usually within a week. This is a one-person project, so replies may take time.
 3. You may be asked for changes. Push them as new commits on the same branch.
 4. When the change is approved the maintainer merges it. Squash merges are the default.
-5. Changes that alter a script's behavior or a template get an entry in [CHANGELOG.md](CHANGELOG.md) under the next version.
+5. Changes that alter a script's behaviour or a template get an entry in [CHANGELOG.md](CHANGELOG.md) under the next version.
 
 ## Licence of contributions
 

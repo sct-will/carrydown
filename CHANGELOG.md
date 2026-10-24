@@ -11,7 +11,7 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ### Added
 
-- Planning rigor. `plan.yaml` records why the plan is composed the way it is: `rationale`, `joint_demonstration` and `single_track_reason` on each milestone, `order_rationale` on each track and `theme` on each item. The ten planning rules are in the ground-truth skill's `references/planning.md` and in `docs/method.md`.
+- Planning rigour. `plan.yaml` records why the plan is composed the way it is: `rationale`, `joint_demonstration` and `single_track_reason` on each milestone, `order_rationale` on each track and `theme` on each item. The ten planning rules are in the ground-truth skill's `references/planning.md` and in `docs/method.md`.
 - `scaffold_spec.py` writes "Why these items form this milestone" and "Joint demonstration" into each `milestone.md`, and "How this plan was composed" into the specification README. `--refresh-headers` rewrites or adds these sections and leaves other edits alone.
 - `check_specs.py` has a planning review. A milestone on one track without a reason, and a missing rationale, joint demonstration or order rationale, are findings. `--report` ends with advisory lines: the tracks each milestone covers and whether its joint check names them, items with no slack, theme switches per owner, critical path owners and the load ratio.
 

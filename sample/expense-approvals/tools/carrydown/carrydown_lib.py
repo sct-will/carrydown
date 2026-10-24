@@ -884,7 +884,7 @@ def header_markdown(plan, it):
 
 
 # ---------------------------------------------------------------------------
-# Planning rigor: the rules a plan is composed by, and the helpers that read them
+# Planning rigour: the rules a plan is composed by, and the helpers that read them
 # ---------------------------------------------------------------------------
 
 PLANNING_RULES = (
@@ -898,7 +898,7 @@ PLANNING_RULES = (
     "Size in days divided by allocation gives calendar working days: four days at 60 percent is nearly seven working days. "
     "Nobody is planned past 100 percent of allocated capacity in a work unit, aim for about 80, and days off and breaks are real.",
     "Slack sits before every checkpoint and demonstration. An item that completes on its checkpoint date has none.",
-    "The critical path is read for single points of failure. If it runs through one person, the plan says so and offers an alternative.",
+    "The critical path is checked for who owns each item on it, because one absent owner there would move the end date. If it runs through one person, the plan says so and offers an alternative.",
     "Work outside the plan, owned outside the team, keeps its ids as gaps in the numbering.",
     "The plan records its rationale where anyone can argue with it: for each milestone, why these items form it and what the joint demonstration proves, "
     "and for each track, why its items are in this order. The plan owner reads the plan week by week, adversarially, before anything is scaffolded.",

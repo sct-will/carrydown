@@ -2,7 +2,7 @@
 
 An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent. Two skills you install, one skill is generated for your engineers.
 
-Carrydown carries a ground truth document down into a governed plan. The plan has one specification per work item, a set of GitHub issues, a project board and the engineers' skill that every issue links to. This page explains the four steps and what each one produces, which parts the carrydown skills do for you and which stay with the plan owner and the engineers.
+The carrydown skills carry a ground truth document down into a governed plan. The plan has one specification per work item, a set of GitHub issues, a project board and the engineers' skill that every issue links to. This page explains the four steps and what each one produces, which parts the carrydown skills do for you and which stay with the plan owner and the engineers.
 
 The idea is old in systems engineering, where it is called flow-down: a requirement at the top is traced to every part below it. The carrydown skills apply the same idea to software work done with coding agents. One document, one unbroken line through the plan, the specifications, the issues, the board and the agent.
 
@@ -13,7 +13,7 @@ The idea is old in systems engineering, where it is called flow-down: a requirem
 | 1. Generate, with `carrydown-ground-truth` | The agent renders the ground truth to Markdown with stable section anchors, interviews the plan owner about people, time and dates, and drafts the plan around those people. Then it writes one specification per work item to a fixed template, with contract excerpts copied from the ground truth. A checker validates every file against the plan. | The plan owner decides, the agent drafts | The rendered ground truth, `plan.yaml` with its load table and critical path, and one specification per work item. |
 | 2. Review | The plan owner reads the plan week by week and every specification, adversarially, and edits them with the agent until they are right. No separate reviewer. | Plan owner | A plan and specifications the plan owner approves, with 0 findings from the checker. |
 | 3. Carry down to GitHub, with `carrydown-plan-to-github` | A dry run first. After the plan owner's yes: labels, an Epic, a sub-epic per milestone, an issue per work item as a sub-issue with its specification linked, dependency links and a roll-up comment on the Epic. Then a GitHub Project (v2) board with a work unit iteration field of custom length, track, dates and three views. Last, the engineers' skill is generated from the specifications. | Plan owner, after each dry run | Issues, the board, and the engineers' skill with the install line to send each engineer. |
-| 4. Work the issues | Each engineer installs the engineers' skill once and says "Work on WI-03". The agent reads the specification, the cited sections and the conventions, then plans the code. Evidence is posted on every closed issue, a weekly checkpoint runs a named joint check between tracks, and each milestone ends with one demonstration against criteria written in advance. | Engineers show, the stakeholders decide | Code, closing comments with evidence, checkpoint comments and a demonstration note on each sub-epic. |
+| 4. Work the issues | Each engineer installs the engineers' skill once and says "Work on WI-03". The agent reads the specification, the cited sections and the conventions, then plans the code. Evidence is posted on every closed issue. Each week the tracks meet at a checkpoint, a dated integration check between them. There they run a joint check, the one-sentence test in the plan that proves the parts they built fit together. Each milestone ends with one demonstration against criteria written in advance. | Engineers show, the stakeholders decide | Code, closing comments with evidence, checkpoint comments and a demonstration note on each sub-epic. |
 
 To see the four steps on a finished fictional sample, open [the sample board](https://github.com/users/sct-will/projects/2) and [issue 9](https://github.com/sct-will/carrydown-sample/issues/9).
 
@@ -41,7 +41,7 @@ Items are the smallest pieces an engineer can finish, show and close, usually tw
 
 Items that depend on work owned outside the team (a pilot team, an approval, a review) carry an "external input" note. That work is an external item: the plan does not schedule it, and it leaves a gap in the numbering.
 
-## Planning rigor
+## Planning rigour
 
 A generated task list and a plan look alike on a board. What separates them is the reasoning, so the plan writes it down. These ten rules were worked out by hand with a real team. The ground-truth skill drafts by them and the checker's planning review reads the plan against them.
 
@@ -52,7 +52,7 @@ A generated task list and a plan look alike on a board. What separates them is t
 5. Each engineer's consecutive items stay in one part of the system, a theme. Related items for the same person sit in adjacent days to cut context switching.
 6. Size in days divided by allocation gives calendar working days: four days at 60 percent is nearly seven working days. Nobody is planned past 100 percent of allocated capacity in a work unit, aim for about 80, and days off and breaks are real.
 7. Slack sits before every checkpoint and demonstration. An item that completes on its checkpoint date has none.
-8. The critical path is read for single points of failure. If it runs through one person, the plan says so and offers an alternative.
+8. The critical path is checked for who owns each item on it, because one absent owner there would move the end date. If it runs through one person, the plan says so and offers an alternative.
 9. Work outside the plan, owned outside the team, keeps its ids as gaps in the numbering.
 10. The plan records its rationale where anyone can argue with it: for each milestone, why these items form it and what the joint demonstration proves, and for each track, why its items are in this order. The plan owner reads the plan week by week, adversarially, before anything is scaffolded.
 

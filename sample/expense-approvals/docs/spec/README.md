@@ -38,7 +38,7 @@ The shortest route is the engineers' skill. It makes a coding agent read the rig
 - Documentation style in this folder. Sentence-case headings, short sentences, no em dashes or en dashes, no names of people. Owners and dates live in the GitHub issues.
 - Existing behaviour is not changed by a work item unless its file says so.
 
-Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the stakeholders. An external input is something an item needs from an external item, work outside the plan that is owned outside the team.
+Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a dated integration check between the tracks. Its joint check is the one-sentence test the tracks run together there to prove the parts they built fit. A demonstration is the milestone roll-up that the engineers give to the stakeholders. An external input is something an item needs from an external item, work outside the plan that is owned outside the team.
 
 The Ground truth row in a work item's header lists the sections the item is built from. The body may cite other sections for context.
 
@@ -55,7 +55,7 @@ The plan follows ten rules. The reasons below are written in `plan.yaml`, so any
 5. Each engineer's consecutive items stay in one part of the system, a theme. Related items for the same person sit in adjacent days to cut context switching.
 6. Size in days divided by allocation gives calendar working days: four days at 60 percent is nearly seven working days. Nobody is planned past 100 percent of allocated capacity in a work unit, aim for about 80, and days off and breaks are real.
 7. Slack sits before every checkpoint and demonstration. An item that completes on its checkpoint date has none.
-8. The critical path is read for single points of failure. If it runs through one person, the plan says so and offers an alternative.
+8. The critical path is checked for who owns each item on it, because one absent owner there would move the end date. If it runs through one person, the plan says so and offers an alternative.
 9. Work outside the plan, owned outside the team, keeps its ids as gaps in the numbering.
 10. The plan records its rationale where anyone can argue with it: for each milestone, why these items form it and what the joint demonstration proves, and for each track, why its items are in this order. The plan owner reads the plan week by week, adversarially, before anything is scaffolded.
 
