@@ -9,7 +9,7 @@ The long form for the plan owner: the engineering manager or product manager who
 | Plan owner | The engineering manager or product manager who owns the plan. Brings the ground truth and the constraints, answers the interview, reviews the generated plan and specifications with the agent, says yes before anything is written to GitHub, and gives the engineers the generated skill. | `carrydown-ground-truth`, then `carrydown-plan-to-github` |
 | Engineers | The people building the work items, each with their own coding agent. They install the generated skill once, start an item by naming it, post evidence when it closes, and give the demonstrations. | The skill that `carrydown-plan-to-github` generates for the project |
 
-Two skills you install, one skill is generated for your engineers. The demonstrations are watched by the people accountable for the outcome, who decide pass or fail against criteria written before the work. They run nothing.
+Two skills you install, one skill is generated for your engineers. The demonstrations are watched by the stakeholders, the people accountable for the outcome, who decide pass or fail against criteria written before the work. They run nothing.
 
 The agent has no role. It drafts for the plan owner, reads for the engineers and carries the ground truth between them.
 
@@ -90,27 +90,27 @@ The checker compares every specification to the plan. It runs on your computer, 
 
 A token is a long password that lets the scripts create issues and a Project for you. The agent gives you the link. Open it yourself.
 
-1. **Pick the kind.** If an organisation owns the board, create a fine-grained token at https://github.com/settings/personal-access-tokens/new for the one repository, with Issues read and write, Metadata read, and the organisation permission Projects read and write. Only if your own user account owns the board, use a classic token from the pre-filled link https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown. It ticks `repo` and `project` for you.
+1. **Pick the kind.** If an organisation owns the board, create a fine-grained token on [GitHub's new fine-grained token page](https://github.com/settings/personal-access-tokens/new) for the one repository, with Issues read and write, Metadata read, and the organisation permission Projects read and write. Only if your own user account owns the board, use a classic token from [the pre-filled classic token page](https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown). It ticks `repo` and `project` for you.
 2. **Set the expiry to 7 days.** Click Generate token. Copy the token. GitHub shows it once.
 3. **Save it in a plain text file outside your project**, for example `Downloads/token.txt`. In TextEdit, choose Format, then Make Plain Text, before you save.
 4. **Tell the agent the file path.** Do not paste the token into the chat. The agent never opens the file. It runs the token script with `--from-file`. The script reads the file, stores the token at `~/.config/carrydown/github_token` where only you can read it, and checks what the token can do. It keeps your file.
 5. **Delete your file.** It still holds the token in plain text.
 6. **Read the check.** The agent runs the check. It says who owns the token, what it can do and whether the repository is reachable.
 
-When the plan and the board are on GitHub, revoke the token at github.com/settings/tokens. Make a new one if you need it again.
+When the plan and the board are on GitHub, revoke the token on [your GitHub tokens page](https://github.com/settings/tokens). Make a new one if you need it again.
 
 Instead of steps 3 to 5 you can run the token script yourself in a terminal and type the token at the prompt. The characters do not appear as you type.
 
 If the check fails, it names the fix:
 
-- **Single sign-on.** Go to github.com/settings/tokens, find the token, click its "Configure SSO" button, and click "Authorize" next to your organisation. Then ask the agent to run the check again.
+- **Single sign-on.** Go to [your GitHub tokens page](https://github.com/settings/tokens), find the token, click its "Configure SSO" button, and click "Authorize" next to your organisation. Then ask the agent to run the check again.
 - **Missing organisation permission.** Ask an organisation administrator for permission to create issues and Projects.
 
-If you think the token leaked, revoke it at github.com/settings/tokens and make a new one. [security.md](security.md) has the details.
+If you think the token leaked, revoke it on [your GitHub tokens page](https://github.com/settings/tokens) and make a new one. [security.md](security.md) has the details.
 
 ## The GitHub step
 
-The agent runs a dry run first. A dry run changes nothing. It prints a summary line like "1 Epic, 5 sub-epics, 9 work item issues". Read the numbers, then say whether to go ahead. After the write it checks the counts through GitHub, builds the board and fills in the dates. Then it gives you a short list of settings that GitHub only lets a person click, such as how the board groups its cards, and tells you where. Last, it generates the engineers' skill and gives you the install line to send each engineer.
+Commit and push the plan and the specification folder first. Each issue links its specification on GitHub, and the link only works once the file is pushed. The agent checks this and asks you to do it if it is not done. Then the agent runs a dry run. A dry run changes nothing. It prints a summary line like "1 Epic, 5 sub-epics, 9 work item issues". Read the numbers, then say whether to go ahead. After the write it checks the counts through GitHub, builds the board and fills in the dates. Then it gives you a short list of settings that GitHub only lets a person click, such as how the board groups its cards, and tells you where. Last, it generates the engineers' skill and gives you the install line to send each engineer. Commit and push the generated skill folder too, because the install line reads it from GitHub.
 
 ## After that
 
@@ -118,7 +118,7 @@ The engineers follow a rhythm.
 
 - When an item is finished, the engineer posts a closing comment on its issue: what they can demonstrate, the evidence, the decisions, and what the other track needs to know.
 - Every week the engineers meet for 30 minutes and run a joint check.
-- At the end of each work unit the engineers demonstrate the milestone to the people accountable for the outcome, against criteria that were written before the work started. They decide pass or fail, and the outcome is noted on the milestone issue the same day.
+- At the end of each work unit the engineers demonstrate the milestone to the stakeholders, against criteria that were written before the work started. They decide pass or fail, and the outcome is noted on the milestone issue the same day.
 
 To change the plan later, change `plan.yaml` with your agent and run the checker again. [faq.md](faq.md) explains how to refresh the files and the issues.
 
@@ -143,6 +143,8 @@ To change the plan later, change `plan.yaml` with your agent and run the checker
 - **Critical path.** The longest chain of items that depend on each other. It sets the earliest finish date.
 - **Exit gate.** The one sentence that must be true for a work unit to count as done.
 - **Work unit.** A time block with its own length and an exit gate. It replaces the fixed-length sprint.
-- **Checkpoint.** A short weekly meeting where the tracks run a check together to prove their halves fit.
+- **Checkpoint.** A dated integration check between the tracks, listed under `checkpoints` in `plan.yaml`. Each one runs a joint check, and each work item names the checkpoint it must be done by.
+- **Joint check.** The test a checkpoint runs, written in one sentence in the plan: what the tracks run together to prove the parts they built fit, such as a report going from the form to the database.
+- **Joint demonstration.** What the engineers whose tracks meet show together at the end of a milestone, one demonstration of the completed items working as one. The plan says what each of them shows.
 - **Demonstration.** A meeting at the end of a work unit where the engineers show the stakeholders the milestone working, against criteria written in advance.
 - **External item.** Work outside the plan, owned outside the team, such as recruiting a pilot team or getting an approval. It keeps an id, left as a gap in the numbering, and is listed under `external` in `plan.yaml`. An item that waits for it carries an "external input" note.

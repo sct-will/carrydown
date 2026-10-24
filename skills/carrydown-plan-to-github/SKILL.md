@@ -44,6 +44,16 @@ The scripts and templates folders sit next to this SKILL.md. In the commands bel
 
 Run `python3 <skill>/scripts/check_specs.py --root .`. It must report 0 findings. If it does not, stop and go back to `carrydown-ground-truth`. The sync script runs the checker again before it does anything.
 
+Every issue body links its specification at `https://github.com/<owner>/<repo>/blob/<branch>/docs/spec/...`, where `<branch>` is `project.branch`. Those links work only when the specification folder is committed and pushed to that branch. Check it before any `--apply`:
+
+```bash
+git status --porcelain docs/spec
+git fetch origin <branch>
+git log origin/<branch>..HEAD --oneline -- docs/spec
+```
+
+The first and the last command must print nothing. If the first prints a file, the plan or a specification is not committed. If the last prints a commit, it is not pushed. Ask the user to commit and push the plan and the specifications, then check again.
+
 Confirm with the user, in plain words: the repository (`owner/name`) and whether it is public, whether a parent Epic issue exists (its number) or may be created, the people's GitHub logins if they should be assigned, and which account owns the project board (the user's own GitHub account or the organisation). Put the repository, Epic number and project title in `plan.yaml` under `project`.
 
 ### 2. Token
