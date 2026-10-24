@@ -34,6 +34,7 @@ Usage
   python3 scripts/github_sync.py --root . --repo owner/name --apply    write
   python3 scripts/github_sync.py --root . --verify                     check what exists
   python3 scripts/github_sync.py --root . --offline --show-body 3      print one issue body, no network
+  python3 scripts/github_sync.py --root . --offline --show-body M2     print one sub-epic body, no network
 """
 import argparse
 import re
@@ -196,6 +197,13 @@ def build_item_body(plan, root, it, numbers=None, mark=True):
     return with_marker(body, L.tag(plan, it["id"])) if mark else body
 
 
+def optional_section(spec, name):
+    """A heading and the section text, without the HTML comments scaffold_spec.py writes into
+    generated sections. Nothing when the milestone file has no such section."""
+    text = re.sub(r"<!--.*?-->", "", L.section_text(spec, name), flags=re.S).strip()
+    return [f"### {name}", "", text, ""] if text else []
+
+
 def build_subepic_body(plan, root, ms, numbers=None, mark=True):
     numbers = numbers or {}
     p = L.milestone_path(plan, root, ms)
@@ -203,9 +211,11 @@ def build_subepic_body(plan, root, ms, numbers=None, mark=True):
     rel = p.relative_to(root).as_posix()
     lines = [L.section_text(spec, "Purpose"), "", f"**Exit gate.** {ms['gate']}", "",
              f"**Due.** {ms['end']}. **Demonstration.** {ms['demo']}.", "",
-             f"Target delivery for the plan: {target_phrase(plan)[0]} ({target_phrase(plan)[1]})", "",
-             "### Expected outcomes", "", L.section_text(spec, "Expected outcomes"), "",
-             "### Acceptance criteria", "", L.section_text(spec, "Acceptance criteria"), "",
+             f"Target delivery for the plan: {target_phrase(plan)[0]} ({target_phrase(plan)[1]})", ""]
+    lines += optional_section(spec, "Why these items form this milestone")
+    lines += ["### Expected outcomes", "", L.section_text(spec, "Expected outcomes"), ""]
+    lines += optional_section(spec, "Joint demonstration")
+    lines += ["### Acceptance criteria", "", L.section_text(spec, "Acceptance criteria"), "",
              "### Demonstration expectations", "", L.section_text(spec, "Demonstration expectations"), "",
              "### Work items", ""]
     people = {pp["id"]: pp for pp in plan["people"]}
@@ -390,7 +400,7 @@ def _run(argv=None):
     ap.add_argument("--skip-comment", action="store_true", help="do not post or update the Epic roll-up comment")
     ap.add_argument("--skip-check", action="store_true", help="do not run the specification checker first")
     ap.add_argument("--issue-type", default="", help="GitHub issue type for work items, for example Task (organisations only)")
-    ap.add_argument("--show-body", metavar="ID", help="print the issue body for one work item and exit (no network). Accepts WI-07 or 7")
+    ap.add_argument("--show-body", metavar="ID", help="print the issue body for one work item or sub-epic and exit (no network). Accepts WI-07, 7 or M2")
     a = ap.parse_args(argv)
 
     root = Path(a.root).resolve()
@@ -404,6 +414,13 @@ def _run(argv=None):
             L.say("  - " + p)
         return 1
     if a.show_body:
+        sm = re.fullmatch(r"\s*[Mm](\d+)\s*", str(a.show_body))
+        if sm:
+            ms = {m["number"]: m for m in plan["milestones"]}.get(int(sm.group(1)))
+            if not ms:
+                L.die(f"no milestone {a.show_body}. Use M followed by the milestone number, for example M{plan['milestones'][0]['number']}")
+            L.say(build_subepic_body(plan, root, ms))
+            return 0
         m = re.search(r"(\d+)\s*$", str(a.show_body))
         wanted = int(m.group(1)) if m else None
         it = L.item_by_id(plan).get(wanted)

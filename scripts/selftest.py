@@ -394,6 +394,16 @@ def main():
                 "print(S.build_rollup(plan, {}, 1)); print(S.build_subepic_body(plan, sys.argv[2], plan['milestones'][0]))")
         step("the Epic comment and a sub-epic body carry the constraints", [PY, "-c", code, str(ROOT / SAMPLE / "docs/spec/plan.yaml"), str(ROOT / SAMPLE)],
              contains=["**Constraints**", "- Target delivery: 2027-04-23 (given)", "Target delivery for the plan: 2027-04-23 (given)"])
+        code = ("import sys; sys.path.insert(0, 'scripts'); import carrydown_lib as L, github_sync as S; "
+                "plan, _ = L.load_plan(sys.argv[1]); "
+                "b = S.build_subepic_body(plan, sys.argv[2], [m for m in plan['milestones'] if m['number'] == 2][0]); print(b); "
+                "i = [b.index(h) for h in ('Target delivery for the plan:', '### Why these items form this milestone', '### Joint demonstration', '### Acceptance criteria')]; "
+                "sys.exit(0 if i == sorted(i) and '<!--' not in b.rstrip().rsplit(chr(10), 1)[0] and b.rstrip().rsplit(chr(10), 1)[1].startswith('<!-- carrydown:') else 1)")
+        step("the sub-epic body carries the milestone rationale and joint demonstration", [PY, "-c", code, str(ROOT / SAMPLE / "docs/spec/plan.yaml"), str(ROOT / SAMPLE)],
+             contains=["### Why these items form this milestone", "Routing and the inbox are the two halves of one capability",
+                       "### Joint demonstration", "The Experience engineer approves one report as two approvers in turn from the inbox",
+                       "Target delivery for the plan: 2027-04-23 (given)"])
+        step("--show-body prints a sub-epic body", sync + ["--show-body", "M2"], contains=["### Joint demonstration", "Target delivery for the plan: 2027-04-23 (given)"])
         step("a target in weeks is accepted", chk + ["--report", "--plan", variant("weeks", plan_text.replace("  date: 2027-04-23\n", "  weeks: 11\n"))], contains=["11 working weeks plus 1 break week(s)", "meets the target"])
         step("over 100 percent of allocated capacity is flagged", chk + ["--plan", variant("overload", plan_text.replace("allocation: 60", "allocation: 10"))], expect=1, contains=["over 100 percent of allocated capacity"])
         step("a missed target is reported", chk + ["--report", "--plan", variant("late", plan_text.replace("  date: 2027-04-23\n", "  date: 2027-04-16\n"))], contains=["misses the target"])

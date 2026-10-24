@@ -16,11 +16,15 @@ One issue per milestone. The title is `<subepic_prefix> <number>, <name>`, for e
 
 1. The purpose, which is the value proposition.
 2. The exit gate and the due and demonstration dates, then one line: "Target delivery for the plan: <date> (given or derived)".
-3. Expected outcomes.
-4. Acceptance criteria as checkboxes, written before the work starts.
-5. Demonstration expectations.
-6. The work item list as task-list lines that link to the issues, for example `- [ ] #14 WI-03 Approval routing engine, by 2027-02-24`.
-7. A link to the milestone file.
+3. Why these items form this milestone: what the items deliver together and which checkpoint joins them.
+4. Expected outcomes.
+5. Joint demonstration: what each track shows and the joint check on the demonstration date.
+6. Acceptance criteria as checkboxes, written before the work starts.
+7. Demonstration expectations.
+8. The work item list as task-list lines that link to the issues, for example `- [ ] #14 WI-03 Approval routing engine, by 2027-02-24`.
+9. A link to the milestone file.
+
+Steps 3 and 5 are left out when `milestone.md` has no such section. `--offline --show-body M2` prints the body for milestone 2 without a network call.
 
 If an Epic exists, each sub-epic is linked under it as a sub-issue.
 
