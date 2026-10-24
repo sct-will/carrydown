@@ -277,12 +277,12 @@ def frontmatter(tmp, plan_text):
     plan = proj / "docs/spec/plan.yaml"
     gen = [PY, "scripts/generate_dev_skill.py", "--root", str(proj)]
     plan.write_text(plan_text.replace('name: "Expense approvals"', 'name: "Payments: phase 2 #core"'), encoding="utf-8")
-    step("a project name with ': ' and ' #' gives a quoted description", gen + ["--apply"], contains=["description length: 240 characters"])
+    step("a project name with ': ' and ' #' gives a quoted description", gen + ["--apply"], contains=["description length: 254 characters"])
     code = ("import json, re, sys; t = open(sys.argv[1], encoding='utf-8').read(); "
             "m = re.search(r'(?m)^description: (.*)$', t); d = json.loads(m.group(1)); "
             "assert d.startswith('Orients on one Payments: phase 2 #core work item'), d; "
-            "assert 'WI-01 to WI-11' in d and 'wi-01-service-scaffold' in d and 'docs/spec/' in d, d; print('parsed', len(d))")
-    step("the description is a valid quoted scalar", [PY, "-c", code, str(proj / "docs/dev/skills/expense-approvals-dev/SKILL.md")], contains=["parsed 240"])
+            "assert 'a work item id such as WI-01,' in d and 'WI-11' not in d and 'wi-01-service-scaffold' in d and 'docs/spec/' in d, d; print('parsed', len(d))")
+    step("the description is a valid quoted scalar", [PY, "-c", code, str(proj / "docs/dev/skills/expense-approvals-dev/SKILL.md")], contains=["parsed 254"])
     skill = proj / "docs/dev/skills/expense-approvals-dev"
     step("generated text names the engineers, not developers", [PY, "-c", "print('ok')"],
          files={skill / "SKILL.md": ["the engineer checks and posts it"], skill / "references/work-items.md": ["not by the engineers"]})

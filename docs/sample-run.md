@@ -810,7 +810,7 @@ The last step of `carrydown-plan-to-github` generates the skill the engineers in
 ```text
 $ python3 scripts/generate_dev_skill.py --root sample/expense-approvals
 engineers' skill: expense-approvals-dev  ->  docs/dev/skills/expense-approvals-dev
-description length: 234 characters (target under 250, limit 1024)
+description length: 248 characters (target under 250, limit 1024)
   skip (exists): SKILL.md
   skip (exists): README.md
   skip (exists): references/work-items.md

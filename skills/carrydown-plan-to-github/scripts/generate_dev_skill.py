@@ -128,15 +128,16 @@ DESCRIPTION_WARN = 300
 
 def make_description(plan):
     """The description agents read to decide when to load the skill: what it does, then the words
-    that should trigger it (the id range, one file name, the specification folder). Short, because
-    every description of every installed skill shares one listing budget."""
+    that should trigger it (one work item id as an example, one file name, the specification folder).
+    The example is the first planned item, never a range, because a range would include the ids of
+    external items, which have no specification. Short, because every description of every
+    installed skill shares one listing budget."""
     proj = plan["project"]
-    items = plan["items"]
-    first, last = items[0], items[-1]
-    stem = f"{L.tag(plan, first['id']).lower()}-{first['slug']}"
-    ids = L.tag(plan, first["id"]) if first is last else f"{L.tag(plan, first['id'])} to {L.tag(plan, last['id'])}"
+    first = plan["items"][0]
+    tag = L.tag(plan, first["id"])
+    stem = f"{tag.lower()}-{first['slug']}"
     d = (f"Orients on one {proj['name']} work item before any code change, reading its spec, the ground truth sections it cites "
-         f"and the conventions. Use when the user names {ids}, a file such as {stem}, or {proj['spec_dir']}/.")
+         f"and the conventions. Use when the user names a work item id such as {tag}, a file such as {stem}, or {proj['spec_dir']}/.")
     d = d.replace("<", "").replace(">", "")      # angle brackets are not allowed in a skill description
     if len(d) >= 1024:
         d = d[:1020].rsplit(" ", 1)[0] + "."

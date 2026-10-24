@@ -1,6 +1,6 @@
 ---
 name: expense-approvals-dev
-description: "Orients on one Expense approvals work item before any code change, reading its spec, the ground truth sections it cites and the conventions. Use when the user names WI-01 to WI-11, a file such as wi-01-service-scaffold, or docs/spec/."
+description: "Orients on one Expense approvals work item before any code change, reading its spec, the ground truth sections it cites and the conventions. Use when the user names a work item id such as WI-01, a file such as wi-01-service-scaffold, or docs/spec/."
 ---
 
 # Expense approvals development
