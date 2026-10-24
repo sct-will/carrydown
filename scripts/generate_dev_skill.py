@@ -19,6 +19,7 @@ Usage
   python3 scripts/generate_dev_skill.py --root . --only references --apply    refresh only the references
 """
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -121,18 +122,22 @@ def ground_truth_map_md(plan, root):
     return "\n".join(out).rstrip() + "\n"
 
 
+DESCRIPTION_TARGET = 250
+DESCRIPTION_WARN = 300
+
+
 def make_description(plan):
+    """The description agents read to decide when to load the skill: what it does, then the words
+    that should trigger it (the id range, one file name, the specification folder). Short, because
+    every description of every installed skill shares one listing budget."""
     proj = plan["project"]
-    pre = proj["id_prefix"]
-    n = len(plan["items"])
-    first = plan["items"][0]
+    items = plan["items"]
+    first, last = items[0], items[-1]
     stem = f"{L.tag(plan, first['id']).lower()}-{first['slug']}"
-    d = (f"Use when working on a work item of the {proj['name']} project in this repository, named by id (for example "
-         f"{L.tag(plan, plan['items'][0]['id'])} or {L.tag(plan, plan['items'][-1]['id'])}), by a file name such as {stem}, "
-         f"or by its specification under {proj['spec_dir']}/. "
-         f"Gives the steps to orient on one item. The agent reads its specification, the ground truth sections it cites and the project conventions "
-         f"before changing code. Covers the definition of done, the test and lint commands, the work item index ({n} items), "
-         f"the contract headings and the ground truth map.")
+    ids = L.tag(plan, first["id"]) if first is last else f"{L.tag(plan, first['id'])} to {L.tag(plan, last['id'])}"
+    d = (f"Orients on one {proj['name']} work item before any code change, reading its spec, the ground truth sections it cites "
+         f"and the conventions. Use when the user names {ids}, a file such as {stem}, or {proj['spec_dir']}/.")
+    d = d.replace("<", "").replace(">", "")      # angle brackets are not allowed in a skill description
     if len(d) >= 1024:
         d = d[:1020].rsplit(" ", 1)[0] + "."
     return d
@@ -196,12 +201,21 @@ def main(argv=None):
         L.die("project.dev_skill and project.dev_skill_path are required in plan.yaml")
     if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", skill_name):
         L.die("project.dev_skill must be lowercase words joined by hyphens")
+    if len(skill_name) > 64:
+        L.die(f"project.dev_skill is {len(skill_name)} characters. A skill name has at most 64")
+    if Path(skill_path).name != skill_name:
+        L.die(f"the last folder of project.dev_skill_path ({Path(skill_path).name}) must equal project.dev_skill ({skill_name}). "
+              "Agents load a skill only when its folder and its name match")
+    if not plan["items"]:
+        L.die("plan.yaml has no items yet, so there is nothing for a developer skill to describe")
     first = plan["items"][0]
     ms1 = L.milestone_by_num(plan)[first["milestone"]]
     stem = f"{L.tag(plan, first['id']).lower()}-{first['slug']}"
     gt = proj["ground_truth"]
+    description = make_description(plan)
     values = {
-        "skill_name": skill_name, "project_name": proj["name"], "description": make_description(plan),
+        # a JSON string is a valid YAML double-quoted value, so ": " or " #" in a project name cannot break the frontmatter
+        "skill_name": skill_name, "project_name": proj["name"], "description": json.dumps(description, ensure_ascii=False),
         "purpose_extra": "Its conventions come from the plan folder, and its references are generated from the same files.",
         "spec_dir": proj["spec_dir"], "example_id": L.tag(plan, first["id"]), "example_stem": stem,
         "example_path": f"{proj['spec_dir']}/{ms1['folder']}/{stem}.md",
@@ -223,7 +237,9 @@ def main(argv=None):
         outputs = {k: v for k, v in outputs.items() if k.startswith("references/")}
     dest = root / skill_path
     L.say(f"developer skill: {skill_name}  ->  {skill_path}")
-    L.say(f"description length: {len(values['description'])} characters (limit 1024)")
+    L.say(f"description length: {len(description)} characters (target under {DESCRIPTION_TARGET}, limit 1024)")
+    if len(description) > DESCRIPTION_WARN:
+        L.say(f"warning: the description is over {DESCRIPTION_WARN} characters. Shorten project.name: long descriptions are the first to be dropped when an agent lists many skills")
     n = 0
     for rel, make in outputs.items():
         content = make()

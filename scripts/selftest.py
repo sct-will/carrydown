@@ -175,6 +175,28 @@ def maintenance(tmp):
     step("--refresh-headers is stable on a second run", run, contains=["0 file(s) written"])
 
 
+def frontmatter(tmp, plan_text):
+    """The generated SKILL.md frontmatter parses whatever the project is called."""
+    proj = tmp / "frontmatter"
+    shutil.copytree(ROOT / SAMPLE, proj, ignore=shutil.ignore_patterns("dev"))
+    plan = proj / "docs/spec/plan.yaml"
+    gen = [PY, "scripts/generate_dev_skill.py", "--root", str(proj)]
+    plan.write_text(plan_text.replace('name: "Expense approvals"', 'name: "Payments: phase 2 #core"'), encoding="utf-8")
+    step("a project name with ': ' and ' #' gives a quoted description", gen + ["--apply"], contains=["description length: 240 characters"])
+    code = ("import json, re, sys; t = open(sys.argv[1], encoding='utf-8').read(); "
+            "m = re.search(r'(?m)^description: (.*)$', t); d = json.loads(m.group(1)); "
+            "assert d.startswith('Orients on one Payments: phase 2 #core work item'), d; "
+            "assert 'WI-01 to WI-11' in d and 'wi-01-service-scaffold' in d and 'docs/spec/' in d, d; print('parsed', len(d))")
+    step("the description is a valid quoted scalar", [PY, "-c", code, str(proj / "docs/dev/skills/expense-approvals-dev/SKILL.md")], contains=["parsed 240"])
+    plan.write_text(plan_text.replace("dev_skill_path: docs/dev/skills/expense-approvals-dev", "dev_skill_path: docs/dev/skills/other-name"), encoding="utf-8")
+    step("the skill folder must match the skill name", gen, expect=2, contains=["must equal project.dev_skill"])
+    long_name = "a" + "-b" * 40
+    plan.write_text(plan_text.replace("expense-approvals-dev", long_name), encoding="utf-8")
+    step("a skill name over 64 characters is refused", gen, expect=2, contains=["at most 64"])
+    plan.write_text(plan_text.replace('name: "Expense approvals"', 'name: "' + "Very long project name " * 4 + '"'), encoding="utf-8")
+    step("a description over 300 characters is flagged", gen, contains=["warning: the description is over 300 characters"])
+
+
 def main():
     if "--help" in sys.argv or "-h" in sys.argv:
         print(__doc__)
@@ -260,6 +282,7 @@ def main():
         citations(Path(tmp))
         error_paths(Path(tmp), plan_text)
         maintenance(Path(tmp))
+        frontmatter(Path(tmp), plan_text)
     failed = [n for ok, n in results if not ok]
     print(f"\n{len(results) - len(failed)} of {len(results)} steps passed")
     return 1 if failed else 0
