@@ -2,12 +2,12 @@
 
 The run was made against a private throwaway repository that was used only for this test. Names and project links below are placeholders.
 
-This page records a real run of the kit on the sample project `sample/expense-approvals/`, against a throwaway private repository, from the renderer to the project board. It shows what each script prints so you know what to expect before you run it on your own material.
+This page records a real run of the carrydown skills on the sample project `sample/expense-approvals/`, against a throwaway private repository, from the renderer to the project board. It shows what each script prints so you know what to expect before you run it on your own material.
 
 How it was made.
 
 - A new private repository, `your-user/your-test-repo` (a placeholder for the real name), held a copy of the sample folder so that the links in the issues resolve.
-- The commands ran from the root of the kit repository. Output is as printed, with the token removed and file paths shortened. The scripts never print the token.
+- The commands ran from the root of the repository. Output is as printed, with the token removed and file paths shortened. The scripts never print the token.
 - The project is fictional. The numbers are the real issue numbers the run created: Epic #1, sub-epics #2 to #6, work items #7 to #15.
 - The scripts took about three and a half minutes in total, most of it pauses that keep GitHub from rate limiting the writes. Reading the dry runs takes longer than running the scripts.
 
@@ -760,4 +760,4 @@ The run created the project, three fields, the Work unit iteration field with fi
 
 ## Cleaning up
 
-The scripts delete nothing. When you finish with a test repository, delete the repository and the project yourself in the GitHub settings. A token that can delete repositories is more power than the kit needs.
+The scripts delete nothing. When you finish with a test repository, delete the repository and the project yourself in the GitHub settings. A token that can delete repositories is more power than the carrydown skills need.

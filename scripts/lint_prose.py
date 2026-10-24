@@ -7,8 +7,9 @@ Rules
   3. No AI vendor or model names, except in the files that hold the install
      instructions (the agent list). The patterns are written with character
      classes so that this file does not spell the names it bans.
-  4. No names of the design system this kit was modelled on, and no company name outside
+  4. No names of the design system this repository was modelled on, and no company name outside
      the agent lists.
+  5. One retired word, which is written with a character class in the pattern below.
 
 Usage
   python3 scripts/lint_prose.py            lint the whole repository
@@ -31,6 +32,7 @@ ALWAYS = [
     (re.compile("[" + chr(0x2014) + chr(0x2013) + chr(0x2028) + chr(0x2029) + "]"), "em dash, en dash or line separator"),
     (re.compile(r"(?i)gener" + r"ated\s+by|co-auth" + r"ored-by"), "credit line"),
     (re.compile(r"(?i)\bc[a]rbon\b"), "design system name that must not appear"),
+    (re.compile(r"(?i)\bk[i]t\b"), "retired word. Say the carrydown skills, the three skills or the repository"),
 ]
 VENDORS = re.compile(
     r"(?i)cl[a]ude|anthrop[i]c|open[a]i|chat[g]pt|\bg[p]t-?\d|gem[i]ni|\bc[o]pilot\b|\bc[o]dex\b|\bcurs[o]r\b|mistr[a]l|\bl[l]ama\b|deeps[e]ek|\bI[B]M\b"

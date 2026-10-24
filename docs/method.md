@@ -1,12 +1,12 @@
 # The method
 
-Carrydown carries a ground truth document down into a governed plan. The plan has one specification per work item, a set of GitHub issues, a project board and a developer skill in every issue. This page explains the eight steps, which ones the kit does for you and which ones stay with people.
+Carrydown carries a ground truth document down into a governed plan. The plan has one specification per work item, a set of GitHub issues, a project board and a developer skill in every issue. This page explains the eight steps, which ones the carrydown skills do for you and which ones stay with people.
 
-The idea is old in systems engineering, where it is called flow-down: a requirement at the top is traced to every part below it. The kit applies the same idea to software work done with coding agents. One document, one unbroken line through the plan, the specifications, the issues, the board and the agent.
+The idea is old in systems engineering, where it is called flow-down: a requirement at the top is traced to every part below it. The carrydown skills apply the same idea to software work done with coding agents. One document, one unbroken line through the plan, the specifications, the issues, the board and the agent.
 
 ## The eight steps
 
-| Step | What happens | Who decides | What the kit gives you |
+| Step | What happens | Who decides | What the carrydown skills give you |
 | --- | --- | --- | --- |
 | 1. Make the ground truth hold still | Write or collect the document or documents the project must obey. Check each claim about existing code and systems while you write. Run adversarial reviews. Record decisions and a changelog. | People | Interview prompts and review prompts in the ground-truth skill. |
 | 2. Give it a machine-readable twin | Render the document to Markdown in the repository with stable section anchors. Every later artifact cites it by section number. | Automatic | `render_ground_truth.py` for Word and Markdown input. |
@@ -31,7 +31,7 @@ A ground truth is any mix of:
 
 While you write it, verify claims about the existing world. Read the code. Run the test suite. Probe the live service. Measure. Anything you cannot prove, mark "verify at implementation" instead of asserting it. Then run adversarial passes: ask a reviewer to find what is missing, wrong or contradictory, and fold the findings back in with a changelog entry and, for architecture choices, a decision record.
 
-The kit cannot write your document for you. It can help you review it.
+The carrydown skills cannot write your document for you. It can help you review it.
 
 ## Step 3 in more detail
 

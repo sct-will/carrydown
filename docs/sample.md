@@ -119,7 +119,7 @@ All paths are in this repository under `sample/expense-approvals/`.
 
 ## How it was made
 
-From the root of the kit repository, with a throwaway token stored by `github_token.py`:
+From the root of the repository, with a throwaway token stored by `github_token.py`:
 
 ```bash
 python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --version 0.3

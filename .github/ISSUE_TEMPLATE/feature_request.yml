@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest a change that makes the kit easier to use or the plan better.
+description: Suggest a change that makes the carrydown skills easier to use or the plan better.
 title: "Feature: "
 labels: ["enhancement"]
 body:
@@ -13,7 +13,7 @@ body:
   - type: textarea
     id: proposal
     attributes:
-      label: What would you like the kit to do
+      label: What would you like the carrydown skills to do
     validations:
       required: true
   - type: dropdown

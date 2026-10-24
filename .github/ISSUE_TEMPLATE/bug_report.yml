@@ -10,7 +10,7 @@ body:
   - type: dropdown
     id: skill
     attributes:
-      label: Which skill or part of the kit
+      label: Which skill or other part
       options:
         - carrydown-ground-truth
         - carrydown-plan-to-github

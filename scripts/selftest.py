@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Self test for the kit. No GitHub token and no network are needed.
+"""Self test for the carrydown skills. No GitHub token and no network are needed.
 
 It does the following.
   1. Parses every script (a syntax check that leaves no cache files).

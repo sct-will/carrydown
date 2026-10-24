@@ -1,6 +1,6 @@
 # Expense approvals service, architecture document
 
-*Fictional sample. Version 0.3. Written for the carrydown kit. Replace it with your own ground truth.*
+*Fictional sample. Version 0.3. Written for carrydown. Replace it with your own ground truth.*
 
 This document is the ground truth for a small internal service that lets staff submit travel and expense reports and lets managers approve them. It holds the context, the requirements, the architecture, two governance rules, a development standard, a business analyst note, the interfaces and the risks. Every work item specification cites it by section number.
 

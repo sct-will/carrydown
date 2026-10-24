@@ -2,7 +2,7 @@
 
 ## npx: command not found
 
-`npx` comes with Node.js, which is not installed on this computer or is not on your path. Go to https://nodejs.org, download the version marked LTS, run its installer, then close and reopen your terminal and your agent, and try again. You can also ask your agent: "Node.js seems to be missing. Tell me how to install it for this computer." If you cannot install Node.js, there is a path without it: copy the three folders in `skills/` of the kit repository into your agent's skills folder. The README's Install options section lists the folders.
+`npx` comes with Node.js, which is not installed on this computer or is not on your path. Go to https://nodejs.org, download the version marked LTS, run its installer, then close and reopen your terminal and your agent, and try again. You can also ask your agent: "Node.js seems to be missing. Tell me how to install it for this computer." If you cannot install Node.js, there is a path without it: copy the three folders in `skills/` of the repository into your agent's skills folder. The README's Install options section lists the folders.
 
 ## How do I start each skill?
 
@@ -26,7 +26,7 @@ No. It carries the plan down to the point where a developer and their agent can 
 
 ## Does it write my architecture document?
 
-No. The document must exist and be worth trusting. The kit renders it, helps you review it with prompts, and cites it everywhere.
+No. The document must exist and be worth trusting. The carrydown skills render it, helps you review it with prompts, and cites it everywhere.
 
 ## My document is a Word file with no section numbers.
 
@@ -42,7 +42,7 @@ Yes. Change `plan.yaml` and the specifications. New items are added on the next 
 
 ## Why work units and not sprints?
 
-Time boxes of equal length force the work to fit the box. Work units take the length the work needs. They have exit gates. The kit avoids sprint, story point and velocity vocabulary, and the checker rejects it unless you configure otherwise.
+Time boxes of equal length force the work to fit the box. Work units take the length the work needs. They have exit gates. The carrydown skills avoid sprint, story point and velocity vocabulary, and the checker rejects it unless you configure otherwise.
 
 ## Why are people's names not allowed in specifications?
 
@@ -58,7 +58,7 @@ GitHub's API creates fields and views and sets a view's name, layout, filter and
 
 ## Why do the work units show as breaks in the roadmap?
 
-Between two iterations with a gap in the dates, GitHub shows a break. The kit leaves the gaps from your `breaks` list.
+Between two iterations with a gap in the dates, GitHub shows a break. The scripts leave the gaps from your `breaks` list.
 
 ## Can I use Jira or another tracker?
 

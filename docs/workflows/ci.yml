@@ -1,4 +1,4 @@
-# Runs the kit's self test on every push and pull request. No token and no network
+# Runs the self test of the carrydown skills on every push and pull request. No token and no network
 # access to GitHub are needed. The self test checks the sample against its plan, runs
 # every script's --help, and runs every dry run against the sample.
 name: Self test

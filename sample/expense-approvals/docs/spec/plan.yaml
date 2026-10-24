@@ -1,6 +1,6 @@
 # Sample plan for the fictional expense approvals service.
 # Decisions in this file (order, dates, owners) were made by a person. The checker and the
-# GitHub scripts read it. See templates/plan.yaml in the kit for the annotated version.
+# GitHub scripts read it. See templates/plan.yaml in the repository for the annotated version.
 
 project:
   name: "Expense approvals"

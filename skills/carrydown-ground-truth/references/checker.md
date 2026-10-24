@@ -51,7 +51,7 @@ Entries are regular expressions matched whole-word and without regard to case.
 
 ## Continuous integration
 
-`python3 <skill>/scripts/scaffold_spec.py --root . --ci --apply` writes `.github/workflows/check-specs.yml` from the `check-specs-workflow.yml` template and copies `check_specs.py` and `carrydown_lib.py` to `tools/carrydown/`. The workflow runs `python3 tools/carrydown/check_specs.py --root .` on every pull request and on pushes to the default branch. A finding exits with status 1, so the job fails and the pull request shows a red mark. Mark the job as required in branch protection to block merges. Copy the two scripts again when you update the kit.
+`python3 <skill>/scripts/scaffold_spec.py --root . --ci --apply` writes `.github/workflows/check-specs.yml` from the `check-specs-workflow.yml` template and copies `check_specs.py` and `carrydown_lib.py` to `tools/carrydown/`. The workflow runs `python3 tools/carrydown/check_specs.py --root .` on every pull request and on pushes to the default branch. A finding exits with status 1, so the job fails and the pull request shows a red mark. Mark the job as required in branch protection to block merges. Copy the two scripts again when you update the carrydown skills.
 
 ## Reading the output
 

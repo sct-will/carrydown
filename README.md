@@ -186,7 +186,7 @@ Or open the repository in Codespaces. It opens on the sample output and runs the
 | `scripts/github_sync.py` | Labels, sub-epics, issues, links and the Epic comment. |
 | `scripts/github_project.py` | The GitHub Project board. |
 | `scripts/generate_dev_skill.py` | The developer skill folder. |
-| `scripts/selftest.py` | The kit's own checks, with no token. |
+| `scripts/selftest.py` | The repository's own checks, with no token. |
 | `scripts/lint_prose.py` | The prose style checks. |
 | `scripts/sync_skill_assets.py` | Maintainers: copy scripts and templates into each skill folder. |
 
@@ -232,7 +232,7 @@ This project follows the Contributor Covenant. See [CODE_OF_CONDUCT.md](CODE_OF_
 
 ## Security
 
-Report a vulnerability privately through GitHub. See [SECURITY.md](SECURITY.md). The kit stores only your GitHub token file, and it never prints or commits the token.
+Report a vulnerability privately through GitHub. See [SECURITY.md](SECURITY.md). The carrydown skills store only your GitHub token file, and it never prints or commits the token.
 
 ## Licence
 

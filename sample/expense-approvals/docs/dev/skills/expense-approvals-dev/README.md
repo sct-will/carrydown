@@ -31,6 +31,7 @@ npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/s
 npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev -a cursor
 npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev -a codex
 npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev -a gemini-cli
+npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev -a bob
 ```
 
 The general form is `npx skills add <repository tree url for this folder> -a <agent>`. The agent names come from the skills tool; run `npx skills add --help` or see https://skills.sh for the full list. If the repository is private, the tool uses the Git credentials already configured on your computer.
@@ -58,6 +59,7 @@ mklink /D <skills folder>\expense-approvals-dev %CD%\docs\dev\skills\expense-app
 | Cursor | `.agents/skills/` | `~/.cursor/skills/` |
 | Codex | `.agents/skills/` | `~/.agents/skills/` |
 | Gemini CLI | `.agents/skills/` | `~/.gemini/skills/` |
+| IBM Bob | `.bob/skills/` | `~/.bob/skills/` |
 | Any other agent that reads Agent Skills | its skills folder | its user skills folder |
 
 ### Option 3, no installation

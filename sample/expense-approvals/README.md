@@ -4,7 +4,7 @@ This is a sample. The project is fictional. The people, the company and the numb
 
 It shows what the three carrydown skills produce from a short ground truth.
 
-This folder is published twice. It lives in the kit repository at `sample/expense-approvals/`, and it is the root of the repository https://github.com/sct-will/carrydown-sample, where the kit scripts created the real issues and the project board from this plan. Read the summary in the kit's `docs/sample.md`.
+This folder is published twice. It lives in the main carrydown repository at `sample/expense-approvals/`, and it is the root of the repository https://github.com/sct-will/carrydown-sample, where the carrydown scripts created the real issues and the project board from this plan. Read the summary in `docs/sample.md` of the main carrydown repository.
 
 ## What is here
 
@@ -26,7 +26,7 @@ Ids 5 and 10 are missing on purpose. They belong to the program (pilot team recr
 
 ## Run it
 
-From the root of the kit repository. The renderer example writes to a separate folder, `my-test/`, so it does not overwrite the shipped sample. Delete that folder when you are done.
+From the root of the repository. The renderer example writes to a separate folder, `my-test/`, so it does not overwrite the shipped sample. Delete that folder when you are done.
 
 ```bash
 python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --out-dir ../../my-test/ground-truth --version 0.3
@@ -37,7 +37,7 @@ python3 scripts/github_sync.py --root sample/expense-approvals --repo YOUR-USER/
 python3 scripts/github_project.py --root sample/expense-approvals --repo YOUR-USER/YOUR-TEST-REPO
 ```
 
-The first three need no token and no network. The `--offline` form of `github_sync.py` shows the plan without a token and without reading GitHub. The full dry run on the last two lines reads GitHub, so it needs a token (run `python3 scripts/github_token.py` first) and a repository that exists. Both are dry runs. Use a throwaway repository of your own, and add `--apply` only when you have read what they would do. `docs/sample-run.md` at the top of the kit repository shows a real run.
+The first three need no token and no network. The `--offline` form of `github_sync.py` shows the plan without a token and without reading GitHub. The full dry run on the last two lines reads GitHub, so it needs a token (run `python3 scripts/github_token.py` first) and a repository that exists. Both are dry runs. Use a throwaway repository of your own, and add `--apply` only when you have read what they would do. `docs/sample-run.md` at the top of the repository shows a real run.
 
 ## Make it yours
 

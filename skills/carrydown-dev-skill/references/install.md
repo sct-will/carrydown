@@ -12,6 +12,7 @@ npx skills add <repository tree url of the skill folder> -a github-copilot
 npx skills add <repository tree url of the skill folder> -a cursor
 npx skills add <repository tree url of the skill folder> -a codex
 npx skills add <repository tree url of the skill folder> -a gemini-cli
+npx skills add <repository tree url of the skill folder> -a bob
 ```
 
 The tree url looks like `https://github.com/<owner>/<repo>/tree/<branch>/<dev_skill_path>`. For a private repository the tool uses the Git credentials already on the computer. `npx skills add --help` lists every option, and https://skills.sh lists every supported agent.
@@ -39,6 +40,7 @@ Where each agent looks for skills:
 | Cursor | `.agents/skills/` | `~/.cursor/skills/` |
 | Codex | `.agents/skills/` | `~/.agents/skills/` |
 | Gemini CLI | `.agents/skills/` | `~/.gemini/skills/` |
+| IBM Bob | `.bob/skills/` | `~/.bob/skills/` |
 | Any other agent that reads Agent Skills | its project skills folder | its user skills folder |
 
 A project folder is shared with the team when it is committed. A user folder is private to one person.
