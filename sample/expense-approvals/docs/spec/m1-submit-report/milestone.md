@@ -43,8 +43,8 @@ The milestone is accepted when the program has seen each of these at the demonst
 
 | Id | Work item | Track | Complete by |
 | --- | --- | --- | --- |
-| WI-01 | [Service scaffold, flag and API contract](wi-01-service-scaffold.md) | Workflow | 2027-02-04 |
-| WI-02 | [Report form and receipt upload](wi-02-report-form.md) | Experience | 2027-02-10 |
+| WI-01 | [Service scaffold, flag and API contract](wi-01-service-scaffold.md) | Workflow | 2027-02-03 |
+| WI-02 | [Report form and receipt upload](wi-02-report-form.md) | Experience | 2027-02-12 |
 
 ## References
 

@@ -96,7 +96,8 @@ items:                                   # the work items
     track: backend
     owner: alex
     complete_by: 2027-01-08
-    size: "Small, about 2 days"
+    size: "Small, about 2 days"          # "about N days" is required. N days at the owner's allocation must fit
+                                         # between the last dependency's complete_by and this one (2 days at 50% = 4 working days)
     depends: []                          # ids of items this one needs first
     unblocks: []                         # optional. Derived from depends when empty.
     checkpoint: 2027-01-08               # one of the checkpoint dates above

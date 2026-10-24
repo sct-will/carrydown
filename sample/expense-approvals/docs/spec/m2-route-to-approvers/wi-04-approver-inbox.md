@@ -4,7 +4,7 @@
 | --- | --- |
 | Milestone | Milestone 2, Route to approvers (`m2-route-to-approvers`), work unit 2 |
 | Track | Experience |
-| Target | Complete by 2027-03-03 (work unit 2, Route to approvers, 2027-02-15 to 2027-03-05) |
+| Target | Complete by 2027-03-05 (work unit 2, Route to approvers, 2027-02-15 to 2027-03-05) |
 | Checkpoint | 2027-03-05, Milestone 2 demonstration |
 | Demonstration | 2027-03-05, milestone 2 demonstration (acceptance criteria in `milestone.md` in this folder) |
 | Size | Medium, about 4 days |
@@ -29,7 +29,7 @@ Approvers cannot decide a report that they cannot see. A report waits 11 days on
 - The sample repository is new and empty. This item creates the inbox page, the decision dialog and the error display under `web/src/`, and their tests. It creates no server code.
 - WI-01 creates `contracts/openapi.yaml`, the stub server that the Experience track calls, `src/server.js`, `src/config/flags.js`, the contract test runner and the lint setup. Read the `/inbox` and `/reports/{id}/decisions` paths in the contract first. WI-02 creates the web client under `web/src/`. Reuse its API client and error display if it made them (verify at implementation what it exports).
 - WI-03 creates `src/routing/engine.js`, the approval_step rows and the state machine of 3.4, so a submitted report has steps and a first approver. The Workflow track owns the handlers `src/api/inbox.js` and `src/api/decisions.js`. Until they are merged, work against the stub.
-- WI-06 creates `src/rules/index.js`, due 2027-03-12, after this item's target of 2027-03-03. Until then the service may not refuse a decision, so test the E_FORBIDDEN display with a fixture that follows the envelope.
+- WI-06 creates `src/rules/index.js`, due 2027-03-10, after this item's target of 2027-03-05. Until then the service may not refuse a decision, so test the E_FORBIDDEN display with a fixture that follows the envelope.
 - The caller's identity comes from the gateway header `X-Employee-Id`. The client never decides who the caller is. How the stub takes an identity is in the WI-01 output (verify at implementation).
 - Verify at implementation the shape of the page that `GET /inbox` returns. 7.1 says "200 with a page" and lists no fields. The row needs the submitter, the base total and the submitted date. If the contract lacks one, change it in its own pull request (DS-1.4, the contracts first rule of the delivery standard DS-1). Commands are `npm test`, `npm run test:contract` and `npm run lint`, and new behaviour sits behind `EXPENSE_APPROVALS_ENABLED`, off by default.
 
@@ -138,7 +138,7 @@ The counterpart items on the Workflow track are WI-03 Approval routing engine, w
 - E_STATE happens when two people act on one report, or the report moved since the page loaded. 7.1 has no version field in the decision request, so do not invent one.
 - E_NOT_FOUND also covers a report the caller may not know exists. Say only that it is not available, never why.
 - Comments can hold personal data. Do not log them, put them in a URL, or keep them after the dialog closes. Money is integer cents (3.3). Format it, never use floating point.
-- E_FORBIDDEN cannot be tested against real rules before WI-06 lands on 2027-03-12. Keep the fixture, then repeat the check with real rules.
+- E_FORBIDDEN cannot be tested against real rules before WI-06 lands on 2027-03-10. Keep the fixture, then repeat the check with real rules.
 
 ## References
 

@@ -109,7 +109,7 @@ The counterpart on the Experience track is WI-08, Notifications and delegates, w
 - Crosses the boundary. The state change that both the audit event and the notification event of section 7.2 come from, with the same `report_id` and `to_state`, and the `event_type` names.
 - Joint check. A decision produces an audit event and a notification, and the submitter sees the new state. This item shows the `audit_event` row for the decision that the notification came from.
 - Handoff on close. Give WI-08 the `event_type` names and say that log lines in the worker follow the same rule (identifiers and event types only).
-- Timing. WI-08 completes on 2027-03-18, one day after this item. Agree the event fields before 2027-03-17.
+- Timing. WI-08 completes on 2027-03-19, two days after this item. Agree the event fields before 2027-03-17.
 
 ## Out of scope
 

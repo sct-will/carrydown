@@ -43,9 +43,9 @@ The milestone is accepted when the program has seen each of these at the demonst
 
 | Id | Work item | Track | Complete by |
 | --- | --- | --- | --- |
-| WI-06 | [Approval limits and separation of duties](wi-06-limits-and-duties.md) | Workflow | 2027-03-12 |
+| WI-06 | [Approval limits and separation of duties](wi-06-limits-and-duties.md) | Workflow | 2027-03-10 |
 | WI-07 | [Audit log and retention](wi-07-audit-log.md) | Workflow | 2027-03-17 |
-| WI-08 | [Notifications and delegates](wi-08-notifications-delegates.md) | Experience | 2027-03-18 |
+| WI-08 | [Notifications and delegates](wi-08-notifications-delegates.md) | Experience | 2027-03-19 |
 
 ## References
 

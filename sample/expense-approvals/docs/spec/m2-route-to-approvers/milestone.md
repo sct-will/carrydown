@@ -44,7 +44,7 @@ The milestone is accepted when the program has seen each of these at the demonst
 | Id | Work item | Track | Complete by |
 | --- | --- | --- | --- |
 | WI-03 | [Approval routing engine](wi-03-routing-engine.md) | Workflow | 2027-02-24 |
-| WI-04 | [Approver inbox and decisions](wi-04-approver-inbox.md) | Experience | 2027-03-03 |
+| WI-04 | [Approver inbox and decisions](wi-04-approver-inbox.md) | Experience | 2027-03-05 |
 
 ## References
 

@@ -4,7 +4,7 @@
 | --- | --- |
 | Milestone | Milestone 3, Enforce policy (`m3-enforce-policy`), work unit 3 |
 | Track | Workflow |
-| Target | Complete by 2027-03-12 (work unit 3, Enforce policy, 2027-03-08 to 2027-03-19) |
+| Target | Complete by 2027-03-10 (work unit 3, Enforce policy, 2027-03-08 to 2027-03-19) |
 | Checkpoint | 2027-03-12, Rules meet routing |
 | Demonstration | 2027-03-19, milestone 3 demonstration (acceptance criteria in `milestone.md` in this folder) |
 | Size | Medium, about 3 days |

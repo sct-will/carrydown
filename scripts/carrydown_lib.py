@@ -25,6 +25,19 @@ from pathlib import Path
 # a colon followed by a space in quotes.
 
 
+def safe_console():
+    """Never crash on a character the console cannot show. A Windows console or a pipe read by an
+    agent may use a code page such as cp1252; such characters are printed as escapes instead."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(errors="backslashreplace")
+        except (AttributeError, ValueError, OSError):
+            pass
+
+
+safe_console()
+
+
 class YamlError(ValueError):
     pass
 
@@ -81,7 +94,11 @@ def _scalar(s):
     if s[0] == '"':
         if len(s) < 2 or s[-1] != '"':
             raise YamlError(f"unterminated string: {s}")
-        return json.loads(s) if "\\u" not in s else bytes(s[1:-1], "utf-8").decode("unicode_escape")
+        try:
+            return json.loads(s)
+        except ValueError as e:
+            raise YamlError(f"bad double-quoted value {s}: {getattr(e, 'msg', e)}. "
+                            "Inside double quotes write \\\" for a quote, or use single quotes")
     if s[0] == "'":
         if len(s) < 2 or s[-1] != "'":
             raise YamlError(f"unterminated string: {s}")
@@ -321,8 +338,37 @@ def loads(text):
     return v
 
 
+def read_text(path):
+    """Read a text file as UTF-8, with or without a byte order mark (Notepad and PowerShell write one)."""
+    return Path(path).read_text(encoding="utf-8-sig")
+
+
 def load_file(path):
-    return loads(Path(path).read_text(encoding="utf-8"))
+    return loads(read_text(path))
+
+
+# ---------------------------------------------------------------------------
+# Paths and names
+# ---------------------------------------------------------------------------
+
+def inside(root, path, what="output"):
+    """Return path, resolved, when it lies inside root. Otherwise stop with a message.
+
+    Every write target that comes from plan.yaml or the command line goes through this, so a
+    value such as "../../somewhere" can never make a script write outside the project folder."""
+    base = Path(root).resolve()
+    target = Path(path)
+    target = (target if target.is_absolute() else base / target).resolve()
+    if target != base and base not in target.parents:
+        die(f"the {what} path {path} is outside the project folder {base}, so nothing was written")
+    return target
+
+
+def slugify(text):
+    """Lowercase words joined by hyphens, ASCII only: "Acme Pay, phase 2" becomes "acme-pay-phase-2"."""
+    import unicodedata
+    t = unicodedata.normalize("NFKD", str(text)).encode("ascii", "ignore").decode("ascii").lower()
+    return re.sub(r"[^a-z0-9]+", "-", t).strip("-")
 
 
 # ---------------------------------------------------------------------------
@@ -397,7 +443,7 @@ def load_plan(path):
     path = Path(path)
     try:
         raw = load_file(path)
-    except (OSError, YamlError) as e:
+    except (OSError, ValueError) as e:   # YamlError, UnicodeDecodeError and JSON errors are ValueErrors
         raise SystemExit(f"cannot read plan {path}: {e}")
     if not isinstance(raw, dict):
         raise SystemExit(f"plan {path} must be a mapping at the top level")
@@ -450,19 +496,26 @@ def load_plan(path):
         it["_derived_unblocks"] = sorted(derived.get(it["id"], []))
         if not it["unblocks"]:
             it["unblocks"] = it["_derived_unblocks"]
-    # banned names: people and advisors, first names, github logins
-    names = list(b["names"])
+    # banned names come only from the plan: the people and advisors in it, and banned.names.
+    # Full names match in any case. A single part of a name ("Will", "Long") matches only as a
+    # capitalised word, and handles and ids only as written, so the words "will" and "long" in
+    # ordinary prose are not findings. A capitalised name part at the start of a sentence still is.
+    names = [str(n) for n in b["names"] if n]
+    exact = []
     for p in list(plan["people"]) + list(plan["advisors"]):
         if p.get("derived"):
             continue   # placeholder people such as "Engineer 1" are not real names
+        parts = []
         if p.get("name"):
-            names.append(p["name"])
-            names.extend(part for part in re.split(r"\s+", p["name"]) if len(part) > 2)
-        if p.get("github"):
-            names.append(p["github"])
-        if p.get("id") and len(str(p["id"])) >= 3:
-            names.append(str(p["id"]))
+            names.append(str(p["name"]))
+            parts = [part for part in re.split(r"\s+", str(p["name"])) if len(part) > 2]
+            exact.extend(part[0].upper() + part[1:] for part in parts)
+        lowered = {part.lower() for part in parts}
+        for handle in (p.get("github"), p.get("id")):
+            if handle and len(str(handle)) >= 3 and str(handle).lower() not in lowered:
+                exact.append(str(handle))
     plan["_banned_names"] = sorted(set(n for n in names if n))
+    plan["_banned_exact"] = sorted(set(exact))
     plan["_path"] = str(path)
     return plan, validate_plan(plan)
 
@@ -473,6 +526,10 @@ def _is_date(s):
         return True
     except ValueError:
         return False
+
+
+def _is_weekend(s):
+    return parse_date(s).weekday() >= 5
 
 
 def validate_plan(plan):
@@ -492,9 +549,18 @@ def validate_plan(plan):
             P.append(f"people: each person needs id and name ({p})")
         if p.get("track") not in tracks:
             P.append(f"people: {p.get('id')} has unknown track {p.get('track')!r}")
-        for d in p.get("days_off") or []:
+        if p.get("start") is not None:
+            if not _is_date(p["start"]):
+                P.append(f"people: {p.get('id')} start is not a date (use YYYY-MM-DD): {p['start']!r}")
+            elif _is_weekend(p["start"]):
+                P.append(f"people: {p.get('id')} start {p['start']} is a weekend")
+        if p.get("days_off") is not None and not isinstance(p.get("days_off"), list):
+            P.append(f"people: {p.get('id')} days_off must be a list of dates, such as [2027-02-22]")
+        for d in (p.get("days_off") if isinstance(p.get("days_off"), list) else []):
             if not _is_date(d):
                 P.append(f"people: {p.get('id')} days_off has a bad date {d!r}")
+            elif _is_weekend(d):
+                P.append(f"people: {p.get('id')} day off {d} is a weekend")
     for t in plan["tracks"]:
         if not t.get("id") or not t.get("label"):
             P.append(f"tracks: each track needs id and label ({t})")
@@ -540,6 +606,9 @@ def validate_plan(plan):
                 dm = parse_date(m["demo"])
                 if dm < s or dm > e:
                     P.append(f"milestone {n}: demo {m['demo']} is outside {m['start']} to {m['end']}")
+            for k in ("start", "end", "demo"):
+                if m.get(k) and _is_date(m[k]) and _is_weekend(m[k]):
+                    P.append(f"milestone {n}: {k} {m[k]} is a weekend")
         else:
             for k in ("start", "end", "demo"):
                 if m.get(k) and not _is_date(m[k]):
@@ -562,6 +631,8 @@ def validate_plan(plan):
             P.append(f"checkpoints: need date and name ({c})")
         else:
             cps[c["date"]] = c
+            if _is_weekend(c["date"]):
+                P.append(f"checkpoint {c['date']} is a weekend")
     prog_ids = set()
     for pi in plan["program"]["items"]:
         if not isinstance(pi.get("id"), int) or not pi.get("label"):
@@ -609,6 +680,8 @@ def validate_plan(plan):
             own = people.get(it.get("owner"))
             if own and it["complete_by"] in [str(x) for x in (own.get("days_off") or [])]:
                 P.append(f"item {iid}: complete_by {it['complete_by']} is a day off for {own['id']}")
+        if it.get("size") and not re.search(r"about \d+(?:\.\d+)?", str(it["size"])):
+            P.append(f"item {iid}: size must say how many days, as in \"Medium, about 4 days\", got {it['size']!r}")
         if it.get("checkpoint") and it["checkpoint"] not in cps:
             P.append(f"item {iid}: checkpoint {it['checkpoint']!r} is not in checkpoints")
         elif it.get("checkpoint") and it.get("complete_by") and _is_date(it["complete_by"]):
@@ -651,7 +724,7 @@ def validate_plan(plan):
 # ---------------------------------------------------------------------------
 
 def read_spec(path):
-    text = Path(path).read_text(encoding="utf-8")
+    text = read_text(path)
     lines = text.split("\n")
     rows = {}
     order = []
@@ -779,7 +852,7 @@ def templates_dir():
 
 
 def read_template(*parts):
-    return (templates_dir().joinpath(*parts)).read_text(encoding="utf-8")
+    return read_text(templates_dir().joinpath(*parts))
 
 
 def fill(template, values):
@@ -802,6 +875,101 @@ def github_tree_url(plan, relpath, repo=None):
 
 def rel_spec(plan, root, it):
     return str(spec_path(plan, root, it).relative_to(Path(root).resolve())) if Path(root).resolve() in spec_path(plan, root, it).resolve().parents else str(spec_path(plan, root, it))
+
+
+# ---------------------------------------------------------------------------
+# Markdown helpers shared by the scaffold, the renderer and the skill generator
+# ---------------------------------------------------------------------------
+
+def md_table(headers, rows):
+    out = ["| " + " | ".join(headers) + " |", "| " + " | ".join("---" for _ in headers) + " |"]
+    for r in rows:
+        out.append("| " + " | ".join(str(c).replace("|", "\\|") for c in r) + " |")
+    return "\n".join(out)
+
+
+def conventions_text(plan):
+    c = plan["conventions"]
+    lines = []
+    if c.get("feature_flag"):
+        lines.append(f"- Feature flag. `{c['feature_flag']}` gates the new behaviour. Off by default until the release. With the flag off, nothing existing changes.")
+    if c.get("test_command"):
+        lines.append(f"- Tests. Run `{c['test_command']}`. New suites accompany each work item.")
+    if c.get("lint_command"):
+        lines.append(f"- Lint and format. `{c['lint_command']}` passes on every pull request.")
+    for extra in c.get("extra") or []:
+        lines.append(f"- {extra}")
+    lines.append("- Documentation style in this folder. Sentence-case headings, short sentences, no em dashes or en dashes, no names of people. Owners and dates live in the GitHub issues.")
+    lines.append("- Existing behaviour is not changed by a work item unless its file says so.")
+    return "\n".join(lines)
+
+
+def schedule_table(plan):
+    rows = []
+    entries = []
+    for m in plan["milestones"]:
+        entries.append((m["start"], f"{m['number']}, {m['name']}", f"{m['start']} to {m['end']}", m["gate"]))
+    for br in plan["breaks"]:
+        entries.append((br["start"], br["name"], f"{br['start']} to {br['end']}", "None committed."))
+    for _, a, b, c in sorted(entries):
+        rows.append([a, b, c])
+    return md_table(["Work unit", "Dates", "Gate"], rows)
+
+
+def anchor_slug(text):
+    """GitHub heading anchor: lowercase, drop punctuation, spaces to hyphens."""
+    s = text.strip().lower()
+    s = re.sub(r"[^\w\s-]", "", s)
+    s = re.sub(r"\s+", "-", s)
+    return s
+
+
+def collect_headings(lines):
+    """Return [(line_no, level, text)] for ATX headings outside code fences."""
+    out = []
+    fence = None
+    for i, line in enumerate(lines, 1):
+        m = re.match(r"^\s{0,3}(`{3,}|~{3,})", line)
+        if m:
+            tok = m.group(1)
+            if fence is None:
+                fence = tok[0]
+            elif tok[0] == fence:
+                fence = None
+            continue
+        if fence:
+            continue
+        h = re.match(r"^(#{1,6})\s+(.+?)\s*#*\s*$", line)
+        if h:
+            out.append((i, len(h.group(1)), h.group(2).strip()))
+    return out
+
+
+def anchors_for(headings):
+    counts = {}
+    result = []
+    for _, _, text in headings:
+        plain = re.sub(r"[`*_]", "", text)
+        base = anchor_slug(plain)
+        n = counts.get(base, 0)
+        counts[base] = n + 1
+        result.append(base if n == 0 else f"{base}-{n}")
+    return result
+
+
+def table_rows(text):
+    """Rows of the first Markdown table in text as an ordered list of (name, value)."""
+    rows = []
+    started = False
+    for line in text.split("\n"):
+        if line.startswith("|"):
+            started = True
+            m = re.match(r"^\| (.+?) \| (.*?) \|$", line)
+            if m and not set(m.group(1).strip()) <= set("-: "):
+                rows.append((m.group(1).strip(), m.group(2).strip()))
+        elif started:
+            break
+    return rows
 
 
 # ---------------------------------------------------------------------------
@@ -832,6 +1000,138 @@ def capacity_days(person, milestone):
 def sized_days(item):
     m = re.search(r"about (\d+(?:\.\d+)?)", item.get("size", "") or "")
     return float(m.group(1)) if m else 0.0
+
+
+def allocation_of(plan, item):
+    """Percent of working time the item's owner gives the plan, 100 when there is no owner."""
+    for p in plan["people"]:
+        if p.get("id") == item.get("owner"):
+            al = p.get("allocation", 100)
+            # an invalid allocation is reported by validate_plan; count it as 100 here
+            return al if isinstance(al, int) and not isinstance(al, bool) and 1 <= al <= 100 else 100
+    return 100
+
+
+def needed_days(plan, item):
+    """Working days an item takes on the calendar: its size in days over its owner's allocation.
+    "about 4 days" at 60 percent is 4 / 0.6, about 6.7 working days."""
+    return sized_days(item) * 100.0 / allocation_of(plan, item)
+
+
+def _off_days(plan, item):
+    off = set()
+    for p in plan["people"]:
+        if p.get("id") == item.get("owner"):
+            off |= {str(d) for d in (p.get("days_off") or [])}
+    for br in plan["breaks"]:
+        if _is_date(br.get("start")) and _is_date(br.get("end")):
+            d, e = parse_date(br["start"]), parse_date(br["end"])
+            while d <= e:
+                off.add(fmt_date(d))
+                d += _dt.timedelta(days=1)
+    return off
+
+
+def _is_working(d, off):
+    return d.weekday() < 5 and fmt_date(d) not in off
+
+
+def _owner_start(plan, item):
+    for p in plan["people"]:
+        if p.get("id") == item.get("owner") and p.get("start"):
+            return parse_date(p["start"])
+    return None
+
+
+def item_window(plan, item):
+    """(first day, working days) an item has: from the day after its latest dependency completes,
+    or from the start of its work unit when it has no dependency, to its complete_by date,
+    without weekends, breaks and its owner's days off."""
+    items = item_by_id(plan)
+    deps = [items[d] for d in item["depends"] if d in items]
+    if deps:
+        start = max(parse_date(d["complete_by"]) for d in deps) + _dt.timedelta(days=1)
+    else:
+        start = parse_date(milestone_by_num(plan)[item["milestone"]]["start"])
+    own = _owner_start(plan, item)
+    if own and own > start:
+        start = own
+    end = parse_date(item["complete_by"])
+    off = _off_days(plan, item)
+    n, d = 0, start
+    while d <= end:
+        n += _is_working(d, off)
+        d += _dt.timedelta(days=1)
+    return start, n
+
+
+def fit_findings(plan):
+    """Items whose window is shorter than the working days their size and allocation need."""
+    out = []
+    items = item_by_id(plan)
+    for it in plan["items"]:
+        need = needed_days(plan, it)
+        if need <= 0:
+            continue
+        start, have = item_window(plan, it)
+        if have + 1e-9 < need:
+            deps = [d for d in it["depends"] if d in items]
+            last = max(deps, key=lambda d: parse_date(items[d]["complete_by"])) if deps else None
+            frm = (f"from {fmt_date(start)}, the day after {tag(plan, last)} completes," if last
+                   else f"from {fmt_date(start)}, the start of work unit {it['milestone']},")
+            out.append(f"{tag(plan, it['id'])} needs about {need:.1f} working days ({sized_days(it):g} days at {allocation_of(plan, it)} percent) "
+                       f"but has {have} {frm} to its complete_by {it['complete_by']}")
+    return out
+
+
+def earliest_finish(plan):
+    """Forward pass over the dependencies with durations from size and allocation.
+
+    Returns ({id: (earliest start, earliest finish)}, chain of ids to the latest finish), or
+    ({}, []) when no item is sized. An item starts no earlier than the first work unit and its
+    owner's start, and the working day after its last dependency finishes. Owners are not
+    serialised here: the load table covers that."""
+    if not plan["items"] or not any(sized_days(it) for it in plan["items"]):
+        return {}, []
+    items = item_by_id(plan)
+    first = parse_date(plan["milestones"][0]["start"]) if plan["milestones"] else min(parse_date(it["complete_by"]) for it in plan["items"])
+    memo, via = {}, {}
+
+    def visit(n, stack=()):
+        if n in memo:
+            return memo[n]
+        it = items[n]
+        off = _off_days(plan, it)
+        start, prev = first, None
+        own = _owner_start(plan, it)
+        if own and own > start:
+            start = own
+        for d in it["depends"]:
+            if d in items and d not in stack:
+                fin = visit(d, stack + (n,))[1] + _dt.timedelta(days=1)
+                if fin > start:
+                    start, prev = fin, d
+        while not _is_working(start, off):
+            start += _dt.timedelta(days=1)
+        need = needed_days(plan, it)
+        finish, done = start, 0.0
+        while True:
+            if _is_working(finish, off):
+                done += 1
+                if done + 1e-9 >= need:
+                    break
+            finish += _dt.timedelta(days=1)
+        memo[n], via[n] = (start, finish), prev
+        return memo[n]
+
+    for n in items:
+        visit(n)
+    end = max(memo, key=lambda n: (memo[n][1], n))
+    chain, n = [], end
+    while n is not None:
+        chain.append(n)
+        n = via[n]
+    return memo, chain[::-1]
 
 
 def load_rows(plan):

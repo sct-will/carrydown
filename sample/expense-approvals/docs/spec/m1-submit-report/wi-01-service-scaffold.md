@@ -4,7 +4,7 @@
 | --- | --- |
 | Milestone | Milestone 1, Submit an expense report (`m1-submit-report`), work unit 1 |
 | Track | Workflow |
-| Target | Complete by 2027-02-04 (work unit 1, Submit an expense report, 2027-02-01 to 2027-02-12) |
+| Target | Complete by 2027-02-03 (work unit 1, Submit an expense report, 2027-02-01 to 2027-02-12) |
 | Checkpoint | 2027-02-05, Contract freeze |
 | Demonstration | 2027-02-12, milestone 1 demonstration (acceptance criteria in `milestone.md` in this folder) |
 | Size | Medium, about 3 days |
