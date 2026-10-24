@@ -4,7 +4,7 @@
 
 ## Why this work item exists
 
-TODO: Two to five sentences. Name the problem in the ground truth that this item solves, why it is a separate item, and what breaks or waits without it. Cite sections by number.
+TODO: Two to five sentences. Name the problem in the ground truth that this item solves, why it is a separate item, and what breaks or waits without it. Cite sections by number. The Ground truth row in the header above lists the sections the item is built from; the body may cite other sections for context.
 
 ## Outcome
 
