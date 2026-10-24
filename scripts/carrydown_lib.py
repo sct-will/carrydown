@@ -500,19 +500,26 @@ def load_plan(path):
         it["_derived_unblocks"] = sorted(derived.get(it["id"], []))
         if not it["unblocks"]:
             it["unblocks"] = it["_derived_unblocks"]
-    # banned names: people and advisors, first names, github logins
-    names = list(b["names"])
+    # banned names come only from the plan: the people and advisors in it, and banned.names.
+    # Full names match in any case. A single part of a name ("Will", "Long") matches only as a
+    # capitalised word, and handles and ids only as written, so the words "will" and "long" in
+    # ordinary prose are not findings. A capitalised name part at the start of a sentence still is.
+    names = [str(n) for n in b["names"] if n]
+    exact = []
     for p in list(plan["people"]) + list(plan["advisors"]):
         if p.get("derived"):
             continue   # placeholder people such as "Engineer 1" are not real names
+        parts = []
         if p.get("name"):
-            names.append(p["name"])
-            names.extend(part for part in re.split(r"\s+", p["name"]) if len(part) > 2)
-        if p.get("github"):
-            names.append(p["github"])
-        if p.get("id") and len(str(p["id"])) >= 3:
-            names.append(str(p["id"]))
+            names.append(str(p["name"]))
+            parts = [part for part in re.split(r"\s+", str(p["name"])) if len(part) > 2]
+            exact.extend(part[0].upper() + part[1:] for part in parts)
+        lowered = {part.lower() for part in parts}
+        for handle in (p.get("github"), p.get("id")):
+            if handle and len(str(handle)) >= 3 and str(handle).lower() not in lowered:
+                exact.append(str(handle))
     plan["_banned_names"] = sorted(set(n for n in names if n))
+    plan["_banned_exact"] = sorted(set(exact))
     plan["_path"] = str(path)
     return plan, validate_plan(plan)
 

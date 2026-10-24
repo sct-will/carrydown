@@ -235,6 +235,20 @@ def path_safety(tmp, plan_text):
     print(("PASS " if not leaked else "FAIL ") + "nothing was written outside the project")
 
 
+def names(tmp, plan_text):
+    """Names come from the plan; ordinary words that happen to be names are not findings."""
+    proj = tmp / "names"
+    shutil.copytree(ROOT / SAMPLE, proj)
+    plan = proj / "docs/spec/plan.yaml"
+    plan.write_text(plan_text.replace("Tamsin Hale", "Will Long").replace("tamsin", "will"), encoding="utf-8")
+    chk = [PY, "scripts/check_specs.py", "--root", str(proj)]
+    step("a person named Will Long does not flag the words will and long", chk, contains=["0 with findings"])
+    spec = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
+    spec.write_text(spec.read_text(encoding="utf-8") + "\nLong reviewed this with idris.\n", encoding="utf-8")
+    step("a capitalised name part and a handle are still flagged", chk, expect=1,
+         contains=["person name or handle from the plan at line", "Long reviewed this with idris."])
+
+
 def main():
     if "--help" in sys.argv or "-h" in sys.argv:
         print(__doc__)
@@ -322,6 +336,7 @@ def main():
         maintenance(Path(tmp))
         frontmatter(Path(tmp), plan_text)
         path_safety(Path(tmp), plan_text)
+        names(Path(tmp), plan_text)
     failed = [n for ok, n in results if not ok]
     print(f"\n{len(results) - len(failed)} of {len(results)} steps passed")
     return 1 if failed else 0

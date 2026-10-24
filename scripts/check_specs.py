@@ -53,7 +53,10 @@ def banned_patterns(plan):
         pats.append((re.compile("[" + chr(0x2014) + chr(0x2013) + "]"), "em or en dash"))
     if plan["_banned_names"]:
         alt = "|".join(re.escape(n) for n in plan["_banned_names"])
-        pats.append((re.compile(r"(?i)\b(" + alt + r")\b"), "person name or handle from the plan"))
+        pats.append((re.compile(r"(?i)(?<![\w-])(" + alt + r")(?![\w-])"), "person name or handle from the plan"))
+    if plan.get("_banned_exact"):
+        alt = "|".join(re.escape(n) for n in plan["_banned_exact"])
+        pats.append((re.compile(r"(?<![\w-])(" + alt + r")(?![\w-])"), "person name or handle from the plan"))
     for key, why in (("vendors", "AI vendor or model reference"), ("words", "banned word"), ("phrases", "banned phrase")):
         pats_list = b.get(key) or []
         if pats_list:
