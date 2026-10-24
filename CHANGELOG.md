@@ -43,6 +43,7 @@ All notable changes to this project are written here. The format follows Keep a 
 - The window and earliest-finish checks compare each item with its size and allocation, and the sample dates are adjusted to fit.
 - The name check uses the plan's people.
 - `github_token.py --check` reads the token the way the GitHub scripts do: `--token-file`, then `CARRYDOWN_GITHUB_TOKEN`, then the stored file.
+- The documents say which scripts are dry runs: every script that writes to GitHub waits for `--apply`, the scaffold and the skill generator write local files only with `--apply`, and the renderer writes unless you pass `--dry-run`.
 - The self test grew to 160 steps, with a loopback GitHub mock, built Word fixtures and planning review cases.
 
 ### Security

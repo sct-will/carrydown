@@ -27,7 +27,7 @@ It does not write application code. Planning decisions (owners, dates, scope, or
 ## Rules for working here
 
 - Never print, log or commit a token. Do not put one in a URL or a command line.
-- Every script that writes is a dry run unless you pass `--apply`. Run the dry run, read it, then apply.
+- Every script that writes to GitHub is a dry run unless you pass `--apply`. The scaffold and the skill generator write local files in the project only with `--apply`; the renderer writes them unless you pass `--dry-run`. Run the dry run, read it, then apply.
 - Ask the user before anything touches GitHub. Never delete issues, labels, projects or repositories.
 - Prose style: sentence-case headings, short sentences, no em or en dashes, spell out acronyms on first use.
 - No AI vendor names outside the agent install lists. One retired word for this product, the three-letter "k" noun for a set of tools, is banned. Say "the carrydown skills", "the two skills" or "the repository". `lint_prose.py` rejects it. No copyright lines, use an attribution line.

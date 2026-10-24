@@ -63,7 +63,7 @@ Or open the repository in Codespaces. It opens on the sample output and runs the
 | `scripts/lint_prose.py` | The prose style checks. |
 | `scripts/sync_skill_assets.py` | Maintainers: copy scripts and templates into each skill folder. |
 
-Every script has `--help`. The ones that write are dry runs unless you pass `--apply`. The installer copies only a skill's folder, so each skill carries its own copy of the scripts and templates it runs. The top-level `scripts/` and `templates/` are the canonical copies.
+Every script has `--help`. Every script that writes to GitHub is a dry run unless you pass `--apply`. The scaffold and the skill generator write local files in the project only with `--apply`; the renderer writes them unless you pass `--dry-run`. The installer copies only a skill's folder, so each skill carries its own copy of the scripts and templates it runs. The top-level `scripts/` and `templates/` are the canonical copies.
 
 ## Run the checks locally
 

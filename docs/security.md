@@ -4,7 +4,7 @@
 
 The GitHub scripts need a token that can write issues and projects. A token is a password.
 
-- Use a 7-day expiry. For a board owned by an organisation, create a fine-grained token limited to the one repository, with Issues (read and write), Metadata (read) and the organisation permission Projects (read and write). For a board on your own account, create a classic token with the scopes `repo` and `project`, because GitHub does not let fine-grained tokens use those boards. See the plan-to-github skill, `references/token-walkthrough.md`.
+- Use a 7-day expiry. For a board owned by an organisation, create a fine-grained token limited to the one repository, with Issues (read and write), Metadata (read) and the organisation permission Projects (read and write). For a board on your own account, create a classic token with the scopes `repo` and `project`, because GitHub does not let fine-grained tokens use those boards. See [the token walkthrough](../skills/carrydown-plan-to-github/references/token-walkthrough.md) in the plan-to-github skill.
 - Store it with `python3 scripts/github_token.py`. The script reads it from a hidden prompt, a plain text file you name (`--from-file`), or standard input. It writes `~/.config/carrydown/github_token` in a folder with mode 700 and a file with mode 600.
 - Before anything is sent, the script checks that the text looks like a GitHub personal access token (it starts with `ghp_` or `github_pat_`). If it does not, nothing is sent.
 - With `--from-file`, the script keeps your file and tells you to delete it. It deletes the file only when you pass `--delete-after`.
@@ -16,17 +16,17 @@ The GitHub scripts need a token that can write issues and projects. A token is a
 
 ## Dry run first
 
-Every script that writes anything is a dry run until you pass `--apply`.
+Every script that writes to GitHub is a dry run until you pass `--apply`. The scripts that write local files inside your project differ: the scaffold and the skill generator write only with `--apply`, and the renderer writes unless you pass `--dry-run`. The token script writes one file, outside your project.
 
-| Script | Reads | Writes with `--apply` |
+| Script | Reads | Writes |
 | --- | --- | --- |
-| `render_ground_truth.py` | The documents you name. | `docs/ground-truth/` in your project. |
-| `scaffold_spec.py` | `plan.yaml`. | The specification folder: README, milestone files, stubs. Never overwrites without `--force`. |
+| `render_ground_truth.py` | The documents you name. | `docs/ground-truth/` in your project, unless you pass `--dry-run`. |
+| `scaffold_spec.py` | `plan.yaml`. | With `--apply`, the specification folder: README, milestone files, stubs. Never overwrites without `--force`. |
 | `check_specs.py` | `plan.yaml` and the folder. | Nothing. |
-| `github_token.py` | The token you give it. | The token file, mode 600. It writes without `--apply`, after you give it a token. |
-| `github_sync.py` | The folder, and GitHub (read only) in a dry run. | GitHub: labels, issues, sub-issue links, one comment. |
-| `github_project.py` | The folder, and GitHub (read only) in a dry run. | GitHub: a project, fields, views, items, field values. |
-| `generate_dev_skill.py` | The folder. | The engineers' skill folder. |
+| `github_token.py` | The token you give it. | The token file, mode 600, outside your project. It writes without `--apply`, after you give it a token. |
+| `github_sync.py` | The folder, and GitHub (read only) in a dry run. | With `--apply`, GitHub: labels, issues, sub-issue links, one comment. |
+| `github_project.py` | The folder, and GitHub (read only) in a dry run. | With `--apply`, GitHub: a project, fields, views, items, field values. |
+| `generate_dev_skill.py` | The folder. | With `--apply`, the engineers' skill folder. |
 
 The skills tell the agent to show you the dry run and wait for a clear yes before `--apply`.
 
@@ -50,7 +50,7 @@ To avoid creating anything twice, carrydown-plan-to-github reads back from your 
 
 It treats that text as data. It compares it with the plan and never follows it. It prints issue titles from the plan, not from GitHub. It rewrites a body only while the body is exactly as the script wrote it, unless you pass `--update-bodies`.
 
-When GitHub fails while an issue is being created, the script reads the issues back before it tries again, so a lost answer does not make a duplicate. Only reads are retried on their own. A rerun after a crash repairs missing links and lists, and `--verify` fails while any are missing.
+When GitHub fails while an issue is being created, the script reads the issues back before it tries again, so a lost answer does not make a duplicate. A server error or a lost connection is retried on its own only for reads, which are safe to repeat. A secondary rate limit is retried for every request, writes included, up to four times, because GitHub refuses that request before acting on it. A rerun after a crash repairs missing links and lists, and `--verify` fails while any are missing.
 
 ## Documents are data
 

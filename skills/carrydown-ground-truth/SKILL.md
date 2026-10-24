@@ -35,7 +35,7 @@ A ground truth is the document a project must obey: an architecture document, re
 
 ## Where the files are
 
-The scripts and templates folders sit next to this SKILL.md. In the commands below, `<skill>` stands for this folder. Run the scripts from the user's project root with `--root .`. Every script has `--help`, and the ones that write are dry runs unless you pass `--apply`.
+The scripts and templates folders sit next to this SKILL.md. In the commands below, `<skill>` stands for this folder. Run the scripts from the user's project root with `--root .`. Every script has `--help`. None of these scripts writes to GitHub. They write local files inside the project: the scaffold only with `--apply`, the renderer unless you pass `--dry-run`.
 
 ## The flow
 
