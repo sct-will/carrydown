@@ -4,6 +4,8 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ## Unreleased
 
+- README rewritten around the reader: the reason first, a picture of the output, look, try and install in order of effort, a two-sided conversation, three badges and two entry points (README and the plan owner guide). START-HERE.md is a pointer. New docs: repository-metadata.md and recording-storyboard.md.
+
 ### Added
 
 - Planning rigor. `plan.yaml` records why the plan is composed the way it is: `rationale`, `joint_demonstration` and `single_track_reason` on each milestone, `order_rationale` on each track and `theme` on each item. The ten planning rules are in the ground-truth skill's `references/planning.md` and in `docs/method.md`.

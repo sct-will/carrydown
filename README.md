@@ -2,6 +2,8 @@
 
 # Give every AI coding agent the architecture, not just the ticket.
 
+[![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![Licence](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-3%20skills-teal)](https://agentskills.io)
+
 I wrote most of a sixty-page architecture document this year, and I doubt anyone has read it end to end since the review, because nobody can hold sixty pages in their head while they build, me included. An AI agent can hold all of it, every section and every rule. carrydown has that agent carry the right paragraph to every engineer, through a plan dated around your real people, one specification per piece of work citing its section, GitHub issues, a board, and a skill that makes each coding agent read it all before it changes code.
 
 *Will Scott*
@@ -139,7 +141,5 @@ The sample is a fictional expense approvals service, so the company, people and 
 ## Contributing and licence
 
 [CONTRIBUTING.md](CONTRIBUTING.md) shows how to run the scripts and checks yourself, under the [code of conduct](CODE_OF_CONDUCT.md); [SECURITY.md](SECURITY.md) covers private reports. Code is under [Apache 2.0](LICENSE) and the words and images under [CC BY 4.0](LICENSE-CONTENT.md), so reuse the diagrams with attribution to Will Scott. More: [plan owner guide](docs/plan-owner-guide.md), [FAQ](docs/faq.md), [method](docs/method.md), [changelog](CHANGELOG.md).
-
-[![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![Licence](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-3%20skills-teal)](https://agentskills.io)
 
 If carrydown helped you, star the repository so the next plan owner finds it. If it broke on your document, open a ["My ground truth looks like this"](https://github.com/sct-will/carrydown/issues/new?template=ground_truth.yml) issue, because that is the feedback I most want.
