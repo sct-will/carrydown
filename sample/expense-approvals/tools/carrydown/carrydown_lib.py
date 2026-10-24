@@ -438,6 +438,19 @@ def find_plan(root, explicit=None):
     return Path(root) / "docs/spec/plan.yaml"
 
 
+RATIONALE_MILESTONE_KEYS = ("rationale", "joint_demonstration", "single_track_reason")
+
+
+def _text(value):
+    """A rationale field as one line of text. None becomes "". Anything that is not text is kept
+    as it is, so validate_plan can report it."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return " ".join(value.split())
+    return value
+
+
 def load_plan(path):
     """Read plan.yaml and fill defaults. Returns (plan, problems)."""
     path = Path(path)
@@ -486,6 +499,16 @@ def load_plan(path):
         it.setdefault("size", "")
         it.setdefault("ground_truth", "")
         it.setdefault("owner", "")
+        it["theme"] = _text(it.get("theme"))
+    # the planning rationale: why each milestone holds its items, what the joint demonstration
+    # shows, and why each track's items are in their order. Text, folded to one line.
+    for m in plan["milestones"]:
+        if isinstance(m, dict):
+            for k in RATIONALE_MILESTONE_KEYS:
+                m[k] = _text(m.get(k))
+    for t in plan["tracks"]:
+        if isinstance(t, dict):
+            t["order_rationale"] = _text(t.get("order_rationale"))
     # derived unblocks: inverse of depends
     derived = {it["id"]: [] for it in plan["items"] if isinstance(it.get("id"), int)}
     for it in plan["items"]:
@@ -587,6 +610,16 @@ def validate_plan(plan):
             P.append(f"target: date is not a date: {tg.get('date')!r}")
         if "weeks" in tg and (not isinstance(tg["weeks"], int) or isinstance(tg["weeks"], bool) or tg["weeks"] < 1):
             P.append(f"target: weeks must be a whole number of working weeks, got {tg['weeks']!r}")
+    for m in plan["milestones"]:
+        for k in RATIONALE_MILESTONE_KEYS:
+            if not isinstance(m.get(k, ""), str):
+                P.append(f"milestone {m.get('number')}: {k} must be text, in quotes if it holds a colon and a space")
+    for t in plan["tracks"]:
+        if not isinstance(t.get("order_rationale", ""), str):
+            P.append(f"tracks: {t.get('id')} order_rationale must be text, in quotes if it holds a colon and a space")
+    for it in plan["items"]:
+        if not isinstance(it.get("theme", ""), str):
+            P.append(f"item {it.get('id')}: theme must be text, such as \"web client\"")
     ms_nums = []
     last_end = None
     for m in plan["milestones"]:
@@ -833,6 +866,103 @@ def header_markdown(plan, it):
     for k, v in rows:
         out.append(f"| {k} | {v} |")
     return "\n".join(out)
+
+
+# ---------------------------------------------------------------------------
+# Planning rigor: the rules a plan is composed by, and the helpers that read them
+# ---------------------------------------------------------------------------
+
+PLANNING_RULES = (
+    "A milestone is the thinnest vertical slice that proves one user-visible capability end to end, named for what a user can do after it. "
+    "The first proves the whole path with the least behaviour, and the last proves the project can be released and run.",
+    "A milestone holds items from every track the capability crosses, and the tracks meet at a named joint check before the demonstration. "
+    "A milestone that stays inside one track says why.",
+    "The exit gate is one sentence the program can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show.",
+    "Inside a milestone the shared contract comes first, so both tracks can start without waiting. The first week leaves nobody idle.",
+    "Each engineer's consecutive items stay in one part of the system, a theme. Related items for the same person sit in adjacent days to cut context switching.",
+    "Size in days divided by allocation gives calendar working days: four days at 60 percent is nearly seven working days. "
+    "Nobody is planned past 100 percent of allocated capacity in a work unit, aim for about 80, and days off and breaks are real.",
+    "Slack sits before every checkpoint and demonstration. An item that completes on its checkpoint date has none.",
+    "The critical path is read for single points of failure. If it runs through one person, the plan says so and offers an alternative.",
+    "Program-owned work stays outside the plan as id gaps.",
+    "The plan records its rationale where a reviewer can argue with it: for each milestone, why these items form it and what the joint demonstration proves, "
+    "and for each track, why its items are in this order. The plan owner reads the plan week by week, adversarially, before anything is scaffolded.",
+)
+
+
+def milestone_tracks(plan, ms):
+    """[(track id, [items])] for the tracks a milestone's items are on, in the plan's track order."""
+    its = [it for it in plan["items"] if it.get("milestone") == ms.get("number")]
+    order = [t.get("id") for t in plan["tracks"]]
+    seen = [t for t in order if any(it.get("track") == t for it in its)]
+    seen += sorted({it.get("track") for it in its if it.get("track") not in order}, key=str)
+    return [(t, [it for it in its if it.get("track") == t]) for t in seen]
+
+
+def demo_checkpoint(plan, ms):
+    """The checkpoint held on the milestone's demonstration date, or None."""
+    for c in plan["checkpoints"]:
+        if c.get("date") == ms.get("demo"):
+            return c
+    return None
+
+
+def tracks_named(plan, text):
+    """Track ids whose label or id appears in text as a whole word, in the plan's track order."""
+    out = []
+    for t in plan["tracks"]:
+        for word in {str(t.get("label") or ""), str(t.get("id") or "")} - {""}:
+            if re.search(r"(?i)(?<![\w-])" + re.escape(word) + r"(?![\w-])", text or ""):
+                out.append(t.get("id"))
+                break
+    return out
+
+
+def critical_path(plan):
+    """(calendar days, [ids]) of the longest dependency chain to the last item, or (0, []).
+
+    The length of a chain is the calendar days from the start of the first item's work unit to
+    the last item's complete_by, following the dependencies. Chains that start in the same work
+    unit often tie on days. A tie goes to the chain with more items, so the path keeps the
+    dependency it starts from, such as the shared contract."""
+    items = item_by_id(plan)
+    if not items:
+        return 0, []
+    mss = milestone_by_num(plan)
+    best = {}
+
+    def longest(n):
+        if n in best:
+            return best[n]
+        it = items[n]
+        done = parse_date(it["complete_by"])
+        start = parse_date(mss[it["milestone"]]["start"])
+        best[n] = (max((done - start).days, 0), [n])   # a guard against a cycle, replaced below
+        cand = best[n]
+        for d in it["depends"]:
+            if d in items and d != n:
+                dd, path = longest(d)
+                gap = (done - parse_date(items[d]["complete_by"])).days
+                if (dd + gap, len(path) + 1) > (cand[0], len(cand[1])) and n not in path:
+                    cand = (dd + gap, path + [n])
+        best[n] = cand
+        return cand
+
+    end = max(items, key=lambda n: (parse_date(items[n]["complete_by"]), longest(n)[0]))
+    return longest(end)
+
+
+def slack_days(plan, item):
+    """Working days between an item's complete_by and its checkpoint, the checkpoint day counted.
+    0 when the item completes on its checkpoint date. Weekends, breaks and the owner's days off
+    are not counted."""
+    done, cp = parse_date(item["complete_by"]), parse_date(item["checkpoint"])
+    off = _off_days(plan, item)
+    n, d = 0, done + _dt.timedelta(days=1)
+    while d <= cp:
+        n += _is_working(d, off)
+        d += _dt.timedelta(days=1)
+    return n
 
 
 def program_ids(plan):

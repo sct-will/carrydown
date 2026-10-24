@@ -21,6 +21,8 @@ Each work item gets a size, written as a word and a number of days, for example 
 
 In `plan.yaml` the inputs appear as the documents under `project.ground_truth`, the optional `people` list with `allocation` (a whole number from 1 to 100, 100 if omitted), and the optional `target` block with `date` or `weeks`, next to the `breaks` list.
 
+Two more things come out of the planning conversation rather than out of your head beforehand, but it helps to think about them. Themes: the parts of the system each track touches, in a few words each, such as "web client" or "export job". Each item gets one, so the plan can keep a person on one part at a time. Rationale: why each milestone holds its items, what the engineers show together at its demonstration, and why each track's items are in their order. The agent drafts these with you and writes them into `plan.yaml` as `theme`, `rationale`, `joint_demonstration` and `order_rationale`. The checker fails a plan without the rationale.
+
 The sections below list these and the smaller inputs the interview also asks for.
 
 ## 1. Ground truth documents
@@ -40,6 +42,7 @@ Files can be `.docx` or `.md`. Give paths.
 | --- | --- | --- |
 | Who does the work? | Two engineers. | One to four people. |
 | Which track does each own? | Workflow and Experience. | One track each. |
+| Which parts of the system does each track touch? | Web client, notification worker, expense service, export job. | Ask. They become the themes. |
 | Percent allocation? | 100, or 60 for three days in five. | 100 for everyone. The agent asks once to confirm. |
 | Start dates and days off? | Start 2027-02-01. Off 2027-02-22. | Same start date, no days off. |
 | Who advises and owns no items? | Someone from security, or the author of a policy. | None. |
@@ -74,6 +77,7 @@ Which agentic editors do the engineers use? Any editor or command line agent tha
 | Who is the program, the people who watch the demonstrations and decide pass or fail? | The product manager and the head of operations. | Ask. |
 | How long can they give? | 45 minutes. | 45 minutes. |
 | What must they see to say a milestone is done? | "A manager approves a report from the inbox." | Write it in their words. |
+| Who gives each demonstration? | The engineers whose tracks meet in the milestone, together. | That. |
 
 ## 7. Program-owned boundary
 
@@ -99,6 +103,7 @@ Ground truth files:
 Wins on conflict:
 Version:
 People (name, track, percent allocation, start date, days off, GitHub login):
+Parts of the system each track touches (themes):
 Advisors:
 Target date or weeks:
 Breaks (date ranges):
@@ -107,6 +112,7 @@ Repository:
 Epic number or none:
 Agents in use:
 Demonstration audience and length:
+Who gives each demonstration:
 What they must see:
 Program-owned work and the items that wait for it:
 Test command / lint command / feature flag:

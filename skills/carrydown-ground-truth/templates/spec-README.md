@@ -6,7 +6,7 @@ One file per development work item, plus `milestone.md` per milestone folder. Th
 
 | Path | What it is |
 | --- | --- |
-| `README.md` | This page. Conventions, schedule, checkpoint and comment templates, the index of work items. |
+| `README.md` | This page. Conventions, how the plan was composed, schedule, checkpoint and comment templates, the index of work items. |
 | `plan.yaml` | The schedule as data: milestones, work items, owners, dates, dependencies, checkpoints. The checker and the GitHub scripts read it. |
 | `m1-.../` and the other milestone folders | The work item files, one per item, and `milestone.md` for each milestone. |
 
@@ -31,6 +31,10 @@ The shortest route is the developer skill. It makes a coding agent read the righ
 {{conventions}}
 
 Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the program. A program input is something the program provides outside this plan.
+
+## How this plan was composed
+
+{{composition}}
 
 ## Schedule
 

@@ -12,7 +12,10 @@ Rules
   Nothing is written unless you pass --apply. The default is a dry run.
   Existing files are never overwritten unless you pass --force.
   --refresh-headers rewrites only the header table of existing files so they match plan.yaml
-  after you change a date, an owner or a dependency. The rest of each file is left alone.
+  after you change a date, an owner or a dependency. It also rewrites the sections written from
+  the plan's rationale: "Why these items form this milestone" and "Joint demonstration" in each
+  milestone.md, and "How this plan was composed" in the README. It adds them where they are
+  missing. The rest of each file is left alone.
 
 Usage
   python3 scripts/scaffold_spec.py --root . --init --name "My project"   write a starter plan.yaml
@@ -78,6 +81,71 @@ def index_text(plan):
     return "\n".join(out).rstrip()
 
 
+GENERATED_NOTE = "<!-- Written from plan.yaml. Change it there, then run scaffold_spec.py --refresh-headers --apply. -->"
+
+
+def track_list(plan, ids):
+    labels = [L.track_label(plan, t) for t in ids]
+    return labels[0] if len(labels) == 1 else ", ".join(labels[:-1]) + " and " + labels[-1]
+
+
+def composition_text(plan, ms):
+    """Body of "Why these items form this milestone": the rationale, then the items per track."""
+    out = [GENERATED_NOTE, "",
+           ms.get("rationale") or "TODO: Why these items form this milestone, two to four sentences. Write it under `rationale` "
+                                  "for this milestone in plan.yaml, then run scaffold_spec.py --refresh-headers --apply."]
+    covered = L.milestone_tracks(plan, ms)
+    if covered:
+        out.append("")
+        for t, its in covered:
+            out.append(f"- {L.track_label(plan, t)}: " + ", ".join(
+                L.tag(plan, it["id"]) + (f" ({it['theme']})" if it.get("theme") else "") for it in its) + ".")
+    if ms.get("single_track_reason"):
+        out += ["", f"Why one track: {ms['single_track_reason']}"]
+    return "\n".join(out)
+
+
+def joint_demonstration_text(plan, ms):
+    """Body of "Joint demonstration": what the engineers show together, who, and the joint check."""
+    out = [GENERATED_NOTE, "",
+           ms.get("joint_demonstration") or "TODO: What the engineers whose tracks meet show together, one or two sentences. "
+                                            "Write it under `joint_demonstration` for this milestone in plan.yaml, then run scaffold_spec.py --refresh-headers --apply."]
+    cp = L.demo_checkpoint(plan, ms)
+    tracks = [t for t, _ in L.milestone_tracks(plan, ms)]
+    if cp:
+        tracks += [t for t in L.tracks_named(plan, cp.get("joint_check", "")) if t not in tracks]
+    if tracks:
+        order = [t.get("id") for t in plan["tracks"]]
+        tracks.sort(key=lambda t: order.index(t) if t in order else len(order))
+        out += ["", f"Given together on {ms['demo']} by the engineers of the {track_list(plan, tracks)} track{'s' if len(tracks) > 1 else ''}."]
+    if cp and cp.get("joint_check"):
+        out.append(f"The joint check for that date, {cp['name']}: {cp['joint_check']}")
+    return "\n".join(out)
+
+
+def readme_composition(plan):
+    """Body of "How this plan was composed": the ten rules, the order per track, the milestones."""
+    out = [GENERATED_NOTE, "",
+           "The plan follows ten rules. The reasons below are written in `plan.yaml`, so a reviewer can argue with each one against the dates in the schedule.", ""]
+    out += [f"{n}. {r}" for n, r in enumerate(L.PLANNING_RULES, 1)]
+    rows = []
+    for t in plan["tracks"]:
+        its = sorted((it for it in plan["items"] if it.get("track") == t.get("id")), key=lambda it: (it["complete_by"], it["id"]))
+        if its:
+            rows.append([t.get("label") or t.get("id"), ", ".join(L.tag(plan, it["id"]) for it in its), t.get("order_rationale") or "Not written yet."])
+    out += ["", "### Order of work per track", "", md_table(["Track", "Items in date order", "Why this order"], rows) if rows else "No items yet."]
+    rows = []
+    for m in plan["milestones"]:
+        covered = [t for t, _ in L.milestone_tracks(plan, m)]
+        why = m.get("rationale") or "Not written yet."
+        if m.get("single_track_reason"):
+            why += f" Why one track: {m['single_track_reason']}"
+        rows.append([f"{m['number']}, {m['name']}", (track_list(plan, covered) + (" only" if len(covered) == 1 else "")) if covered else "No items yet",
+                     why, m.get("joint_demonstration") or "Not written yet."])
+    out += ["", "### Milestones", "", md_table(["Milestone", "Tracks", "Why these items", "Joint demonstration"], rows)]
+    return "\n".join(out)
+
+
 def program_section(plan):
     items = plan["program"]["items"]
     if not items:
@@ -114,6 +182,7 @@ def build_readme(plan):
         "checkpoint_comment": L.read_template("checkpoint-comment.md").rstrip().replace("{{date}}", "<date>").replace("{{name}}", "<name>"),
         "program_section": program_section(plan),
         "index": index_text(plan),
+        "composition": readme_composition(plan),
     }
     return L.fill(L.read_template("spec-README.md"), vals)
 
@@ -125,6 +194,8 @@ def build_milestone(plan, ms):
         "start": ms["start"], "end": ms["end"], "folder": ms["folder"], "gate": ms["gate"],
         "demo": ms["demo"], "ids": ", ".join(its),
         "work_table": work_table(plan, ms),
+        "composition": composition_text(plan, ms),
+        "joint_demonstration": joint_demonstration_text(plan, ms),
         "references": "\n".join(
             [f"- `{L.tag(plan, it['id']).lower()}-{it['slug']}.md`" for it in plan["items"] if it["milestone"] == ms["number"]]
             + [f"- The ground truth, `{plan['project']['ground_truth']}`", "- The schedule and checkpoint tables in `../README.md`"]
@@ -258,6 +329,50 @@ def refreshed_milestone_header(plan, ms, old):
     return "\n".join(["| | |", "| --- | --- |"] + [f"| {n} | {v} |" for n, v in rows])
 
 
+def heading_spans(lines):
+    """{heading text: (start, end)} of the level-two sections outside code fences. A section runs
+    from its heading line to the next level-two heading or the end of the file."""
+    heads = []
+    fence = False
+    for i, line in enumerate(lines):
+        if line.lstrip().startswith("```"):
+            fence = not fence
+        elif not fence and line.startswith("## "):
+            heads.append((i, line[3:].strip()))
+    spans = {}
+    for k, (i, name) in enumerate(heads):
+        spans.setdefault(name, (i, heads[k + 1][0] if k + 1 < len(heads) else len(lines)))
+    return spans
+
+
+def put_section(text, heading, body, before=()):
+    """Replace the body of the section `## heading` with body. When the section is missing, insert
+    it before the first section in `before` that exists, or at the end. Other lines stay as they are."""
+    lines = text.split("\n")
+    block = [f"## {heading}", ""] + body.split("\n") + [""]
+    spans = heading_spans(lines)
+    if heading in spans:
+        i, j = spans[heading]
+        if j == len(lines) and lines and lines[-1] == "":
+            j -= 1   # keep the final newline of the file
+        lines[i:j] = block
+    else:
+        at = next((spans[b][0] for b in before if b in spans), None)
+        if at is None:
+            if lines and lines[-1] == "":
+                lines.pop()
+            lines += [""] + block
+        else:
+            lines[at:at] = block
+    return "\n".join(lines)
+
+
+MILESTONE_SECTIONS = (
+    ("Why these items form this milestone", composition_text, ("Expected outcomes", "Acceptance criteria", "Joint demonstration", "Demonstration expectations", "Work items")),
+    ("Joint demonstration", joint_demonstration_text, ("Demonstration expectations", "Work items", "References")),
+)
+
+
 README_TABLES = ("| Work unit | Dates | Gate |", "| Sub-epic |", "| Date | Checkpoint | Items due | Joint check |",
                  "| Id | Work item | Track | Complete by |", "| Id | Program item | Note |")
 
@@ -297,7 +412,8 @@ def refreshed_readme(plan, old):
         swaps += list(zip(o, f))
     for (s0, e0, _), (s1, e1, _) in sorted(swaps, key=lambda x: -x[0][0]):
         lines[s0:e0] = fresh[s1:e1]
-    return "\n".join(lines), skipped
+    text = put_section("\n".join(lines), "How this plan was composed", readme_composition(plan), ("Schedule", "Index"))
+    return text, skipped
 
 
 def refresh(plan, root, a, actions):
@@ -316,7 +432,10 @@ def refresh(plan, root, a, actions):
         if p.exists():
             old = L.read_text(p)
             new = replace_first_table(old, refreshed_milestone_header(plan, ms, old))
-            put(p, old, replace_section_table(new, "Work items", work_table(plan, ms)), "milestone")
+            new = replace_section_table(new, "Work items", work_table(plan, ms))
+            for heading, body, before in MILESTONE_SECTIONS:
+                new = put_section(new, heading, body(plan, ms), before)
+            put(p, old, new, "milestone")
     p = root / plan["project"]["spec_dir"] / "README.md"
     if p.exists():
         old = L.read_text(p)
@@ -329,14 +448,14 @@ def refresh(plan, root, a, actions):
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Scaffold the specification folder from plan.yaml. Dry run unless --apply is given.",
-        epilog="Existing files are never overwritten unless --force is given. --refresh-headers touches only header tables.",
+        epilog="Existing files are never overwritten unless --force is given. --refresh-headers touches only header tables and the sections written from plan.yaml.",
     )
     ap.add_argument("--root", default=".", help="project root (default: current directory)")
     ap.add_argument("--plan", help="path to plan.yaml (default: <root>/docs/spec/plan.yaml)")
     ap.add_argument("--init", action="store_true", help="write a starter plan.yaml from the annotated template and stop")
     ap.add_argument("--name", help="project name for --init")
     ap.add_argument("--stubs", action="store_true", help="also write one stub specification per work item")
-    ap.add_argument("--refresh-headers", action="store_true", help="rewrite header tables of existing specs and milestone files to match plan.yaml")
+    ap.add_argument("--refresh-headers", action="store_true", help="rewrite header tables of existing specs and milestone files, and the sections written from the plan's rationale, to match plan.yaml")
     ap.add_argument("--ci", action="store_true", help="also write .github/workflows/check-specs.yml and copy the checker to tools/carrydown/ so the checker runs in continuous integration")
     ap.add_argument("--force", action="store_true", help="overwrite existing files (README, milestone.md, stubs)")
     ap.add_argument("--apply", action="store_true", help="write files. Without it this is a dry run")

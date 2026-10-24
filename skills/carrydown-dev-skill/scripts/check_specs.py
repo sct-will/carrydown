@@ -22,6 +22,12 @@ percent allocation of each person (1 to 100), that nobody is over 100 percent of
 capacity in a work unit, and, when a target exists, that the last work item meets it. People and the
 target are optional. Without a target the report prints the critical path end date as derived.
 
+The planning review reads how the plan is composed. Findings: a milestone that covers one track with
+no single_track_reason, and a milestone without a rationale or a joint_demonstration, or a track
+with items and no order_rationale. Advisory lines in the report: the tracks each milestone covers and
+whether the joint check at its demonstration names them, items that complete on their checkpoint
+date, theme switches per owner, a critical path owned by one person, and the load ratio between people.
+
 Usage
   python3 scripts/check_specs.py --root .            check everything
   python3 scripts/check_specs.py --root . --report   print the schedule, load table and critical path
@@ -297,6 +303,125 @@ def fmt(d):
     return L.fmt_date(d)
 
 
+def planning_review(plan):
+    """Read how the plan is composed. Returns (findings, lines).
+
+    Findings fail the check. Lines are the advisory text of the report's planning review block,
+    with each finding repeated in its place, marked "finding"."""
+    findings, lines = [], []
+    tl = lambda t: L.track_label(plan, t)
+    tags = lambda its: ", ".join(L.tag(plan, it["id"]) for it in its)
+    used = [t.get("id") for t in plan["tracks"] if any(it.get("track") == t.get("id") for it in plan["items"])]
+
+    def finding(text):
+        findings.append(text)
+        lines.append("    finding: " + text)
+
+    lines.append("  Milestone composition (rules 1 to 3)")
+    for ms in plan["milestones"]:
+        head = f"Milestone {ms['number']}, {ms['name']}"
+        covered = L.milestone_tracks(plan, ms)
+        if not covered:
+            lines.append(f"    {head}: no items yet.")
+            continue
+        lines.append(f"    {head}: " + ", ".join(f"{tl(t)} ({tags(its)})" for t, its in covered) + ("" if len(covered) > 1 else " only") + ".")
+        if len(covered) == 1 and len(used) > 1:
+            if ms.get("single_track_reason"):
+                lines.append(f"      One track, because: {ms['single_track_reason']}")
+            else:
+                finding(f"milestone {ms['number']} covers one track ({tl(covered[0][0])}) and has no single_track_reason. "
+                        "Add an item from the other track the capability crosses, or say why it stays inside one track")
+        cp = L.demo_checkpoint(plan, ms)
+        if cp is None:
+            lines.append(f"      No checkpoint on the demonstration date {ms['demo']}, so the tracks have no named joint check there.")
+        else:
+            named = L.tracks_named(plan, cp.get("joint_check", ""))
+            want = [t for t, _ in covered] if len(covered) > 1 else used
+            missing = [t for t in want if t not in named]
+            if not missing:
+                lines.append(f"      The joint check on {cp['date']} names " + " and ".join(tl(t) for t in want) + ".")
+            else:
+                lines.append(f"      The joint check on {cp['date']} does not name " + " or ".join(tl(t) for t in missing) + ". Name each track that meets there.")
+        for k, what in (("rationale", "why these items form it"), ("joint_demonstration", "what the engineers show together")):
+            if not ms.get(k):
+                finding(f"milestone {ms['number']} has no {k}: write {what} in plan.yaml")
+
+    lines.append("  Order of work per track (rules 4, 5 and 10)")
+    for t in plan["tracks"]:
+        its = sorted((it for it in plan["items"] if it.get("track") == t.get("id")), key=lambda it: (it["complete_by"], it["id"]))
+        if not its:
+            continue
+        lines.append(f"    {tl(t.get('id'))}: {tags(its)}." + (" Order rationale given." if t.get("order_rationale") else ""))
+        if not t.get("order_rationale"):
+            finding(f"track {t.get('id')} has no order_rationale: say in plan.yaml why its items are in this order")
+
+    lines.append("  Theme switches (consecutive items of one owner, by date)")
+    if not any(it.get("theme") for it in plan["items"]):
+        lines.append("    No item has a theme. Add theme to the items to count the switches.")
+    else:
+        owners = []
+        for it in plan["items"]:
+            if it.get("owner") and it["owner"] not in owners:
+                owners.append(it["owner"])
+        mss = L.milestone_by_num(plan)
+        for who in owners:
+            its = sorted((it for it in plan["items"] if it.get("owner") == who), key=lambda it: (it["complete_by"], it["id"]))
+            pairs = []
+            for a, b in zip(its, its[1:]):
+                if (a.get("theme") or "no theme") != (b.get("theme") or "no theme"):
+                    where = (f"inside milestone {a['milestone']}" if a["milestone"] == b["milestone"]
+                             else f"across milestones {a['milestone']} and {b['milestone']}")
+                    pairs.append((a, b, where, a["milestone"] == b["milestone"]))
+            inside = sum(1 for p in pairs if p[3])
+            lines.append(f"    {who}: {len(pairs)} switch{'' if len(pairs) == 1 else 'es'}, {inside} inside a milestone.")
+            for a, b, where, _ in pairs:
+                lines.append(f"      {L.tag(plan, a['id'])} ({a.get('theme') or 'no theme'}) to {L.tag(plan, b['id'])} ({b.get('theme') or 'no theme'}), {where}.")
+
+    lines.append("  Slack before checkpoints (rule 7)")
+    none = [it for it in plan["items"] if it.get("complete_by") == it.get("checkpoint")]
+    for it in none:
+        lines.append(f"    {L.tag(plan, it['id'])} completes on its checkpoint date {it['checkpoint']}: no slack.")
+    if plan["items"] and not none:
+        least = min(plan["items"], key=lambda it: (L.slack_days(plan, it), it["id"]))
+        lines.append(f"    Every item completes before its checkpoint. The least slack is {L.slack_days(plan, least)} working day(s), "
+                     f"{L.tag(plan, least['id'])} before {least['checkpoint']}.")
+
+    lines.append("  Critical path owners (rule 8)")
+    _, path = L.critical_path(plan)
+    items = L.item_by_id(plan)
+    if path:
+        by = {}
+        for n in path:
+            by.setdefault(items[n].get("owner") or "no owner", []).append(L.tag(plan, n))
+        lines.append("    " + " -> ".join(L.tag(plan, n) for n in path) + ": " + ", ".join(f"{w} ({', '.join(v)})" for w, v in by.items()) + ".")
+        if len(by) == 1 and len(plan["people"]) > 1 and "no owner" not in by:
+            who = next(iter(by))
+            track = items[path[0]].get("track")
+            said = [f"the {tl(t.get('id'))} order rationale" for t in plan["tracks"] if "critical path" in (t.get("order_rationale") or "").lower()]
+            said += [f"the milestone {m['number']} rationale" for m in plan["milestones"] if "critical path" in (m.get("rationale") or "").lower()]
+            lines.append(f"    The critical path runs through one person, {who}, on the {tl(track)} track. "
+                         + (f"The plan speaks to it in {' and '.join(said)}." if said else "Say so in the plan and offer an alternative."))
+
+    lines.append("  Load ratio (rule 6)")
+    tot = {}
+    for pid, _, sized, cap, _ in L.load_rows(plan):
+        s_, c_ = tot.get(pid, (0.0, 0.0))
+        tot[pid] = (s_ + sized, c_ + cap)
+    if len(tot) < 2:
+        lines.append("    Fewer than two people in the plan, so there is no ratio.")
+    else:
+        share = {pid: (100.0 * s_ / c_ if c_ else 0.0) for pid, (s_, c_) in tot.items()}
+        lines.append("    Share of allocated capacity over the plan: " + ", ".join(
+            f"{pid} {tot[pid][0]:g} of {tot[pid][1]:.0f}d ({share[pid]:.0f}%)" for pid in tot) + ".")
+        hi, lo = max(share, key=share.get), min(share, key=share.get)
+        if share[lo] <= 0:
+            lines.append(f"    {lo} has no sized work, so the ratio is not defined. Above two to one: move items across tracks where the skills allow.")
+        else:
+            r = share[hi] / share[lo]
+            lines.append(f"    Highest to lowest is {r:.1f} to 1 ({hi} to {lo})." + (" Above two to one: move items across tracks where the skills allow, or stretch the date." if r > 2 else ""))
+    return findings, lines
+
+
 def report(plan):
     people = {p["id"]: p for p in plan["people"]}
     print(f"Plan: {plan['project']['name']}")
@@ -344,28 +469,8 @@ def report(plan):
         print("  No person is over 100 percent of allocated capacity in any work unit.")
     # critical path: longest chain by calendar days between completions
     items = L.item_by_id(plan)
-    best = {}
-
-    def longest(n):
-        if n in best:
-            return best[n]
-        it = items[n]
-        done = L.parse_date(it["complete_by"])
-        ms = L.milestone_by_num(plan)[it["milestone"]]
-        start = L.parse_date(ms["start"])
-        cand = (max((done - start).days, 0), [n])
-        for d in it["depends"]:
-            if d in items:
-                dd, path = longest(d)
-                gap = (done - L.parse_date(items[d]["complete_by"])).days
-                if dd + gap > cand[0]:
-                    cand = (dd + gap, path + [n])
-        best[n] = cand
-        return cand
-
     if items:
-        end = max(items, key=lambda n: (L.parse_date(items[n]["complete_by"]), longest(n)[0]))
-        days, path = longest(end)
+        days, path = L.critical_path(plan)
         print("\nCritical path (longest dependency chain to the last item)")
         print("  " + " -> ".join(L.tag(plan, n) for n in path) + f"  ({days} calendar days)")
         for n in path:
@@ -415,6 +520,11 @@ def report(plan):
     for c in plan["checkpoints"]:
         due = [L.tag(plan, it["id"]) for it in plan["items"] if it["checkpoint"] == c["date"]]
         print(f"  {c['date']}  {c['name']}: {', '.join(due) or 'none closing'}")
+    findings, lines = planning_review(plan)
+    print("\nPlanning review (advisory, except lines marked finding; the rules are in references/planning.md)")
+    for line in lines:
+        print(line)
+    print(f"  {len(findings)} finding(s)." + (" Run the checker without --report to fail on them." if findings else ""))
 
 
 PLAN_ERRORS = (KeyError, ValueError, TypeError, AttributeError, IndexError, ZeroDivisionError)
@@ -459,6 +569,9 @@ def run_checks(plan, root, a):
     gt_heads = ground_truth_headings(plan, root)
     if load_issues:
         results["load and target"] = load_issues
+    review, _ = planning_review(plan) if not a.item else ([], [])
+    if review:
+        results["planning review"] = review
     cites = citation_findings(plan, gt_heads)
     if cites and not a.item:
         results["ground truth"] = cites

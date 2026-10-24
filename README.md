@@ -50,7 +50,7 @@ The agent has no role. It drafts for the plan owner, reads for the engineers and
 
 **`carrydown-ground-truth`**
 - Interviews you, renders your documents to Markdown with stable section anchors, and scaffolds `docs/spec/` with `plan.yaml`.
-- Drafts the plan with you: milestones, work units, tracks, dates, dependencies, load table, critical path, program boundary.
+- Drafts the plan with you: milestones, work units, tracks, dates, dependencies, load table, critical path, program boundary, and records why each milestone is composed the way it is.
 - Writes one specification per work item to a template, runs the checker, and gives review prompts for the document and the plan.
 - Run by: Plan owner. Reviewed by: Lead reviewer.
 

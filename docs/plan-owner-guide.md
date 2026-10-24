@@ -65,7 +65,9 @@ The agent drafts. You decide. It shows you:
 - every **work item** with an owner, a date, what it depends on and a size such as "Small, about 2 days" (the load table reads the number after "about"),
 - the **load table**, how much work each person has in each work unit as a percentage of the capacity their allocation gives them, with any work unit over 100 percent flagged,
 - the **critical path**, the chain of items that sets the end date, and whether it meets your target,
-- the **program items** kept outside the plan.
+- the **program items** kept outside the plan,
+- the **rationale**: for each milestone, why it holds its items and what the engineers show together at its demonstration, and for each track, why its items are in this order,
+- the **planning review**, the last block of the checker report, which lists the tracks each milestone covers, items with no slack before their checkpoint, theme switches, critical path owners and the load ratio.
 
 Questions worth asking:
 
@@ -74,6 +76,7 @@ Questions worth asking:
 - Does anyone have nothing to do, or three things due, on any day?
 - Which items wait for something the program owns?
 - Which milestone has the weakest exit gate?
+- Is each stated reason true of the dates? Pick one and check it against the schedule.
 
 Ask the agent to move things, then ask for the load table and the critical path again. Say that the plan is right only when it is. This is your most important step.
 

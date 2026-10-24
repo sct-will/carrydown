@@ -13,6 +13,10 @@ Sub-epic of the {{project_name}} Epic. Work unit {{number}}, {{start}} to {{end}
 
 TODO: Three to six lines. The value this milestone gives, written for someone who reads only this page. What could not be shown before and what decision the demonstration feeds.
 
+## Why these items form this milestone
+
+{{composition}}
+
 ## Expected outcomes
 
 - TODO: Outcome one, written as something observable.
@@ -25,6 +29,10 @@ The milestone is accepted when the program has seen each of these at the demonst
 - [ ] TODO: A criterion that can be seen during the demonstration.
 - [ ] TODO: A second criterion.
 - [ ] TODO: A third criterion.
+
+## Joint demonstration
+
+{{joint_demonstration}}
 
 ## Demonstration expectations
 

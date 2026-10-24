@@ -1,6 +1,8 @@
 # Sample plan for the fictional expense approvals service.
 # Decisions in this file (order, dates, owners) were made by a person. The checker and the
 # GitHub scripts read it. See templates/plan.yaml in the repository for the annotated version.
+# The rationale, joint_demonstration and order_rationale lines say why the plan is composed the
+# way it is. The scaffold copies them into milestone.md and the README, where a reviewer can argue.
 
 project:
   name: "Expense approvals"
@@ -35,9 +37,11 @@ tracks:
   - id: workflow
     label: Workflow
     color: BLUE
+    order_rationale: "The scaffold and the API contract come first because both tracks build against contracts/openapi.yaml (DS-1.4). Routing closes on 2027-02-19, before the day off on 2027-02-22, so the inbox can start the next Monday. The limits close on 2027-03-08 so the delegates item has the GOV-1 rules from the start of work unit 3, and the audit log follows in the same service code because it shares the transaction of each state change (D1). The one theme change, to the export job, falls across the offsite week."
   - id: experience
     label: Experience
     color: GREEN
+    order_rationale: "In the first three days the Experience engineer reviews the draft contract with the Workflow engineer, so nobody is idle in the first week. The report form starts the day after the contract lands and closes on 2027-02-10, two days before the first demonstration. The inbox needs the form and the routing steps, and closes on 2027-03-03. Notifications and delegates need the inbox decisions and the GOV-1.4 delegate rule, so they come third, and release readiness comes last because it rehearses everything. The theme changes twice, to the notification worker and then to the release, each at a milestone boundary and never between adjacent days. Four of the five items on the critical path sit on this track at 60 percent allocation: if this engineer is away, the Workflow engineer takes the delegate screen of WI-08, whose rules are already theirs."
 
 people:
   - id: tamsin
@@ -67,6 +71,8 @@ milestones:
     end: 2027-02-12
     demo: 2027-02-12
     gate: "A staff member creates a report with a receipt in the web client and submits it through the service."
+    rationale: "The service scaffold with the API contract and the report form are the thinnest slice that proves the whole path: a report goes from the web client through the API to the database. The contract comes first so the form starts from a frozen shape at the Contract freeze checkpoint. Routing, rules and export stay out, so the path is proven with the least behaviour."
+    joint_demonstration: "The Experience engineer creates a report with one receipt in the web client and submits it. The Workflow engineer shows the Submitted state and the stored receipt in the database from the same run."
   - number: 2
     name: "Route to approvers"
     folder: m2-route-to-approvers
@@ -74,6 +80,8 @@ milestones:
     end: 2027-03-05
     demo: 2027-03-05
     gate: "A submitted report reaches the right approvers in order and an approver decides it from the inbox."
+    rationale: "Routing and the inbox are the two halves of one capability: a submitted report reaches its approvers and they decide it. Neither can be shown alone, because the steps mean nothing without an inbox and the inbox is empty without steps. The Routing meets inbox checkpoint on 2027-02-26 joins them a week before the demonstration."
+    joint_demonstration: "The Workflow engineer submits reports in each band of section 3.5 and shows the steps built for them. The Experience engineer approves one report as two approvers in turn from the inbox, and it reaches Approved only after the last step."
   - number: 3
     name: "Enforce policy"
     folder: m3-enforce-policy
@@ -81,6 +89,8 @@ milestones:
     end: 2027-03-19
     demo: 2027-03-19
     gate: "Every decision obeys the approval limits and separation of duties, every change is in the audit trail, and submitters are notified."
+    rationale: "Policy can be seen only when a decision is refused, recorded and told to the submitter, so the rules, the audit log and the notifications form one milestone. The rules come first because the delegates and the error display depend on GOV-1. The audit log shares the transaction of each state change (D1, GOV-2.1), so it stays with the rules in the service."
+    joint_demonstration: "The Experience engineer makes a decision that GOV-1 refuses and shows the rule number in the web client. The Workflow engineer shows the audit event of an allowed decision, and the submitter's email from the same run is opened."
   - number: 4
     name: "Pilot with one team"
     folder: m4-pilot
@@ -88,6 +98,9 @@ milestones:
     end: 2027-04-09
     demo: 2027-04-09
     gate: "A pilot team's approved reports reach the ledger by the nightly file."
+    rationale: "The pilot proves the capability finance asked for: approved reports reach the ledger with no manual change (BA-3). The export job is the only new build, and the pilot team's real reports are the test of everything shown so far."
+    single_track_reason: "The pilot adds no screen and no notification. The Experience work it needs is support for the pilot team on the existing web client, which is not a deliverable item."
+    joint_demonstration: "The Experience engineer walks one pilot report from submit to Approved in the web client. The Workflow engineer runs the nightly job on it and opens the file in the finance tool with no manual change."
   - number: 5
     name: "Release"
     folder: m5-release
@@ -95,6 +108,9 @@ milestones:
     end: 2027-04-23
     demo: 2027-04-23
     gate: "The flag is on in production, the runbook is handed to operations and finance has signed off."
+    rationale: "Release proves the project can be released and run: the rehearsal with the flag on, the runbook handed to operations and the finance sign-off. It holds one item because everything it rehearses was built and shown in milestones 1 to 4."
+    single_track_reason: "Release readiness is one item of rehearsal and runbook work. It sits on the Experience track because the rehearsal runs through the web client. The Workflow engineer takes part in the rehearsal and owns no new item."
+    joint_demonstration: "The Experience engineer shows the rehearsal record, then submits and approves a report in staging with the flag on. The Workflow engineer shows the nightly file, its checksum and the audit events from the same run, then switches the flag off."
 
 target:
   date: 2027-04-23
@@ -110,25 +126,25 @@ checkpoints:
     joint_check: "The web client creates a draft against the service stub and the response validates against contracts/openapi.yaml."
   - date: 2027-02-12
     name: "Milestone 1 demonstration"
-    joint_check: "A report with one receipt goes from the form to the Submitted state, with the audit-ready state change visible in the database."
+    joint_check: "A report with one receipt goes from the form to the Submitted state, with the audit-ready state change visible in the database. Experience drives the form and Workflow shows the database."
   - date: 2027-02-26
     name: "Routing meets inbox"
     joint_check: "A submitted report produces the approval steps of section 3.5, and the inbox contract returns them for the first approver."
   - date: 2027-03-05
     name: "Milestone 2 demonstration"
-    joint_check: "A report is approved by two approvers in order from the inbox in the web client."
+    joint_check: "A report is approved by two approvers in order from the inbox in the web client. Workflow starts a report with two steps and Experience approves it at both."
   - date: 2027-03-12
     name: "Rules meet routing"
     joint_check: "A refused decision shows the rule number in the web client error message, and the report state does not change."
   - date: 2027-03-19
     name: "Milestone 3 demonstration"
-    joint_check: "A decision produces an audit event and a notification, and the submitter sees the new state."
+    joint_check: "A decision produces an audit event and a notification, and the submitter sees the new state. Workflow shows the audit event and Experience shows the notification and the submitter's view."
   - date: 2027-04-09
     name: "Pilot readout"
-    joint_check: "The nightly file for the pilot team's reports opens in the finance tool with no manual change."
+    joint_check: "The nightly file for the pilot team's reports opens in the finance tool with no manual change. Workflow produces the file, and Workflow and Experience open it together and verify the checksum."
   - date: 2027-04-23
     name: "Release"
-    joint_check: "The release rehearsal passes with the flag on in the staging environment."
+    joint_check: "The release rehearsal passes with the flag on in the staging environment. Experience runs it through the web client and Workflow shows the file, the checksum and the audit events."
 
 items:
   - id: 1
@@ -137,6 +153,7 @@ items:
     milestone: 1
     track: workflow
     owner: tamsin
+    theme: "expense service"
     complete_by: 2027-02-03
     size: "Medium, about 3 days"
     depends: []
@@ -148,8 +165,9 @@ items:
     milestone: 1
     track: experience
     owner: idris
-    complete_by: 2027-02-12
-    size: "Medium, about 4 days"
+    theme: "web client"
+    complete_by: 2027-02-10
+    size: "Medium, about 3 days"
     depends: [1]
     checkpoint: 2027-02-12
     ground_truth: "Sections 2.1, 3.3, 6.2, 7.1"
@@ -159,7 +177,8 @@ items:
     milestone: 2
     track: workflow
     owner: tamsin
-    complete_by: 2027-02-24
+    theme: "expense service"
+    complete_by: 2027-02-19
     size: "Large, about 5 days"
     depends: [1]
     checkpoint: 2027-02-26
@@ -170,7 +189,8 @@ items:
     milestone: 2
     track: experience
     owner: idris
-    complete_by: 2027-03-05
+    theme: "web client"
+    complete_by: 2027-03-03
     size: "Medium, about 4 days"
     depends: [2, 3]
     checkpoint: 2027-03-05
@@ -181,7 +201,8 @@ items:
     milestone: 3
     track: workflow
     owner: tamsin
-    complete_by: 2027-03-10
+    theme: "expense service"
+    complete_by: 2027-03-08
     size: "Medium, about 3 days"
     depends: [3]
     checkpoint: 2027-03-12
@@ -192,6 +213,7 @@ items:
     milestone: 3
     track: workflow
     owner: tamsin
+    theme: "expense service"
     complete_by: 2027-03-17
     size: "Medium, about 3 days"
     depends: [3]
@@ -203,7 +225,8 @@ items:
     milestone: 3
     track: experience
     owner: idris
-    complete_by: 2027-03-19
+    theme: "notification worker"
+    complete_by: 2027-03-17
     size: "Medium, about 4 days"
     depends: [4, 6]
     checkpoint: 2027-03-19
@@ -214,6 +237,7 @@ items:
     milestone: 4
     track: workflow
     owner: tamsin
+    theme: "export job"
     complete_by: 2027-04-06
     size: "Medium, about 4 days"
     depends: [7]
@@ -226,6 +250,7 @@ items:
     milestone: 5
     track: experience
     owner: idris
+    theme: "release"
     complete_by: 2027-04-21
     size: "Medium, about 3 days"
     depends: [8, 9]

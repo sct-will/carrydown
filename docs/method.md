@@ -41,6 +41,23 @@ Items are the smallest pieces an engineer can finish, show and close, usually tw
 
 Items that depend on something the program provides (a pilot team, an approval, a review) carry a "program input" note. The program's own work is not in the plan. It leaves a gap in the numbering.
 
+## Planning rigor
+
+A generated task list and a plan look alike on a board. What separates them is the reasoning, so the plan writes it down. These ten rules were worked out by hand with a real team. The ground-truth skill drafts by them and the checker's planning review reads the plan against them.
+
+1. A milestone is the thinnest vertical slice that proves one user-visible capability end to end, named for what a user can do after it. The first proves the whole path with the least behaviour. The last proves the project can be released and run.
+2. A milestone holds items from every track the capability crosses, and the tracks meet at a named joint check before the demonstration. A milestone that stays inside one track says why.
+3. The exit gate is one sentence the program can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show together.
+4. Inside a milestone the shared contract comes first, so both tracks can start without waiting. The first week leaves nobody idle.
+5. Each engineer's consecutive items stay in one part of the system, a theme. Related items for the same person sit in adjacent days to cut context switching.
+6. Size in days divided by allocation gives calendar working days: four days at 60 percent is nearly seven working days. Nobody is planned past 100 percent of allocated capacity in a work unit, aim for about 80, and days off and breaks are real.
+7. Slack sits before every checkpoint and demonstration. An item that completes on its checkpoint date has none.
+8. The critical path is read for single points of failure. If it runs through one person, the plan says so and offers an alternative.
+9. Program-owned work stays outside the plan as id gaps.
+10. The plan records its rationale where a reviewer can argue with it: for each milestone, why these items form it and what the joint demonstration proves, and for each track, why its items are in this order. The plan owner reads the plan week by week, adversarially, before anything is scaffolded.
+
+In `plan.yaml` the rationale is `rationale`, `joint_demonstration` and, when needed, `single_track_reason` on each milestone, `order_rationale` on each track and `theme` on each item. The scaffold copies it into each `milestone.md` and into the "How this plan was composed" section of the specification README. The checker fails a plan that leaves a reason out, and `check_specs.py --report` ends with the planning review for the plan owner to read.
+
 ## Step 4 in more detail
 
 Every specification has the same sections, in the same order: why the item exists, outcome, context for the agent, contract or protocol, implementation guide, acceptance criteria, evidence of completion, integration points, out of scope, watch out for, references, decisions recorded. Contract excerpts are copied word for word. When the writer finds a contradiction in the ground truth, the specification records which side wins, and the contradiction goes onto the list for the next version of the document.

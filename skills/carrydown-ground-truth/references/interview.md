@@ -36,6 +36,7 @@ Ask.
 
 1. Who will do the work? A name or handle for each person.
 2. Which track does each person own? A track is a lane of work, for example back end, front end, data, platform. Each person owns one track.
+   Then ask which parts of the system each track touches, a few words each, such as "web client", "notification worker" or "export job". These become the themes. The plan keeps each person on one theme at a time, so they switch context less.
 3. When does each person start, and which days are they off?
    Then, in one line, confirm the percent allocation: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" Do not ask for a figure per person unless the answer is no. If the answer is no, ask for the figure for each person who is lower. A person at 60 percent has three working days in five for this plan.
 4. Is there anyone who advises and owns no items, such as someone from security or the author of a policy?
@@ -74,6 +75,7 @@ Ask.
 1. Which agentic editors do the engineers use? Any editor or command line agent that reads Agent Skills works. The README lists the ones the installer knows.
 2. Who is the program, the people who watch the milestone demonstrations and decide pass or fail, and how long can they give? A default: 45 minutes, once per milestone.
 3. What must the audience see to say "this milestone is done"? Write down their words. They become acceptance criteria.
+4. Who gives each demonstration? A default: the engineers whose tracks meet in the milestone, together, each showing their half of the same run. Ask whether anyone else must take part, such as an advisor.
 
 ### The program boundary
 
@@ -104,10 +106,11 @@ Write it as a short list the user can correct.
 
 - Ground truth: files, winner on conflict, version.
 - People and tracks, start dates, days off, advisors, lead reviewer.
+- Parts of the system each track touches (the themes).
 - Time frame and pauses, longest work unit, checkpoint rhythm.
 - Repository, Epic, labels, logins.
 - Agents in use.
-- Demonstration audience and what they must see.
+- Demonstration audience, what they must see, and who gives each demonstration.
 - Program-owned work and the items that wait for it.
 - Conventions: test, lint, flag, branch, extra rules.
 

@@ -16,6 +16,15 @@ It is the core of the product. Everything after it adds rules, trail and edges t
 The demonstration proves that routing and the inbox agree on the step order, and that a report can be approved by two people in turn.
 It feeds work unit 3, where the rules and the audit trail attach to decisions that already exist.
 
+## Why these items form this milestone
+
+<!-- Written from plan.yaml. Change it there, then run scaffold_spec.py --refresh-headers --apply. -->
+
+Routing and the inbox are the two halves of one capability: a submitted report reaches its approvers and they decide it. Neither can be shown alone, because the steps mean nothing without an inbox and the inbox is empty without steps. The Routing meets inbox checkpoint on 2027-02-26 joins them a week before the demonstration.
+
+- Workflow: WI-03 (expense service).
+- Experience: WI-04 (web client).
+
 ## Expected outcomes
 
 - A submitted report receives approval steps by the table in section 3.5 of the architecture document.
@@ -33,6 +42,15 @@ The milestone is accepted when the program has seen each of these at the demonst
 - [ ] A reject without a comment was refused, and a return with a comment reached the submitter as Returned.
 - [ ] A report above 25,000.00 answered E_LIMIT and was not routed.
 
+## Joint demonstration
+
+<!-- Written from plan.yaml. Change it there, then run scaffold_spec.py --refresh-headers --apply. -->
+
+The Workflow engineer submits reports in each band of section 3.5 and shows the steps built for them. The Experience engineer approves one report as two approvers in turn from the inbox, and it reaches Approved only after the last step.
+
+Given together on 2027-03-05 by the engineers of the Workflow and Experience tracks.
+The joint check for that date, Milestone 2 demonstration: A report is approved by two approvers in order from the inbox in the web client. Workflow starts a report with two steps and Experience approves it at both.
+
 ## Demonstration expectations
 
 - Given on 2027-03-05 by the people who own the items, to the program, in one meeting session, showing the work items of this milestone working together.
@@ -43,8 +61,8 @@ The milestone is accepted when the program has seen each of these at the demonst
 
 | Id | Work item | Track | Complete by |
 | --- | --- | --- | --- |
-| WI-03 | [Approval routing engine](wi-03-routing-engine.md) | Workflow | 2027-02-24 |
-| WI-04 | [Approver inbox and decisions](wi-04-approver-inbox.md) | Experience | 2027-03-05 |
+| WI-03 | [Approval routing engine](wi-03-routing-engine.md) | Workflow | 2027-02-19 |
+| WI-04 | [Approver inbox and decisions](wi-04-approver-inbox.md) | Experience | 2027-03-03 |
 
 ## References
 

@@ -9,6 +9,7 @@ How it was made.
 - A new private repository, `your-user/your-test-repo` (a placeholder for the real name), held a copy of the sample folder so that the links in the issues resolve.
 - The commands ran from the root of the repository. Output is as printed, with the token removed and file paths shortened. The scripts never print the token.
 - The scripts have since gained a Constraints block in the Epic comment (the target delivery and the allocation by track) and a target delivery line in every sub-epic. The write blocks below predate it. The dry runs print the block before anything is written. The project is fictional. The numbers are the real issue numbers the run created: Epic #1, sub-epics #2 to #6, work items #7 to #15.
+- The sample dates have since moved so that every item has slack before its checkpoint, and the plan gained its rationale. The write blocks below show the earlier dates. The blocks that need no GitHub account show the current ones.
 - The blocks that need no GitHub account were run again with the current scripts: the help text, the token walkthrough, the renderer, the scaffold, the checker, the dry runs (with `--offline`, so they read nothing from GitHub) and the developer skill. The blocks that talk to GitHub are as recorded in the original run: the token check, the writes, the second runs, the verifications and the independent count.
 - The scripts took about three and a half minutes in total, most of it pauses that keep GitHub from rate limiting the writes. Reading the dry runs takes longer than running the scripts.
 
@@ -219,7 +220,7 @@ The checker found problems. Run check_specs.py to see them, fix them, or pass --
 
 ## 5. Check
 
-The checker finds the worked sample clean. The report shows the schedule, the load table, the critical path, the program items and the checkpoints.
+The checker finds the worked sample clean. The report shows the schedule, the load table, the critical path, the program items, the checkpoints and the planning review.
 
 ```text
 $ python3 scripts/check_specs.py --root sample/expense-approvals
@@ -243,14 +244,15 @@ Load (sized days of work against allocated capacity, per person and work unit)
   Capacity is the working days a person has in the work unit, minus days off, times their percent allocation.
   Person  Alloc  WU1             WU2             WU3             WU4             WU5            Total          
   tamsin  100%   3 of 10d (30%)  5 of 14d (36%)  6 of 10d (60%)  4 of 10d (40%)  0 of 10d       18 of 54d (33%)
-  idris   60%    4 of 6d (67%)   4 of 9d (44%)   4 of 5d (74%)   0 of 6d         3 of 6d (50%)  15 of 32d (46%)
+  idris   60%    3 of 6d (50%)   4 of 9d (44%)   4 of 5d (74%)   0 of 6d         3 of 6d (50%)  14 of 32d (43%)
   No person is over 100 percent of allocated capacity in any work unit.
 
 Critical path (longest dependency chain to the last item)
-  WI-02 -> WI-04 -> WI-08 -> WI-11  (79 calendar days)
-    WI-02 Report form and receipt upload, by 2027-02-12, idris
-    WI-04 Approver inbox and decisions, by 2027-03-05, idris
-    WI-08 Notifications and delegates, by 2027-03-19, idris
+  WI-01 -> WI-02 -> WI-04 -> WI-08 -> WI-11  (79 calendar days)
+    WI-01 Service scaffold, flag and API contract, by 2027-02-03, tamsin
+    WI-02 Report form and receipt upload, by 2027-02-10, idris
+    WI-04 Approver inbox and decisions, by 2027-03-03, idris
+    WI-08 Notifications and delegates, by 2027-03-17, idris
     WI-11 Release readiness and runbook, by 2027-04-21, idris
 
 Target
@@ -261,13 +263,13 @@ Fit (working days each item needs, from its size and its owner's allocation, aga
   Every sized item fits between its last dependency and its complete_by date.
 
 Earliest finish (forward pass over the dependencies, from sizes and allocation)
-  WI-01 -> WI-02 -> WI-04 -> WI-08 -> WI-11  ends 2027-03-12
+  WI-01 -> WI-02 -> WI-04 -> WI-08 -> WI-11  ends 2027-03-10
     WI-01 2027-02-01 to 2027-02-03, about 3.0 working days
-    WI-02 2027-02-04 to 2027-02-12, about 6.7 working days
-    WI-04 2027-02-15 to 2027-02-23, about 6.7 working days
-    WI-08 2027-02-24 to 2027-03-04, about 6.7 working days
-    WI-11 2027-03-05 to 2027-03-12, about 5.0 working days
-  It meets the target 2027-04-23 with 42 day(s) to spare. The planned dates add the slack between items.
+    WI-02 2027-02-04 to 2027-02-10, about 5.0 working days
+    WI-04 2027-02-11 to 2027-02-19, about 6.7 working days
+    WI-08 2027-02-22 to 2027-03-02, about 6.7 working days
+    WI-11 2027-03-03 to 2027-03-10, about 5.0 working days
+  It meets the target 2027-04-23 with 44 day(s) to spare. The planned dates add the slack between items.
   Owners are not serialised in this pass. The load table above shows whether each person's work fits each work unit.
 
 Program-owned items (outside the development plan; referenced only as program input)
@@ -283,6 +285,38 @@ Checkpoints
   2027-03-19  Milestone 3 demonstration: WI-07, WI-08
   2027-04-09  Pilot readout: WI-09
   2027-04-23  Release: WI-11
+
+Planning review (advisory, except lines marked finding; the rules are in references/planning.md)
+  Milestone composition (rules 1 to 3)
+    Milestone 1, Submit an expense report: Workflow (WI-01), Experience (WI-02).
+      The joint check on 2027-02-12 names Workflow and Experience.
+    Milestone 2, Route to approvers: Workflow (WI-03), Experience (WI-04).
+      The joint check on 2027-03-05 names Workflow and Experience.
+    Milestone 3, Enforce policy: Workflow (WI-06, WI-07), Experience (WI-08).
+      The joint check on 2027-03-19 names Workflow and Experience.
+    Milestone 4, Pilot with one team: Workflow (WI-09) only.
+      One track, because: The pilot adds no screen and no notification. The Experience work it needs is support for the pilot team on the existing web client, which is not a deliverable item.
+      The joint check on 2027-04-09 names Workflow and Experience.
+    Milestone 5, Release: Experience (WI-11) only.
+      One track, because: Release readiness is one item of rehearsal and runbook work. It sits on the Experience track because the rehearsal runs through the web client. The Workflow engineer takes part in the rehearsal and owns no new item.
+      The joint check on 2027-04-23 names Workflow and Experience.
+  Order of work per track (rules 4, 5 and 10)
+    Workflow: WI-01, WI-03, WI-06, WI-07, WI-09. Order rationale given.
+    Experience: WI-02, WI-04, WI-08, WI-11. Order rationale given.
+  Theme switches (consecutive items of one owner, by date)
+    tamsin: 1 switch, 0 inside a milestone.
+      WI-07 (expense service) to WI-09 (export job), across milestones 3 and 4.
+    idris: 2 switches, 0 inside a milestone.
+      WI-04 (web client) to WI-08 (notification worker), across milestones 2 and 3.
+      WI-08 (notification worker) to WI-11 (release), across milestones 3 and 5.
+  Slack before checkpoints (rule 7)
+    Every item completes before its checkpoint. The least slack is 2 working day(s), WI-01 before 2027-02-05.
+  Critical path owners (rule 8)
+    WI-01 -> WI-02 -> WI-04 -> WI-08 -> WI-11: tamsin (WI-01), idris (WI-02, WI-04, WI-08, WI-11).
+  Load ratio (rule 6)
+    Share of allocated capacity over the plan: tamsin 18 of 54d (33%), idris 14 of 32d (43%).
+    Highest to lowest is 1.3 to 1 (idris to tamsin).
+  0 finding(s).
 [exit 0]
 ```
 
@@ -340,12 +374,12 @@ Would then link each work item under its sub-epic and each sub-epic under the Ep
 rewrite dependency ids in the bodies to issue links, update the sub-epic work item lists,
 and post the Epic roll-up comment.
   WI-01  workflow     2027-02-03  depends: -
-  WI-02  experience   2027-02-12  depends: WI-01
-  WI-03  workflow     2027-02-24  depends: WI-01
-  WI-04  experience   2027-03-05  depends: WI-02, WI-03
-  WI-06  workflow     2027-03-10  depends: WI-03
+  WI-02  experience   2027-02-10  depends: WI-01
+  WI-03  workflow     2027-02-19  depends: WI-01
+  WI-04  experience   2027-03-03  depends: WI-02, WI-03
+  WI-06  workflow     2027-03-08  depends: WI-03
   WI-07  workflow     2027-03-17  depends: WI-03
-  WI-08  experience   2027-03-19  depends: WI-04, WI-06
+  WI-08  experience   2027-03-17  depends: WI-04, WI-06
   WI-09  workflow     2027-04-06  depends: WI-07  program input: the pilot team, named by the program
   WI-11  experience   2027-04-21  depends: WI-08, WI-09  program input: finance sign-off on the export format and retention period
 

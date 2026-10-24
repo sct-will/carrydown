@@ -16,6 +16,16 @@ The last item is the runbook and the release rehearsal. It needs the program's f
 The demonstration proves the service can be switched on in production, run, and switched off again.
 After it, the service is in the hands of operations.
 
+## Why these items form this milestone
+
+<!-- Written from plan.yaml. Change it there, then run scaffold_spec.py --refresh-headers --apply. -->
+
+Release proves the project can be released and run: the rehearsal with the flag on, the runbook handed to operations and the finance sign-off. It holds one item because everything it rehearses was built and shown in milestones 1 to 4.
+
+- Experience: WI-11 (release).
+
+Why one track: Release readiness is one item of rehearsal and runbook work. It sits on the Experience track because the rehearsal runs through the web client. The Workflow engineer takes part in the rehearsal and owns no new item.
+
 ## Expected outcomes
 
 - The runbook covers start, stop, the flag, the nightly job, re-route requests and restore from backup.
@@ -32,6 +42,15 @@ The milestone is accepted when the program has seen each of these at the demonst
 - [ ] The accessibility check of the report form and the inbox reported no failures at level AA.
 - [ ] Switching the flag off returned the service to health check only, and switching it on restored it.
 - [ ] The program recorded finance sign-off before the demonstration.
+
+## Joint demonstration
+
+<!-- Written from plan.yaml. Change it there, then run scaffold_spec.py --refresh-headers --apply. -->
+
+The Experience engineer shows the rehearsal record, then submits and approves a report in staging with the flag on. The Workflow engineer shows the nightly file, its checksum and the audit events from the same run, then switches the flag off.
+
+Given together on 2027-04-23 by the engineers of the Workflow and Experience tracks.
+The joint check for that date, Release: The release rehearsal passes with the flag on in the staging environment. Experience runs it through the web client and Workflow shows the file, the checksum and the audit events.
 
 ## Demonstration expectations
 

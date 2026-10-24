@@ -16,6 +16,15 @@ Before this milestone the client and the service were designed against the same 
 The demonstration proves that the contract frozen at the first checkpoint holds from the form to the stored report.
 It feeds the start of work unit 2. The routing engine takes real submitted reports as its input from here on.
 
+## Why these items form this milestone
+
+<!-- Written from plan.yaml. Change it there, then run scaffold_spec.py --refresh-headers --apply. -->
+
+The service scaffold with the API contract and the report form are the thinnest slice that proves the whole path: a report goes from the web client through the API to the database. The contract comes first so the form starts from a frozen shape at the Contract freeze checkpoint. Routing, rules and export stay out, so the path is proven with the least behaviour.
+
+- Workflow: WI-01 (expense service).
+- Experience: WI-02 (web client).
+
 ## Expected outcomes
 
 - The service runs behind the feature flag, answers its health check with the flag off and refuses every other path.
@@ -33,6 +42,15 @@ The milestone is accepted when the program has seen each of these at the demonst
 - [ ] A response from the service validated against `contracts/openapi.yaml` during the demonstration.
 - [ ] The receipt larger than 10 MB and the file of a wrong type were both refused with E_VALIDATION.
 
+## Joint demonstration
+
+<!-- Written from plan.yaml. Change it there, then run scaffold_spec.py --refresh-headers --apply. -->
+
+The Experience engineer creates a report with one receipt in the web client and submits it. The Workflow engineer shows the Submitted state and the stored receipt in the database from the same run.
+
+Given together on 2027-02-12 by the engineers of the Workflow and Experience tracks.
+The joint check for that date, Milestone 1 demonstration: A report with one receipt goes from the form to the Submitted state, with the audit-ready state change visible in the database. Experience drives the form and Workflow shows the database.
+
 ## Demonstration expectations
 
 - Given on 2027-02-12 by the people who own the items, to the program, in one meeting session, showing the work items of this milestone working together.
@@ -44,7 +62,7 @@ The milestone is accepted when the program has seen each of these at the demonst
 | Id | Work item | Track | Complete by |
 | --- | --- | --- | --- |
 | WI-01 | [Service scaffold, flag and API contract](wi-01-service-scaffold.md) | Workflow | 2027-02-03 |
-| WI-02 | [Report form and receipt upload](wi-02-report-form.md) | Experience | 2027-02-12 |
+| WI-02 | [Report form and receipt upload](wi-02-report-form.md) | Experience | 2027-02-10 |
 
 ## References
 

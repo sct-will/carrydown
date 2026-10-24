@@ -71,7 +71,7 @@ This writes a starter `docs/spec/plan.yaml` from the template. Fill it in during
 
 ### 4. Draft the plan with the user
 
-Read `references/planning.md` and follow its steps, stopping for a decision at each: what must exist, milestones, work units, work items, dates, the load table and critical path, the program boundary, and an adversarial review of the plan. Start that review with this sentence, word for word: "List what is missing, wrong or improvable in this plan, reading it as each engineer would live it week by week." Show the load table with `python3 <skill>/scripts/check_specs.py --root . --report`. Save the result in `plan.yaml` and run the report again.
+Read `references/planning.md` and follow its steps, stopping for a decision at each: what must exist, milestones and their composition, work units, work items, dates, the load table and critical path, the program boundary, an adversarial review of the plan, and the rationale. Start that review with this sentence, word for word: "List what is missing, wrong or improvable in this plan, reading it as each engineer would live it week by week." The plan records its rationale: why each milestone holds its items, what the engineers show together at its demonstration, and why each track's items are in their order. Run `python3 <skill>/scripts/check_specs.py --root . --report` and show the user the load table and the planning review block. Save the result in `plan.yaml` and run the report again.
 
 ### 5. Write milestones and specifications
 
@@ -93,4 +93,4 @@ Run the review prompts from `references/review-prompts.md` once more on the fini
 
 ## What good looks like
 
-Every item has a file a coding agent can start from without opening the original document. Every acceptance criterion can be proven by a named test or a recorded check. Every milestone has an exit gate and acceptance criteria written before the work starts. The checker reports 0 findings, and the user has read the plan.
+Every item has a file a coding agent can start from without opening the original document. Every acceptance criterion can be proven by a named test or a recorded check. Every milestone has an exit gate, acceptance criteria written before the work starts, and a rationale a reviewer can argue with. The checker reports 0 findings, and the user has read the plan.

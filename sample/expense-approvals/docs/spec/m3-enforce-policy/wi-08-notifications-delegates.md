@@ -4,7 +4,7 @@
 | --- | --- |
 | Milestone | Milestone 3, Enforce policy (`m3-enforce-policy`), work unit 3 |
 | Track | Experience |
-| Target | Complete by 2027-03-19 (work unit 3, Enforce policy, 2027-03-08 to 2027-03-19) |
+| Target | Complete by 2027-03-17 (work unit 3, Enforce policy, 2027-03-08 to 2027-03-19) |
 | Checkpoint | 2027-03-19, Milestone 3 demonstration |
 | Demonstration | 2027-03-19, milestone 3 demonstration (acceptance criteria in `milestone.md` in this folder) |
 | Size | Medium, about 4 days |
@@ -124,7 +124,7 @@ The counterpart items on the Workflow track are WI-07 Audit log and retention, w
 - Crosses the boundary. The `report.state_changed` event of 7.2 on the queue, the service account that reads `GET /reports/{id}`, and `PUT /delegates` in `contracts/openapi.yaml`.
 - Joint check. A decision produces an audit event and a notification, and the submitter sees the new state. This item shows the notification and the submitter's view for the decision made together. The Workflow person shows the audit_event row for the same decision.
 - Handoff on close. Tell the Workflow track which item publishes the event, what the service account reads, the request body of `PUT /delegates`, and where the reminder number 3 is held.
-- Timing. WI-07 is due on 2027-03-17, one day before this item. Agree the decision used for the joint check by 2027-03-15.
+- Timing. WI-07 is due on 2027-03-17, the same day as this item. Agree the decision used for the joint check by 2027-03-15.
 
 ## Out of scope
 
