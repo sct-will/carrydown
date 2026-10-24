@@ -10,7 +10,7 @@ The following content is licensed under the Creative Commons Attribution 4.0 Int
 - The documents in `docs/`, `README.md` and `START-HERE.md`.
 - Any images in this repository.
 
-The flow diagram (`docs/images/flow.png`) and the hero image (`docs/images/hero.png`) may be reused under CC BY 4.0 with attribution to Will Scott.
+The flow diagram (`docs/images/flow.png`), the handoff diagram (`docs/images/handoff.png`) and the hero image (`docs/images/hero.png`) may be reused under CC BY 4.0 with attribution to Will Scott.
 
 You may share and adapt this content for any purpose, including commercial use, as long as you give appropriate credit, link to the licence, and indicate if you made changes. Do not suggest that the licensor endorses you or your use.
 
