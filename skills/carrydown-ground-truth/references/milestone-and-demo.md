@@ -1,6 +1,6 @@
 # Milestones, demonstrations and checkpoints
 
-Progress is shown, not reported. Three things carry it.
+Progress is shown with working software and evidence. Three things carry it.
 
 ## Milestone file
 

@@ -51,7 +51,7 @@ If an Epic exists, the script posts one comment. It opens with a Constraints blo
 - Issues are matched by a hidden marker in the body (`<!-- carrydown:WI-07 -->`), and by title for issues made before the marker existed. A rerun finds what exists, creates only what is missing and repairs missing links.
 - Existing issue bodies are left alone. Pass `--update-bodies` to rewrite them from the specs. This overwrites hand edits on GitHub.
 - Dependency links and the sub-epic lists are filled in after creation, once the issue numbers are known, for issues created in the same run.
-- Renaming an item changes its title, so the next run would create a new issue. Rename on GitHub first, or leave the title alone.
+- Renaming an item in `plan.yaml` is safe. The next run finds the issue by its marker and creates nothing new. The script never changes an issue title, not even with `--update-bodies`, so the title on GitHub keeps the old name until someone edits it there. An issue made before the marker existed is matched by title only: rename that one on GitHub first.
 
 ## Closing the loop
 

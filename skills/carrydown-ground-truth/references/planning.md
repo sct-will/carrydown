@@ -29,7 +29,7 @@ Aim for three to six milestones. Put contracts that two tracks share into the fi
 
 ### Milestone composition
 
-Three rules decide what goes into a milestone. They are rules, not advice.
+Three rules decide what goes into a milestone. Apply every one of them each time.
 
 1. A milestone is the thinnest vertical slice that proves one user-visible capability end to end. Name it for what a user can do after it. The first milestone proves the whole path with the least behaviour. The last proves the project can be released and run.
 2. A milestone holds items from every track the capability crosses. The tracks meet at a named joint check, a checkpoint with a `joint_check`, before the demonstration. The joint check names each track that meets there. A milestone that stays inside one track says why, in `single_track_reason`.

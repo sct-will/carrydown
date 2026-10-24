@@ -6,7 +6,7 @@ This is a sample. The project is fictional. The people, the company and the numb
 
 It shows what the two carrydown skills produce from a short ground truth, including the skill they generate for the engineers.
 
-This folder is published twice. It lives in the main carrydown repository at `sample/expense-approvals/`, and it is the root of the repository https://github.com/sct-will/carrydown-sample, where the carrydown scripts created the real issues and the project board from this plan. The README of that repository shows the renderings and the sample output.
+This folder is published twice. It lives in [the main carrydown repository](https://github.com/sct-will/carrydown) at `sample/expense-approvals/`, and it is the root of [the carrydown-sample repository](https://github.com/sct-will/carrydown-sample), where the carrydown scripts created the real issues and the project board from this plan. The README of that repository shows the renderings and the sample output.
 
 ## What is here
 
@@ -43,7 +43,7 @@ The first three need no token and no network. The `--offline` form of `github_sy
 
 ## On GitHub
 
-The issues and the public board for this plan are in the sample repository: https://github.com/sct-will/carrydown-sample/issues and https://github.com/users/sct-will/projects/2. Start with the board's Board view. The Roadmap view shows bars only after its date fields are chosen by hand once (Complete by, and Checkpoint for markers), because the script does not set them yet. That click is in the list `github_project.py` prints at the end of every run.
+The issues and the public board for this plan are in the sample repository: [its issues](https://github.com/sct-will/carrydown-sample/issues) and [the public board](https://github.com/users/sct-will/projects/2). Start with the board's Board view. The Roadmap view shows bars only after its date fields are chosen by hand once (Complete by, and Checkpoint for markers), because the script does not set them yet. That click is in the list `github_project.py` prints at the end of every run.
 
 ## Make it yours
 

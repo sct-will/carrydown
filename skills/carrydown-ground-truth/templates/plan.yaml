@@ -88,7 +88,7 @@ target:                                  # OPTIONAL. When the plan must be deliv
   date: 2027-01-29                       # the target date, or instead:
   # weeks: 4                             # working weeks from the start of the first work unit. Breaks add to it:
                                          # target = start + 7 * (weeks + break weeks) - 3 days, a Friday.
-  # derived: true                        # add this when the date is not a constraint but was worked out from the
+  # derived: true                        # add this when the date was worked out from the people and the
                                          # critical path. Leave the whole block out if there is no target yet.
 
 breaks:                                  # pauses between work units, optional. Each one a date range.

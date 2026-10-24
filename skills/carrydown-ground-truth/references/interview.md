@@ -71,7 +71,7 @@ Begin with `carrydown: interview, step 5 of 6`.
 
 Ask.
 
-1. Which agentic editors do the engineers use? Any editor or command line agent that reads Agent Skills works. The installer's list of agents and their `-a` values is at https://github.com/vercel-labs/skills/blob/main/docs/agents.md.
+1. Which agentic editors do the engineers use? Any editor or command line agent that reads Agent Skills works. The installer's [list of agents and their `-a` values](https://github.com/vercel-labs/skills/blob/main/docs/agents.md) has them all.
 2. Who are the stakeholders, the people accountable for the outcome, who watch the milestone demonstrations and decide pass or fail, and how long can they give? A default: 45 minutes, once per milestone.
 3. What must the stakeholders see to say "this milestone is done"? Write down their words. They become acceptance criteria.
 4. Who gives each demonstration? A default: the engineers whose tracks meet in the milestone, together, each showing their half of the same run. Ask whether anyone else must take part, such as an advisor.
@@ -117,4 +117,4 @@ Say: "If this is right, I will render the documents and draft the plan. Nothing 
 
 Offer the dry run for every script.
 
-If the user wants to see the whole flow first, give them the browser links to open themselves, never a local folder. Do not open the links with a browser tool. An install copies only this skill folder, so the sample is not on their computer. The sample repository is https://github.com/sct-will/carrydown-sample. Its README holds the renderings and the sample output, and the repository has the live issues and the public board.
+If the user wants to see the whole flow first, give them the browser links to open themselves, never a local folder. Do not open the links with a browser tool. An install copies only this skill folder, so the sample is not on their computer. The sample is in [the carrydown-sample repository](https://github.com/sct-will/carrydown-sample). Its README holds the renderings and the sample output, and the repository has the live issues and the public board.

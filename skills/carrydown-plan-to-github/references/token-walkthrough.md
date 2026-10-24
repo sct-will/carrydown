@@ -10,7 +10,7 @@ Pick by who owns the project board.
 
 Fine-grained token, for a board owned by an organisation. Use this whenever you can. It reaches only the one repository.
 
-- Create it at https://github.com/settings/personal-access-tokens/new
+- Create it on [the new fine-grained token page](https://github.com/settings/personal-access-tokens/new).
 - Token name: carrydown. Expiration: 7 days.
 - Resource owner: the organisation that owns the repository.
 - Repository access: only the one repository.
@@ -20,7 +20,7 @@ Fine-grained token, for a board owned by an organisation. Use this whenever you 
 
 Classic token, only for a board owned by your user account. GitHub does not let fine-grained tokens use projects that belong to a user account.
 
-- Create it with the pre-filled link https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown. It ticks `repo` and `project` and names the token for you.
+- Create it with [the pre-filled new classic token page](https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown). It ticks `repo` and `project` and names the token for you.
 - Set the expiry to 7 days.
 
 Copy the token when GitHub shows it. It is shown once. When the plan and the board are on GitHub, revoke the token. Make a new one if you need it again.
@@ -67,7 +67,7 @@ Many organisations require single sign-on (SSO). A classic token that works for 
 
 To fix it:
 
-1. Open https://github.com/settings/tokens.
+1. Open [your GitHub tokens page](https://github.com/settings/tokens).
 2. Find the token and click its Configure SSO button.
 3. Click Authorize next to the organisation and complete the sign-in.
 4. Run `github_token.py --check --repo owner/name` again.
@@ -82,5 +82,5 @@ In this order: the `--token-file` option, the environment variable `CARRYDOWN_GI
 
 - Never commit the token or the folder it lives in. Do not store it under a project directory.
 - Never print it, echo it or put it in a command line.
-- Never paste it into an issue, chat or document. If you do, revoke it right away at https://github.com/settings/tokens and make a new one.
+- Never paste it into an issue, chat or document. If you do, revoke it right away on [your GitHub tokens page](https://github.com/settings/tokens) and make a new one.
 - Revoke the token when the plan and the board are on GitHub.

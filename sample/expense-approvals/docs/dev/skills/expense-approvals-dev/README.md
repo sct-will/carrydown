@@ -34,7 +34,7 @@ npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/s
 npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev -a bob
 ```
 
-The general form is `npx skills add <repository tree url for this folder> -a <agent>`. The agent names come from the skills tool; run `npx skills add --help` or see https://skills.sh for the full list. If the repository is private, the tool uses the Git credentials already configured on your computer.
+The general form is `npx skills add <repository tree url for this folder> -a <agent>`. The agent names come from the skills tool; run `npx skills add --help` or see [the installer's list of agents](https://github.com/vercel-labs/skills/blob/main/docs/agents.md) for the full list. If the repository is private, the tool uses the Git credentials already configured on your computer.
 
 ### Option 2, copy or link the folder
 

@@ -17,7 +17,7 @@ npx skills add <repository tree url of the skill folder> -a gemini-cli
 npx skills add <repository tree url of the skill folder> -a bob
 ```
 
-The tree url looks like `https://github.com/<owner>/<repo>/tree/<branch>/<dev_skill_path>`. For a private repository the tool uses the Git credentials already on the computer. `npx skills add --help` lists every option, and https://skills.sh lists every supported agent.
+The tree url looks like `https://github.com/<owner>/<repo>/tree/<branch>/<dev_skill_path>`. For a private repository the tool uses the Git credentials already on the computer. `npx skills add --help` lists every option, and [the installer's list of agents](https://github.com/vercel-labs/skills/blob/main/docs/agents.md) has every supported agent.
 
 ## By copying or linking the folder
 
