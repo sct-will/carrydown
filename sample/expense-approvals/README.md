@@ -11,7 +11,7 @@ This folder is published twice. It lives in the main carrydown repository at `sa
 | Path | What it is | Made by |
 | --- | --- | --- |
 | `ground-truth/architecture.md` | The source document. About eight pages: context, requirements, architecture, two governance rules, a development standard, a business analyst note, interfaces and risks. | You |
-| `people.yaml` | Two people with tracks, days off, and an advisor. | The interview |
+| `people.yaml` | Two people with tracks, percent allocation (one at 100, one at 60), days off, and an advisor. | The interview |
 | `timeline.yaml` | Start date, target date, 11 weeks of work, a pause week, the program-owned items, conventions. | The interview |
 | `docs/ground-truth/architecture.md` | The rendering with a section index. | `render_ground_truth.py` |
 | `docs/ground-truth/architecture.index.txt` | One line per heading with its line number. | `render_ground_truth.py` |

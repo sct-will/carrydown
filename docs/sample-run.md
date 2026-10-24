@@ -230,10 +230,12 @@ Schedule
   Work unit 5, Release: 2027-04-12 to 2027-04-23 (demonstration 2027-04-23)
   Break, Offsite and planning week: 2027-03-22 to 2027-03-26
 
-Load (items per person per work unit, with sized days where the size says 'about N days')
-  Person  WU1     WU2     WU3     WU4     WU5     Total  
-  tamsin  1 (3d)  1 (5d)  2 (6d)  1 (4d)  0       5 (18d)
-  idris   1 (4d)  1 (4d)  1 (4d)  0       1 (3d)  4 (15d)
+Load (sized days of work against allocated capacity, per person and work unit)
+  Capacity is the working days a person has in the work unit, minus days off, times their percent allocation.
+  Person  Alloc  WU1             WU2             WU3             WU4             WU5            Total          
+  tamsin  100%   3 of 10d (30%)  5 of 14d (36%)  6 of 10d (60%)  4 of 10d (40%)  0 of 10d       18 of 54d (33%)
+  idris   60%    4 of 6d (67%)   4 of 9d (44%)   4 of 5d (74%)   0 of 6d         3 of 6d (50%)  15 of 32d (46%)
+  No person is over 100 percent of allocated capacity in any work unit.
 
 Critical path (longest dependency chain to the last item)
   WI-02 -> WI-04 -> WI-08 -> WI-11  (79 calendar days)
@@ -241,6 +243,10 @@ Critical path (longest dependency chain to the last item)
     WI-04 Approver inbox and decisions, by 2027-03-03, idris
     WI-08 Notifications and delegates, by 2027-03-18, idris
     WI-11 Release readiness and runbook, by 2027-04-21, idris
+
+Target
+  Target: 2027-04-23
+  The critical path ends 2027-04-21: it meets the target with 2 day(s) to spare.
 
 Program-owned items (outside the development plan; referenced only as program input)
   WI-05 Pilot team recruitment

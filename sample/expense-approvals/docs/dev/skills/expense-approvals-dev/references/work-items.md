@@ -13,6 +13,10 @@ Generated from `plan.yaml`. The GitHub issues hold the owners, status and dates 
 | 4, Pilot with one team | 2027-03-29 to 2027-04-09 | A pilot team's approved reports reach the ledger by the nightly file. |
 | 5, Release | 2027-04-12 to 2027-04-23 | The flag is on in production, the runbook is handed to operations and finance has signed off. |
 
+Target. 2027-04-23.
+
+Allocation. People are allocated as a percentage of their working time to this plan. By track, the allocation adds up to Workflow 100 percent, Experience 60 percent. The dates in this plan already account for it, so a track at less than 100 percent has fewer working days in each work unit.
+
 ## Milestone 1, Submit an expense report (`m1-submit-report`)
 
 Exit gate. A staff member creates a report with a receipt in the web client and submits it through the service.

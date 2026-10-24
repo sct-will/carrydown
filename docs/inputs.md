@@ -2,6 +2,18 @@
 
 The ground-truth skill interviews you for these. You can prepare them first, or answer as it asks. If you do not know an answer, use the default or say "decide later" and the agent will mark it.
 
+## Three required inputs
+
+The agent will not draft a plan until it has these three.
+
+1. **The ground truth.** One or more documents, as .docx or .md files.
+2. **The people.** Each with a track, a percent allocation, a start date and days off. Percent allocation is the share of a person's working time that goes to this plan. The agent assumes 100 percent for everyone and asks you once to confirm: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" If someone works on the plan three days in five, say 60.
+3. **The target.** A date, or a number of working weeks, plus any breaks given as date ranges.
+
+In `plan.yaml` they appear as the documents under `project.ground_truth`, the `people` list with `allocation` (a whole number from 1 to 100, 100 if omitted), and a `target` block with `date` or `weeks`, next to the `breaks` list.
+
+The sections below list these and the smaller inputs the interview also asks for.
+
 ## 1. Ground truth documents
 
 | Ask yourself | Example | Default |
@@ -19,16 +31,17 @@ Files can be `.docx` or `.md`. Give paths.
 | --- | --- | --- |
 | Who does the work? | Two developers. | One to four people. |
 | Which track does each own? | Workflow and Experience. | One track each. |
+| Percent allocation? | 100, or 60 for three days in five. | 100 for everyone. The agent asks once to confirm. |
 | Start dates and days off? | Start 2027-02-01. Off 2027-02-22. | Same start date, no days off. |
 | Who advises and owns no items? | A policy owner. | None. |
 | Their GitHub logins, if they should be assigned? | Leave empty for none. | Empty. |
 
-## 3. Dates and pauses
+## 3. The target and the breaks
 
 | Ask yourself | Example | Default |
 | --- | --- | --- |
-| Target date or number of weeks? | 2027-04-23, or 11 weeks of work. | Ask. |
-| Pause windows? | A company offsite week. | None. |
+| Target date or number of weeks? (required) | 2027-04-23, or 11 weeks of work. | Ask. |
+| Breaks? (required, "none" is an answer) | A company offsite week, as a date range. | None. |
 | Longest work unit? | Three weeks. | Three weeks. |
 | Integration check rhythm? | Weekly, Fridays, 30 minutes. | Weekly. |
 
@@ -76,10 +89,10 @@ Which agentic editors does the team use? Any editor or command line agent that r
 Ground truth files:
 Wins on conflict:
 Version:
-People (name, track, start date, days off, GitHub login):
+People (name, track, percent allocation, start date, days off, GitHub login):
 Advisors:
 Target date or weeks:
-Pauses:
+Breaks (date ranges):
 Longest work unit:
 Repository:
 Epic number or none:

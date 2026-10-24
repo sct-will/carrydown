@@ -44,12 +44,14 @@ people:
     name: "Tamsin Hale"
     github: ""
     track: workflow
+    allocation: 100
     start: 2027-02-01
     days_off: [2027-02-22]
   - id: idris
     name: "Idris Okoye"
     github: ""
     track: experience
+    allocation: 60
     start: 2027-02-01
     days_off: [2027-03-08]
 
@@ -93,6 +95,9 @@ milestones:
     end: 2027-04-23
     demo: 2027-04-23
     gate: "The flag is on in production, the runbook is handed to operations and finance has signed off."
+
+target:
+  date: 2027-04-23
 
 breaks:
   - name: "Offsite and planning week"

@@ -419,6 +419,10 @@ def load_plan(path):
     for k in ("people", "advisors", "tracks", "milestones", "breaks", "checkpoints", "items"):
         if plan.get(k) is None:
             plan[k] = []
+    for person in plan["people"]:
+        if person.get("allocation") is None:
+            person["allocation"] = 100
+    plan["target"] = plan.get("target") or None
     plan["conventions"] = plan.get("conventions") or {}
     plan["limits"] = plan.get("limits") or {}
     plan["limits"].setdefault("spec_lines", [80, 340])
@@ -496,6 +500,20 @@ def validate_plan(plan):
     for t in plan["tracks"]:
         if not t.get("id") or not t.get("label"):
             P.append(f"tracks: each track needs id and label ({t})")
+    for p in plan["people"]:
+        al = p.get("allocation")
+        if not isinstance(al, int) or isinstance(al, bool) or not (1 <= al <= 100):
+            P.append(f"people: {p.get('id')} allocation must be a whole percent from 1 to 100, got {al!r}")
+    tg = plan.get("target")
+    if not isinstance(tg, dict) or not ("date" in tg or "weeks" in tg):
+        P.append("target: the plan needs a target, written as `target:` with `date: YYYY-MM-DD` or `weeks: N` (breaks are listed under `breaks`)")
+    else:
+        if "date" in tg and "weeks" in tg:
+            P.append("target: give either date or weeks, not both")
+        if "date" in tg and not _is_date(tg.get("date")):
+            P.append(f"target: date is not a date: {tg.get('date')!r}")
+        if "weeks" in tg and (not isinstance(tg["weeks"], int) or isinstance(tg["weeks"], bool) or tg["weeks"] < 1):
+            P.append(f"target: weeks must be a whole number of working weeks, got {tg['weeks']!r}")
     ms_nums = []
     last_end = None
     for m in plan["milestones"]:
@@ -914,6 +932,67 @@ def github_tree_url(plan, relpath, repo=None):
 
 def rel_spec(plan, root, it):
     return str(spec_path(plan, root, it).relative_to(Path(root).resolve())) if Path(root).resolve() in spec_path(plan, root, it).resolve().parents else str(spec_path(plan, root, it))
+
+
+# ---------------------------------------------------------------------------
+# Capacity and target
+# ---------------------------------------------------------------------------
+
+def working_days(start, end, days_off=()):
+    """Monday to Friday days from start to end inclusive, minus the listed days off."""
+    off = {str(d) for d in days_off}
+    n = 0
+    d = start
+    while d <= end:
+        if d.weekday() < 5 and fmt_date(d) not in off:
+            n += 1
+        d += _dt.timedelta(days=1)
+    return n
+
+
+def capacity_days(person, milestone):
+    """Allocated working days a person has in a work unit: available days times allocation."""
+    start = max(parse_date(milestone["start"]), parse_date(person["start"])) if person.get("start") else parse_date(milestone["start"])
+    end = parse_date(milestone["end"])
+    if end < start:
+        return 0.0
+    return working_days(start, end, person.get("days_off") or []) * person.get("allocation", 100) / 100.0
+
+
+def sized_days(item):
+    m = re.search(r"about (\d+(?:\.\d+)?)", item.get("size", "") or "")
+    return float(m.group(1)) if m else 0.0
+
+
+def load_rows(plan):
+    """Per person and work unit: (person id, milestone number, sized days, capacity days, percent or None)."""
+    rows = []
+    for p in plan["people"]:
+        for m in plan["milestones"]:
+            sized = sum(sized_days(it) for it in plan["items"] if it.get("owner") == p["id"] and it["milestone"] == m["number"])
+            cap = capacity_days(p, m)
+            pct = (100.0 * sized / cap) if cap > 0 else (None if sized == 0 else float("inf"))
+            rows.append((p["id"], m["number"], sized, cap, pct))
+    return rows
+
+
+def target_date(plan):
+    """Return (date, text). The date is None when the plan has no usable target.
+
+    With `weeks`, the target is the last Friday of N working weeks plus the weeks the breaks take,
+    counted from the start of the first work unit: start + 7 * (weeks + break weeks) - 3 days."""
+    tg = plan.get("target")
+    if not isinstance(tg, dict) or not plan["milestones"]:
+        return None, "no target"
+    if "date" in tg and _is_date(tg["date"]):
+        return parse_date(tg["date"]), f"{tg['date']}"
+    if isinstance(tg.get("weeks"), int):
+        start = parse_date(plan["milestones"][0]["start"])
+        break_days = sum((parse_date(b["end"]) - parse_date(b["start"])).days + 1 for b in plan["breaks"] if _is_date(b.get("start")) and _is_date(b.get("end")))
+        break_weeks = -(-break_days // 7)
+        d = start + _dt.timedelta(days=7 * (tg["weeks"] + break_weeks) - 3)
+        return d, f"{tg['weeks']} working weeks plus {break_weeks} break week(s), which ends {fmt_date(d)}"
+    return None, "no target"
 
 
 if __name__ == "__main__":

@@ -81,11 +81,11 @@ Restart your agent.
 
    You will see: yes, and its start sentence.
 
-4. Put your .docx or .md file in `docs/source/`. Say:
+4. Put your document (.docx or .md) in `docs/source/`, then say:
 
    > Set up a project plan from docs/source/\<file\>.
 
-   You will see: "carrydown: interview, step 1 of 6" and a few questions.
+   You will see: "carrydown: interview, step 1 of 6" and a few questions. You will be asked for two more required inputs: the people, and the target date or number of weeks. Everyone is assumed to be allocated full time unless you say otherwise.
 
 5. Answer, or say "use your default". Then say:
 

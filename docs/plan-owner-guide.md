@@ -14,6 +14,8 @@ You bring a document that says how the project must work, such as an architectur
 
 Nothing is written to GitHub until you say yes. Work items are numbered WI-01, WI-02 and so on.
 
+Three inputs are required, and the agent will not draft a plan without them: the ground truth documents, the people with their percent allocation, and the target date or number of weeks plus breaks. Allocation is assumed to be 100 percent for everyone. The agent asks you once to confirm, and you only name a figure for someone who is lower.
+
 How long it takes. The interview and the plan review take an hour or two of your attention. The scripts take a few minutes. A senior engineer adds about an hour to review the specifications.
 
 ## Before you start
@@ -35,8 +37,8 @@ Things to gather:
 The agent asks questions in six steps. Each reply starts with the line "carrydown: interview, step N of 6" so you know where you are. The steps cover:
 
 1. your documents, and which one wins if two disagree,
-2. the people, their tracks, GitHub logins, start dates and days off,
-3. the time frame, pause weeks, and the longest stretch of work you allow in one block,
+2. the people, their tracks, their percent allocation (assumed 100, confirmed once), GitHub logins, start dates and days off,
+3. the target as a date or a number of weeks, the breaks, and the longest stretch of work you allow in one block,
 4. your GitHub repository, the branch, and whether an Epic issue exists,
 5. which agents your team uses, who watches the demonstrations, and what the program owns and keeps outside the plan,
 6. how the team runs tests and lint, and whether it uses a feature flag.
@@ -50,8 +52,8 @@ The agent drafts. You decide. It shows you:
 - the **milestones**, each with an exit gate you can check at a demonstration,
 - the **work units** (the time blocks), with dates and your pauses,
 - every **work item** with an owner, a date and what it depends on,
-- the **load table**, how much work each person has in each work unit,
-- the **critical path**, the chain of items that sets the end date,
+- the **load table**, how much work each person has in each work unit as a percentage of the capacity their allocation gives them, with any work unit over 100 percent flagged,
+- the **critical path**, the chain of items that sets the end date, and whether it meets your target,
 - the **program items** kept outside the plan.
 
 Questions worth asking:

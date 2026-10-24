@@ -4,11 +4,13 @@ people:
   - name: "Tamsin Hale"
     github: ""                     # GitHub login for issue assignment. Empty in the sample.
     track: Workflow                # the lane this person owns
+    allocation: 100                # percent of working time on this plan
     start: 2027-02-01
     days_off: [2027-02-22]
   - name: "Idris Okoye"
     github: ""
     track: Experience
+    allocation: 60                 # works on this plan three days in five
     start: 2027-02-01
     days_off: [2027-03-08]
 advisors:                          # advise and review. Own no work items.
