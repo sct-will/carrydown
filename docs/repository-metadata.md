@@ -31,7 +31,7 @@ Compared with today's six topics, this keeps `agent-skills`, `github-projects` a
 
 **Skills badge:** the Agent Skills badge under the README title reads `2 skills`: two skills you install, one skill is generated for your engineers. The badge address is `https://img.shields.io/badge/Agent%20Skills-2%20skills-teal`.
 
-**Social preview image:** upload [`docs/images/hero.png`](images/hero.png) in Settings, General, Social preview. It is 4800 by 2400 pixels, the 2 to 1 ratio GitHub asks for, and about 400 KB, under the 1 MB limit. It carries the name, the tagline and the install line, so a shared link reads on its own.
+**Social preview image:** upload [`docs/images/social-preview.png`](images/social-preview.png) in Settings, General, Social preview. It is the README hero at 4800 by 2400 pixels, the 2 to 1 ratio GitHub asks for, and about 420 KB, under the 1 MB limit. The README itself shows the same hero at 3 to 1, [`docs/images/hero.png`](images/hero.png), so the install line sits higher on the page. Both carry the name, the tagline, the canonical phrase and the install line, so a shared link reads on its own.
 
 **How to apply.** The description, homepage and topics can be set in one command by someone with admin rights. The social preview has no command and is uploaded in the settings page.
 
