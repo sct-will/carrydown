@@ -1,6 +1,6 @@
 # Setup from nothing
 
-The long form of the "Before you start" block in the [README](../README.md#getting-started). It takes you from a computer with nothing installed to a project folder where you can install the carrydown skills. Pick your system. Each section says what to click or type and what you will see.
+The long form of the [prerequisites line in the README](../README.md#prerequisites). It takes you from a computer with nothing installed to a project folder where you can install the carrydown skills. Pick your system. Each section says what to click or type and what you will see.
 
 You need four things: a terminal, Node.js (only to run the install line), Python 3.9 or later (to run the scripts) and git (to keep the plan under version control). Everything here is free.
 
@@ -58,6 +58,6 @@ The skills are self-contained, so nothing else needs copying.
 
 - **`npx: command not found` or `npx` is not recognised.** Node.js is not installed, or your terminal was opened before the install. Close the terminal, open a new one and try again. See the [FAQ](faq.md#npx-command-not-found).
 - **`python3: command not found` on Windows.** Use `python`. If neither works, rerun the Python installer, choose Modify, and tick Add Python to environment variables.
-- **The agent does not see the skills.** Restart it. Check that the skill folders are in the agent's skills folder from the README table.
+- **The agent does not see the skills.** Restart it. Check that the skill folders are in the agent's skills folder from the table under [Install options](../README.md#install-options) in the README.
 - **`fatal: not a git repository`.** Run `git init` in your project folder, or `cd` into the folder you made.
-- **You do not have permission to install programs.** Ask your IT department for Node.js LTS, Python 3.9 or later and git. Or use a Codespace: the README has a button that opens the repository in a browser with the tools already installed.
+- **You do not have permission to install programs.** Ask your IT department for Node.js LTS, Python 3.9 or later and git. Or use a Codespace: the README's [Getting started](../README.md#getting-started) has a link that opens the repository in a browser with the tools already installed.
