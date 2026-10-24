@@ -55,7 +55,7 @@ If your agent is not listed, find its documentation for skills or custom instruc
 
 ## Check that it works
 
-Start a new session. Say "Work on <first id>." The agent should open the specification for that id, read the sections of the ground truth it cites, and state a short plan before it writes code.
+Start a new session. Name the first item, for example "Work on <first id>." The agent should open the specification for that id, read the sections of the ground truth it cites, and state a short plan before it writes code.
 
 ## Team rollout
 

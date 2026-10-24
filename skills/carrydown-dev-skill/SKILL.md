@@ -7,11 +7,11 @@ description: Use when a project has a docs/spec folder with plan.yaml and the us
 
 Start phrase: "Generate the developer skill."
 
-Run by: the Plan owner, once, to generate the skill. The generated skill is installed and used every day by the Engineers, who start an item by saying "Work on WI-07".
+Run by: the Plan owner, once, to generate the skill. The generated skill is installed and used every day by the Engineers, who start an item by naming it, for example "Work on WI-07".
 
 ## What this skill does
 
-The specification folder is canonical, but a developer should not have to paste it into a prompt. A developer skill is a small folder in the Agent Skills format: a `SKILL.md` and reference files. Once installed, a developer says "work on WI-07" and the coding agent reads the specification, the ground truth sections it cites and the project conventions first.
+The specification folder is canonical, but a developer should not have to paste it into a prompt. A developer skill is a small folder in the Agent Skills format: a `SKILL.md` and reference files. Once installed, a developer names an item, for example "work on WI-07", and the coding agent reads the specification, the ground truth sections it cites and the project conventions first.
 
 This skill generates that folder from `plan.yaml`, the specifications and the rendered ground truth, then helps each person install it.
 
@@ -55,7 +55,7 @@ Read `references/review-checklist.md` and go through it with the user. Add what 
 
 ### 4. Install
 
-Read `references/install.md`. Each person installs the skill once in the agent they use. Give them the line for their agent from the generated README. Show them how to start a work item:
+Read `references/install.md`. Each person installs the skill once in the agent they use. Give them the line for their agent from the generated README. Show them how to start a work item by naming it, for example:
 
 > Work on WI-07.
 

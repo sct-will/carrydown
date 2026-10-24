@@ -34,4 +34,4 @@ Go through this with the user before you call the skill done.
 
 ## Smoke test
 
-Install the skill in one agent, start a new session and say "Work on <first id>". The agent should name the specification file, read it, and read only the cited sections of the ground truth. If it does not, fix the description.
+Install the skill in one agent, start a new session and name the first item, for example "Work on <first id>". The agent should name the specification file, read it, and read only the cited sections of the ground truth. If it does not, fix the description.

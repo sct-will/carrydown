@@ -97,7 +97,7 @@ Restart your agent.
 
    You will see: the schedule, the load table, the critical path, and the checker reporting 0 findings.
 
-5. **Lead reviewer.** A senior engineer reads the generated specifications for about an hour, as the person who would build them, and asks for changes before anything goes to GitHub. You will see: one specification per work item under `docs/spec/`, each with its header, acceptance criteria and evidence section.
+5. **Lead reviewer.** A senior engineer reads the generated specifications for about an hour, as the person who would build them, and asks for changes before anything goes to GitHub. What to read: one specification per work item under `docs/spec/`. Start with the header, the acceptance criteria and the evidence section.
 
 6. **Plan owner or delivery manager.** Say:
 
@@ -113,7 +113,7 @@ Restart your agent.
 
    > Generate the developer skill.
 
-   The Plan owner sends each engineer the install line it prints. Each engineer installs the generated skill and starts an item by saying "Work on WI-07". You will see: the skill folder and the install line per agent.
+   The Plan owner sends each engineer the install line it prints. Each engineer installs the generated skill and starts an item by naming it, for example "Work on WI-07". You will see: the skill folder and the install line per agent.
 
 **Program.** Attends each milestone demonstration and decides pass or fail against the criteria written before the work.
 
@@ -141,7 +141,7 @@ Planning decisions stay with people. The skills set up, draft to templates, vali
 - Generates the developer skill for your project from the specification folder.
 - The skill makes each developer's agent read the spec, the cited sections and the conventions before it changes code.
 - Its README shows each teammate how to install it in their agent.
-- Run by: the Plan owner, once, to generate the skill. The generated skill is installed and used every day by the Engineers, who start an item by saying "Work on WI-07".
+- Run by: the Plan owner, once, to generate the skill. The generated skill is installed and used every day by the Engineers, who start an item by naming it, for example "Work on WI-07".
 
 **Roles**
 
@@ -149,7 +149,7 @@ Planning decisions stay with people. The skills set up, draft to templates, vali
 | --- | --- | --- |
 | Plan owner | The engineering lead or product manager who owns the plan. Gives the documents and any constraints, answers the interview, approves the plan, says yes before anything is written to GitHub, and generates the developer skill. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
 | Lead reviewer | A senior engineer who spends about an hour reading the generated specifications as the person who will build them. | Reviews the output of `carrydown-ground-truth` |
-| Engineers | The people building the work items, each with their own coding agent. They start an item by saying "Work on WI-07". | The generated developer skill, made by `carrydown-dev-skill` |
+| Engineers | The people building the work items, each with their own coding agent. They start an item by naming it, for example "Work on WI-07". | The generated developer skill, made by `carrydown-dev-skill` |
 | Program | The people who watch the demonstrations and decide pass or fail. They run nothing. They attend. | None |
 
 ## What you get

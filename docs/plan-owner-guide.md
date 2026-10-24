@@ -8,7 +8,7 @@ The long form for a product manager, a program lead or anyone who owns a plan. Y
 | --- | --- | --- |
 | Plan owner | The engineering lead or product manager who owns the plan. Gives the documents and any constraints, answers the interview, approves the plan, says yes before anything is written to GitHub, and generates the developer skill. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
 | Lead reviewer | A senior engineer who spends about an hour reading the generated specifications as the person who will build them. | Reviews the output of `carrydown-ground-truth` |
-| Engineers | The people building the work items, each with their own coding agent. They start an item by saying "Work on WI-07". | The generated developer skill, made by `carrydown-dev-skill` |
+| Engineers | The people building the work items, each with their own coding agent. They start an item by naming it, for example "Work on WI-07". | The generated developer skill, made by `carrydown-dev-skill` |
 | Program | The people who watch the demonstrations and decide pass or fail. They run nothing. They attend. | None |
 
 ## What you will end up with
