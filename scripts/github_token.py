@@ -160,6 +160,8 @@ def _main(argv=None):
     ap.add_argument("--from-file", metavar="PATH", help="read the token from this plain text file instead of prompting")
     ap.add_argument("--delete-after", action="store_true",
                     help="delete the --from-file file after the token is stored and verified. Off by default: the file is kept and you delete it yourself")
+    # Older instructions pass --no-delete-after. Keeping the file is now the default, so accept it quietly.
+    ap.add_argument("--no-delete-after", dest="delete_after", action="store_false", help=argparse.SUPPRESS)
     ap.add_argument("--dry-run", action="store_true", help="print the steps and the storage path. Ask for nothing, store nothing, call nothing")
     a = ap.parse_args(argv)
     dest = Path(os.path.expanduser(a.token_file))
