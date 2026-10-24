@@ -4,7 +4,7 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ## Unreleased
 
-- Two skills you install, one skill is generated for your engineers. The generator for the engineers' skill moved into `carrydown-plan-to-github`, whose last step, "Generate the engineers' skill", runs `generate_dev_skill.py` and prints the install line. Its templates and its install, maintenance and review references moved with it. Two roles remain: the plan owner, who runs both skills and reviews the generated plan and specifications with the agent, and the engineers, who install the generated skill. The separate reviewer and the named role for the people who watch the demonstrations are gone. The self test now has 159 steps.
+- Two skills you install, one skill is generated for your engineers. The generator for the engineers' skill moved into `carrydown-plan-to-github`, whose last step, "Generate the engineers' skill", runs `generate_dev_skill.py` and prints the install line. Its templates and its install, maintenance and review references moved with it. Two roles remain: the plan owner, who runs both skills and reviews the generated plan and specifications with the agent, and the engineers, who install the generated skill. The separate reviewer and the named role for the people who watch the demonstrations are gone. The self test now has 160 steps.
 - Work outside the plan is called what it is. Work the team depends on but does not schedule, such as a sign-off or a security review, is an external item, listed under `external` in `plan.yaml`. An item that waits for one sets `external_input`, and its Depends on row, its issue and the engineers' skill say "external input". The library function is `external_ids`. The checker report heading is "External items (outside the development plan; referenced only as external input)", the sync summary says "N external items kept outside the plan", and the specification README table column is "External item". A plan written with the older key and item field still loads: `carrydown_lib.py` reads them as `external` and `external_input`, and the README refresh recognises the older column headers.
 - README rewritten around the reader: the reason first, a picture of the output, look, try and install in order of effort, a two-sided conversation, three badges and two entry points (README and the plan owner guide). START-HERE.md is a pointer. New docs: repository-metadata.md and recording-storyboard.md.
 - The README hero is 3 to 1, so the install line sits higher, and a 2 to 1 copy, `docs/images/social-preview.png`, is the social preview. The handoff diagram says that the plan owner runs each skill in their agent and that the plan and specifications are human reviewed, with the agent making the edits. The six-step flow diagram is gone.
@@ -42,7 +42,8 @@ All notable changes to this project are written here. The format follows Keep a 
 - The generated skill description is quoted and checked: the name length, the folder name, a target under 250 characters and a warning above 300. It gives one work item id as an example, such as WI-01, instead of a range that would include the ids of external items.
 - The window and earliest-finish checks compare each item with its size and allocation, and the sample dates are adjusted to fit.
 - The name check uses the plan's people.
-- The self test grew to 159 steps, with a loopback GitHub mock, built Word fixtures and planning review cases.
+- `github_token.py --check` reads the token the way the GitHub scripts do: `--token-file`, then `CARRYDOWN_GITHUB_TOKEN`, then the stored file.
+- The self test grew to 160 steps, with a loopback GitHub mock, built Word fixtures and planning review cases.
 
 ### Security
 

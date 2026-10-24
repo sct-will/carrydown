@@ -21,7 +21,7 @@ Steps it prints and follows
 Usage
   python3 scripts/github_token.py                    walk through it
   python3 scripts/github_token.py --dry-run          print the steps, store nothing, ask nothing
-  python3 scripts/github_token.py --check            check the stored token and exit
+  python3 scripts/github_token.py --check            check the token the GitHub scripts would use, and exit
   python3 scripts/github_token.py --check --repo owner/name   also check access to that repository
   printf '%s' "$TOKEN" | python3 scripts/github_token.py --stdin   non-interactive store
   python3 scripts/github_token.py --from-file ~/Downloads/token.txt   no prompt: read a plain text file
@@ -153,8 +153,9 @@ def _main(argv=None):
         description="Walk through creating a GitHub token, store it safely and check it. The token is never printed.",
         epilog="Storage: ~/.config/carrydown/github_token, mode 600. The GitHub scripts read it from there.",
     )
-    ap.add_argument("--token-file", default=G.DEFAULT_TOKEN_FILE, help=f"where to store or read the token (default: {G.DEFAULT_TOKEN_FILE})")
-    ap.add_argument("--check", action="store_true", help="check the token already stored, store nothing")
+    ap.add_argument("--token-file", help=f"where to store or read the token (default: {G.DEFAULT_TOKEN_FILE})")
+    ap.add_argument("--check", action="store_true",
+                    help="check the token the GitHub scripts would use (--token-file, then CARRYDOWN_GITHUB_TOKEN, then the stored file), store nothing")
     ap.add_argument("--repo", help="owner/name. Also check that the token reaches this repository")
     ap.add_argument("--stdin", action="store_true", help="read the token from standard input instead of prompting")
     ap.add_argument("--from-file", metavar="PATH", help="read the token from this plain text file instead of prompting")
@@ -164,7 +165,7 @@ def _main(argv=None):
     ap.add_argument("--no-delete-after", dest="delete_after", action="store_false", help=argparse.SUPPRESS)
     ap.add_argument("--dry-run", action="store_true", help="print the steps and the storage path. Ask for nothing, store nothing, call nothing")
     a = ap.parse_args(argv)
-    dest = Path(os.path.expanduser(a.token_file))
+    dest = Path(os.path.expanduser(a.token_file or G.DEFAULT_TOKEN_FILE))
 
     if a.dry_run:
         L.say("Dry run. These are the steps:")
@@ -181,9 +182,11 @@ def _main(argv=None):
         return 0
 
     if a.check:
+        # The same lookup as the GitHub scripts: --token-file, then CARRYDOWN_GITHUB_TOKEN, then the stored file.
         token = G.read_token(a.token_file, required=False)
         if not token:
-            L.say(f"No token found at {short(dest)}. Run python3 {G.TOKEN_SCRIPT} without --check to set one up.")
+            where = f"at {short(dest)}" if a.token_file else f"in CARRYDOWN_GITHUB_TOKEN or at {short(dest)}"
+            L.say(f"No token found {where}. Run python3 {G.TOKEN_SCRIPT} without --check to set one up.")
             return 1
         return check(token, a.repo)
 

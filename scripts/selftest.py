@@ -12,7 +12,8 @@ It does the following.
   7. Runs the GitHub scripts against a local mock of the GitHub API (tests/mock/, on
      127.0.0.1 only): a 502 after a create, a crash then a rerun, --verify on an unlinked
      id, single sign-on, a timeout, a public repository, issues and comments that are not
-     the plan's, renamed issues, and the token file. It also runs the dry runs without a token.
+     the plan's, renamed issues, the token file, and the token
+     check reading CARRYDOWN_GITHUB_TOKEN. It also runs the dry runs without a token.
 
 Every step runs with HOME set to an empty temporary folder and with no
 CARRYDOWN_GITHUB_TOKEN, so no stored token is ever read.
@@ -489,6 +490,7 @@ def main():
         ("ownership", "mock: only labelled issues and own comments count"),
         ("project", "mock: renamed issues are found by their marker"),
         ("tokenfile", "mock: the token file is kept and checked before sending"),
+        ("tokenenv", "mock: the token check reads CARRYDOWN_GITHUB_TOKEN like the GitHub scripts"),
     ]
     for scenario, name in mock:
         step(name, [PY, "tests/mock/scenarios.py", scenario], contains=[f"{scenario}: all checks passed"])

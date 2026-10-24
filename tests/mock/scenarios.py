@@ -15,6 +15,8 @@ Scenarios
   project       github_project.py finds every plan issue by its marker, prints plan titles only
   tokenfile     --from-file: a file with a byte order mark works, the file is kept, and text
                 that is not a token is refused before anything is sent
+  tokenenv      --check reads CARRYDOWN_GITHUB_TOKEN like the GitHub scripts, --token-file wins
+                over it, and the token is never printed
 
 Each check prints PASS or FAIL. Exit status is 0 when every check passes. Nothing here
 talks to GitHub: the client is pointed at the mock on 127.0.0.1, and HOME is a temporary
@@ -244,6 +246,28 @@ def scenario_tokenfile():
     check(rc == 2 and "that is not a GitHub personal access token (it starts with ghp_ or github_pat_). Nothing was sent." in out,
           "text that is not a token is refused")
     check(len(M.log) == n, "nothing was sent to the mock for it")
+
+
+def scenario_tokenenv():
+    # Fake values planted for the test. They go only to the mock on 127.0.0.1.
+    env_token = "ghp_" + "E" * 36
+    file_token = "ghp_" + "F" * 36
+    os.environ["CARRYDOWN_GITHUB_TOKEN"] = env_token
+    rc, out = call(GT.main, ["--check", "--repo", "o/r"])
+    check(rc == 0 and "The token belongs to tester." in out and "Token check passed." in out,
+          f"--check with only CARRYDOWN_GITHUB_TOKEN set checks that token (got {rc})")
+    check(bool(M.auth) and M.auth[-1] == "Bearer " + env_token, "the token sent is the one from CARRYDOWN_GITHUB_TOKEN")
+    check(env_token not in out, "the token is not printed")
+    token_file = Path(TMP) / "explicit_token"
+    token_file.write_text(file_token + "\n", encoding="utf-8")
+    rc, out = call(GT.main, ["--check", "--token-file", str(token_file)])
+    check(rc == 0 and M.auth[-1] == "Bearer " + file_token, f"--token-file wins over CARRYDOWN_GITHUB_TOKEN, as in the GitHub scripts (got {rc})")
+    check(file_token not in out and env_token not in out, "neither token is printed")
+    n = len(M.log)
+    del os.environ["CARRYDOWN_GITHUB_TOKEN"]
+    rc, out = call(GT.main, ["--check"])
+    check(rc == 1 and "No token found in CARRYDOWN_GITHUB_TOKEN or at" in out, f"with no token anywhere the message names both places (got {rc})")
+    check(len(M.log) == n, "nothing was sent when there was no token")
 
 
 def main(argv):

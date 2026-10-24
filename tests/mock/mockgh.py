@@ -26,6 +26,7 @@ class State:
         self.private = True
         self.fail = {}
         self.log = []
+        self.auth = []   # the Authorization header of each request, so a test can see which token was sent
         self.timeout = 3.0
 
     def add_issue(self, title, body="", labels=(), state="open"):
@@ -70,6 +71,7 @@ class H(BaseHTTPRequestHandler):
         u = urlparse(self.path)
         p, q = u.path, parse_qs(u.query)
         S.log.append((method, p))
+        S.auth.append(self.headers.get("Authorization", ""))
         for (m, rx), acts in list(S.fail.items()):
             if m == method and re.fullmatch(rx, p) and acts:
                 act = acts.pop(0)
