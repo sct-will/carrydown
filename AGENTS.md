@@ -53,6 +53,8 @@ Install them with the line in the README. Then the user says one sentence per st
 2. "Create the GitHub issues and the board." (`carrydown-plan-to-github`)
 3. "Generate the developer skill." (`carrydown-dev-skill`)
 
+Roles: the Plan owner runs the skills, a Lead reviewer reads the specifications for about an hour, the Engineers use the generated developer skill every day, and the Program only attends the demonstrations. The README has the table.
+
 If a skill is not picked up, name it first: "Use the carrydown-ground-truth skill." The steps with expected output are in the README under Getting started. The long form, for the person who owns the plan, is `docs/plan-owner-guide.md`.
 
 ## Pull requests

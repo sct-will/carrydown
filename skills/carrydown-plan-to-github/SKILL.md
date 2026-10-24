@@ -7,6 +7,8 @@ description: Use when a docs/spec folder with plan.yaml exists and the user want
 
 Start phrase: "Create the GitHub issues and the board."
 
+Run by: the Plan owner or a delivery manager with permission to create issues and a Project.
+
 ## What this skill does
 
 It reads `docs/spec/plan.yaml` and the specification folder and builds, on GitHub:

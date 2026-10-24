@@ -7,6 +7,8 @@ description: Use when a project has a docs/spec folder with plan.yaml and the us
 
 Start phrase: "Generate the developer skill."
 
+Run by: the Plan owner, once, to generate the skill. The generated skill is installed and used every day by the Engineers, who start an item by saying "Work on WI-07".
+
 ## What this skill does
 
 The specification folder is canonical, but a developer should not have to paste it into a prompt. A developer skill is a small folder in the Agent Skills format: a `SKILL.md` and reference files. Once installed, a developer says "work on WI-07" and the coding agent reads the specification, the ground truth sections it cites and the project conventions first.

@@ -125,16 +125,28 @@ Planning decisions stay with people. The skills set up, draft to templates, vali
 - Interviews you, renders your documents to Markdown with stable section anchors, and scaffolds `docs/spec/` with `plan.yaml`.
 - Drafts the plan with you: milestones, work units, tracks, dates, dependencies, load table, critical path, program boundary.
 - Writes one specification per work item to a template, runs the checker, and gives review prompts for the document and the plan.
+- Run by: the Plan owner. Reviewed by the Lead reviewer.
 
 **`carrydown-plan-to-github`**
 - Walks you through a GitHub token safely and runs a dry run before anything is written.
 - After your yes, creates labels, one sub-epic per milestone, one issue per work item with sub-issue links, dependency links and an Epic roll-up comment that states the target delivery and the people by track.
 - Builds the project board with work unit, track and date fields and three views, verifies the counts, and lists what you click by hand.
+- Run by: the Plan owner or a delivery manager with permission to create issues and a Project.
 
 **`carrydown-dev-skill`**
 - Generates the developer skill for your project from the specification folder.
 - The skill makes each developer's agent read the spec, the cited sections and the conventions before it changes code.
 - Its README shows each teammate how to install it in their agent.
+- Run by: the Plan owner, once, to generate the skill. The generated skill is installed and used every day by the Engineers, who start an item by saying "Work on WI-07".
+
+**Roles**
+
+| Role | What they do | Which skill |
+| --- | --- | --- |
+| Plan owner | The engineering lead or product manager who owns the plan. Gives the documents and any constraints, answers the interview, approves the plan, says yes before anything is written to GitHub, and generates the developer skill. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
+| Lead reviewer | A senior engineer who spends about an hour reading the generated specifications as the person who will build them. | Reviews the output of `carrydown-ground-truth` |
+| Engineers | The people building the work items, each with their own coding agent. They start an item by saying "Work on WI-07". | The generated developer skill, made by `carrydown-dev-skill` |
+| Program | The people who watch the demonstrations and decide pass or fail. They run nothing. They attend. | None |
 
 ## What you get
 

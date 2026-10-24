@@ -2,6 +2,15 @@
 
 The long form for a product manager, a program lead or anyone who owns a plan. You do not need to write code. The short form is the [Getting started](../README.md#getting-started) section of the README. It holds the install line and the three sentences you say to your agent. This guide does not repeat them. It explains what happens between them, what to review and what to ask for in advance.
 
+## Who runs what
+
+| Role | What they do | Which skill |
+| --- | --- | --- |
+| Plan owner | The engineering lead or product manager who owns the plan. Gives the documents and any constraints, answers the interview, approves the plan, says yes before anything is written to GitHub, and generates the developer skill. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
+| Lead reviewer | A senior engineer who spends about an hour reading the generated specifications as the person who will build them. | Reviews the output of `carrydown-ground-truth` |
+| Engineers | The people building the work items, each with their own coding agent. They start an item by saying "Work on WI-07". | The generated developer skill, made by `carrydown-dev-skill` |
+| Program | The people who watch the demonstrations and decide pass or fail. They run nothing. They attend. | None |
+
 ## What you will end up with
 
 You bring a document that says how the project must work, such as an architecture document. You and your agent turn it into:

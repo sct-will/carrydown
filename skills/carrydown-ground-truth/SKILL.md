@@ -7,6 +7,8 @@ description: Use when a team wants to carry an architecture document, requiremen
 
 Start phrase: "Set up a project plan from this document."
 
+Run by: the Plan owner. Reviewed by the Lead reviewer.
+
 ## What this skill does
 
 A ground truth is the document a project must obey: an architecture document, requirements, a business analyst note, governance rules, a development standard. Often it is a Word file. This skill turns it into a plan that a coding agent and a person can both follow.
