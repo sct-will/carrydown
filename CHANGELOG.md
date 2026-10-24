@@ -20,3 +20,7 @@ First release.
 - Templates for the plan, specification, milestone file, specification README, issue body, closing comment, checkpoint comment and developer skill.
 - Sample project `sample/expense-approvals/` with its ground truth, inputs, plan, five milestones, nine specifications and generated developer skill.
 - Documents: method, inputs checklist, FAQ, security notes and a recorded run of the sample.
+- Repository conventions: `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, issue forms (bug report, feature request, question, conduct report), a pull request template and `CODEOWNERS`.
+- `scripts/selftest.py`, which runs the checker on the sample and every script's `--help` and dry run without a token, and `scripts/lint_prose.py`, which checks dashes, credit lines and vendor names.
+- Two GitHub Actions workflows that run those two scripts on every push and pull request.
+- `scripts/scaffold_spec.py --ci`, which adds the specification checker to continuous integration.

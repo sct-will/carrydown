@@ -1,0 +1,23 @@
+# Runs the kit's self test on every push and pull request. No token and no network
+# access to GitHub are needed. The self test checks the sample against its plan, runs
+# every script's --help, and runs every dry run against the sample.
+name: Self test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  selftest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Run the self test
+        run: python3 scripts/selftest.py

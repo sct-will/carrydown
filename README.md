@@ -1,8 +1,34 @@
+![carrydown](docs/images/hero.png)
+
 # carrydown
 
-Carry an enterprise ground-truth document down into a governed plan: one specification per work item, GitHub sub-epics and issues, a populated GitHub Project board, and a developer skill in every issue.
+Carrydown carries an enterprise ground-truth document down into a governed plan. From an architecture document, requirements or rules it builds one specification per work item, GitHub sub-epics and issues, a populated GitHub Project board, and a developer skill in every issue. It is a kit of three Agent Skills and a few Python scripts that you drive by talking to your coding agent.
 
-It is a kit of three Agent Skills and a few Python scripts. You talk to your coding agent. The agent interviews you, drafts the plan, writes the specifications to a template, checks them mechanically, and, after you say yes, builds the GitHub structure.
+[![Licence](https://img.shields.io/github/license/sct-will/carrydown)](LICENSE)
+[![Last commit](https://img.shields.io/github/last-commit/sct-will/carrydown)](https://github.com/sct-will/carrydown/commits/main)
+[![Issues](https://img.shields.io/github/issues/sct-will/carrydown)](https://github.com/sct-will/carrydown/issues)
+
+## Table of contents
+
+- [What it is](#what-it-is)
+- [Who it is for](#who-it-is-for)
+- [Install](#install)
+- [The three skills](#the-three-skills)
+- [The flow](#the-flow)
+  - [Say it to your agent](#say-it-to-your-agent)
+  - [What you get](#what-you-get)
+- [Supported agents](#supported-agents)
+- [The sample](#the-sample)
+  - [Run the scripts by hand](#run-the-scripts-by-hand)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [Code of conduct](#code-of-conduct)
+- [Security](#security)
+- [Licence](#licence)
+
+## What it is
+
+You bring the document a project must obey. You and your agent turn it into a plan with milestones, people, dates and dependencies. Each work item gets a specification tied to the sections of the document it comes from. A checker compares every specification to the plan. After you say yes, the kit creates the issues and the board on GitHub. Planning decisions stay with people. The skills set up, draft to templates, validate and populate.
 
 ## Who it is for
 
@@ -61,7 +87,7 @@ docs/dev/skills/<project>-dev/  installed in every developer's agent
 
 Planning decisions stay with people. The skills set up, draft to templates, validate and populate.
 
-## Say it to your agent
+### Say it to your agent
 
 After installing, open your agent in your project folder and say these three sentences, one at a time, as you reach each stage.
 
@@ -73,7 +99,7 @@ After installing, open your agent in your project folder and say these three sen
 
 If your agent does not pick the skill up on its own, put the skill name first: "Use the carrydown-ground-truth skill. Set up a project plan from this document." The other two skills are `carrydown-plan-to-github` and `carrydown-dev-skill`.
 
-## What you get
+### What you get
 
 ```text
 docs/
@@ -89,27 +115,6 @@ docs/
 ```
 
 On GitHub: labels, one sub-epic per milestone, one issue per work item, a roll-up comment on the Epic, and a project board.
-
-## The sample
-
-[sample/expense-approvals/](sample/expense-approvals/) is a fictional internal expense approvals service. It has a short architecture document (context, requirements, architecture, two governance rules, a development standard, a business analyst note, interfaces and risks), two people and an advisor, and an 11-week timeline with a pause. The worked output is next to it: `plan.yaml`, five milestones, nine complete specifications, and the generated developer skill. It is a sample to be replaced by your own material. [docs/sample-run.md](docs/sample-run.md) shows a real run of the scripts on it against a throwaway repository.
-
-## Run the scripts by hand
-
-Every script has `--help`, and the ones that write are dry runs unless you pass `--apply`.
-
-| Script | Purpose |
-| --- | --- |
-| `scripts/render_ground_truth.py` | `.docx` or `.md` to Markdown with a section index and figures. |
-| `scripts/scaffold_spec.py` | Create `plan.yaml`, the README, milestone folders and stubs. Refresh headers. |
-| `scripts/check_specs.py` | Check specifications against `plan.yaml`. Print the load table and critical path. |
-| `scripts/github_token.py` | Create and store a GitHub token safely, and check its scopes. |
-| `scripts/github_sync.py` | Labels, sub-epics, issues, links and the Epic comment. |
-| `scripts/github_project.py` | The GitHub Project board. |
-| `scripts/generate_dev_skill.py` | The developer skill folder. |
-| `scripts/sync_skill_assets.py` | Maintainers: copy scripts and templates into each skill folder. |
-
-The installer copies only a skill's folder, so each skill carries its own copy of the scripts and templates it runs. The top-level `scripts/` and `templates/` are the canonical copies.
 
 ## Supported agents
 
@@ -127,7 +132,28 @@ The installer supports many more agents. The full and current list is in the ski
 
 Generic path. Any other agent that reads the Agent Skills format (https://agentskills.io) can use the skills. Copy the three folders in `skills/` into the folder where that agent looks for skills, or tell the agent to read `skills/<name>/SKILL.md`.
 
-## Documents
+## The sample
+
+[sample/expense-approvals/](sample/expense-approvals/) is a fictional internal expense approvals service. It has a short architecture document (context, requirements, architecture, two governance rules, a development standard, a business analyst note, interfaces and risks), two people and an advisor, and an 11-week timeline with a pause. The worked output is next to it: `plan.yaml`, five milestones, nine complete specifications, and the generated developer skill. It is a sample to be replaced by your own material. [docs/sample-run.md](docs/sample-run.md) shows a real run of the scripts on it against a throwaway repository.
+
+### Run the scripts by hand
+
+Every script has `--help`, and the ones that write are dry runs unless you pass `--apply`.
+
+| Script | Purpose |
+| --- | --- |
+| `scripts/render_ground_truth.py` | `.docx` or `.md` to Markdown with a section index and figures. |
+| `scripts/scaffold_spec.py` | Create `plan.yaml`, the README, milestone folders and stubs. Refresh headers. |
+| `scripts/check_specs.py` | Check specifications against `plan.yaml`. Print the load table and critical path. |
+| `scripts/github_token.py` | Create and store a GitHub token safely, and check its scopes. |
+| `scripts/github_sync.py` | Labels, sub-epics, issues, links and the Epic comment. |
+| `scripts/github_project.py` | The GitHub Project board. |
+| `scripts/generate_dev_skill.py` | The developer skill folder. |
+| `scripts/sync_skill_assets.py` | Maintainers: copy scripts and templates into each skill folder. |
+
+The installer copies only a skill's folder, so each skill carries its own copy of the scripts and templates it runs. The top-level `scripts/` and `templates/` are the canonical copies.
+
+## Documentation
 
 - [START-HERE.md](START-HERE.md). The product manager path.
 - [docs/method.md](docs/method.md). The eight steps.
@@ -137,6 +163,22 @@ Generic path. Any other agent that reads the Agent Skills format (https://agents
 - [docs/sample-run.md](docs/sample-run.md). A real run on the sample.
 - [CHANGELOG.md](CHANGELOG.md).
 
-## Licences
+## Contributing
 
-Code is licensed under the Apache License 2.0, see [LICENSE](LICENSE). The sample document, the templates text and the images are licensed under Creative Commons Attribution 4.0 International, see [LICENSE-CONTENT.md](LICENSE-CONTENT.md). Copyright 2026 Will Scott.
+Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to report a problem, propose a change, run the checks (`python3 scripts/selftest.py` and `python3 scripts/lint_prose.py`) and get a review. Issue forms and a pull request template guide you. The two workflow files that run those checks are in [docs/workflows/](docs/workflows/README.md) until they are moved to `.github/workflows/`.
+
+## Code of conduct
+
+This project follows the Contributor Covenant. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). To report a problem, open an issue with the Conduct report form.
+
+## Security
+
+Report a vulnerability privately through GitHub. See [SECURITY.md](SECURITY.md). The kit stores only your GitHub token file, and it never prints or commits the token.
+
+## Licence
+
+Code is licensed under the Apache License 2.0, see [LICENSE](LICENSE). The sample document, the templates text, the skills prose, the documents and the images are licensed under Creative Commons Attribution 4.0 International, see [LICENSE-CONTENT.md](LICENSE-CONTENT.md).
+
+Copyright 2026 Will Scott.
+
+Will Scott, Ph.D.
