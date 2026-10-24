@@ -1,6 +1,6 @@
 # Contributing to carrydown
 
-Thank you for helping. This page tells you how to report a problem, propose a change, run the checks and get a change reviewed. Please read the [code of conduct](CODE_OF_CONDUCT.md) first.
+Thank you for helping. This page tells you how to report a problem, propose a change, run the checks and get a change reviewed. Please read the [code of conduct](CODE_OF_CONDUCT.md) first. If you are a coding agent working in this repository, read [AGENTS.md](AGENTS.md) too. It has the rules and the checks in short form.
 
 ## Report a problem
 

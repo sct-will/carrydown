@@ -6,9 +6,47 @@ Turn your architecture document into a plan your team and its AI coding agents c
 
 [![Licence](https://img.shields.io/github/license/sct-will/carrydown)](LICENSE) [![Last commit](https://img.shields.io/github/last-commit/sct-will/carrydown)](https://github.com/sct-will/carrydown/commits/main) [![Issues](https://img.shields.io/github/issues/sct-will/carrydown)](https://github.com/sct-will/carrydown/issues) [![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-blue)](LICENSE-CONTENT.md) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-3%20skills-teal)](https://agentskills.io) [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](#requirements-and-access) [![Open in Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sct-will/carrydown)
 
-[Getting started](#getting-started) · [How it works](#how-it-works) · [What you get](#what-you-get) · [Install options](#install-options) · [Requirements and access](#requirements-and-access) · [Sample](#sample) · [Run the scripts yourself](#run-the-scripts-yourself) · [FAQ](#faq) · [Contributing](#contributing) · [Licence](#licence)
+[Getting started](#getting-started) · [How it works](#how-it-works) · [What you get](#what-you-get) · [Install options](#install-options) · [Requirements and access](#requirements-and-access) · [Sample](#sample) · [Run the scripts yourself](#run-the-scripts-yourself) · [FAQ](#faq) · [Contributing](#contributing) · [Licence](#licence) · [For agents](AGENTS.md)
 
 ## Getting started
+
+**Before you start.** You need a terminal, Node.js (only for the install line), Python 3.9 or later and git. Pick your system. The full steps are in [docs/setup.md](docs/setup.md).
+
+<details>
+<summary>macOS</summary>
+
+1. Open Terminal: press Command and Space, type Terminal, press Return.
+2. Install Node.js: download the LTS installer from https://nodejs.org and open it. Or run `brew install node` if you use Homebrew.
+3. Check it: run `node --version` and `npm --version`. Each prints a version number.
+4. Run `python3 --version` and `git --version`. A window may offer to install developer tools. Click Install and wait.
+5. Make your project folder: `mkdir my-plan`, then `cd my-plan`, then `git init`. Or `cd` into an existing folder.
+6. Run the install line below.
+
+</details>
+
+<details>
+<summary>Windows</summary>
+
+1. Open PowerShell: click Start, type PowerShell, press Enter.
+2. Install Node.js LTS from https://nodejs.org with its installer. Tick the option to install necessary tools if offered.
+3. Install Python 3 from https://www.python.org/downloads/ and tick "Add python.exe to PATH".
+4. Install Git for Windows from https://git-scm.com.
+5. Close PowerShell and open it again. Run `node --version`, `npm --version`, `python --version` and `git --version`. Each prints a version number. On Windows the command may be `python` and not `python3`. The scripts accept either.
+6. Make your project folder: `mkdir my-plan; cd my-plan; git init`. Or `cd` into an existing folder.
+7. Run the install line below.
+
+</details>
+
+<details>
+<summary>Linux</summary>
+
+1. Open a terminal.
+2. Debian or Ubuntu: `sudo apt install nodejs npm python3 git`. Fedora: `sudo dnf install nodejs npm python3 git`. If `node --version` is below 22.20, install Node.js from https://nodejs.org instead.
+3. Check with `node --version`, `npm --version`, `python3 --version` and `git --version`.
+4. Make your project folder: `mkdir my-plan`, then `cd my-plan`, then `git init`. Or `cd` into an existing folder.
+5. Run the install line below.
+
+</details>
 
 ```bash
 npx skills add sct-will/carrydown --all
@@ -16,7 +54,16 @@ npx skills add sct-will/carrydown --all
 
 Restart your agent.
 
-1. Open your coding agent in your project folder. No folder yet? Say:
+<details>
+<summary>Manual install (no Node.js)</summary>
+
+1. Open https://github.com/sct-will/carrydown, click the green Code button, then Download ZIP, and unzip it.
+2. Copy the three folders inside `skills/` into your agent's skills folder. The paths are in the table under [Install options](#install-options).
+3. Restart your agent.
+
+</details>
+
+1. Open your coding agent in your project folder (the folder you made above). No folder yet? Say:
 
    > Make a folder called my-plan with a git repository and work there.
 
@@ -130,6 +177,7 @@ No Node.js? Skip the installer. Copy the three folders in `skills/` into your ag
 
 ## Requirements and access
 
+- **Setup from nothing**, step by step: [macOS](docs/setup.md#macos), [Windows](docs/setup.md#windows), [Linux](docs/setup.md#linux).
 - **Node.js**, only to run the install line. Get it from https://nodejs.org (choose LTS). Nothing in the skills needs it after that.
 - **Python 3.9 or later**, to run the scripts. Check with `python3 --version`. Nothing else to install, not even for Word files.
 - **GitHub permission** to create issues in the repository and to create a Project in the organisation or account. Ask an organisation admin if you do not have it. Planning works without it. Only the GitHub step needs it.
@@ -219,7 +267,5 @@ Report a vulnerability privately through GitHub. See [SECURITY.md](SECURITY.md).
 ## Licence
 
 Code is licensed under the Apache License 2.0, see [LICENSE](LICENSE). The sample document, the templates text, the skills prose, the documents and the images are licensed under Creative Commons Attribution 4.0 International, see [LICENSE-CONTENT.md](LICENSE-CONTENT.md).
-
-Copyright 2026 Will Scott.
 
 Will Scott, Ph.D.
