@@ -41,8 +41,16 @@ def work_items_md(plan, root):
     for person in plan["people"]:
         by_track[person["track"]] = by_track.get(person["track"], 0) + person.get("allocation", 100)
     alloc = ", ".join(f"{L.track_label(plan, t)} {pct} percent" for t, pct in by_track.items())
-    out += [f"Target. {ttext if tdate else 'not set in plan.yaml'}.", "",
-            f"Allocation. People are allocated as a percentage of their working time to this plan. By track, the allocation adds up to {alloc}. The dates in this plan already account for it, so a track at less than 100 percent has fewer working days in each work unit.", ""]
+    last = max((L.parse_date(it["complete_by"]) for it in plan["items"]), default=None)
+    if tdate and L.target_is_constraint(plan):
+        out += [f"Target. {ttext}. The plan was fitted to it.", ""]
+    else:
+        out += [f"Target. Derived from the critical path: {L.fmt_date(last) if last else 'not known yet'}. It is the plan's end date, not a constraint.", ""]
+    if plan["people"]:
+        derived_note = " Some people are placeholders marked derived in plan.yaml." if any(p.get("derived") for p in plan["people"]) else ""
+        out += [f"Allocation. People are allocated as a percentage of their working time to this plan. By track, the allocation adds up to {alloc}. The dates in this plan already account for it, so a track at less than 100 percent has fewer working days in each work unit.{derived_note}", ""]
+    else:
+        out += ["Allocation. The plan names no people yet, so the dates are not fitted to anyone's capacity.", ""]
     spec_dir = plan["project"]["spec_dir"]
     for m in plan["milestones"]:
         out += [f"## Milestone {m['number']}, {m['name']} (`{m['folder']}`)", "",

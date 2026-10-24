@@ -2,6 +2,17 @@
 
 You draft. The user decides. Stop for a yes after each step.
 
+## The modes
+
+The ground truth is required. The project constraints, the people with their percent allocation and the target, are optional. The rule: give both and the plan fits them. Give one and the skill backs into the other. Give neither and the skill proposes a default and asks. Say plainly which mode you are in.
+
+- **Fit.** The people and the target are both given. Plan to fit them. Flag any person over 100 percent of allocated capacity in a work unit, and any target miss. Do not move the target silently. Show the options: cut scope, add people, move the date.
+- **Derive the date.** The people are given and there is no target. Plan with the people. The plan's end date is the critical path end. Report it as the "derived target" and write it into `plan.yaml` as `target: {date: <end date>, derived: true}`. Ask whether the date is acceptable.
+- **Derive the capacity.** The target is given and there are no people. Propose tracks and a head count at 100 percent that meets the date. Write them into `plan.yaml` as `people` entries with `derived: true` and placeholder names such as "Engineer 1" and "Engineer 2". Tell the user to replace them with real people and to say if anyone is below 100 percent.
+- **Neither given.** Propose a default team of two tracks, "Engineer 1" and "Engineer 2" at 100 percent, and a derived date. Mark both as derived. Show them and ask the user to confirm or to give real constraints.
+
+After any mode, run the checker. Its summary line says what is derived, for example "2 people derived, target derived". When the user gives real people or a real target, replace the derived entries and remove `derived: true`.
+
 ## 1. Read the ground truth
 
 Read the rendered document, using its section index. Make a plain list of what must exist when the project is done, in the document's words, with section numbers. Note every contract, rule and standard. Note every statement that is unverified or contradicted. Show the list to the user and correct it.

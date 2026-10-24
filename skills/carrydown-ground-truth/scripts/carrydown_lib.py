@@ -457,6 +457,8 @@ def load_plan(path):
     # banned names: people and advisors, first names, github logins
     names = list(b["names"])
     for p in list(plan["people"]) + list(plan["advisors"]):
+        if p.get("derived"):
+            continue   # placeholder people such as "Engineer 1" are not real names
         if p.get("name"):
             names.append(p["name"])
             names.extend(part for part in re.split(r"\s+", p["name"]) if len(part) > 2)
@@ -504,10 +506,19 @@ def validate_plan(plan):
         al = p.get("allocation")
         if not isinstance(al, int) or isinstance(al, bool) or not (1 <= al <= 100):
             P.append(f"people: {p.get('id')} allocation must be a whole percent from 1 to 100, got {al!r}")
+    for p in plan["people"]:
+        if "derived" in p and not isinstance(p["derived"], bool):
+            P.append(f"people: {p.get('id')} derived must be true or false")
     tg = plan.get("target")
-    if not isinstance(tg, dict) or not ("date" in tg or "weeks" in tg):
-        P.append("target: the plan needs a target, written as `target:` with `date: YYYY-MM-DD` or `weeks: N` (breaks are listed under `breaks`)")
+    if tg is None:
+        pass   # the target is optional. Without one, the plan's end date is derived from the critical path
+    elif not isinstance(tg, dict) or not ("date" in tg or "weeks" in tg):
+        P.append("target: write `target:` with `date: YYYY-MM-DD` or `weeks: N`, or leave the block out (breaks are listed under `breaks`)")
     else:
+        if "derived" in tg and not isinstance(tg["derived"], bool):
+            P.append("target: derived must be true or false")
+        if tg.get("derived") and "date" not in tg:
+            P.append("target: a derived target is written as a date")
         if "date" in tg and "weeks" in tg:
             P.append("target: give either date or weeks, not both")
         if "date" in tg and not _is_date(tg.get("date")):
@@ -974,6 +985,24 @@ def load_rows(plan):
             pct = (100.0 * sized / cap) if cap > 0 else (None if sized == 0 else float("inf"))
             rows.append((p["id"], m["number"], sized, cap, pct))
     return rows
+
+
+def derived_summary(plan):
+    """Text such as "2 people derived, target derived", or "" when nothing is derived."""
+    n = sum(1 for p in plan["people"] if p.get("derived"))
+    parts = []
+    if n:
+        parts.append(f"{n} {'person' if n == 1 else 'people'} derived")
+    tg = plan.get("target")
+    if isinstance(tg, dict) and tg.get("derived"):
+        parts.append("target derived")
+    return ", ".join(parts)
+
+
+def target_is_constraint(plan):
+    """A target constrains the plan only when it exists and is not derived."""
+    tg = plan.get("target")
+    return isinstance(tg, dict) and not tg.get("derived")
 
 
 def target_date(plan):

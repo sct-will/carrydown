@@ -40,7 +40,9 @@ tracks:                                  # parallel lanes of work, usually one p
     label: Frontend
     color: GREEN
 
-people:                                  # people who own items. Names stay out of specs.
+people:                                  # OPTIONAL. People who own items. Names stay out of specs.
+                                         # Add `derived: true` to a placeholder such as "Engineer 1" that the planning
+                                         # step proposed because you gave no people. Replace it when you know who.
   - id: alex                             # short handle used in this file
     name: "Alex Quill"
     github: ""                           # GitHub login for assignment, or empty
@@ -69,10 +71,12 @@ milestones:                              # one per work unit. A work unit has a 
     demo: 2027-01-15
     gate: "One sentence the program can check at the demonstration."
 
-target:                                  # REQUIRED. When the plan must be delivered. Give a date or a number of weeks.
+target:                                  # OPTIONAL. When the plan must be delivered. Give a date or a number of weeks.
   date: 2027-01-29                       # the target date, or instead:
   # weeks: 4                             # working weeks from the start of the first work unit. Breaks add to it:
                                          # target = start + 7 * (weeks + break weeks) - 3 days, a Friday.
+  # derived: true                        # add this when the date is not a constraint but was worked out from the
+                                         # critical path. Leave the whole block out if there is no target yet.
 
 breaks:                                  # pauses between work units, optional. Each one a date range.
   - name: "Pause"

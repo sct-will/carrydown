@@ -2,15 +2,14 @@
 
 Run this interview before you write anything. The user may be a product manager, so use plain words, ask a few questions at a time, and explain why you ask. Offer a default for every question. Read the answers back as one summary and wait for a yes.
 
-## The three required inputs
+## The two inputs
 
-Ask for these first. Name them as required. Do not draft a plan until all three are known, and say so: "I need these three before I can draft a plan."
+1. **The ground truth documents.** Required. Step 1 below. Without them you do not draft anything, and you say so.
+2. **The project constraints.** Optional, in any combination. After the documents, ask one question: "What constraints do you have? The people, the target date or weeks, both, or neither for now." Steps 2 and 3 below collect the details.
 
-1. **The ground truth documents.** Step 1 below.
-2. **The people.** Each with a track, a percent allocation, a start date and days off. Step 2 below. The user does not type the allocation. Ask once, in one line: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" Confirmation means 100 for everyone. Named figures replace the default for those people. Allocation counts as known once it is confirmed or given.
-3. **The target.** A date, or a number of working weeks, plus breaks. Step 3 below.
+The rule: give both people and a target and the plan fits them. Give one and you back into the other. Give neither and you propose a default and ask. Name the mode you are in (Fit, Derive the date, Derive the capacity, or Neither given) so the user knows what you will do. The modes are in `planning.md`.
 
-Everything else has a default or can wait.
+The user does not type the allocation. Ask once, in one line: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" Confirmation means 100 for everyone. Named figures replace the default for those people.
 
 Never ask the user to paste a secret. A GitHub token is handled later by `carrydown-plan-to-github`, in a hidden prompt.
 
@@ -27,7 +26,7 @@ Ask.
 
 Why you ask: the plan is only as good as the document it is carried from. Say so if the document looks thin, and offer the review prompts in `review-prompts.md`.
 
-## Step 2 of 6. The people
+## Step 2 of 6. The people (optional)
 
 Begin with `carrydown: interview, step 2 of 6`.
 
@@ -42,14 +41,14 @@ Ask.
 
 Explain: names stay in `plan.yaml`. The checker keeps them out of the specifications so the files stay valid when people change.
 
-## Step 3 of 6. The target and the breaks
+## Step 3 of 6. The target and the breaks (optional)
 
 Begin with `carrydown: interview, step 3 of 6`.
 
 Ask.
 
-1. **Required.** What is the target: a date, or a number of working weeks? Which is firm? If it is weeks, the target date is worked out from the start of the first work unit, and each break adds its weeks.
-2. **Required.** Are there breaks, such as holidays, offsites or a freeze? Give each as a date range. "None" is an answer.
+1. What is the target: a date, or a number of working weeks? Which is firm? If there is none yet, say so. The plan will derive the date from the critical path. If it is weeks, the target date is worked out from the start of the first work unit, and each break adds its weeks.
+2. Are there breaks, such as holidays, offsites or a freeze? Give each as a date range. "None" is an answer.
 3. What is the longest a work unit may run? A work unit is a time box with its own length. A default: no longer than three weeks.
 4. How often can the people meet for a short integration check? A default: weekly, 30 minutes.
 

@@ -18,8 +18,9 @@ Per milestone: milestone.md exists with the required parts and lists every item.
 Per project: README.md in the spec folder lists every item.
 
 Also checks the plan itself: dates, owners, dependencies, cycles, weekends, days off, breaks, the
-percent allocation of each person (1 to 100), that a target exists, that nobody is over 100 percent of
-their allocated capacity in a work unit, and that the last work item meets the target.
+percent allocation of each person (1 to 100), that nobody is over 100 percent of their allocated
+capacity in a work unit, and, when a target exists, that the last work item meets it. People and the
+target are optional. Without a target the report prints the critical path end date as derived.
 
 Usage
   python3 scripts/check_specs.py --root .            check everything
@@ -279,12 +280,17 @@ def fmt(d):
 def report(plan):
     people = {p["id"]: p for p in plan["people"]}
     print(f"Plan: {plan['project']['name']}")
+    ds = L.derived_summary(plan)
+    if ds:
+        print(f"Derived inputs: {ds}. Replace the placeholders when you know the real values.")
     print("\nSchedule")
     for m in plan["milestones"]:
         print(f"  Work unit {m['number']}, {m['name']}: {m['start']} to {m['end']} (demonstration {m['demo']})")
     for br in plan["breaks"]:
         print(f"  Break, {br['name']}: {br['start']} to {br['end']}")
     print("\nLoad (sized days of work against allocated capacity, per person and work unit)")
+    if not people:
+        print("  No people in the plan yet. Add them under `people`, or let the planning step propose a team marked derived.")
     print("  Capacity is the working days a person has in the work unit, minus days off, times their percent allocation.")
     head = ["Person", "Alloc"] + [f"WU{m['number']}" for m in plan["milestones"]] + ["Total"]
     rows = []
@@ -347,13 +353,16 @@ def report(plan):
         tdate, ttext = L.target_date(plan)
         end_date = L.parse_date(items[path[-1]]["complete_by"])
         print("\nTarget")
-        if tdate:
+        if tdate and L.target_is_constraint(plan):
             gap = (tdate - end_date).days
             verdict = f"meets the target with {gap} day(s) to spare" if gap >= 0 else f"misses the target by {-gap} day(s)"
             print(f"  Target: {ttext}")
             print(f"  The critical path ends {fmt(end_date)}: it {verdict}.")
         else:
-            print("  No target in plan.yaml. Add a target block with a date or a number of weeks.")
+            why = "The target in plan.yaml is marked derived" if tdate else "There is no target in plan.yaml"
+            print(f"  Critical path ends {fmt(end_date)} (derived from the critical path). {why}, so this is the derived target: the plan's end date, not a constraint.")
+            if tdate and tdate != end_date:
+                print(f"  The derived target in plan.yaml says {fmt(tdate)}. Update it to {fmt(end_date)}.")
     pitems = plan["program"]["items"]
     if pitems:
         print("\nProgram-owned items (outside the development plan; referenced only as program input)")
@@ -397,8 +406,10 @@ def main(argv=None):
     tdate, _ = L.target_date(plan)
     if tdate and plan["items"]:
         last = max(L.parse_date(it["complete_by"]) for it in plan["items"])
-        if last > tdate:
+        if L.target_is_constraint(plan) and last > tdate:
             load_issues.append(f"the last work item completes {L.fmt_date(last)}, after the target {L.fmt_date(tdate)}")
+        if not L.target_is_constraint(plan) and last != tdate:
+            load_issues.append(f"the derived target {L.fmt_date(tdate)} is out of date. The last work item completes {L.fmt_date(last)}, so write that date under target")
     banned = banned_patterns(plan)
     gt_heads = ground_truth_headings(plan, root)
     results = {}
@@ -434,6 +445,8 @@ def main(argv=None):
         print(json.dumps({"clean": ok, "files": n_files, "findings": results}, indent=2))
     else:
         print(f"{ok} files clean, {len(results)} with findings ({len(items)} work items, {0 if a.item else len(plan['milestones'])} milestones)")
+        if L.derived_summary(plan):
+            print(f"Derived inputs: {L.derived_summary(plan)}.")
         if not a.quiet:
             for k, v in results.items():
                 print(f"{k}:")
