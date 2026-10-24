@@ -51,7 +51,7 @@ Planning decisions stay with people. The skills set up, draft to templates, vali
 - **git**, to keep the plan under version control.
 - **GitHub permission** to create issues in the repository and to create a Project in the organisation or account. Ask an organisation admin if you do not have it. Planning works without it. Only the GitHub step needs it.
 - **Single sign-on (SSO).** If your organisation enforces it, authorise the token: github.com/settings/tokens, click the token's "Configure SSO" button, click "Authorize" next to the organisation.
-- **A token**, created with the pre-filled link https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown. It ticks `repo` and `project`. A fine-grained token also works for a project owned by an organisation, with Issues read and write, Metadata read, and the organisation permission Projects read and write. It does not work for a project owned by a user account. Use a classic token there.
+- **A token**, only at the GitHub step. For a board owned by an organisation, a fine-grained token for the one repository with Issues read and write, Metadata read, and the organisation permission Projects read and write. Only for a board owned by your user account, a classic token from the pre-filled link https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown, which ticks `repo` and `project`. Set a 7-day expiry and revoke the token when you are done. [docs/plan-owner-guide.md](docs/plan-owner-guide.md#the-token) has the steps.
 
 Pick your system. Each block takes you from nothing to a project folder. The full steps are in [docs/setup.md](docs/setup.md): [macOS](docs/setup.md#macos), [Windows](docs/setup.md#windows), [Linux](docs/setup.md#linux).
 

@@ -11,7 +11,7 @@ The rule: give both people and a target and the plan fits them. Give one and you
 
 The user does not type the allocation. Ask once, in one line: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" Confirmation means 100 for everyone. Named figures replace the default for those people.
 
-Never ask the user to paste a secret. A GitHub token is handled later by `carrydown-plan-to-github`, in a hidden prompt.
+Never ask the user to paste a secret. A GitHub token is handled later by `carrydown-plan-to-github`, through a file the user names or a hidden prompt.
 
 ## Step 1 of 6. The ground truth
 

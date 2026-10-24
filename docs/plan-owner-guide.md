@@ -85,15 +85,18 @@ The checker compares every specification to the plan. It runs on your computer, 
 
 ## The token
 
-A token is a long password that lets the scripts create issues and a Project for you. It needs two permissions, `repo` and `project`.
+A token is a long password that lets the scripts create issues and a Project for you. The agent gives you the link. Open it yourself.
 
-1. **Open the pre-filled link** https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown. It ticks the two permissions and names the token for you.
-2. **Set an expiry.** Thirty days is enough. Click Generate token. Copy the token. GitHub shows it once.
-3. **Save it in a plain text file**, for example `Downloads/token.txt`. In TextEdit, choose Format, then Make Plain Text, before you save.
-4. **Tell the agent the file path.** Do not paste the token into the chat. The agent runs the token script with `--from-file`. The script reads the file, stores the token at `~/.config/carrydown/github_token` where only you can read it, checks what the token can do, and deletes your copy of the file. It prints a message saying so.
-5. **Read the check.** The agent runs the check. It says who owns the token, which permissions it has and whether the repository is reachable.
+1. **Pick the kind.** If an organisation owns the board, create a fine-grained token at https://github.com/settings/personal-access-tokens/new for the one repository, with Issues read and write, Metadata read, and the organisation permission Projects read and write. Only if your own user account owns the board, use a classic token from the pre-filled link https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown. It ticks `repo` and `project` for you.
+2. **Set the expiry to 7 days.** Click Generate token. Copy the token. GitHub shows it once.
+3. **Save it in a plain text file outside your project**, for example `Downloads/token.txt`. In TextEdit, choose Format, then Make Plain Text, before you save.
+4. **Tell the agent the file path.** Do not paste the token into the chat. The agent never opens the file. It runs the token script with `--from-file`. The script reads the file, stores the token at `~/.config/carrydown/github_token` where only you can read it, and checks what the token can do. It keeps your file.
+5. **Delete your file.** It still holds the token in plain text.
+6. **Read the check.** The agent runs the check. It says who owns the token, what it can do and whether the repository is reachable.
 
-Instead of steps 3 and 4 you can run the token script yourself in a terminal and type the token at the prompt. The characters do not appear as you type.
+When the plan and the board are on GitHub, revoke the token at github.com/settings/tokens. Make a new one if you need it again.
+
+Instead of steps 3 to 5 you can run the token script yourself in a terminal and type the token at the prompt. The characters do not appear as you type.
 
 If the check fails, it names the fix:
 
@@ -118,7 +121,7 @@ To change the plan later, change `plan.yaml` with your agent and run the checker
 
 ## If something goes wrong
 
-- A script fails. Ask the agent to show the message and explain it. Nothing is written until you said yes, and no script deletes anything except the token file you gave it.
+- A script fails. Ask the agent to show the message and explain it. Nothing is written until you said yes, and no script deletes anything.
 - `npx: command not found`. Node.js is missing. See [faq.md](faq.md).
 - A GitHub step is refused. The usual cause is single sign-on or a missing organisation permission. The token check names the fix.
 - The agent does not pick up a skill. Put the skill name in front of the sentence, as the README says.
