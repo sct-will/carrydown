@@ -1,0 +1,42 @@
+name: My ground truth looks like this
+description: Tell us about a document shape the skills did not plan for.
+title: "Ground truth: "
+labels: ["ground-truth"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form if the skills struggled with your kind of document. Remove anything private first. Never paste a token or a secret.
+  - type: input
+    id: document_type
+    attributes:
+      label: Document type and format
+      description: For example an architecture document as a Word file, a set of Markdown files, or a PDF.
+    validations:
+      required: true
+  - type: textarea
+    id: headings
+    attributes:
+      label: How headings are numbered
+      description: Say whether sections have numbers, letters or none, and show a few real heading lines.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: went_wrong
+    attributes:
+      label: What went wrong
+      description: Paste the exact message, with private paths removed.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: agent
+    attributes:
+      label: Which coding agent you use

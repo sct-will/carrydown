@@ -279,6 +279,8 @@ More answers, including "npx: command not found", are in [docs/faq.md](docs/faq.
 
 Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to report a problem, propose a change, run the checks (`python3 scripts/selftest.py` and `python3 scripts/lint_prose.py`) and get a review. Issue forms and a pull request template guide you.
 
+If it breaks on your kind of document, open an issue with the "My ground truth looks like this" form.
+
 ## Code of conduct
 
 This project follows the Contributor Covenant. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). To report a problem, open an issue with the Conduct report form.
