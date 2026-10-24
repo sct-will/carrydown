@@ -1,0 +1,241 @@
+# Sample plan for the fictional expense approvals service.
+# Decisions in this file (order, dates, owners) were made by a person. The checker and the
+# GitHub scripts read it. See templates/plan.yaml in the kit for the annotated version.
+
+project:
+  name: "Expense approvals"
+  slug: expense-approvals
+  id_prefix: WI
+  repo: sample-org/expense-approvals
+  branch: main
+  epic: null
+  epic_title: "Expense approvals, development plan"
+  subepic_prefix: "Milestone"
+  title_format: "{id} {label}"
+  spec_dir: docs/spec
+  ground_truth: docs/ground-truth/architecture.md
+  project_title: "Expense approvals plan"
+  dev_skill: expense-approvals-dev
+  dev_skill_path: docs/dev/skills/expense-approvals-dev
+
+sources:
+  - name: "Architecture document, version 0.3"
+    path: "ground-truth/architecture.md (source), docs/ground-truth/architecture.md (rendering)"
+    use: "Full specification. Section numbers in the work item files refer to it."
+
+conventions:
+  test_command: "npm test"
+  lint_command: "npm run lint"
+  feature_flag: "EXPENSE_APPROVALS_ENABLED"
+  extra:
+    - "Contract tests pass with `npm run test:contract`, and a change to `contracts/openapi.yaml` is its own pull request."
+    - "Secrets and personal data never appear in code, tests, logs or fixtures."
+
+tracks:
+  - id: workflow
+    label: Workflow
+    color: BLUE
+  - id: experience
+    label: Experience
+    color: GREEN
+
+people:
+  - id: tamsin
+    name: "Tamsin Hale"
+    github: ""
+    track: workflow
+    start: 2027-02-01
+    days_off: [2027-02-22]
+  - id: idris
+    name: "Idris Okoye"
+    github: ""
+    track: experience
+    start: 2027-02-01
+    days_off: [2027-03-08]
+
+advisors:
+  - name: "Noor Castellan"
+    note: "Finance policy advisor. Reviews the rules and the export format."
+
+milestones:
+  - number: 1
+    name: "Submit an expense report"
+    folder: m1-submit-report
+    start: 2027-02-01
+    end: 2027-02-12
+    demo: 2027-02-12
+    gate: "A staff member creates a report with a receipt in the web client and submits it through the service."
+  - number: 2
+    name: "Route to approvers"
+    folder: m2-route-to-approvers
+    start: 2027-02-15
+    end: 2027-03-05
+    demo: 2027-03-05
+    gate: "A submitted report reaches the right approvers in order and an approver decides it from the inbox."
+  - number: 3
+    name: "Enforce policy"
+    folder: m3-enforce-policy
+    start: 2027-03-08
+    end: 2027-03-19
+    demo: 2027-03-19
+    gate: "Every decision obeys the approval limits and separation of duties, every change is in the audit trail, and submitters are notified."
+  - number: 4
+    name: "Pilot with one team"
+    folder: m4-pilot
+    start: 2027-03-29
+    end: 2027-04-09
+    demo: 2027-04-09
+    gate: "A pilot team's approved reports reach the ledger by the nightly file."
+  - number: 5
+    name: "Release"
+    folder: m5-release
+    start: 2027-04-12
+    end: 2027-04-23
+    demo: 2027-04-23
+    gate: "The flag is on in production, the runbook is handed to operations and finance has signed off."
+
+breaks:
+  - name: "Offsite and planning week"
+    start: 2027-03-22
+    end: 2027-03-26
+
+checkpoints:
+  - date: 2027-02-05
+    name: "Contract freeze"
+    joint_check: "The web client creates a draft against the service stub and the response validates against contracts/openapi.yaml."
+  - date: 2027-02-12
+    name: "Milestone 1 demonstration"
+    joint_check: "A report with one receipt goes from the form to the Submitted state, with the audit-ready state change visible in the database."
+  - date: 2027-02-26
+    name: "Routing meets inbox"
+    joint_check: "A submitted report produces the approval steps of section 3.5, and the inbox contract returns them for the first approver."
+  - date: 2027-03-05
+    name: "Milestone 2 demonstration"
+    joint_check: "A report is approved by two approvers in order from the inbox in the web client."
+  - date: 2027-03-12
+    name: "Rules meet routing"
+    joint_check: "A refused decision shows the rule number in the web client error message, and the report state does not change."
+  - date: 2027-03-19
+    name: "Milestone 3 demonstration"
+    joint_check: "A decision produces an audit event and a notification, and the submitter sees the new state."
+  - date: 2027-04-09
+    name: "Pilot readout"
+    joint_check: "The nightly file for the pilot team's reports opens in the finance tool with no manual change."
+  - date: 2027-04-23
+    name: "Release"
+    joint_check: "The release rehearsal passes with the flag on in the staging environment."
+
+items:
+  - id: 1
+    slug: service-scaffold
+    label: "Service scaffold, flag and API contract"
+    milestone: 1
+    track: workflow
+    owner: tamsin
+    complete_by: 2027-02-04
+    size: "Medium, about 3 days"
+    depends: []
+    checkpoint: 2027-02-05
+    ground_truth: "Sections 3.1, 3.2, 5.1, 7.1"
+  - id: 2
+    slug: report-form
+    label: "Report form and receipt upload"
+    milestone: 1
+    track: experience
+    owner: idris
+    complete_by: 2027-02-10
+    size: "Medium, about 4 days"
+    depends: [1]
+    checkpoint: 2027-02-12
+    ground_truth: "Sections 2.1, 3.3, 6.2, 7.1"
+  - id: 3
+    slug: routing-engine
+    label: "Approval routing engine"
+    milestone: 2
+    track: workflow
+    owner: tamsin
+    complete_by: 2027-02-24
+    size: "Large, about 5 days"
+    depends: [1]
+    checkpoint: 2027-02-26
+    ground_truth: "Sections 3.4, 3.5, 7.1"
+  - id: 4
+    slug: approver-inbox
+    label: "Approver inbox and decisions"
+    milestone: 2
+    track: experience
+    owner: idris
+    complete_by: 2027-03-03
+    size: "Medium, about 4 days"
+    depends: [2, 3]
+    checkpoint: 2027-03-05
+    ground_truth: "Sections 2.1, 3.4, 6.1, 7.1"
+  - id: 6
+    slug: limits-and-duties
+    label: "Approval limits and separation of duties"
+    milestone: 3
+    track: workflow
+    owner: tamsin
+    complete_by: 2027-03-12
+    size: "Medium, about 3 days"
+    depends: [3]
+    checkpoint: 2027-03-12
+    ground_truth: "Sections 3.5, 4.1, 7.1"
+  - id: 7
+    slug: audit-log
+    label: "Audit log and retention"
+    milestone: 3
+    track: workflow
+    owner: tamsin
+    complete_by: 2027-03-17
+    size: "Medium, about 3 days"
+    depends: [3]
+    checkpoint: 2027-03-19
+    ground_truth: "Sections 3.3, 4.2"
+  - id: 8
+    slug: notifications-delegates
+    label: "Notifications and delegates"
+    milestone: 3
+    track: experience
+    owner: idris
+    complete_by: 2027-03-18
+    size: "Medium, about 4 days"
+    depends: [4, 6]
+    checkpoint: 2027-03-19
+    ground_truth: "Sections 6.1, 6.2, 7.2"
+  - id: 9
+    slug: ledger-export
+    label: "Ledger export job"
+    milestone: 4
+    track: workflow
+    owner: tamsin
+    complete_by: 2027-04-06
+    size: "Medium, about 4 days"
+    depends: [7]
+    checkpoint: 2027-04-09
+    program_input: "the pilot team, named by the program"
+    ground_truth: "Sections 3.6, 4.2, 7.3"
+  - id: 11
+    slug: release-readiness
+    label: "Release readiness and runbook"
+    milestone: 5
+    track: experience
+    owner: idris
+    complete_by: 2027-04-21
+    size: "Medium, about 3 days"
+    depends: [8, 9]
+    checkpoint: 2027-04-23
+    program_input: "finance sign-off on the export format and retention period"
+    ground_truth: "Sections 5.1, 8.1"
+
+program:
+  items:
+    - id: 5
+      label: "Pilot team recruitment"
+      note: "The program names the pilot team and confirms their cost centres before work unit 4."
+    - id: 10
+      label: "Finance sign-off"
+      note: "Finance operations approves the export format and the retention period before the release."
+
+limits:
+  spec_lines: [80, 340]

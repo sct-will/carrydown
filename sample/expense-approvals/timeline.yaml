@@ -1,0 +1,20 @@
+# Sample input: when the work happens.
+start_date: 2027-02-01
+target_date: 2027-04-23
+weeks_of_work: 11                  # 12 calendar weeks minus the pause
+pauses:
+  - name: "Offsite and planning week"
+    start: 2027-03-22
+    end: 2027-03-26
+max_work_unit_weeks: 3             # no work unit longer than this
+demonstration_audience: "Head of finance operations and the product owner, in a 45 minute meeting."
+program_owned:                     # work the program owns, kept outside the development plan
+  - "Pilot team recruitment"
+  - "Finance sign-off on the ledger export format and retention period"
+repository: sample-org/expense-approvals     # replace with your own
+epic: none
+agents: ["two agentic editors that read Agent Skills"]
+conventions:
+  test_command: "npm test"
+  lint_command: "npm run lint"
+  feature_flag: "EXPENSE_APPROVALS_ENABLED"

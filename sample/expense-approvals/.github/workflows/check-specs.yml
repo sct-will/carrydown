@@ -1,0 +1,32 @@
+# Runs the carrydown checker on every pull request and on pushes to the default branch.
+# It fails the job, and so blocks the merge when branch protection requires it, when a
+# specification drifts from plan.yaml. The same command runs on your computer:
+#   python3 tools/carrydown/check_specs.py --root .
+name: Check specifications
+
+on:
+  pull_request:
+    paths:
+      - "docs/spec/**"
+      - "docs/ground-truth/**"
+      - "tools/carrydown/**"
+  push:
+    branches: [main]
+    paths:
+      - "docs/spec/**"
+      - "docs/ground-truth/**"
+      - "tools/carrydown/**"
+
+permissions:
+  contents: read
+
+jobs:
+  check-specs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Check the specifications against the plan
+        run: python3 tools/carrydown/check_specs.py --root .

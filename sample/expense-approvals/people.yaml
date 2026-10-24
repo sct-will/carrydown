@@ -1,0 +1,16 @@
+# Sample input: who does the work. The interview in the ground-truth skill collects these.
+# All names are fictional.
+people:
+  - name: "Tamsin Hale"
+    github: ""                     # GitHub login for issue assignment. Empty in the sample.
+    track: Workflow                # the lane this person owns
+    start: 2027-02-01
+    days_off: [2027-02-22]
+  - name: "Idris Okoye"
+    github: ""
+    track: Experience
+    start: 2027-02-01
+    days_off: [2027-03-08]
+advisors:                          # advise and review. Own no work items.
+  - name: "Noor Castellan"
+    role: "Finance policy advisor. Reviews the rules and the export format."

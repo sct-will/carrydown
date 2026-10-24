@@ -1,0 +1,74 @@
+# expense-approvals-dev skill
+
+A developer skill for the Expense approvals work in this repository. It follows the Agent Skills format, a folder with a `SKILL.md` and reference files, so any coding agent that supports skills can load it.
+
+When a developer asks the agent to work on a work item by id (WI-01), or touches the files an item names, the skill gives the agent the steps to orient on the item, the project conventions, the definition of done and the test commands. Its reference files hold the work item index, the contract headings and the ground truth map.
+
+## Why use it
+
+Without the skill, a coding agent tends to invent function names, skip the feature flag, drift from the contracts or work from memory instead of the specification. When you ask it to work on a work item id, the skill orients the agent on that one item. It reads the specification and the ground truth sections the item cites, then the project conventions, before it changes code. You review every change.
+
+## What is in this folder
+
+| File | Contents |
+| --- | --- |
+| `SKILL.md` | When to use the skill, how to orient on a work item, conventions, definition of done, tests and workflow. |
+| `references/work-items.md` | The 9 work items with track, date, dependencies and specification path, and the program inputs. |
+| `references/contracts.md` | Where each contract is defined and the headings of every Contract or Protocol section. |
+| `references/ground-truth-map.md` | Ground truth headings with anchors and line numbers, and the sections each work item cites. |
+
+## Install
+
+Choose one option. Install it once per computer or once per project. Then start a new session in your agent so it picks up the skill.
+
+### Option 1, the skills command line tool
+
+Run one line for your agent. Add `-g` to install for your user instead of this project. The tool copies the folder, so run the line again after the skill changes.
+
+```bash
+npx skills add https://github.com/sample-org/expense-approvals/tree/main/docs/dev/skills/expense-approvals-dev -a claude-code
+npx skills add https://github.com/sample-org/expense-approvals/tree/main/docs/dev/skills/expense-approvals-dev -a github-copilot
+npx skills add https://github.com/sample-org/expense-approvals/tree/main/docs/dev/skills/expense-approvals-dev -a cursor
+npx skills add https://github.com/sample-org/expense-approvals/tree/main/docs/dev/skills/expense-approvals-dev -a codex
+npx skills add https://github.com/sample-org/expense-approvals/tree/main/docs/dev/skills/expense-approvals-dev -a gemini-cli
+```
+
+The general form is `npx skills add <repository tree url for this folder> -a <agent>`. The agent names come from the skills tool; run `npx skills add --help` or see https://skills.sh for the full list. If the repository is private, the tool uses the Git credentials already configured on your computer.
+
+### Option 2, copy or link the folder
+
+A symlink keeps the installed skill in step with the repository, so `git pull` updates it. From the repository root on macOS or Linux:
+
+```bash
+ln -s "$(pwd)/docs/dev/skills/expense-approvals-dev" <skills folder>/expense-approvals-dev
+```
+
+On Windows, from a Command Prompt with Developer Mode on:
+
+```bat
+mklink /D <skills folder>\expense-approvals-dev %CD%\docs\dev\skills\expense-approvals-dev
+```
+
+`<skills folder>` is where your agent looks for skills:
+
+| Agent | Project folder | User folder |
+| --- | --- | --- |
+| Claude Code | `.claude/skills/` | `~/.claude/skills/` |
+| GitHub Copilot | `.agents/skills/` | `~/.copilot/skills/` |
+| Cursor | `.agents/skills/` | `~/.cursor/skills/` |
+| Codex | `.agents/skills/` | `~/.agents/skills/` |
+| Gemini CLI | `.agents/skills/` | `~/.gemini/skills/` |
+| Any other agent that reads Agent Skills | its skills folder | its user skills folder |
+
+### Option 3, no installation
+
+Ask your agent: "Read docs/dev/skills/expense-approvals-dev/SKILL.md and follow it for work item WI-01." This works in any agent that can read files.
+
+## How the skill relates to the specification folder
+
+The specification folder `docs/spec/` is canonical. It holds the conventions, the schedule, the index and one file per work item. The skill carries the conventions and points at those files. It does not replace them.
+
+- The conventions and definition of done in `SKILL.md` are copied from `docs/spec/README.md` and `plan.yaml`. A pull request that changes them there updates `SKILL.md` in the same pull request.
+- The contracts reference lists headings. The owning work item file holds the contract.
+- The ground truth map uses the anchors of the current rendering. Regenerating the rendering for a new document version may move line numbers, so refresh the map then.
+- Owners, status and dates of record live in the GitHub issues.
