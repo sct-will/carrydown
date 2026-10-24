@@ -10,7 +10,7 @@ metadata:
 
 # Carry a ground truth down into a plan
 
-Start phrase: "Set up a project plan from this document."
+Start phrase: "Set up a project plan from this document." (or "write the specs").
 
 Run by: plan owner.
 
@@ -59,7 +59,7 @@ Start each later step with the same line and the next number. Do not go on befor
 python3 <skill>/scripts/render_ground_truth.py path/to/document.docx --root . --version 0.1
 ```
 
-It takes several files at once, `.docx` or `.md`. Use `--dry-run` first if the user wants to see what will be written. The output goes to `docs/ground-truth/<name>.md` with a section index, plus `<name>.index.txt` (one line per heading) and `figures/`. Tell the user which headings have no numbers: specifications cite sections by number. Offer to renumber the source, not the rendering.
+It takes several files at once, `.docx` or `.md`. Use `--dry-run` first if the user wants to see what will be written. The output goes to `docs/ground-truth/<name>.md` with a section index, plus `<name>.index.txt` (one line per heading) and `figures/`. It refuses a source kept inside `docs/ground-truth/`, because the rendering would overwrite it; move the source to `docs/source/`. Tell the user which headings have no numbers: specifications cite sections by number. Offer to renumber the source, not the rendering.
 
 ### 3. Scaffold
 

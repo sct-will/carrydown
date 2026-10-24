@@ -1,6 +1,6 @@
 # Plan owner guide
 
-The long form for the plan owner: the engineering manager or product manager who owns the plan. You do not need to write code. The short form is the README: [Getting started](../README.md#getting-started) has the install line, and [What it sounds like](../README.md#what-it-sounds-like) has the sentences you say to your agent and what it replies. This guide does not repeat them. It explains what happens between them, what to review and what to ask for in advance.
+The long form for the plan owner: the engineering manager or product manager who owns the plan. You do not need to write code. The short form is the README: [Getting started](../README.md#getting-started) has the install line and the first sentence to say, and [What the agent asks you](../README.md#what-the-agent-asks-you) has the questions you answer. This guide does not repeat them. It explains what happens between them, what to review and what to ask for in advance.
 
 ## Who runs what
 

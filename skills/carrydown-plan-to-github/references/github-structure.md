@@ -21,7 +21,7 @@ One issue per milestone. The title is `<subepic_prefix> <number>, <name>`, for e
 5. Joint demonstration: what each track shows and the joint check on the demonstration date.
 6. Acceptance criteria as checkboxes, written before the work starts.
 7. Demonstration expectations.
-8. The work item list as task-list lines that link to the issues, for example `- [ ] #14 WI-03 Approval routing engine, by 2027-02-24`.
+8. The work item list as task-list lines that link to the issues, for example `- [ ] #9 WI-03 Approval routing engine, by 2027-02-19` in the sample. The issue number appears once the issue exists, and `, @login` follows the title when the owner has a GitHub login in `plan.yaml`.
 9. A link to the milestone file.
 
 Steps 3 and 5 are left out when `milestone.md` has no such section. `--offline --show-body M2` prints the body for milestone 2 without a network call.

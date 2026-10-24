@@ -1,6 +1,6 @@
 ---
 name: carrydown-plan-to-github
-description: Carries an approved docs/spec/plan.yaml into GitHub as sub-epics, one issue per work item and a Projects board, dry run first, then generates the skill each engineer installs. Use for "put the plan on GitHub" or "generate the engineers' skill".
+description: Carries an approved docs/spec/plan.yaml into GitHub as sub-epics, one issue per work item and a Projects board, dry run first, then generates the skill each engineer installs. Use for "Put the plan on GitHub" or "Generate the engineers' skill".
 license: Apache-2.0
 compatibility: Needs Python 3.9 or later, network access to api.github.com only, and a GitHub token the user creates.
 metadata:
@@ -10,7 +10,7 @@ metadata:
 
 # Put the plan on GitHub
 
-Start phrase: "Put the plan on GitHub." (or "Create the GitHub issues and the board."). For the last step on its own: "Generate the engineers' skill." (or "Generate the developer skill.").
+Start phrase: "Put the plan on GitHub." (or "Create the GitHub issues and the board."). For the last step on its own: "Generate the engineers' skill."
 
 Run by: plan owner. The generated skill is used by: engineers.
 
@@ -59,21 +59,21 @@ The script stores the token with mode 600 and keeps the user's file. Ask the use
 ### 3. Dry run of the issues
 
 ```bash
-python3 <skill>/scripts/github_sync.py --root . --repo owner/name
+python3 <skill>/scripts/github_sync.py --root . --repo owner/name --create-epic
 ```
 
-Show the user the summary line, which reads exactly `1 Epic, N sub-epics, N work item issues` with the real numbers, and which of them exist already. Offer `--show-body ID` to print one issue body without any network call.
+`--create-epic` makes a parent Epic only when `project.epic` is empty; when it holds a number, that Epic is used. Leave the flag out of every command in steps 3 and 4 only if the user wants no parent Epic, and the summary then starts with `0 Epic`. Show the user the summary line, which reads exactly `1 Epic, N sub-epics, N work item issues` with the real numbers, and which of them exist already. Offer `--show-body ID` to print one issue body without any network call.
 
 Ask: "This will create 1 Epic, N sub-epics and N work item issues in owner/name. Shall I go ahead?" Wait for a yes ("Go ahead.").
 
 ### 4. Apply and verify
 
 ```bash
-python3 <skill>/scripts/github_sync.py --root . --repo owner/name --apply
-python3 <skill>/scripts/github_sync.py --root . --repo owner/name --verify
+python3 <skill>/scripts/github_sync.py --root . --repo owner/name --create-epic --apply
+python3 <skill>/scripts/github_sync.py --root . --repo owner/name --create-epic --verify
 ```
 
-Add `--create-epic` if the user agreed to a new parent Epic, `--issue-type Task` if the organisation uses issue types, `--update-bodies` only if the user wants existing bodies rewritten. `references/verification.md` lists what `--verify` checks and the expected counts.
+Add `--issue-type Task` if the organisation uses issue types, `--update-bodies` only if the user wants existing bodies rewritten. `references/verification.md` lists what `--verify` checks and the expected counts.
 
 ### 5. Project board
 

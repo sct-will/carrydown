@@ -14,7 +14,7 @@ The rendered ground truth lives at `docs/ground-truth/architecture.md`. The engi
 
 ## How to use a specification
 
-The shortest route is the developer skill. It makes a coding agent read the right specification, the ground truth sections it cites and these conventions before it changes code. You do not paste that context by hand.
+The shortest route is the engineers' skill. It makes a coding agent read the right specification, the ground truth sections it cites and these conventions before it changes code. You do not paste that context by hand.
 
 1. Read the whole file, then the code it points to. Open the ground truth only for the sections the file cites.
 2. Propose the change in a short plan in the pull request description before writing code. Name the files you will touch.

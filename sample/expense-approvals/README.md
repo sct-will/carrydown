@@ -22,7 +22,7 @@ This folder is published twice. It lives in the main carrydown repository at `sa
 | `docs/dev/skills/expense-approvals-dev/` | The engineers' skill for this project. | `generate_dev_skill.py`, the last step of `carrydown-plan-to-github` |
 | `.github/workflows/check-specs.yml` and `tools/carrydown/` | The checker in continuous integration, and its copy. | `scaffold_spec.py --ci` |
 
-Ids 5 and 10 are missing on purpose. They are work the plan does not schedule, owned outside the team (pilot team recruitment, finance sign-off), and appear in the specifications only as a "program input".
+Ids 5 and 10 are missing on purpose. They are work the plan does not schedule, owned outside the team (pilot team recruitment, finance sign-off), and appear in the specifications only as an "external input".
 
 ## Run it
 

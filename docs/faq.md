@@ -42,7 +42,7 @@ No. It carries the plan down to the point where an engineer and their agent can 
 
 ## Does it write my architecture document?
 
-No. The document must exist and be worth trusting. The carrydown skills render it, helps you review it with prompts, and cites it everywhere.
+No. The document must exist and be worth trusting. The carrydown skills render it, help you review it with prompts, and cite it everywhere.
 
 ## My document is a Word file with no section numbers.
 

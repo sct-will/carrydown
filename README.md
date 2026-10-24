@@ -14,7 +14,7 @@ Run this in your project folder and pick your coding agent:
 npx skills add sct-will/carrydown
 ```
 
-Put your document in `docs/ground-truth/` and tell your agent:
+Put your document in `docs/source/` and tell your agent:
 
 > Set up a project plan from this document.
 
@@ -22,12 +22,18 @@ To look before you install, open [the sample board](https://github.com/users/sct
 
 ## How it works
 
-![How carrydown works. Two lanes. Plan owner, an engineering or product manager: step 1 Generate with carrydown-ground-truth, in: architecture document plus people and dates, out: plan.yaml and one spec per work item; step 2 Review, no skill, read and edit the plan and specs with the agent; step 3 Carry down to GitHub with carrydown-plan-to-github, out: epic, milestones, issues with specs, board, engineers' skill. One install line goes down to the Engineers lane: step 4 Work the issues, "Work on WI-03", the agent invokes the skill, reads the spec and the cited sections, then plans the code. The ground truth document is the only amber element and a thin amber thread runs from it through steps 1 and 3 into step 4.](docs/images/handoff.png)
+![How carrydown works. Two lanes. Plan owner, an engineering or product manager: step 1 Generate with carrydown-ground-truth, in: architecture document plus people and dates, out: plan.yaml and one spec per work item; step 2 Review, no skill, read and edit the plan and specs with the agent; step 3 Carry down to GitHub with carrydown-plan-to-github, out: epic, a sub-epic per milestone, issues with specs, board, engineers' skill. One install line goes down to the Engineers lane: step 4 Work the issues, "Work on WI-03", the agent invokes the skill, reads the spec and the cited sections, then plans the code. The ground truth document is the only amber element and a thin amber thread runs from it through steps 1 and 3 into step 4.](docs/images/handoff.png)
 
 1. **Generate.** You have the ground truth, usually an architecture document. Your agent interviews you about people, time and dates, then writes the plan and one specification per work item. Skill: [carrydown-ground-truth](skills/carrydown-ground-truth/SKILL.md).
 2. **Review.** You read the plan and the specifications and edit them with the agent until they are right. No separate reviewer.
-3. **Carry down to GitHub.** Say "put the plan on GitHub". Then the agent generates an epic, a sub-epic per milestone, an issue per work item with its specification, the board and the engineers' skill. Skill: [carrydown-plan-to-github](skills/carrydown-plan-to-github/SKILL.md).
-4. **Work the issues.** Each engineer installs that skill once and says "Work on WI-03". Their agent reads the specification and the sections it cites, then plans the code.
+3. **Carry down to GitHub.** Say "put the plan on GitHub". Then the agent generates an epic, a sub-epic per milestone, an issue per work item with its specification, the board and the engineers' skill. It shows a dry run first and writes nothing until you say yes. Skill: [carrydown-plan-to-github](skills/carrydown-plan-to-github/SKILL.md).
+4. **Work the issues.** Each engineer installs the engineers' skill once and says "Work on WI-03". Their agent reads the specification and the sections it cites, then plans the code. The install line names the skill's folder in your repository and the engineer's agent:
+
+   ```bash
+   npx skills add https://github.com/<owner>/<repo>/tree/main/docs/dev/skills/<project>-dev -a <agent>
+   ```
+
+   In the sample it is `npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev -a claude-code`.
 
 You are the plan owner, an engineering manager or a product manager, and you need not write code. The [plan owner guide](docs/plan-owner-guide.md) walks each step with you.
 
@@ -56,7 +62,7 @@ The first skill interviews you in six short steps. Nothing is written to GitHub 
 | What must the people who watch each milestone demonstration see to call it done? | Their words, which become acceptance criteria |
 | How is the code built, tested and merged here? | The commands and the branch rule |
 
-Then it shows the schedule, each person's load per work unit, the critical path and the slack before every checkpoint, and asks you to review. If you have a date and no team, say so, and it derives the capacity; if you have a team and no date, it derives the date. [docs/inputs.md](docs/inputs.md) has the details.
+Then it shows the schedule, each person's load per work unit, the critical path (the chain of items that sets the end date) and the slack (days to spare) before every checkpoint, and asks you to review. If you have a date and no team, say so, and it derives the capacity; if you have a team and no date, it derives the date. [docs/inputs.md](docs/inputs.md) has the details.
 
 ## What you get
 
@@ -64,7 +70,7 @@ Then it shows the schedule, each person's load per work unit, the critical path 
 - **One specification per work item**, the smallest piece of work an engineer can finish and show, citing the sections it comes from and checked against the plan by a script that also runs in continuous integration.
 - **GitHub issues**, one per work item under a sub-epic per milestone, each telling the engineer's agent what to read.
 - **A GitHub Project board** with work units, tracks, dates and checkpoints filled in.
-- **The engineers' skill**, generated from your specifications and committed in your repository, so "Work on WI-07" makes any coding agent read the specification and its sections before touching code.
+- **The engineers' skill**, generated from your specifications and committed in your repository, so "Work on WI-03" makes any coding agent read the specification and its sections before touching code.
 
 <details>
 <summary>Where the files go in your project</summary>
@@ -86,11 +92,11 @@ docs/
 
 ## How the plan is composed
 
-The agent does not sort tickets into weeks. Each engineer owns one track and stays on one theme at a time, so they switch context less. A milestone takes items from the tracks it needs, the tracks meet at a named joint check, and the milestone ends with one demonstration of integrated functionality given by the engineers whose tracks meet. Size divided by allocation gives calendar time, nobody passes 100 percent of their time in a work unit, slack sits before every checkpoint, and the critical path is read for single points of failure. The reason for each milestone is written in the plan, and the checker's "Planning review" reports coverage, theme switches, slack and load so you can argue with it. [The method](docs/method.md) lists the ten rules.
+The agent builds the plan around people and the part of the system each one owns. Each engineer owns one track and stays on one theme, one part of the system, at a time, so they switch context less. A milestone takes items from the tracks it needs. The tracks meet at a named joint check, a short dated integration check between tracks. The milestone ends with one demonstration of integrated functionality, given by the engineers whose tracks meet. Size divided by allocation gives calendar time, and nobody passes 100 percent of their time in a work unit. Slack, the days to spare, sits before every checkpoint. The critical path, the chain of items that sets the end date, is read for single points of failure. The reason for each milestone is written in the plan, and the checker's "Planning review" reports coverage, theme switches, slack and load so you can argue with it. [The method](docs/method.md) lists the ten rules.
 
 ## How it compares
 
-Plan mode and spec-driven tools plan one task from one specification, and CCPM turns requirements into issues; carrydown carries one agreed ground truth across every task, dates the plan around named people and checks every specification against it, so it sits beside any of them. The FAQ has [the longer comparison](docs/faq.md#how-does-this-compare-with-plan-mode-spec-driven-tools-superpowers-and-ccpm) and [whether this is just prompts](docs/faq.md#isnt-this-just-prompts).
+Plan mode and spec-driven tools plan one task from one specification, and Claude Code Project Management (CCPM) turns requirements into issues; carrydown carries one agreed ground truth across every task, dates the plan around named people and checks every specification against it, so it sits beside any of them. The FAQ has [the longer comparison](docs/faq.md#how-does-this-compare-with-plan-mode-spec-driven-tools-superpowers-and-ccpm) and [whether this is just prompts](docs/faq.md#isnt-this-just-prompts).
 
 It is not waterfall: the plan is files in Git, the work units stretch to fit the work, and [changing the plan is cheap](docs/faq.md#isnt-this-waterfall).
 
@@ -100,7 +106,7 @@ Systems engineers call it flow-down: a requirement at the top of a system traced
 
 ## Prerequisites
 
-You need a coding agent and Node.js 22.20 or later; your agent checks for Python 3.9 and git and tells you what to do.
+You need a coding agent and Node.js 22.20 or later; your agent checks for Python 3.9 and git and tells you what to do. For step 3 you need permission to create issues and a project in the repository, and a GitHub token, which the second skill helps you create.
 
 ## Install options
 

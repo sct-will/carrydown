@@ -1,25 +1,21 @@
 # The method
 
-Carrydown carries a ground truth document down into a governed plan. The plan has one specification per work item, a set of GitHub issues, a project board and the engineers' skill that every issue links to. This page explains the eight steps, which ones the carrydown skills do for you and which ones stay with the plan owner and the engineers. Two skills you install, one skill is generated for your engineers.
+Carrydown carries a ground truth document down into a governed plan. The plan has one specification per work item, a set of GitHub issues, a project board and the engineers' skill that every issue links to. This page explains the four steps and what each one produces, which parts the carrydown skills do for you and which stay with the plan owner and the engineers. Two skills you install, one skill is generated for your engineers.
 
 The idea is old in systems engineering, where it is called flow-down: a requirement at the top is traced to every part below it. The carrydown skills apply the same idea to software work done with coding agents. One document, one unbroken line through the plan, the specifications, the issues, the board and the agent.
 
-## The eight steps
+## The four steps
 
-| Step | What happens | Who decides | What the carrydown skills give you |
+| Step | What happens | Who decides | What it produces |
 | --- | --- | --- | --- |
-| 1. Make the ground truth hold still | Write or collect the document or documents the project must obey. Check each claim about existing code and systems while you write. Run adversarial reviews. Record decisions and a changelog. | Plan owner | Interview prompts and review prompts in the ground-truth skill. |
-| 2. Give it a machine-readable twin | Render the document to Markdown in the repository with stable section anchors. Every later artifact cites it by section number. | Automatic | `render_ground_truth.py` for Word and Markdown input. |
-| 3. Draft the plan around real people | Milestones with exit gates, tracks, work items with owners, dates and dependencies, a load table, a critical path, work units of variable length. Review it adversarially. | Plan owner, with a draft from the agent | Planning guide, `plan.yaml` template, `check_specs.py --report`. |
-| 4. One specification per work item | A fixed template. Contract excerpts copied from the ground truth. Written in parallel where the agent supports it, reviewed by the plan owner with the agent. A checker validates every file against the plan. | Agent drafts, plan owner reviews and approves | Template, scaffold script, checker, writer brief. |
-| 5. The engineers' skill | A small skill generated from the specifications. An engineer names a work item id and the agent reads the specification, the cited sections and the conventions first. | Automatic, then reviewed by the plan owner | `generate_dev_skill.py`, the last step of `carrydown-plan-to-github`. |
-| 6. GitHub structure | A sub-epic per milestone, an issue per work item as a sub-issue, dependency links, a roll-up comment on the parent Epic, labels. Each issue body is templated. | Automatic, after the plan owner's yes | `github_sync.py`. |
-| 7. A project board | A GitHub Project (v2) with a work unit iteration field of custom length, track, dates, and three views. Every issue placed and every field filled. | Automatic, after the plan owner's yes | `github_project.py`. |
-| 8. Progress is shown | Evidence posted on every closed issue. A weekly integration check between tracks with a named joint check. One demonstration per milestone against criteria written in advance. | Engineers show, the people accountable for the outcome decide | Comment templates, milestone files, checkpoint table. |
+| 1. Generate, with `carrydown-ground-truth` | The agent renders the ground truth to Markdown with stable section anchors, interviews the plan owner about people, time and dates, and drafts the plan around those people. Then it writes one specification per work item to a fixed template, with contract excerpts copied from the ground truth. A checker validates every file against the plan. | The plan owner decides, the agent drafts | The rendered ground truth, `plan.yaml` with its load table and critical path, and one specification per work item. |
+| 2. Review | The plan owner reads the plan week by week and every specification, adversarially, and edits them with the agent until they are right. No separate reviewer. | Plan owner | A plan and specifications the plan owner approves, with 0 findings from the checker. |
+| 3. Carry down to GitHub, with `carrydown-plan-to-github` | A dry run first. After the plan owner's yes: labels, an Epic, a sub-epic per milestone, an issue per work item as a sub-issue with its specification linked, dependency links and a roll-up comment on the Epic. Then a GitHub Project (v2) board with a work unit iteration field of custom length, track, dates and three views. Last, the engineers' skill is generated from the specifications. | Plan owner, after each dry run | Issues, the board, and the engineers' skill with the install line to send each engineer. |
+| 4. Work the issues | Each engineer installs the engineers' skill once and says "Work on WI-03". The agent reads the specification, the cited sections and the conventions, then plans the code. Evidence is posted on every closed issue, a weekly checkpoint runs a named joint check between tracks, and each milestone ends with one demonstration against criteria written in advance. | Engineers show, the people accountable for the outcome decide | Code, closing comments with evidence, checkpoint comments and a demonstration note on each sub-epic. |
 
 Planning decisions stay with the plan owner. The agent drafts, validates and populates. It does not decide who does what, when, or in which order.
 
-## Step 1 in more detail
+## Before step 1: a ground truth that holds still
 
 A ground truth is any mix of:
 
@@ -31,9 +27,9 @@ A ground truth is any mix of:
 
 While you write it, verify claims about the existing world. Read the code. Run the test suite. Probe the live service. Measure. Anything you cannot prove, mark "verify at implementation" instead of asserting it. Then run adversarial passes: ask the agent, in a fresh context, to find what is missing, wrong or contradictory, and fold the findings back in with a changelog entry and, for architecture choices, a decision record.
 
-The carrydown skills cannot write your document for you. It can help you review it.
+The carrydown skills cannot write your document for you. They can help you review it: the ground-truth skill has interview prompts and review prompts.
 
-## Step 3 in more detail
+## Step 1 in more detail: the plan
 
 Work units are time boxes of variable length. A thin first slice may take a week and the core may take three. Pauses sit between them. There is no sprint vocabulary, no story points and no velocity. Each work unit has an exit gate, and each milestone has acceptance criteria written before the work starts.
 
@@ -58,13 +54,13 @@ A generated task list and a plan look alike on a board. What separates them is t
 
 In `plan.yaml` the rationale is `rationale`, `joint_demonstration` and, when needed, `single_track_reason` on each milestone, `order_rationale` on each track and `theme` on each item. The scaffold copies it into each `milestone.md` and into the "How this plan was composed" section of the specification README. The checker fails a plan that leaves a reason out, and `check_specs.py --report` ends with the planning review for the plan owner to read.
 
-## Step 4 in more detail
+## Step 1 in more detail: the specifications
 
 Every specification has the same sections, in the same order: why the item exists, outcome, context for the agent, contract or protocol, implementation guide, acceptance criteria, evidence of completion, integration points, out of scope, watch out for, references, decisions recorded. Contract excerpts are copied word for word. When the writer finds a contradiction in the ground truth, the specification records which side wins, and the contradiction goes onto the list for the next version of the document.
 
 The checker validates header rows against `plan.yaml`, section order, length, banned vocabulary, the ids of external items, broken links, and the section numbers cited.
 
-## Step 8 in more detail
+## Step 4 in more detail
 
 Three rhythms.
 

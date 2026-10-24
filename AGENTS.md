@@ -4,7 +4,7 @@ Read this when you open the carrydown repository.
 
 ## What this repository is
 
-- Two Agent Skills: `carrydown-ground-truth` and `carrydown-plan-to-github`. The second also generates a third skill, per project, that the engineers install. Two skills you install, one skill is generated for your engineers.
+- Two Agent Skills: `carrydown-ground-truth` and `carrydown-plan-to-github`. Two skills you install, one skill is generated for your engineers: the last step of `carrydown-plan-to-github` generates it for each project.
 - The Python scripts and Markdown templates the skills run, each skill carrying its own copy.
 - A fictional sample, `sample/expense-approvals/`, with its worked output.
 

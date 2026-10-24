@@ -4,10 +4,10 @@ A proposal for the maintainer to apply by hand. Nothing here has been written to
 
 ## sct-will/carrydown
 
-**Description** (65 characters, the README's tagline, so the repository page, search results and link previews all say the same thing):
+**Description** (129 characters, the tagline on the README hero image, so the repository page, search results and link previews all say the same thing):
 
 ```text
-Give every AI coding agent the architecture, not just the ticket.
+An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent.
 ```
 
 The current description, a longer line that also gives an out-of-date count of the skills, is a third tagline and should go.
@@ -37,7 +37,7 @@ Compared with today's six topics, this keeps `agent-skills`, `github-projects` a
 
 ```bash
 gh repo edit sct-will/carrydown \
-  --description "Give every AI coding agent the architecture, not just the ticket." \
+  --description "An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent." \
   --homepage "[ARTICLE URL]" \
   --remove-topic architecture,enterprise,planning \
   --add-topic agent-skills,coding-agents,ai-agents,spec-driven-development,project-planning,github-projects,software-architecture,ai-governance,product-management,requirements-traceability

@@ -4,7 +4,7 @@ The long form of the [prerequisites line in the README](../README.md#prerequisit
 
 You need four things: a terminal, Node.js (only to run the install line), Python 3.9 or later (to run the scripts) and git (to keep the plan under version control). Everything here is free.
 
-A note on version numbers. The skills installer needs Node.js 22.20 or later. Install the version marked LTS from https://nodejs.org and you will have it. On Linux, the version in the system package manager is sometimes older. If `node --version` prints a number below 22.20, install from nodejs.org instead.
+A note on version numbers. The skills installer needs Node.js 22.20 or later. Install the version marked LTS (long-term support) from https://nodejs.org and you will have it. On Linux, the version in the system package manager is sometimes older. If `node --version` prints a number below 22.20, install from nodejs.org instead.
 
 ## macOS
 
