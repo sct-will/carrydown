@@ -107,7 +107,7 @@ Attach to the closing comment on the issue, in the template from the folder READ
 - The before and after row counts for one refused decision, with identifiers only.
 - Redactions. Remove employee identifiers from pasted responses that are not fixtures.
 
-The coding agent produces these from the commands above. The developer checks them before posting.
+The coding agent produces these from the commands above. The engineer checks them before posting.
 
 ## Integration points
 

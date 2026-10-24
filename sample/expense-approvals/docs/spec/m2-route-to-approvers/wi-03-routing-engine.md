@@ -109,7 +109,7 @@ Attach to the closing comment on the issue, in the template from the folder READ
 - The suites `tests/routing.engine.test.js`, `tests/routing.states.test.js` and `tests/routing.business-days.test.js` with `npm test`, and `tests/contract/routing.contract.test.js` with `npm run test:contract`.
 - A table of the `approval_step` rows for the three demo reports. Remove employee identifiers from any pasted response that is not a fixture.
 
-The coding agent produces these from the commands above. The developer checks them before posting.
+The coding agent produces these from the commands above. The engineer checks them before posting.
 
 ## Integration points
 

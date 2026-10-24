@@ -114,7 +114,7 @@ Attach to the closing comment on the issue, in the template from the folder READ
 - The two approver run as a short recording or screenshots, with the `GET /reports/{id}` body showing the state and both steps, and the keyboard and screen reader walkthrough with each step and result.
 - Redactions. Show made-up ids and amounts only. Remove real identities, comments and request ids from the screenshots.
 
-The coding agent produces these from the commands above. The developer checks them before posting.
+The coding agent produces these from the commands above. The engineer checks them before posting.
 
 ## Integration points
 

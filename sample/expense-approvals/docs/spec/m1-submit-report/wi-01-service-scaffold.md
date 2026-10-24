@@ -134,7 +134,7 @@ Attach to the closing comment on the issue, in the template from the folder READ
 - The response body of the stub for POST /reports, and the 404 body with the flag off, with identifiers only.
 - The table list from the first migration run on an empty database, with no data in it.
 
-The coding agent produces these from the commands above. The developer checks them before posting.
+The coding agent produces these from the commands above. The engineer checks them before posting.
 
 ## Integration points
 

@@ -21,7 +21,7 @@ A plan for a silent screen recording, sixty seconds long, that shows the sample 
 | 5 | 28 to 34 s | The critical path block, `WI-01 -> WI-02 -> WI-04 -> WI-08 -> WI-11`, and the line saying it meets the target with 2 days to spare. | The critical path shows what would slip, before it does. |
 | 6 | 34 to 42 s | The plan owner types "Create the GitHub issues and the board." The dry run scrolls by and stops on `1 Epic, 5 sub-epics, 9 work item issues`. | A dry run first. Nothing reaches GitHub until you say yes. |
 | 7 | 42 to 52 s | "Go ahead." The "sped up" mark shows. Cut to the browser: the project board, grouped by work unit, with tracks and dates filled in. The mouse pointer opens WI-03 and its AI engineering notes come into view. | Issues and a board, with owners and dates already filled in. |
-| 8 | 52 to 60 s | The specification link opens the WI-03 file; the "Ground truth: Sections 3.4, 3.5, 7.1" row is highlighted. Final card: the tagline, `npx skills add sct-will/carrydown` and `github.com/sct-will/carrydown`. | Give every AI coding agent the architecture, not just the ticket. |
+| 8 | 52 to 60 s | The specification link opens the WI-03 file; the "Ground truth: Sections 3.4, 3.5, 7.1" row is highlighted. Final card: the tagline, `npx skills add sct-will/carrydown` and `github.com/sct-will/carrydown`. | An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent. |
 
 ## Transcript
 
@@ -34,6 +34,6 @@ To post beside the recording, in this order:
 5. The critical path shows what would slip, before it does.
 6. A dry run first. Nothing reaches GitHub until you say yes.
 7. Issues and a board, with owners and dates already filled in.
-8. Give every AI coding agent the architecture, not just the ticket. Install with `npx skills add sct-will/carrydown`.
+8. An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent. Install with `npx skills add sct-will/carrydown`.
 
 The sample is fictional: the company, the people and the dates are invented, and the plan, issues and board are what the skills produced.

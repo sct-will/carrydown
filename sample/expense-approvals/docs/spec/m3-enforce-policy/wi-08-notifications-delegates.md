@@ -115,7 +115,7 @@ Attach to the closing comment on the issue, in the template from the folder READ
 - The event JSON and the captured email for one return, side by side, and the `PUT /delegates` response body.
 - A screenshot of the delegate screen and the keyboard and screen reader walkthrough with each step and result. Redactions. Use made-up ids, amounts and addresses only, and remove real names and comments.
 
-The coding agent produces these from the commands above. The developer checks them before posting.
+The coding agent produces these from the commands above. The engineer checks them before posting.
 
 ## Integration points
 

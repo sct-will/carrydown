@@ -103,7 +103,7 @@ Attach to the closing comment on the issue, in the template from the folder READ
 - The audit_event rows for the exported reports, identifiers only, and the failure injection test output.
 - Redactions. Attach made-up rows only. For real pilot data attach the header, the row count and the checksum, never employee ids, cost centres or amounts.
 
-The coding agent produces these from the commands above. The developer checks them before posting.
+The coding agent produces these from the commands above. The engineer checks them before posting.
 
 ## Integration points
 
