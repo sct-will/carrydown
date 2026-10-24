@@ -6,6 +6,10 @@ Turn your architecture document into a plan your team and its AI coding agents c
 
 [![Licence](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Last commit](https://img.shields.io/github/last-commit/sct-will/carrydown?v=2)](https://github.com/sct-will/carrydown/commits/main) [![Issues](https://img.shields.io/github/issues/sct-will/carrydown?v=2)](https://github.com/sct-will/carrydown/issues) [![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-blue)](LICENSE-CONTENT.md) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-3%20skills-teal)](https://agentskills.io) [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](#prerequisites) [![Open in Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sct-will/carrydown)
 
+Install: `npx skills add sct-will/carrydown`
+
+See the fictional sample first, no install: the [public board](https://github.com/users/sct-will/projects/2) and [one issue](https://github.com/sct-will/carrydown-sample/issues/9). Three clicks: open the board, open WI-03, then follow its specification link to the cited sections. The company, people and dates in the sample are fictional. The plan, specifications, issues and board are what the skills produced.
+
 [See it in 60 seconds](#see-it-in-60-seconds) · [How it works](#how-it-works) · [Getting started](#getting-started) · [Prerequisites](#prerequisites) · [What you get](#what-you-get) · [Install options](#install-options) · [Sample](#sample) · [FAQ](#faq) · [Contributing](#contributing) · [Licence](#licence)
 
 More: [Start here](START-HERE.md) · [Plan owner guide](docs/plan-owner-guide.md) · [Method](docs/method.md) · [Inputs](docs/inputs.md) · [Derive the date](docs/derive-the-date.md) · [A recorded run](docs/sample-run.md) · [Security](docs/security.md) · [Changelog](CHANGELOG.md) · [For agents](AGENTS.md)
