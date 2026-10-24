@@ -39,6 +39,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
+import github_client as G  # noqa: E402
 
 CLASSIC_URL = "https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown"
 FINE_URL = "https://github.com/settings/personal-access-tokens/new"
@@ -66,10 +67,10 @@ def store(path, token):
 
 
 def check(token, repo=None):
-    gh = L.GitHub(token)
+    gh = G.GitHub(token)
     try:
         me = gh.whoami()
-    except L.GitHubError as e:
+    except G.GitHubError as e:
         L.say(f"GitHub rejected the token: {str(e)[:200]}")
         L.say(f"Fix: create a new token with the pre-filled link {CLASSIC_URL} and store it again. Check that you copied the whole token and that it has not expired.")
         return 1
@@ -112,7 +113,7 @@ def main(argv=None):
         description="Walk through creating a GitHub token, store it safely and check it. The token is never printed.",
         epilog="Storage: ~/.config/carrydown/github_token, mode 600. The GitHub scripts read it from there.",
     )
-    ap.add_argument("--token-file", default=L.DEFAULT_TOKEN_FILE, help=f"where to store or read the token (default: {L.DEFAULT_TOKEN_FILE})")
+    ap.add_argument("--token-file", default=G.DEFAULT_TOKEN_FILE, help=f"where to store or read the token (default: {G.DEFAULT_TOKEN_FILE})")
     ap.add_argument("--check", action="store_true", help="check the token already stored, store nothing")
     ap.add_argument("--repo", help="owner/name. Also check that the token reaches this repository")
     ap.add_argument("--stdin", action="store_true", help="read the token from standard input instead of prompting")
@@ -135,7 +136,7 @@ def main(argv=None):
         return 0
 
     if a.check:
-        token = L.read_token(a.token_file, required=False)
+        token = G.read_token(a.token_file, required=False)
         if not token:
             L.say(f"No token found at {short(dest)}. Run this script without --check to set one up.")
             return 1
@@ -167,8 +168,8 @@ def main(argv=None):
     if len(token) < 20 or any(c.isspace() for c in token):
         L.die("that does not look like a token (too short or has spaces)")
     try:
-        L.GitHub(token).whoami()
-    except L.GitHubError as e:
+        G.GitHub(token).whoami()
+    except G.GitHubError as e:
         L.say(f"GitHub rejected the token, so it was not stored: {str(e)[:120]}")
         L.say("Check that you copied the whole token and that it has not expired.")
         return 1

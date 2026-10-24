@@ -62,7 +62,7 @@ def main():
     step("checker on the sample", [PY, "scripts/check_specs.py", "--root", SAMPLE])
     step("checker report on the sample", [PY, "scripts/check_specs.py", "--root", SAMPLE, "--report"])
     for s in scripts:
-        if s.name not in ("carrydown_lib.py", "selftest.py"):
+        if s.name not in ("carrydown_lib.py", "github_client.py", "selftest.py"):
             step(f"--help {s.name}", [PY, f"scripts/{s.name}", "--help"])
     step("dry run: render_ground_truth", [PY, "scripts/render_ground_truth.py", f"{SAMPLE}/ground-truth/architecture.md", "--root", SAMPLE, "--version", "0.3", "--dry-run"])
     step("dry run: scaffold_spec", [PY, "scripts/scaffold_spec.py", "--root", SAMPLE, "--stubs"])

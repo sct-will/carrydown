@@ -5,6 +5,11 @@ Installers such as `npx skills add` copy only a skill's folder, not the whole re
 So every skill carries the scripts and templates it runs. The canonical copies are in
 scripts/ and templates/ at the top of the repository. This script refreshes the copies.
 
+The GitHub client (github_client.py, the only module with network or token code) ships only
+with carrydown-plan-to-github. The check fails if it, or any other script that is not in a
+skill's list, turns up in another skill, and if any copy of carrydown_lib.py under skills/
+differs from scripts/carrydown_lib.py.
+
 Usage
   python3 scripts/sync_skill_assets.py            copy files (dry run: shows what would change)
   python3 scripts/sync_skill_assets.py --apply    write the copies
@@ -24,7 +29,7 @@ NEEDS = {
         "templates": ["plan.yaml", "spec.md", "milestone.md", "spec-README.md", "closing-comment.md", "checkpoint-comment.md", "check-specs-workflow.yml"],
     },
     "carrydown-plan-to-github": {
-        "scripts": ["github_token.py", "github_sync.py", "github_project.py", "check_specs.py"],
+        "scripts": ["github_token.py", "github_sync.py", "github_project.py", "github_client.py", "check_specs.py"],
         "templates": ["issue-body.md", "closing-comment.md", "checkpoint-comment.md"],
     },
     "carrydown-dev-skill": {
@@ -32,6 +37,9 @@ NEEDS = {
         "templates": ["dev-skill/SKILL.md", "dev-skill/README.md"],
     },
 }
+
+# Modules that may ship with one skill only, because they hold network or token code.
+ONLY_IN = {"github_client.py": "carrydown-plan-to-github"}
 
 
 def closure(names):
@@ -60,6 +68,27 @@ def plan():
     return out
 
 
+def problems():
+    """Copies that must not exist or must match, beyond the plan: a module outside the skill
+    that may ship it, a script no skill lists, and any carrydown_lib.py under skills/ that
+    differs from the canonical one (the listed copies are compared in main)."""
+    out = []
+    wanted = {dst for _, dst in plan()}
+    for skill, need in NEEDS.items():
+        names = closure(need["scripts"])
+        for mod, owner in ONLY_IN.items():
+            if mod in names and skill != owner:
+                out.append(f"{mod} is in the script list of {skill}, but it may ship only with {owner}")
+    for f in sorted((REPO / "skills").glob("*/scripts/*.py")):
+        if f not in wanted:
+            out.append(f"not expected: {f.relative_to(REPO)}. Remove it by hand")
+    canonical = (REPO / "scripts" / "carrydown_lib.py").read_bytes()
+    for f in sorted((REPO / "skills").rglob("carrydown_lib.py")):
+        if f not in wanted and f.read_bytes() != canonical:
+            out.append(f"differs from scripts/carrydown_lib.py: {f.relative_to(REPO)}")
+    return out
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Copy the scripts and templates each skill needs into its own folder.")
     ap.add_argument("--apply", action="store_true", help="write the copies")
@@ -80,9 +109,15 @@ def main(argv=None):
             print(f"copied: {rel}")
         else:
             print(f"would copy: {rel}")
+    extra = problems()
+    for p in extra:
+        print(p)
     if a.check:
-        print("copies are current" if not stale else f"{stale} copy(ies) out of date. Run: python3 scripts/sync_skill_assets.py --apply")
-        return 1 if stale else 0
+        if not stale and not extra:
+            print("copies are current")
+        elif stale:
+            print(f"{stale} copy(ies) out of date. Run: python3 scripts/sync_skill_assets.py --apply")
+        return 1 if stale or extra else 0
     print(f"{stale} file(s) {'copied' if a.apply else 'would be copied'}.")
     return 0
 

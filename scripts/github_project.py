@@ -33,6 +33,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
+import github_client as G  # noqa: E402
 import github_sync as S  # noqa: E402
 
 CLICK = [
@@ -188,11 +189,11 @@ def run(argv=None):
     if a.offline:
         L.say("offline: nothing read from GitHub")
         return 0
-    token = L.read_token(a.token_file, required=a.apply or a.verify)
+    token = G.read_token(a.token_file, required=a.apply or a.verify)
     if not token:
         L.say("no token available: showing the intended configuration only. Run scripts/github_token.py to set one up.")
         return 0
-    gh = L.GitHub(token, pause=0.3)
+    gh = G.GitHub(token, pause=0.3)
     st, ujs = gh.rest_status("GET", f"/users/{owner}")
     if st == 404:
         L.die(f"owner {owner} not found")
@@ -246,7 +247,7 @@ def run(argv=None):
             try:
                 gh.graphql("mutation($p: ID!, $r: ID!) { linkProjectV2ToRepository(input: {projectId: $p, repositoryId: $r}) { repository { id } } }", {"p": proj["id"], "r": repo_node})
                 L.say("  linked the project to the repository")
-            except L.GitHubError as e:
+            except G.GitHubError as e:
                 L.say(f"  could not link to the repository: {e}")
     if not proj:
         L.say("\nDry run complete. Add --apply to create the project, fields, views and items.")
@@ -329,7 +330,7 @@ def run(argv=None):
                 continue   # GitHub rejects visible fields on roadmap views
             try:
                 gh.graphql("mutation($v: ID!, $f: [ID!]) { updateProjectV2View(input: {viewId: $v, configuration: {visibleFieldIds: $f}}) { projectV2View { id } } }", {"v": v["id"], "f": visible})
-            except L.GitHubError as e:
+            except G.GitHubError as e:
                 L.say(f"  could not set visible fields on {vname}: {str(e)[:160]}")
         L.say("  visible fields set on the Table and Board views (the Roadmap view takes its fields from its settings)")
 

@@ -35,6 +35,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
+import github_client as G  # noqa: E402
 import check_specs  # noqa: E402
 
 COLORS = {"GRAY": "6e7781", "BLUE": "1d76db", "GREEN": "0e8a16", "YELLOW": "fbca04", "ORANGE": "d93f0b",
@@ -334,9 +335,9 @@ def run(argv=None):
     proj = plan["project"]
     gh = None
     if not a.offline:
-        token = L.read_token(a.token_file, required=a.apply or a.verify)
+        token = G.read_token(a.token_file, required=a.apply or a.verify)
         if token:
-            gh = L.GitHub(token)
+            gh = G.GitHub(token)
     L.say("")
     L.say(f"carrydown github_sync  {'APPLY' if a.apply else 'VERIFY (read only)' if a.verify else 'DRY RUN (nothing will be written)'}")
     plan_shown = plan_path.relative_to(root) if root in plan_path.parents else plan_path.name
