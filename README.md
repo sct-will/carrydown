@@ -4,15 +4,21 @@
 
 Carrydown carries an enterprise ground-truth document down into a governed plan. From an architecture document, requirements or rules it builds one specification per work item, GitHub sub-epics and issues, a populated GitHub Project board, and a developer skill in every issue. It is a kit of three Agent Skills and a few Python scripts that you drive by talking to your coding agent.
 
-[![Licence](https://img.shields.io/github/license/sct-will/carrydown)](LICENSE)
-[![Last commit](https://img.shields.io/github/last-commit/sct-will/carrydown)](https://github.com/sct-will/carrydown/commits/main)
-[![Issues](https://img.shields.io/github/issues/sct-will/carrydown)](https://github.com/sct-will/carrydown/issues)
+<!-- Static badges, because the dynamic ones show "repo not found" while the repository is private.
+On publish day switch back to these dynamic badges:
+https://img.shields.io/github/license/sct-will/carrydown
+https://img.shields.io/github/last-commit/sct-will/carrydown
+https://img.shields.io/github/issues/sct-will/carrydown -->
+[![Licence: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-blue)](LICENSE-CONTENT.md)
+![Agent skills: 3](https://img.shields.io/badge/agent%20skills-3-teal)
 
 ## Table of contents
 
 - [What it is](#what-it-is)
 - [Who it is for](#who-it-is-for)
 - [Install](#install)
+- [Getting started](#getting-started)
 - [The three skills](#the-three-skills)
 - [The flow](#the-flow)
   - [Say it to your agent](#say-it-to-your-agent)
@@ -44,7 +50,7 @@ If you are a product manager, read [START-HERE.md](START-HERE.md). You need one 
 npx skills add sct-will/carrydown --all
 ```
 
-`--all` installs every skill to every agent the installer supports, without asking. To install all three skills for one agent only, name it.
+`--all` installs all three skills for every coding agent the installer finds on this computer, without asking. To install all three skills for one agent only, name it.
 
 ```bash
 npx skills add sct-will/carrydown --skill '*' -a claude-code
@@ -53,6 +59,26 @@ npx skills add sct-will/carrydown --skill '*' -a claude-code
 Replace `claude-code` with your agent's name from the table below. Add `-g` to install for your user instead of the current project. Run `npx skills add sct-will/carrydown` with no options to choose from a list. Run `npx skills add sct-will/carrydown --list` to see the skills first.
 
 The installer is the Vercel Labs `skills` command line tool. Its documentation is at https://github.com/vercel-labs/skills. You need Node.js. The scripts in the skills need Python 3.9 or later. Reading Word files needs the `lxml` package (`pip install lxml`).
+
+## Getting started
+
+1. Install the skills. In a terminal in your project folder, run `npx skills add sct-will/carrydown --all`.
+2. Open your coding agent with your project folder as its working directory.
+3. Put your document (.docx or .md) in `docs/source`.
+4. Tell the agent, then answer its interview about people, dates, repository and rules.
+
+   > Set up a project plan from this document.
+
+5. Read the plan it shows you, ask for changes, and approve it.
+6. Tell the agent, then read the dry run and confirm it.
+
+   > Create the GitHub issues and the board.
+
+7. Tell the agent, then send the install line it gives you to your team.
+
+   > Generate the developer skill.
+
+The long form, with the token steps and a glossary, is in [START-HERE.md](START-HERE.md).
 
 ## The three skills
 
@@ -64,26 +90,7 @@ The installer is the Vercel Labs `skills` command line tool. Its documentation i
 
 ## The flow
 
-```text
-ground truth documents (.docx or .md)
-        |  render_ground_truth.py
-        v
-docs/ground-truth/*.md  + section index
-        |  interview, plan with the human, scaffold_spec.py
-        v
-docs/spec/plan.yaml  +  README  +  milestone.md  +  one specification per item
-        |  check_specs.py  (mechanical review against the plan)
-        v
-        |  github_sync.py  (dry run first, then --apply)
-        v
-GitHub: labels, sub-epics, issues, sub-issue links, Epic roll-up
-        |  github_project.py  (dry run first, then --apply)
-        v
-GitHub Project board: Work unit, Track, Complete by, Checkpoint, 3 views
-        |  generate_dev_skill.py
-        v
-docs/dev/skills/<project>-dev/  installed in every developer's agent
-```
+![How carrydown works](docs/images/flow.png)
 
 Planning decisions stay with people. The skills set up, draft to templates, validate and populate.
 
