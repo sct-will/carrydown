@@ -24,7 +24,7 @@ Use the "Question" form for questions. Use the "Feature request" form for ideas.
 
 | Path | What lives there |
 | --- | --- |
-| `scripts/` | The canonical Python scripts. Standard library only, except `lxml` for Word files. |
+| `scripts/` | The canonical Python scripts. Standard library only. |
 | `templates/` | The canonical templates the scripts fill in. |
 | `skills/<name>/` | Each skill: `SKILL.md`, `references/`, and its own copy of the scripts and templates it runs. |
 | `sample/expense-approvals/` | The fictional sample and its worked output. |

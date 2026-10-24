@@ -1,5 +1,9 @@
 # Frequently asked questions
 
+## npx: command not found
+
+`npx` comes with Node.js, which is not installed on this computer or is not on your path. Go to https://nodejs.org, download the version marked LTS, run its installer, then close and reopen your terminal and your agent, and try again. You can also ask your agent: "Node.js seems to be missing. Tell me how to install it for this computer." If you cannot install Node.js, there is a path without it: copy the three folders in `skills/` of the kit repository into your agent's skills folder. The README's Install options section lists the folders.
+
 ## How do I start each skill?
 
 Say one sentence per skill. "Set up a project plan from this document." "Create the GitHub issues and the board." "Generate the developer skill." If your agent does not pick the skill up, put "Use the carrydown-ground-truth skill." (or `carrydown-plan-to-github`, or `carrydown-dev-skill`) in front.
@@ -14,7 +18,7 @@ Any agent that reads Agent Skills. The installer supports more than seventy. The
 
 ## What do I need installed?
 
-Node.js, for the install command. Python 3.9 or later, for the scripts. The `lxml` Python package only if you start from a Word file (`pip install lxml`). Your agent can check these and tell you.
+Node.js, for the install command. Python 3.9 or later, for the scripts. Nothing else, not even for Word files. Your agent can check these and tell you.
 
 ## Does it write the code?
 

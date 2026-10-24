@@ -5,7 +5,7 @@
 The GitHub scripts need a token that can write issues and projects. A token is a password.
 
 - Create a classic token with the scopes `repo` and `project`, or a fine-grained token with the equivalent permissions. See the plan-to-github skill, `references/token-walkthrough.md`.
-- Store it with `python3 scripts/github_token.py`. The script reads it from a hidden prompt, a plain text file you name (`--from-file`), or standard input. It writes `~/.config/carrydown/github_token` in a folder with mode 700 and a file with mode 600.
+- Store it with `python3 scripts/github_token.py`. The script reads it from a hidden prompt, a plain text file you name (`--from-file`), or standard input. With `--from-file`, the script deletes that file after it has stored and verified the token (`--no-delete-after` keeps it). It writes `~/.config/carrydown/github_token` in a folder with mode 700 and a file with mode 600.
 - The scripts never print the token. They remove it from every error message before showing it. They never put it in a URL or a command line argument.
 - The scripts never write the token into the project. The token lives outside the repository.
 - Do not paste the token into a chat with an agent. Do not commit it. If you did either, revoke it at https://github.com/settings/tokens and make a new one.
