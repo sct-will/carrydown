@@ -2,7 +2,7 @@
 
 # carrydown
 
-Give your coding agent the architecture document, or other context, and optionally the project constraints: the number of engineers who will work on the project and the target duration. It drafts the plan, writes one specification per work item, carries both into GitHub as milestones, issues and a project board, and generates an agent skill every engineer's agent uses to read the right sections before it writes code. Two skills you install, one skill is generated for your engineers.
+Give your coding agent the architecture document, or other context, and optionally the project constraints: the number of engineers who will work on the project and the target duration. It drafts the plan, writes one specification per work item, carries both into GitHub as an epic, a sub-epic per milestone, issues and a project board, and generates an agent skill every engineer's agent uses to read the right sections before it writes code. Two skills you install, one skill is generated for your engineers.
 
 [![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![Licence](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
 
@@ -22,12 +22,12 @@ To look before you install, open [the sample board](https://github.com/users/sct
 
 ## How it works
 
-![How carrydown works. Two lanes. Plan owner, an engineering or product manager: step 1 Generate, the plan owner runs carrydown-ground-truth in their agent, in: architecture document plus people and dates, out: plan.yaml and one spec per work item; step 2 Review, the plan and specs are human reviewed, with the agent making the edits; step 3 Carry down to GitHub, the plan owner runs carrydown-plan-to-github in their agent, out: epic, a sub-epic per milestone, issues with specs, board, engineers' skill. One install line goes down to the Engineers lane: step 4 Work the issues, "Work on WI-03", the agent invokes the skill, reads the spec and the cited sections, then plans the code. The ground truth document is the only amber element and a thin amber thread runs from it through steps 1 and 3 into step 4.](docs/images/handoff.png)
+![How carrydown works. Two lanes. Plan owner, an engineering or product manager: step 1 Generate, the plan owner runs carrydown-ground-truth in their agent, in: architecture document plus people and dates, out: plan.yaml and one spec per work item; step 2 Review, the plan and specs are human reviewed, with the agent making the edits; step 3 Carry down to GitHub, the plan owner runs carrydown-plan-to-github in their agent, out: epic, a sub-epic per milestone, issues with specs, board, engineers' skill, with the note dry run first, nothing is written until you say yes. One install line goes down to the Engineers lane: step 4 Work the issues, the engineer says "Work on WI-03" for work item WI-03, the agent invokes the skill, reads the spec and the cited sections, then plans the code. The ground truth document is the only amber element. A thin amber thread, labelled ground truth, cited by section, runs from it through steps 1 and 3 into step 4.](docs/images/handoff.png)
 
 1. **Generate.** You have the ground truth, usually an architecture document. Your agent interviews you about people, time and dates, then writes the plan and one specification per work item. Skill: [carrydown-ground-truth](skills/carrydown-ground-truth/SKILL.md).
-2. **Review.** You read the plan and the specifications and edit them with the agent until they are right. No separate reviewer.
-3. **Carry down to GitHub.** Say "put the plan on GitHub". Then the agent generates an epic, a sub-epic per milestone, an issue per work item with its specification, the board and the engineers' skill. It shows a dry run first and writes nothing until you say yes. Skill: [carrydown-plan-to-github](skills/carrydown-plan-to-github/SKILL.md).
-4. **Work the issues.** Each engineer installs the engineers' skill once and says "Work on WI-03". Their agent reads the specification and the sections it cites, then plans the code. The install line names the skill's folder in your repository and the engineer's agent:
+2. **Review.** You read the plan, `docs/spec/plan.yaml`, and the specifications in the folders under `docs/spec/`, and edit them with the agent until they are right. No separate reviewer.
+3. **Carry down to GitHub.** Commit and push the plan first, because each issue links its specification on GitHub. Say "put the plan on GitHub". Then the agent generates an epic, a sub-epic per milestone, an issue per work item with its specification, the board and the engineers' skill. It shows a dry run first and writes nothing until you say yes. Skill: [carrydown-plan-to-github](skills/carrydown-plan-to-github/SKILL.md).
+4. **Work the issues.** Each engineer installs the engineers' skill once, opens an issue, for example work item WI-03, and says "Work on WI-03". Their agent reads the specification and the sections it cites, then plans the code. The install line works once you have committed and pushed the generated skill folder. It names that folder in your repository and the engineer's agent:
 
    ```bash
    npx skills add https://github.com/<owner>/<repo>/tree/main/docs/dev/skills/<project>-dev -a <agent>
@@ -39,6 +39,8 @@ You are the plan owner, an engineering manager or a product manager, and you nee
 
 ## The sample, real and public
 
+The sample is a fictional expense approvals service, so the company, the people and the dates are invented. Everything the two skills made from it is real and public in [carrydown-sample](https://github.com/sct-will/carrydown-sample): [plan.yaml](https://github.com/sct-will/carrydown-sample/blob/main/docs/spec/plan.yaml), the nine specifications, fifteen issues, the board and [the generated engineers' skill](https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev). A copy sits in [`sample/expense-approvals/`](sample/expense-approvals/) for the self test, and [a recorded run](docs/sample-run.md) shows what each script printed when the sample was carried into a throwaway repository.
+
 [![Issue 9 in the sample repository, WI-03 Approval routing engine, as GitHub renders it. Open, parent Milestone 2, Route to approvers. The body gives the target completion date, the checkpoint, why the item exists, then the AI engineering notes: a link to the specification, a link to the engineers' skill, the instruction to install it once and ask your coding agent to work on WI-03, and the ground truth sections 3.4, 3.5 and 7.1.](docs/images/issue-9.png)](https://github.com/sct-will/carrydown-sample/issues/9)
 
 *What step 4 opens: [issue 9](https://github.com/sct-will/carrydown-sample/issues/9) and [the specification it links to](https://github.com/sct-will/carrydown-sample/blob/main/docs/spec/m2-route-to-approvers/wi-03-routing-engine.md).*
@@ -46,8 +48,6 @@ You are the plan owner, an engineering manager or a product manager, and you nee
 [![The sample's GitHub Project as a table grouped by work unit, with the Title, Track, Complete by and Checkpoint columns. Five work units from 1 February to 23 April 2027, each with its milestone row and its work items, for example WI-03 Approval routing engine on the Workflow track, complete by 19 February 2027, checkpoint 26 February 2027.](docs/images/board.png)](https://github.com/users/sct-will/projects/2)
 
 *What step 3 built: [the board](https://github.com/users/sct-will/projects/2), shown as a table grouped by work unit.*
-
-The sample is a fictional expense approvals service, so the company, the people and the dates are invented. Everything the two skills made from it is real and public in [carrydown-sample](https://github.com/sct-will/carrydown-sample): [plan.yaml](https://github.com/sct-will/carrydown-sample/blob/main/docs/spec/plan.yaml), the nine specifications, fifteen issues, the board and [the generated engineers' skill](https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev). A copy sits in [`sample/expense-approvals/`](sample/expense-approvals/) for the self test.
 
 ## What the agent asks you
 
@@ -59,7 +59,7 @@ The first skill interviews you in six short steps. Nothing is written to GitHub 
 | Who does the work, which part of the system does each person own, from when, and at what share of their time? | Names, a track each, start dates, days off |
 | When must it ship, or how many weeks do you have? | A date, a number of weeks, or "derive the date" |
 | Which repository, and which coding agents do the engineers use? | owner/repo and the agents |
-| What must the people who watch each milestone demonstration see to call it done? | Their words, which become acceptance criteria |
+| What must the stakeholders see at each milestone demonstration to call it done? | Their words, which become acceptance criteria |
 | How is the code built, tested and merged here? | The commands and the branch rule |
 
 Then it shows the schedule, each person's load per work unit, the critical path (the chain of items that sets the end date) and the slack (days to spare) before every checkpoint, and asks you to review. If you have a date and no team, say so, and it derives the capacity; if you have a team and no date, it derives the date. [docs/inputs.md](docs/inputs.md) has the details.
