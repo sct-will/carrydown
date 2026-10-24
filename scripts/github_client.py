@@ -149,7 +149,13 @@ class GitHub:
             "User-Agent": "carrydown",
         }
 
-    def _send(self, method, url, data=None, ok=(200, 201, 202, 204), retries=4):
+    def _send(self, method, url, data=None, ok=(200, 201, 202, 204), retries=4, safe=None):
+        """Send one request. A server error or a lost connection is retried only when the request
+        is safe to repeat (GET, or a GraphQL query), because GitHub may already have acted on a
+        write whose answer was lost. A secondary rate limit is retried for every method: GitHub
+        refuses the request before acting on it. Callers recover a failed write by reading back."""
+        if safe is None:
+            safe = method == "GET"
         body = json.dumps(data).encode() if data is not None else None
         path = url.replace(self.api, "")
         for attempt in range(retries + 1):
@@ -178,7 +184,7 @@ class GitHub:
                 msg = redact(" ".join(str(msg).split())[:500], self._token)
                 err = classify(e.code, msg, e.headers, method, path)
                 retry_after = e.headers.get("Retry-After")
-                if err.kind in ("secondary", "server") and attempt < retries:
+                if (err.kind == "secondary" or (err.kind == "server" and safe)) and attempt < retries:
                     try:
                         delay = float(retry_after) if retry_after else 5 * (attempt + 1)
                     except ValueError:
@@ -190,7 +196,7 @@ class GitHub:
                 reason = getattr(e, "reason", None) or e
                 if isinstance(reason, (socket.timeout, TimeoutError)) or "timed out" in str(reason):
                     reason = "no answer within 60 seconds"
-                if attempt < retries:
+                if safe and attempt < retries:
                     time.sleep(3 * (attempt + 1))
                     continue
                 raise GitHubError(f"{method} {path} failed: {redact(reason, self._token)}", None, "network",
@@ -217,7 +223,8 @@ class GitHub:
             page += 1
 
     def graphql(self, query, variables=None):
-        status, js, _ = self._send("POST", self.api + "/graphql", {"query": query, "variables": variables or {}})
+        safe = query.lstrip().startswith("query")   # a read; a mutation is never repeated
+        status, js, _ = self._send("POST", self.api + "/graphql", {"query": query, "variables": variables or {}}, safe=safe)
         if js is None:
             raise GitHubError("GraphQL returned no body")
         if js.get("errors"):
