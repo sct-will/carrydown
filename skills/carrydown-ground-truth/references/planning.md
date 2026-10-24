@@ -25,7 +25,17 @@ A milestone is a step the program can see working. Each one has:
 - an exit gate, one sentence that a person can check live at the demonstration,
 - acceptance criteria that you write now, before the work starts.
 
-Aim for three to six milestones. Order them so that the first proves the whole path with the least behaviour, and the last proves the project can be released and run. Put contracts that two tracks share into the first milestone.
+Aim for three to six milestones. Put contracts that two tracks share into the first milestone.
+
+### Milestone composition
+
+Three rules decide what goes into a milestone. They are rules, not advice.
+
+1. A milestone is the thinnest vertical slice that proves one user-visible capability end to end. Name it for what a user can do after it. The first milestone proves the whole path with the least behaviour. The last proves the project can be released and run.
+2. A milestone holds items from every track the capability crosses. The tracks meet at a named joint check, a checkpoint with a `joint_check`, before the demonstration. The joint check names each track that meets there. A milestone that stays inside one track says why, in `single_track_reason`.
+3. The exit gate is one sentence the program can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show together, in `joint_demonstration`.
+
+A milestone that fails one of these is split, merged or explained before you go on. The checker's planning review lists the tracks each milestone covers and whether its demonstration's joint check names them.
 
 ## 3. Work units
 
@@ -40,6 +50,7 @@ A work item is the smallest piece of work that an engineer can finish, show and 
 - an id, a number that stays fixed. Leave gaps for program-owned items,
 - a short label in plain words,
 - a milestone, a track and an owner on that track,
+- a theme, a short label for the part of the system it touches, such as "web client" or "export job",
 - a size such as "Medium, about 3 days" (the load table reads "about N days"),
 - the ground truth sections it cites,
 - dependencies by id.
@@ -49,12 +60,12 @@ Split an item if it spans two tracks or runs past five days. Merge items that ca
 ## 5. Dates and order
 
 - Set a completion date for each item inside its work unit, on a working day, not a day off of the owner.
-- Use each person's percent allocation. A person's capacity in a work unit is their working days, minus days off, times their allocation. An item sized "about 4 days" needs about 4 divided by the allocation in working days: 4 days at 60 percent is nearly 7 working days of calendar time. Never plan a person past 100 percent of their allocated capacity in a work unit. The checker reports the load as a percentage of allocated capacity and flags any work unit over 100 percent.
+- Use each person's percent allocation. A person's capacity in a work unit is their working days, minus days off, times their allocation. An item sized "about 4 days" needs about 4 divided by the allocation in working days: 4 days at 60 percent is nearly 7 working days of calendar time. Never plan a person past 100 percent of their allocated capacity in a work unit, and aim for about 80. Days off and breaks are real: no item is due on one, and none is planned through one. The checker reports the load as a percentage of allocated capacity and flags any work unit over 100 percent.
 - Check the end against the target. The checker prints the target and whether the critical path meets it.
 - A dependency finishes on or before the item that needs it.
-- Put the shared contract first, so both tracks can start from it.
-- Keep a person on one theme at a time. Group related items for the same person in adjacent days to cut context switching.
-- Leave slack before each checkpoint and before each demonstration.
+- Inside each milestone, put the shared contract first, so both tracks can start from it without waiting. Read the first week of each work unit: nobody is idle.
+- Keep each engineer's consecutive items in one part of the system, one theme. Group related items for the same person in adjacent days to cut context switching. The planning review counts each owner's theme switches by date and says which fall inside a milestone. Explain any switch you keep in the track's `order_rationale`.
+- Leave slack before each checkpoint and before each demonstration. An item that completes on its checkpoint date has none. The planning review lists such items.
 - Alternate the checkpoint dates so that every item has a checkpoint on or after its completion date.
 
 ## 6. Checkpoints
@@ -69,16 +80,26 @@ Run:
 python3 <skill>/scripts/check_specs.py --root . --report
 ```
 
-It prints the schedule, each person's allocation, their sized days against allocated capacity per work unit (with a flag over 100 percent), the critical path, the target and whether the critical path meets it, and the checkpoints. Read it with the user. A load of 100 percent or more leaves no slack, so aim for about 80 percent at most. If one person carries much more than the other, move items across tracks where the skills allow, or stretch the date. If the critical path runs through one person, say so and ask whether to change it.
+It prints the schedule, each person's allocation, their sized days against allocated capacity per work unit (with a flag over 100 percent), the critical path, the target and whether the critical path meets it, the checkpoints and the planning review. Read it with the user. A load of 100 percent or more leaves no slack, so aim for about 80 percent at most. If one person carries much more than the other, move items across tracks where the skills allow, or stretch the date. The planning review flags a load ratio above two to one. Read the critical path for single points of failure. If it runs through one person, the plan says so and offers an alternative, in that track's `order_rationale`. Ask the user whether to change it.
 
 ## 8. The program boundary
 
-Program-owned work stays outside the plan. Give each such item an id from the gap (for example 5 and 10) and list it under `program.items`. In an item that waits for one, set `program_input` to a phrase that says what is needed, without the id. Specifications never mention a program id. The checker fails if they do.
+Program-owned work stays outside the plan, as id gaps. Give each such item an id from the gap (for example 5 and 10) and list it under `program.items`. In an item that waits for one, set `program_input` to a phrase that says what is needed, without the id. Specifications never mention a program id. The checker fails if they do.
 
 ## 9. Review the plan
 
-Use the plan review prompt in `review-prompts.md`. Fold in the findings the user accepts. Record rejected findings in your own notes, not in the specs.
+Read the plan with the user, adversarially and week by week, before anything is scaffolded. Use the plan review prompt in `review-prompts.md`. Fold in the findings the user accepts. Record rejected findings in your own notes, not in the specs.
 
-## 10. Fill in plan.yaml
+## 10. Record the rationale
+
+Write down why the plan is composed the way it is, where a reviewer can argue with it. Each reason must be true of the dates.
+
+- For each milestone, `rationale`: why these items form it, in two to four sentences. `joint_demonstration`: what the engineers whose tracks meet show together, in one or two sentences. `single_track_reason`, only when all its items are on one track.
+- For each track, `order_rationale`: why its items are in this order. Name each theme switch you keep, and the critical path risk with its alternative when it falls on this track.
+- No names of people. The scaffold copies the text into `milestone.md` and the README, where the checker rejects names.
+
+The checker fails while any of these is missing. Show the user the planning review block of `check_specs.py --report` and go through each line with them.
+
+## 11. Fill in plan.yaml
 
 Write the decisions into `docs/spec/plan.yaml`. The annotated `plan.yaml` template in the templates folder inside this skill shows every field. Then run the checker. Ask the user to read the schedule and to say yes before you scaffold the folder.

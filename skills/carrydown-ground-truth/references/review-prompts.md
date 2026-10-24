@@ -26,7 +26,7 @@ The short form of the plan review is this one sentence. Use it first, word for w
 
 > List what is missing, wrong or improvable in this plan, reading it as each engineer would live it week by week.
 
-Then use the longer prompt below to push each finding to a concrete change. Paste `plan.yaml`, the load table and the critical path.
+Then use the longer prompt below to push each finding to a concrete change. Paste `plan.yaml`, the load table, the critical path and the planning review.
 
 > You are a sceptical reviewer of a project plan. Find what is missing, incorrect or improvable. Think about the people who will do the work.
 >
@@ -36,7 +36,9 @@ Then use the longer prompt below to push each finding to a concrete change. Past
 > 4. Context switching. Where a person jumps between themes on consecutive days. Propose a reordering.
 > 5. Load. One person carrying much more than another. Single points of failure on the critical path.
 > 6. The engineers' experience. Is there a day when someone has nothing to do, or three things due? Does the first week let people start without waiting?
-> 7. For each finding: the item or milestone, the problem, a concrete change.
+> 7. Milestone composition. Does each milestone prove one user-visible capability end to end, with every track it crosses meeting at a named joint check before the demonstration? Is the reason given for a milestone that stays inside one track true?
+> 8. Rationale. Is each stated reason in `rationale`, `joint_demonstration` and `order_rationale` true of the dates and dependencies? Quote the reason and the date or dependency that contradicts it.
+> 9. For each finding: the item or milestone, the problem, a concrete change.
 >
 > Return a numbered list sorted by impact. Do not make the changes.
 
