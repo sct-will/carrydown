@@ -2,7 +2,7 @@
 
 A developer skill for the {{project_name}} work in this repository. It follows the Agent Skills format, a folder with a `SKILL.md` and reference files, so any coding agent that supports skills can load it.
 
-When a developer asks the agent to work on a work item by id ({{example_id}}), or touches the files an item names, the skill gives the agent the steps to orient on the item, the project conventions, the definition of done and the test commands. Its reference files hold the work item index, the contract headings and the ground truth map.
+When an engineer asks the agent to work on a work item by id ({{example_id}}), or touches the files an item names, the skill gives the agent the steps to orient on the item, the project conventions, the definition of done and the test commands. Its reference files hold the work item index, the contract headings and the ground truth map.
 
 ## Why use it
 
@@ -12,7 +12,7 @@ Without the skill, a coding agent tends to invent function names, skip the featu
 
 | File | Contents |
 | --- | --- |
-| `SKILL.md` | When to use the skill, how to orient on a work item, conventions, definition of done, tests and workflow. |
+| `SKILL.md` | How to orient on a work item, the project conventions and tests, the definition of done, and when to read each reference. |
 | `references/work-items.md` | The {{item_count}} work items with track, date, dependencies and specification path, and the program inputs. |
 | `references/contracts.md` | Where each contract is defined and the headings of every Contract or Protocol section. |
 | `references/ground-truth-map.md` | Ground truth headings with anchors and line numbers, and the sections each work item cites. |
@@ -23,7 +23,7 @@ Choose one option. Install it once per computer or once per project. Then start 
 
 ### Option 1, the skills command line tool
 
-Run one line for your agent. Add `-g` to install for your user instead of this project. The tool copies the folder, so run the line again after the skill changes.
+Run one line for your agent. Add `-g` to install for your user account instead of this project, and keep the `-a` value: without it, `-g` writes into the folder of every agent the tool supports. The tool copies the folder, so run the line again after the skill changes.
 
 ```bash
 npx skills add {{tree_url}} -a claude-code

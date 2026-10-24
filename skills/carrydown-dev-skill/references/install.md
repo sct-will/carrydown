@@ -1,10 +1,12 @@
 # Installing the developer skill
 
-Each person installs the skill once, in the agent they use. Then they start a new session.
+This page speaks to the plan owner and the engineers. Relay it in your own words.
+
+Each engineer installs the skill once, in the agent they use. Then they start a new session.
 
 ## With the skills command line tool
 
-The tool needs Node.js. Run one line from the project root. Add `-g` to install for your user instead of the project. The tool copies the folder, so run it again after the skill changes.
+The tool needs Node.js 22.20 or later. Run one line from the project root. Add `-g` to install for your user account instead of the project, and keep the `-a` value: without it, `-g` writes into the folder of every agent the tool supports. The tool copies the folder, so run it again after the skill changes.
 
 ```bash
 npx skills add <repository tree url of the skill folder> -a claude-code
@@ -43,7 +45,7 @@ Where each agent looks for skills:
 | IBM Bob | `.bob/skills/` | `~/.bob/skills/` |
 | Any other agent that reads Agent Skills | its project skills folder | its user skills folder |
 
-A project folder is shared with the team when it is committed. A user folder is private to one person.
+A project folder is shared with the engineers when it is committed. A user folder is private to one person.
 
 ## Without installing
 
@@ -59,7 +61,7 @@ Start a new session. Name the first item, for example "Work on <first id>." The 
 
 ## Team rollout
 
-1. One person installs and runs the smoke test.
-2. The team lead sends the line for each agent in use.
-3. Each person installs and runs the smoke test. Anyone for whom it fails posts the agent name and the first thing the agent said.
+1. The plan owner, or one engineer, installs and runs the smoke test.
+2. The plan owner sends the line for each agent in use.
+3. Each engineer installs and runs the smoke test. Anyone for whom it fails posts the agent name and the first thing the agent said.
 4. Add the install line to the project README.

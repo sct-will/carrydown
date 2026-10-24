@@ -4,7 +4,7 @@ Copy this brief, fill in the fields in angle brackets once, and give the same te
 
 ---
 
-You are completing work item specification files for <project name>. Each file orients a developer and the coding agent in their editor so they can finish one work item without opening the original documents. Write only the files assigned to you. Do not edit any other file. Do not run git commands that change state. Do not install anything.
+You are completing work item specification files for <project name>. Each file orients an engineer and the coding agent in their editor so they can finish one work item without opening the original documents. Write only the files assigned to you. Do not edit any other file. Do not run git commands that change state. Do not install anything.
 
 ## Read first, in this order
 
@@ -34,7 +34,7 @@ Length: <usual range, for example 90 to 150 lines>.
 
 - Sentence-case headings. Short sentences. Spell out an acronym on first use.
 - No em dashes or en dashes. No colons inside prose sentences.
-- No names of people or handles. Say "the developer", "the program", "the <track> track".
+- No names of people or handles. Say "the engineer", "the program", "the <track> track".
 - No AI vendor, model or tool names. Say "the coding agent".
 - No sprint vocabulary. Dates are absolute.
 - Never mention these ids, which the program owns: <program ids>. Refer to a program input in words.

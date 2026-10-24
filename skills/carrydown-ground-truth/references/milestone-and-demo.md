@@ -17,19 +17,19 @@ The checker confirms these parts exist and that every item of the milestone is l
 
 ## Demonstration
 
-One per milestone, given by the people who own the items to the audience named in the interview. It shows the items of the milestone working together. The exit gate is the pass criterion. The acceptance criteria say what the audience must see.
+One per milestone, given by the engineers who built the items to the program. It shows the items of the milestone working together. The exit gate is the pass criterion. The acceptance criteria say what the audience must see.
 
-Do not script or automate the session. People decide what to show. To help them, give the coding agent a preparation list the day before: which environment, which data, which accounts (placeholders only), a dry run. Record the outcome as a comment on the sub-epic with the checkpoint comment template, filled in with pass or fail against each criterion.
+Do not script or automate the session. The engineers decide what to show. To help them prepare, add a preparation list to the milestone file for their coding agents to use the day before: which environment, which data, which accounts (placeholders only), a dry run. Record the outcome as a comment on the sub-epic with the checkpoint comment template, filled in with pass or fail against each criterion.
 
 ## Checkpoint
 
-A 30-minute integration check, weekly, with all tracks present. Not a demonstration. The people run the current end-to-end flow and the joint check named for the date in `plan.yaml`. Record it with the `checkpoint-comment.md` template: Shown, Closed since the last checkpoint, Joint check, Blocked or at risk.
+A 30-minute integration check, weekly, with all tracks present. Not a demonstration. The engineers run the current end-to-end flow and the joint check named for the date in `plan.yaml`. Record it with the `checkpoint-comment.md` template: Shown, Closed since the last checkpoint, Joint check, Blocked or at risk.
 
 Every work item names one checkpoint, on or after its completion date. The joint check is the item's share of the whole: what the two tracks run together to prove their halves meet.
 
 ## Closing comment on each issue
 
-When an item closes, the developer posts the evidence with the `closing-comment.md` template: Demo, Evidence, Decisions, Handoff. The coding agent assembles it from the commands in the specification. The developer checks it first.
+When an item closes, the engineer posts the evidence with the `closing-comment.md` template: Demo, Evidence, Decisions, Handoff. The coding agent assembles it from the commands in the specification. The engineer checks it first.
 
 ## The rhythm
 

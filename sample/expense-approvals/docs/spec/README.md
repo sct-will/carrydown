@@ -1,6 +1,6 @@
 # Work item specifications for Expense approvals
 
-One file per development work item, plus `milestone.md` per milestone folder. The GitHub issue for a work item links to its file here, and the milestone sub-epic links to `milestone.md`. Each file gives the developer, and the coding agent in their editor, the context needed to complete the item without opening the original ground truth documents. Where a file excerpts a contract, the excerpt is normative for the item. Where it conflicts with the ground truth, the ground truth wins and the file is corrected in the same pull request.
+One file per development work item, plus `milestone.md` per milestone folder. The GitHub issue for a work item links to its file here, and the milestone sub-epic links to `milestone.md`. Each file gives the engineer, and the coding agent in their editor, the context needed to complete the item without opening the original ground truth documents. Where a file excerpts a contract, the excerpt is normative for the item. Where it conflicts with the ground truth, the ground truth wins and the file is corrected in the same pull request.
 
 ## What is in this folder
 
@@ -38,7 +38,7 @@ The shortest route is the developer skill. It makes a coding agent read the righ
 - Documentation style in this folder. Sentence-case headings, short sentences, no em dashes or en dashes, no names of people. Owners and dates live in the GitHub issues.
 - Existing behaviour is not changed by a work item unless its file says so.
 
-Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the people give to the program. A program input is something the program provides outside this plan.
+Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the program. A program input is something the program provides outside this plan.
 
 ## Schedule
 
@@ -82,7 +82,7 @@ Checkpoints. A 30-minute integration check every week with all tracks present. T
 
 ### Closing comment on an issue
 
-The coding agent assembles the evidence named in the work item file. The developer checks it and posts it as the closing comment, in this shape.
+The coding agent assembles the evidence named in the work item file. The engineer checks it and posts it as the closing comment, in this shape.
 
 ```
 ## Done: EXP-NN <label>
@@ -95,7 +95,7 @@ The coding agent assembles the evidence named in the work item file. The develop
 
 ### Checkpoint comment on the Epic
 
-Posted after each checkpoint by one of the people, alternating. The outcome of a milestone demonstration is noted as a comment on its sub-epic.
+Posted after each checkpoint by one of the engineers, taking turns. The outcome of a milestone demonstration is noted as a comment on its sub-epic.
 
 ```
 ## Checkpoint <date>, <name>

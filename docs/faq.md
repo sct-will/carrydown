@@ -10,7 +10,7 @@ Say one sentence per skill. "Set up a project plan from this document." "Create 
 
 ## Do I need a terminal?
 
-Only for one command, the install line in START-HERE.md. After that you talk to your agent. If you create a GitHub token, you can save it in a plain text file and give the agent the path, and the agent runs `github_token.py --from-file` for you, so there is no terminal prompt.
+Only for one command, the install line in the README's [Getting started](../README.md#getting-started). After that you talk to your agent. If you create a GitHub token, you can save it in a plain text file and give the agent the path, and the agent runs `github_token.py --from-file` for you, so there is no terminal prompt.
 
 ## Which agents work?
 
@@ -18,11 +18,11 @@ Any agent that reads Agent Skills. The installer supports more than seventy. The
 
 ## What do I need installed?
 
-Node.js, for the install command. Python 3.9 or later, for the scripts. Nothing else, not even for Word files. Your agent can check these and tell you.
+Node.js 22.20 or later, for the install command. Python 3.9 or later, for the scripts. Nothing else, not even for Word files. Your agent can check these and tell you.
 
 ## Does it write the code?
 
-No. It carries the plan down to the point where a developer and their agent can start work. The developer skill then makes each work item start from its specification.
+No. It carries the plan down to the point where an engineer and their agent can start work. The developer skill then makes each work item start from its specification.
 
 ## Does it write my architecture document?
 
@@ -52,9 +52,9 @@ People change. Names go in `plan.yaml`, and the checker keeps them out of the sp
 
 Something the program provides outside the plan, such as a pilot team, an approval or a review. Items that wait for one say "program input". The program's own items are not issues in the plan. They leave a gap in the numbering.
 
-## What can the project board not do through the API?
+## What does the board script leave for me to click?
 
-GitHub's API creates fields and views and sets a view's name, layout, filter and visible fields. It cannot set group by, sort order, the board's column field, the roadmap's date fields and zoom, slice by, field sums, or the project workflows. You click those once. The list is printed at the end of `github_project.py` and written in the plan-to-github skill.
+The script creates the fields and the views and sets each view's name, layout and visible fields. It does not yet set group by, sort order or the board's column field, although GitHub's endpoint for creating a view now accepts them. It also does not set the roadmap's date fields and zoom, slice by, field sums or the project workflows. You click those once. The list is printed at the end of `github_project.py` and written in the plan-to-github skill.
 
 ## Why do the work units show as breaks in the roadmap?
 

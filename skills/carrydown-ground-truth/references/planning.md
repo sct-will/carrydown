@@ -1,4 +1,4 @@
-# Drafting the plan with the human
+# Drafting the plan with the plan owner
 
 You draft. The user decides. Stop for a yes after each step.
 
@@ -21,7 +21,7 @@ Read the rendered document, using its section index. Make a plain list of what m
 
 A milestone is a step the program can see working. Each one has:
 
-- a name that says what the user can do after it,
+- a name that says what the product's users can do after it,
 - an exit gate, one sentence that a person can check live at the demonstration,
 - acceptance criteria that you write now, before the work starts.
 
@@ -35,7 +35,7 @@ Check: the sum of the work units plus breaks fits the time frame, and no work un
 
 ## 4. Work items
 
-A work item is the smallest piece of work that a person can finish, show and close. Aim for two to five days. Each has:
+A work item is the smallest piece of work that an engineer can finish, show and close. Aim for two to five days. Each has:
 
 - an id, a number that stays fixed. Leave gaps for program-owned items,
 - a short label in plain words,

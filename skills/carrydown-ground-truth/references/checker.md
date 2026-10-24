@@ -51,8 +51,8 @@ Entries are regular expressions matched whole-word and without regard to case.
 
 ## Continuous integration
 
-`python3 <skill>/scripts/scaffold_spec.py --root . --ci --apply` writes `.github/workflows/check-specs.yml` from the `check-specs-workflow.yml` template and copies `check_specs.py` and `carrydown_lib.py` to `tools/carrydown/`. The workflow runs `python3 tools/carrydown/check_specs.py --root .` on every pull request and on pushes to the default branch. A finding exits with status 1, so the job fails and the pull request shows a red mark. Mark the job as required in branch protection to block merges. Copy the two scripts again when you update the carrydown skills.
+Offer this to the user after the first clean run, so the checker fails loudly on every pull request. `python3 <skill>/scripts/scaffold_spec.py --root . --ci --apply` writes `.github/workflows/check-specs.yml` from the `check-specs-workflow.yml` template and copies `check_specs.py` and `carrydown_lib.py` to `tools/carrydown/`. The workflow runs `python3 tools/carrydown/check_specs.py --root .` on every pull request and on pushes to the default branch. A finding exits with status 1, so the job fails and the pull request shows a red mark. Mark the job as required in branch protection to block merges. That command also runs locally. Copy the two scripts again when you update the carrydown skills.
 
 ## Reading the output
 
-Each finding names the file and a line number when it can. Fix the source, not the checker. If a finding is wrong for your project, change the configuration in `plan.yaml` and say why in the commit message.
+Each finding names the file and a line number when it can. Fix the source, not the checker. If a finding is wrong for this project, change the configuration in `plan.yaml` and say why in the commit message.
