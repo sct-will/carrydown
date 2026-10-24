@@ -26,7 +26,7 @@ npx skills add sct-will/carrydown
 
 ## What it sounds like
 
-The sample, from document to board. Code lines are what the scripts print; the rest is shortened.
+The sample, from document to board. Text in code style is what the skills and scripts print, word for word; the rest is shortened.
 
 > **You:** Set up a project plan from this document. It is `docs/source/architecture.md`.
 >
