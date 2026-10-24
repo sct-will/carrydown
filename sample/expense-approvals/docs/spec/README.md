@@ -119,7 +119,7 @@ Checkpoints. A 30-minute integration check every week with all tracks present. T
 The coding agent assembles the evidence named in the work item file. The engineer checks it and posts it as the closing comment, in this shape.
 
 ```
-## Done: EXP-NN <label>
+## Done: WI-NN <label>
 
 **Demo.** What can be shown now that could not be before, and how to see it in under two minutes.
 **Evidence.** Pull requests. Test suites by file with the run line. Artifacts attached: outputs, header dumps, record tables, screenshots or a short recording, as the work item file lists them.
