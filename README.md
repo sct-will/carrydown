@@ -73,7 +73,7 @@ Restart your agent.
 
    > Make a folder called my-plan with a git repository and work there.
 
-   You will see: the agent creating the folder and starting work in it.
+   You will see: the agent working in the new folder.
 
 2. **Plan owner.** Say:
 
@@ -85,7 +85,7 @@ Restart your agent.
 
    > Set up a project plan from docs/source/\<file\>.
 
-   Then answer the interview, or say "use your default". You will see: "carrydown: interview, step 1 of 6" and a few questions. The document is the only required input. You will also be asked what constraints you have: the people, the target date or number of weeks, both, or neither for now. Everyone is assumed to be allocated full time unless you say otherwise.
+   Then answer the interview, or say "use your default". The document is the only required input. You will also be asked about your constraints: the people, the target date or weeks, both, or neither for now. Everyone is assumed to be full time unless you say otherwise. You will see: "carrydown: interview, step 1 of 6".
 
 4. **Plan owner.** Review the plan. Say:
 
@@ -95,9 +95,9 @@ Restart your agent.
 
    > Yes, the plan is right.
 
-   You will see: the schedule, the load table, the critical path, and the checker reporting 0 findings.
+   You will see: the checker reporting 0 findings.
 
-5. **Lead reviewer.** A senior engineer reads the generated specifications for about an hour, as the person who would build them, and asks for changes before anything goes to GitHub. What to read: one specification per work item under `docs/spec/`. Start with the header, the acceptance criteria and the evidence section.
+5. **Lead reviewer.** A senior engineer reads the generated specifications in `docs/spec/` for about an hour and asks for changes before anything goes to GitHub.
 
 6. **Plan owner or delivery manager.** Say:
 
@@ -107,13 +107,13 @@ Restart your agent.
 
    > Go ahead.
 
-   You will see: "1 Epic, N sub-epics, N work item issues" and then the board link.
+   You will see: the board link.
 
-7. **Plan owner, then Engineers.** The Plan owner says:
+7. **Plan owner, then Engineers.** Say:
 
    > Generate the developer skill.
 
-   The Plan owner sends each engineer the install line it prints. Each engineer installs the generated skill and starts an item by naming it, for example "Work on WI-07". You will see: the skill folder and the install line per agent.
+   Send the install line to each engineer. They start an item by naming it, for example "Work on WI-07". You will see: the install line per agent.
 
 **Program.** Attends each milestone demonstration and decides pass or fail against the criteria written before the work.
 
