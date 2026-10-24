@@ -22,7 +22,7 @@ Restart your agent.
 
    You will see: the agent creating the folder and starting work in it.
 
-2. Say:
+2. If you ran the install line above, skip this step. Otherwise say:
 
    > Install carrydown for this agent: run npx skills add sct-will/carrydown --skill '*' -a \<your agent\>. If Node.js or Python 3 is missing, stop and tell me how to install it.
 
