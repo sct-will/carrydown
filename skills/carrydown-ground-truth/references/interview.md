@@ -2,6 +2,16 @@
 
 Run this interview before you write anything. The user may be a product manager, so use plain words, ask a few questions at a time, and explain why you ask. Offer a default for every question. Read the answers back as one summary and wait for a yes.
 
+## The three required inputs
+
+Ask for these first. Name them as required. Do not draft a plan until all three are known, and say so: "I need these three before I can draft a plan."
+
+1. **The ground truth documents.** Step 1 below.
+2. **The people.** Each with a track, a percent allocation, a start date and days off. Step 2 below. The user does not type the allocation. Ask once, in one line: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" Confirmation means 100 for everyone. Named figures replace the default for those people. Allocation counts as known once it is confirmed or given.
+3. **The target.** A date, or a number of working weeks, plus breaks. Step 3 below.
+
+Everything else has a default or can wait.
+
 Never ask the user to paste a secret. A GitHub token is handled later by `carrydown-plan-to-github`, in a hidden prompt.
 
 ## Step 1 of 6. The ground truth
@@ -26,19 +36,20 @@ Ask.
 1. Who will do the work? A name or handle for each person.
 2. Which track does each person own? A track is a lane of work, for example back end, front end, data, platform. Each person owns one track.
 3. When does each person start, and which days are they off?
+   Then, in one line, confirm the percent allocation: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" Do not ask for a figure per person unless the answer is no. If the answer is no, ask for the figure for each person who is lower. A person at 60 percent has three working days in five for this plan.
 4. Is there anyone who advises and owns no items, such as a security reviewer or a policy owner?
 5. Who is the program lead or product owner, who decides when the plan is final?
 
 Explain: names stay in `plan.yaml`. The checker keeps them out of the specifications so the files stay valid when people change.
 
-## Step 3 of 6. The time frame
+## Step 3 of 6. The target and the breaks
 
 Begin with `carrydown: interview, step 3 of 6`.
 
 Ask.
 
-1. Is there a target date, or a number of weeks? Which is firm?
-2. Are there pauses, such as holidays, offsites or a freeze?
+1. **Required.** What is the target: a date, or a number of working weeks? Which is firm? If it is weeks, the target date is worked out from the start of the first work unit, and each break adds its weeks.
+2. **Required.** Are there breaks, such as holidays, offsites or a freeze? Give each as a date range. "None" is an answer.
 3. What is the longest a work unit may run? A work unit is a time box with its own length. A default: no longer than three weeks.
 4. How often can the people meet for a short integration check? A default: weekly, 30 minutes.
 

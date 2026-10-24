@@ -36,6 +36,13 @@ def work_items_md(plan, root):
            "Generated from `plan.yaml`. The GitHub issues hold the owners, status and dates of record.", "",
            "## Work units and milestones", "",
            SC.schedule_table(plan), ""]
+    tdate, ttext = L.target_date(plan)
+    by_track = {}
+    for person in plan["people"]:
+        by_track[person["track"]] = by_track.get(person["track"], 0) + person.get("allocation", 100)
+    alloc = ", ".join(f"{L.track_label(plan, t)} {pct} percent" for t, pct in by_track.items())
+    out += [f"Target. {ttext if tdate else 'not set in plan.yaml'}.", "",
+            f"Allocation. People are allocated as a percentage of their working time to this plan. By track, the allocation adds up to {alloc}. The dates in this plan already account for it, so a track at less than 100 percent has fewer working days in each work unit.", ""]
     spec_dir = plan["project"]["spec_dir"]
     for m in plan["milestones"]:
         out += [f"## Milestone {m['number']}, {m['name']} (`{m['folder']}`)", "",

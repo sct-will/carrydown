@@ -38,6 +38,8 @@ Split an item if it spans two tracks or runs past five days. Merge items that ca
 ## 5. Dates and order
 
 - Set a completion date for each item inside its work unit, on a working day, not a day off of the owner.
+- Use each person's percent allocation. A person's capacity in a work unit is their working days, minus days off, times their allocation. An item sized "about 4 days" needs about 4 divided by the allocation in working days: 4 days at 60 percent is nearly 7 working days of calendar time. Never plan a person past 100 percent of their allocated capacity in a work unit. The checker reports the load as a percentage of allocated capacity and flags any work unit over 100 percent.
+- Check the end against the target. The checker prints the target and whether the critical path meets it.
 - A dependency finishes on or before the item that needs it.
 - Put the shared contract first, so both tracks can start from it.
 - Keep a person on one theme at a time. Group related items for the same person in adjacent days to cut context switching.
@@ -56,7 +58,7 @@ Run:
 python3 <skill>/scripts/check_specs.py --root . --report
 ```
 
-It prints the schedule, the items and days per person per work unit, the critical path and the checkpoints. Read it with the user. If one person carries much more than the other, move items across tracks where the skills allow, or stretch the date. If the critical path runs through one person, say so and ask whether to change it.
+It prints the schedule, each person's allocation, their sized days against allocated capacity per work unit (with a flag over 100 percent), the critical path, the target and whether the critical path meets it, and the checkpoints. Read it with the user. A load of 100 percent or more leaves no slack, so aim for about 80 percent at most. If one person carries much more than the other, move items across tracks where the skills allow, or stretch the date. If the critical path runs through one person, say so and ask whether to change it.
 
 ## 8. The program boundary
 

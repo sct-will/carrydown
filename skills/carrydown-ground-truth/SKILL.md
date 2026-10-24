@@ -22,6 +22,7 @@ The next skill, `carrydown-plan-to-github`, puts the plan on GitHub. The one aft
 
 ## Rules that never bend
 
+- Do not draft a plan until the three required inputs are known: the documents, the people with their allocation, and the target. Say that you are waiting for them.
 - Planning decisions stay with the human. You draft, the user decides. Never pick owners, dates, scope or order without an explicit yes.
 - Ask before you write any file outside `docs/`, and never write to GitHub in this skill.
 - Every claim in a specification traces to a section of the ground truth. If it cannot be traced or verified, write "verify at implementation" and say what to look for. Never invent a function name, a file or a number.
@@ -49,10 +50,18 @@ Read `references/interview.md` and run the interview in six steps. The first lin
 
 Start each later group with the same line and the next number. Collect these, in small groups, and do not start before the user confirms your summary.
 
+**Three inputs are required.** Ask for them first, name them as required, and do not draft the plan until all three are known. Say so plainly: "I need these three before I can draft a plan."
+
+1. The ground truth documents.
+2. The people, each with their track, start date, days off and percent allocation. Do not make the user type the allocation. Ask once, in one line: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" If the user confirms, use 100 for everyone. If they name other figures, use those. Allocation counts as known once it is confirmed or given.
+3. The target: a date, or a number of working weeks, plus any breaks.
+
+Everything else below can be defaulted or decided later.
+
 - Up front, before anything else: can the user create a Project in the organisation on GitHub? Say that planning continues meanwhile, and that the answer only matters at the GitHub step, where an organisation admin may need to grant the permission.
 - The ground truth documents (any mix, `.docx` or `.md`), and which one wins when they disagree.
-- The people: names or handles, their GitHub logins for assignment, the track each owns, start dates, days off, advisors who own no items.
-- The time frame: a target date or a number of weeks, pause windows, the longest a work unit may run.
+- The people (required): names or handles, their GitHub logins for assignment, the track each owns, percent allocation (assumed 100 until confirmed or given), start dates, days off, advisors who own no items.
+- The target (required): a date or a number of working weeks, the breaks (pause windows), the longest a work unit may run.
 - The repository and organisation, which branch the plan is for, whether a parent Epic exists, which labels exist.
 - The agentic editors the team uses.
 - Who watches the demonstrations.

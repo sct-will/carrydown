@@ -45,12 +45,14 @@ people:                                  # people who own items. Names stay out 
     name: "Alex Quill"
     github: ""                           # GitHub login for assignment, or empty
     track: backend
+    allocation: 100                      # percent of working time on this plan, 1 to 100. 100 if omitted
     start: 2027-01-04
     days_off: []                         # list of dates
   - id: sam
     name: "Sam Marlow"
     github: ""
     track: frontend
+    allocation: 100
     start: 2027-01-04
     days_off: []
 
@@ -67,7 +69,12 @@ milestones:                              # one per work unit. A work unit has a 
     demo: 2027-01-15
     gate: "One sentence the program can check at the demonstration."
 
-breaks:                                  # pauses between work units, optional
+target:                                  # REQUIRED. When the plan must be delivered. Give a date or a number of weeks.
+  date: 2027-01-29                       # the target date, or instead:
+  # weeks: 4                             # working weeks from the start of the first work unit. Breaks add to it:
+                                         # target = start + 7 * (weeks + break weeks) - 3 days, a Friday.
+
+breaks:                                  # pauses between work units, optional. Each one a date range.
   - name: "Pause"
     start: 2027-01-18
     end: 2027-01-22

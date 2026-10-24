@@ -17,7 +17,9 @@ Checks, per work item
 Per milestone: milestone.md exists with the required parts and lists every item.
 Per project: README.md in the spec folder lists every item.
 
-Also checks the plan itself: dates, owners, dependencies, cycles, weekends, days off, breaks.
+Also checks the plan itself: dates, owners, dependencies, cycles, weekends, days off, breaks, the
+percent allocation of each person (1 to 100), that a target exists, that nobody is over 100 percent of
+their allocated capacity in a work unit, and that the last work item meets the target.
 
 Usage
   python3 scripts/check_specs.py --root .            check everything
@@ -270,6 +272,10 @@ def orphan_files(plan, root):
     return out
 
 
+def fmt(d):
+    return L.fmt_date(d)
+
+
 def report(plan):
     people = {p["id"]: p for p in plan["people"]}
     print(f"Plan: {plan['project']['name']}")
@@ -278,25 +284,38 @@ def report(plan):
         print(f"  Work unit {m['number']}, {m['name']}: {m['start']} to {m['end']} (demonstration {m['demo']})")
     for br in plan["breaks"]:
         print(f"  Break, {br['name']}: {br['start']} to {br['end']}")
-    print("\nLoad (items per person per work unit, with sized days where the size says 'about N days')")
-    head = ["Person"] + [f"WU{m['number']}" for m in plan["milestones"]] + ["Total"]
+    print("\nLoad (sized days of work against allocated capacity, per person and work unit)")
+    print("  Capacity is the working days a person has in the work unit, minus days off, times their percent allocation.")
+    head = ["Person", "Alloc"] + [f"WU{m['number']}" for m in plan["milestones"]] + ["Total"]
     rows = []
+    over = []
+    by_person = {}
+    for pid, mnum, sized, cap, pct in L.load_rows(plan):
+        by_person.setdefault(pid, []).append((mnum, sized, cap, pct))
     for pid, p in people.items():
-        cells, tot_items, tot_days = [], 0, 0
-        for m in plan["milestones"]:
-            its = [it for it in plan["items"] if it["owner"] == pid and it["milestone"] == m["number"]]
-            days = 0
-            for it in its:
-                mm = re.search(r"about (\d+(?:\.\d+)?)", it.get("size", ""))
-                days += float(mm.group(1)) if mm else 0
-            cells.append(f"{len(its)}" + (f" ({days:g}d)" if days else ""))
-            tot_items += len(its)
-            tot_days += days
-        rows.append([pid] + cells + [f"{tot_items}" + (f" ({tot_days:g}d)" if tot_days else "")])
+        cells, tot_sized, tot_cap = [], 0.0, 0.0
+        for mnum, sized, cap, pct in by_person.get(pid, []):
+            if sized == 0:
+                cells.append(f"0 of {cap:.0f}d")
+            else:
+                flag = "  OVER" if (pct is not None and pct > 100) else ""
+                cells.append(f"{sized:g} of {cap:.0f}d ({pct:.0f}%){flag}" if pct not in (None, float("inf")) else f"{sized:g} of 0d (no capacity){flag or '  OVER'}")
+                if pct is None or pct > 100:
+                    over.append((pid, mnum, sized, cap, pct))
+            tot_sized += sized
+            tot_cap += cap
+        tot = f"{tot_sized:g} of {tot_cap:.0f}d" + (f" ({100 * tot_sized / tot_cap:.0f}%)" if tot_cap else "")
+        rows.append([pid, f"{p.get('allocation', 100)}%"] + cells + [tot])
     widths = [max(len(str(r[i])) for r in [head] + rows) for i in range(len(head))]
     print("  " + "  ".join(h.ljust(w) for h, w in zip(head, widths)))
     for r in rows:
         print("  " + "  ".join(str(c).ljust(w) for c, w in zip(r, widths)))
+    if over:
+        print("  Over 100 percent of allocated capacity:")
+        for pid, mnum, sized, cap, pct in over:
+            print(f"    {pid} in work unit {mnum}: {sized:g} sized days against {cap:.1f} allocated days" + (f" ({pct:.0f}%)" if pct not in (None, float("inf")) else ""))
+    else:
+        print("  No person is over 100 percent of allocated capacity in any work unit.")
     # critical path: longest chain by calendar days between completions
     items = L.item_by_id(plan)
     best = {}
@@ -325,6 +344,16 @@ def report(plan):
         print("  " + " -> ".join(L.tag(plan, n) for n in path) + f"  ({days} calendar days)")
         for n in path:
             print(f"    {L.tag(plan, n)} {items[n]['label']}, by {items[n]['complete_by']}, {people.get(items[n]['owner'], {}).get('id', items[n]['owner'])}")
+        tdate, ttext = L.target_date(plan)
+        end_date = L.parse_date(items[path[-1]]["complete_by"])
+        print("\nTarget")
+        if tdate:
+            gap = (tdate - end_date).days
+            verdict = f"meets the target with {gap} day(s) to spare" if gap >= 0 else f"misses the target by {-gap} day(s)"
+            print(f"  Target: {ttext}")
+            print(f"  The critical path ends {fmt(end_date)}: it {verdict}.")
+        else:
+            print("  No target in plan.yaml. Add a target block with a date or a number of weeks.")
     pitems = plan["program"]["items"]
     if pitems:
         print("\nProgram-owned items (outside the development plan; referenced only as program input)")
@@ -361,12 +390,23 @@ def main(argv=None):
             for p in plan_problems:
                 print("  - " + p)
         return 1 if plan_problems else 0
+    load_issues = []
+    for pid, mnum, sized, cap, pct in L.load_rows(plan):
+        if pct is not None and pct > 100:
+            load_issues.append(f"{pid} is over 100 percent of allocated capacity in work unit {mnum}: {sized:g} sized days against {cap:.1f} allocated days")
+    tdate, _ = L.target_date(plan)
+    if tdate and plan["items"]:
+        last = max(L.parse_date(it["complete_by"]) for it in plan["items"])
+        if last > tdate:
+            load_issues.append(f"the last work item completes {L.fmt_date(last)}, after the target {L.fmt_date(tdate)}")
     banned = banned_patterns(plan)
     gt_heads = ground_truth_headings(plan, root)
     results = {}
     ok = 0
     if plan_problems:
         results["plan.yaml"] = plan_problems
+    if load_issues:
+        results["load and target"] = load_issues
     items = [it for it in plan["items"] if not a.item or it["id"] in a.item]
     for it in items:
         issues, rel = check_item(plan, root, it, banned, gt_heads)

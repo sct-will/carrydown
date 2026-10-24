@@ -30,13 +30,15 @@ SAMPLE = "sample/expense-approvals"
 results = []
 
 
-def step(name, cmd, cwd=ROOT, expect=0):
+def step(name, cmd, cwd=ROOT, expect=0, contains=()):
     p = subprocess.run(cmd, cwd=cwd, env=ENV, capture_output=True, text=True)
-    ok = p.returncode == expect
+    out = (p.stdout or "") + (p.stderr or "")
+    missing = [c for c in contains if c not in out]
+    ok = p.returncode == expect and not missing
     results.append((ok, name))
     print(("PASS " if ok else "FAIL ") + name)
     if not ok:
-        print("      exit", p.returncode)
+        print("      exit", p.returncode, ("missing in output: " + repr(missing)) if missing else "")
         for line in ((p.stdout or "") + (p.stderr or "")).strip().splitlines()[-12:]:
             print("      " + line)
     return ok
@@ -69,7 +71,21 @@ def main():
     step("dry run: github_project (offline)", [PY, "scripts/github_project.py", "--root", SAMPLE, "--offline"])
     step("dry run: generate_dev_skill", [PY, "scripts/generate_dev_skill.py", "--root", SAMPLE])
     step("dry run: github_token", [PY, "scripts/github_token.py", "--dry-run"])
+    plan_text = (ROOT / SAMPLE / "docs/spec/plan.yaml").read_text(encoding="utf-8")
     with tempfile.TemporaryDirectory() as tmp:
+        def variant(name, text):
+            path = Path(tmp) / f"{name}.yaml"
+            path.write_text(text, encoding="utf-8")
+            return str(path)
+        chk = [PY, "scripts/check_specs.py", "--root", SAMPLE]
+        step("report shows allocation, capacity and the target", chk + ["--report"], contains=["Alloc", "60%", "of 6d", "meets the target"])
+        step("allocation is optional and defaults to 100", chk + ["--report", "--plan", variant("noalloc", plan_text.replace("    allocation: 100\n", "").replace("    allocation: 60\n", ""))], contains=["100%"])
+        step("allocation 0 is rejected", chk + ["--plan", variant("alloc0", plan_text.replace("allocation: 60", "allocation: 0"))], expect=1, contains=["allocation must be a whole percent from 1 to 100"])
+        step("allocation 101 is rejected", chk + ["--plan", variant("alloc101", plan_text.replace("allocation: 100", "allocation: 101"))], expect=1, contains=["allocation must be a whole percent"])
+        step("a missing target is rejected", chk + ["--plan", variant("notarget", plan_text.replace("target:\n  date: 2027-04-23\n", ""))], expect=1, contains=["target: the plan needs a target"])
+        step("a target in weeks is accepted", chk + ["--report", "--plan", variant("weeks", plan_text.replace("  date: 2027-04-23\n", "  weeks: 11\n"))], contains=["11 working weeks plus 1 break week(s)", "meets the target"])
+        step("over 100 percent of allocated capacity is flagged", chk + ["--plan", variant("overload", plan_text.replace("allocation: 60", "allocation: 10"))], expect=1, contains=["over 100 percent of allocated capacity"])
+        step("a missed target is reported", chk + ["--report", "--plan", variant("late", plan_text.replace("  date: 2027-04-23\n", "  date: 2027-04-16\n"))], contains=["misses the target"])
         for skill, script in (("carrydown-ground-truth", "check_specs.py"), ("carrydown-plan-to-github", "github_sync.py"), ("carrydown-dev-skill", "generate_dev_skill.py")):
             dst = Path(tmp) / skill
             shutil.copytree(ROOT / "skills" / skill, dst)
