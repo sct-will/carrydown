@@ -39,6 +39,10 @@ python3 scripts/github_project.py --root sample/expense-approvals --repo YOUR-US
 
 The first three need no token and no network. The `--offline` form of `github_sync.py` shows the plan without a token and without reading GitHub. The full dry run on the last two lines reads GitHub, so it needs a token (run `python3 scripts/github_token.py` first) and a repository that exists. Both are dry runs. Use a throwaway repository of your own, and add `--apply` only when you have read what they would do. `docs/sample-run.md` at the top of the repository shows a real run.
 
+## On GitHub
+
+The issues and the public board for this plan are in the sample repository: https://github.com/sct-will/carrydown-sample/issues and https://github.com/users/sct-will/projects/2. Start with the board's Board view. The Roadmap view shows bars only after its date fields are chosen by hand once (Complete by, and Checkpoint for markers), because the script does not set them yet. That click is in the list `github_project.py` prints at the end of every run.
+
 ## Make it yours
 
 Copy the folder, replace `ground-truth/architecture.md` with your document, and say to your agent: "Set up a project plan from this document." Put "Use the carrydown-ground-truth skill." in front if it does not pick the skill up.

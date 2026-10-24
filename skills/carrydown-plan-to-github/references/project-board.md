@@ -27,9 +27,9 @@ The script ensures three views named Table, Board and Roadmap. A new project has
 
 Every sub-epic, work item issue and the Epic (if there is one) is added to the project. For each sub-epic and work item the script sets Work unit, Track (work items), Complete by and Checkpoint. A rerun skips values that are already right.
 
-## What the API cannot set
+## What the script does not set yet
 
-GitHub's API creates fields and views and sets a view's name, layout, filter and visible fields. It does not expose these, so click them once:
+The script creates the fields and the views and sets each view's name, layout and visible fields. GitHub's endpoint for creating a view now also accepts group by, sort and the board column field, but the script does not set them yet. Give the user this list to click once:
 
 1. Table view: group by Work unit (View menu, Group by). Sort by Complete by (View menu, Sort).
 2. Board view: set the Column field to Status, or to Work unit for a board by work unit.

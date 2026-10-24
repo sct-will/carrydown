@@ -6,7 +6,24 @@ Turn your architecture document into a plan your team and its AI coding agents c
 
 [![Licence](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Last commit](https://img.shields.io/github/last-commit/sct-will/carrydown?v=2)](https://github.com/sct-will/carrydown/commits/main) [![Issues](https://img.shields.io/github/issues/sct-will/carrydown?v=2)](https://github.com/sct-will/carrydown/issues) [![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-blue)](LICENSE-CONTENT.md) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-3%20skills-teal)](https://agentskills.io) [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](#prerequisites) [![Open in Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sct-will/carrydown)
 
-[How it works](#how-it-works) · [Getting started](#getting-started) · [Prerequisites](#prerequisites) · [What you get](#what-you-get) · [Install options](#install-options) · [Sample](#sample) · [FAQ](#faq) · [Contributing](#contributing) · [Licence](#licence) · [For agents](AGENTS.md)
+[See it in 60 seconds](#see-it-in-60-seconds) · [How it works](#how-it-works) · [Getting started](#getting-started) · [Prerequisites](#prerequisites) · [What you get](#what-you-get) · [Install options](#install-options) · [Sample](#sample) · [FAQ](#faq) · [Contributing](#contributing) · [Licence](#licence)
+
+More: [Start here](START-HERE.md) · [Plan owner guide](docs/plan-owner-guide.md) · [Method](docs/method.md) · [Inputs](docs/inputs.md) · [Derive the date](docs/derive-the-date.md) · [A recorded run](docs/sample-run.md) · [Security](docs/security.md) · [Changelog](CHANGELOG.md) · [For agents](AGENTS.md)
+
+## See it in 60 seconds
+
+No agent, no token and no install. Clone the main repository and the sample repository side by side, then run three read-only commands on the sample. They print the schedule, the load table and the critical path, then the issues and the board the plan would create, without calling GitHub.
+
+```bash
+git clone https://github.com/sct-will/carrydown.git
+git clone https://github.com/sct-will/carrydown-sample.git
+cd carrydown
+python3 scripts/check_specs.py --root ../carrydown-sample --report
+python3 scripts/github_sync.py --root ../carrydown-sample --offline
+python3 scripts/github_project.py --root ../carrydown-sample --offline
+```
+
+Measured on a laptop: the two clones took about 2 seconds, and each command about a fifth of a second. You need git and Python 3.9 or later.
 
 ## How it works
 
@@ -50,11 +67,11 @@ The agent has no role. It drafts for the plan owner, reads for the engineers and
 ### Prerequisites
 
 - **Inputs.** The ground truth is required. Your project constraints are optional: the people with their percent allocation, and the target date or weeks. Give both and the plan fits them. Give one and the skill backs into the other. Give neither and it proposes a default and asks.
-- **A terminal and Node.js**, only to run the install line. Get Node.js from https://nodejs.org (choose LTS). Nothing in the skills needs it after that.
+- **A terminal and Node.js 22.20 or later**, only to run the install line. Get Node.js from https://nodejs.org (choose LTS). Nothing in the skills needs it after that.
 - **Python 3.9 or later**, to run the scripts. Check with `python3 --version`. Nothing else to install, not even for Word files.
 - **git**, to keep the plan under version control.
 - **GitHub permission** to create issues in the repository and to create a Project in the organisation or account. Ask an organisation admin if you do not have it. Planning works without it. Only the GitHub step needs it.
-- **Single sign-on (SSO).** If your organisation enforces it, authorise the token: github.com/settings/tokens, click the token's "Configure SSO" button, click "Authorize" next to the organisation.
+- **Single sign-on (SSO).** If your organisation enforces it and you use a classic token, authorise the token: github.com/settings/tokens, click the token's "Configure SSO" button, click "Authorize" next to the organisation.
 - **A token**, only at the GitHub step. For a board owned by an organisation, a fine-grained token for the one repository with Issues read and write, Metadata read, and the organisation permission Projects read and write. Only for a board owned by your user account, a classic token from the pre-filled link https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown, which ticks `repo` and `project`. Set a 7-day expiry and revoke the token when you are done. [docs/plan-owner-guide.md](docs/plan-owner-guide.md#the-token) has the steps.
 
 Pick your system. Each block takes you from nothing to a project folder. The full steps are in [docs/setup.md](docs/setup.md): [macOS](docs/setup.md#macos), [Windows](docs/setup.md#windows), [Linux](docs/setup.md#linux).
@@ -64,8 +81,8 @@ Pick your system. Each block takes you from nothing to a project folder. The ful
 
 1. Open Terminal: press Command and Space, type Terminal, press Return.
 2. Install Node.js: download the LTS installer from https://nodejs.org and open it. Or run `brew install node` if you use Homebrew.
-3. Check it: run `node --version` and `npm --version`. Each prints a version number.
-4. Run `python3 --version` and `git --version`. A window may offer to install developer tools. Click Install and wait.
+3. Check it: run `node --version` and `npm --version`. Node.js must be 22.20 or later.
+4. Run `python3 --version` and `git --version`. Python must be 3.9 or later. A window may offer to install developer tools. Click Install and wait.
 5. Make your project folder: `mkdir my-plan`, then `cd my-plan`, then `git init`. Or `cd` into an existing folder.
 6. Run the install line below.
 
@@ -78,7 +95,7 @@ Pick your system. Each block takes you from nothing to a project folder. The ful
 2. Install Node.js LTS from https://nodejs.org with its installer. Tick the option to install necessary tools if offered.
 3. Install Python 3 from https://www.python.org/downloads/ and tick "Add python.exe to PATH".
 4. Install Git for Windows from https://git-scm.com.
-5. Close PowerShell and open it again. Run `node --version`, `npm --version`, `python --version` and `git --version`. Each prints a version number. On Windows the command may be `python` and not `python3`. The scripts accept either.
+5. Close PowerShell and open it again. Run `node --version`, `npm --version`, `python --version` and `git --version`. Node.js must be 22.20 or later and Python 3.9 or later. On Windows the command may be `python` and not `python3`. The scripts accept either.
 6. Make your project folder: `mkdir my-plan; cd my-plan; git init`. Or `cd` into an existing folder.
 7. Run the install line below.
 
@@ -88,8 +105,8 @@ Pick your system. Each block takes you from nothing to a project folder. The ful
 <summary>Linux</summary>
 
 1. Open a terminal.
-2. Debian or Ubuntu: `sudo apt install nodejs npm python3 git`. Fedora: `sudo dnf install nodejs npm python3 git`. If `node --version` is below 22.20, install Node.js from https://nodejs.org instead.
-3. Check with `node --version`, `npm --version`, `python3 --version` and `git --version`.
+2. Debian or Ubuntu: `sudo apt install nodejs npm python3 git`. Fedora: `sudo dnf install nodejs npm python3 git`.
+3. Check with `node --version`, `npm --version`, `python3 --version` and `git --version`. Node.js must be 22.20 or later and Python 3.9 or later. If Node.js is older, install it from https://nodejs.org instead.
 4. Make your project folder: `mkdir my-plan`, then `cd my-plan`, then `git init`. Or `cd` into an existing folder.
 5. Run the install line below.
 
@@ -97,26 +114,31 @@ Pick your system. Each block takes you from nothing to a project folder. The ful
 
 To run the scripts outside a skill, see the [contributing guide](CONTRIBUTING.md#run-the-scripts-yourself).
 
-Install the agent skills:
-
-Using npx:
+Install the agent skills from your project folder. The installer asks which skills and which agents:
 
 ```bash
-npx skills add sct-will/carrydown --all
+npx skills add sct-will/carrydown
 ```
 
-Manually:
+Or install all three skills for one agent without questions, for example:
+
+```bash
+npx skills add sct-will/carrydown --skill '*' -a claude-code
+```
+
+The `-a` values for other agents are in [Install options](#install-options).
 
 <details>
 <summary>Manual install (no Node.js)</summary>
 
 1. Open https://github.com/sct-will/carrydown, click the green Code button, then Download ZIP, and unzip it.
 2. Copy the three folders inside `skills/` into your agent's skills folder. The paths are in the table under [Install options](#install-options).
-3. Restart your agent.
 
 </details>
 
-Restart your agent.
+**What the installer will tell you.** After it installs, the installer prints a table of third-party security scans for each skill and the line "Review skills before use; they run with full agent permissions." The scanners rate what a skill could do, not what it did. `carrydown-plan-to-github` may show a risk label because it uses a GitHub token and reads the issues in your repository. Labels can change when the scanners run again. [docs/security.md](docs/security.md) explains what each skill touches.
+
+Restart your agent so it sees the skills.
 
 1. **Plan owner.** Open your coding agent in your project folder (the folder you made above). No folder yet? Say:
 
@@ -132,9 +154,9 @@ Restart your agent.
 
 3. **Plan owner.** Put your document (.docx or .md) in `docs/source/`, then say:
 
-   > Set up a project plan from docs/source/\<file\>.
+   > Set up a project plan from this document.
 
-   Then answer the interview, or say "use your default". The document is the only required input. You will also be asked about your constraints: the people, the target date or weeks, both, or neither for now. Everyone is assumed to be full time unless you say otherwise. You will see: "carrydown: interview, step 1 of 6".
+   Name the file when the agent asks, for example `docs/source/architecture.docx`. Then answer the interview, or say "use your default". The document is the only required input. You will also be asked about your constraints: the people, the target date or weeks, both, or neither for now. Everyone is assumed to be full time unless you say otherwise. You will see: "carrydown: interview, step 1 of 6".
 
 4. **Plan owner.** Review the plan. Say:
 
@@ -144,7 +166,7 @@ Restart your agent.
 
    > Yes, the plan is right.
 
-   You will see: the checker reporting 0 findings.
+   You will see: the load table, the critical path and 0 plan findings. Findings on the specification stubs, such as TODO text, are expected until the agent has written the specifications. After that the checker reports 0 findings.
 
 5. **Lead reviewer.** A senior engineer reads the generated specifications in `docs/spec/` for about an hour and asks for changes before anything goes to GitHub.
 
@@ -187,10 +209,11 @@ On GitHub: labels, one Epic, one sub-epic per milestone, one issue per work item
 
 ## Install options
 
-- `--all` installs the three skills for every coding agent found on this computer, without asking. The installer adds folders such as `.claude/` and `.agents/` to your project. Commit only the ones your team uses.
-- `-a <agent>` installs for one agent. Example: `npx skills add sct-will/carrydown --skill '*' -a claude-code`.
-- `-g` installs for your user instead of the current project.
-- `--list` shows the skills without installing them. With no options the installer lets you choose from a list.
+- With no options the installer lets you choose the skills and the agents from a list.
+- `--skill '*' -a <agent>` installs all three skills for one agent without asking. Example: `npx skills add sct-will/carrydown --skill '*' -a claude-code`.
+- `--all` installs the three skills for every agent the installer supports, not only the ones on this computer, without asking. In the project folder it creates `.agents/skills/` with the skills, `.claude/skills/` with links to them, a visible `agent/skills/` folder with a second copy, and `skills-lock.json`. Commit only the folders the engineers use.
+- `-g` installs for your user account instead of the current project. Without `-a`, it writes into the user folder of every supported agent, dozens of hidden folders in your home folder, and reports errors for agents that cannot install globally. Use `-g -a <agent>`, for example `npx skills add sct-will/carrydown --skill '*' -g -a claude-code`.
+- `--list` shows the skills without installing them.
 
 | Agent | `-a` value | Project folder | User folder |
 | --- | --- | --- | --- |
@@ -215,6 +238,8 @@ The sample is a fictional expense approvals service: requirements, two governanc
 - The issues the skills created: https://github.com/sct-will/carrydown-sample/issues
 - The public project board: https://github.com/users/sct-will/projects/2
 - Its README, which holds the renderings and the sample output: https://github.com/sct-will/carrydown-sample#readme
+
+The same files are in this repository at [`sample/expense-approvals/`](sample/expense-approvals/), so the self test can run on them. [See it in 60 seconds](#see-it-in-60-seconds) runs the scripts on the sample.
 
 ## FAQ
 
@@ -256,7 +281,7 @@ This project follows the Contributor Covenant. See [CODE_OF_CONDUCT.md](CODE_OF_
 
 ## Security
 
-Report a vulnerability privately through GitHub. See [SECURITY.md](SECURITY.md). The carrydown skills store only your GitHub token file, and it never prints or commits the token.
+Report a vulnerability privately through GitHub. See [SECURITY.md](SECURITY.md). The carrydown skills store only your GitHub token file, and they never print or commit the token. The installer's scanners may rate `carrydown-plan-to-github` as a medium risk because it uses a token and reads the issues in your repository. [docs/security.md](docs/security.md) explains why.
 
 ## Licence
 

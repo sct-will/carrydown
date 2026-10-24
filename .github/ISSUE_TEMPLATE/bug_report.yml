@@ -65,12 +65,12 @@ body:
     id: node
     attributes:
       label: Node.js version
-      description: Run `node --version`. Write "not installed" if it is not.
+      description: Run `node --version`. The installer needs 22.20 or later. Write "not installed" if it is not.
   - type: input
     id: python
     attributes:
       label: Python version
-      description: Run `python3 --version`.
+      description: Run `python3 --version`, or `python --version` on Windows. The scripts need 3.9 or later.
     validations:
       required: true
   - type: checkboxes

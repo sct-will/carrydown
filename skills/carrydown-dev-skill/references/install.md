@@ -6,7 +6,7 @@ Each engineer installs the skill once, in the agent they use. Then they start a 
 
 ## With the skills command line tool
 
-The tool needs Node.js. Run one line from the project root. Add `-g` to install for your user instead of the project. The tool copies the folder, so run it again after the skill changes.
+The tool needs Node.js 22.20 or later. Run one line from the project root. Add `-g` to install for your user account instead of the project, and keep the `-a` value: without it, `-g` writes into the folder of every agent the tool supports. The tool copies the folder, so run it again after the skill changes.
 
 ```bash
 npx skills add <repository tree url of the skill folder> -a claude-code

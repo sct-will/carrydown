@@ -62,7 +62,7 @@ The agent drafts. You decide. It shows you:
 
 - the **milestones**, each with an exit gate you can check at a demonstration,
 - the **work units** (the time blocks), with dates and your pauses,
-- every **work item** with an owner, a date and what it depends on,
+- every **work item** with an owner, a date, what it depends on and a size such as "Small, about 2 days" (the load table reads the number after "about"),
 - the **load table**, how much work each person has in each work unit as a percentage of the capacity their allocation gives them, with any work unit over 100 percent flagged,
 - the **critical path**, the chain of items that sets the end date, and whether it meets your target,
 - the **program items** kept outside the plan.

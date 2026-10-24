@@ -23,7 +23,7 @@ Choose one option. Install it once per computer or once per project. Then start 
 
 ### Option 1, the skills command line tool
 
-Run one line for your agent. Add `-g` to install for your user instead of this project. The tool copies the folder, so run the line again after the skill changes.
+Run one line for your agent. Add `-g` to install for your user account instead of this project, and keep the `-a` value: without it, `-g` writes into the folder of every agent the tool supports. The tool copies the folder, so run the line again after the skill changes.
 
 ```bash
 npx skills add {{tree_url}} -a claude-code

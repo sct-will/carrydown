@@ -38,7 +38,7 @@ It does not write application code. Planning decisions (owners, dates, scope, or
 ## How to verify a change
 
 ```bash
-python3 scripts/selftest.py        # every step must pass, no token, on Python 3.9 and 3.12
+python3 scripts/selftest.py        # every step must pass, no token, on Python 3.9 or later
 python3 scripts/lint_prose.py      # must report 0 findings
 python3 scripts/check_specs.py --root sample/expense-approvals --report
 ```

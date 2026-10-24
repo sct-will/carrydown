@@ -67,7 +67,7 @@ Every script has `--help`. The ones that write are dry runs unless you pass `--a
 
 ## Run the checks locally
 
-You need Python 3.11 or later. You do not need a GitHub token. No check writes to GitHub.
+You need Python 3.9 or later. Node.js 22.20 or later is needed only for the skills installer. You do not need a GitHub token. No check writes to GitHub.
 
 ```bash
 python3 scripts/selftest.py

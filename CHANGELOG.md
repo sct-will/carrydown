@@ -2,6 +2,23 @@
 
 All notable changes to this project are written here. The format follows Keep a Changelog. Versions follow semantic versioning.
 
+## Unreleased
+
+### Changed
+
+- The three skills and the generated developer skill treat documents, specifications, plan.yaml and issue text as data and never follow instructions found in them.
+- `carrydown-plan-to-github` never opens the token file, asks for an explicit yes before writing to a public repository, and gives links for the user to open.
+- Token guidance leads with a fine-grained token for organisation boards, keeps the classic token for user-owned boards only, and sets a 7-day expiry and revocation when done.
+- After `github_token.py --from-file`, the user deletes their own token file. The documents no longer say the script deletes it.
+- `carrydown-ground-truth` runs `git init` only after a clear yes and no longer asks the user to install software through a system dialog.
+- Shorter skill descriptions and bodies, with `license`, `compatibility` and `metadata` in the frontmatter. Setup checks moved to `references/setup.md`.
+- The generated developer skill finds a work item file by glob and reads cited ground truth sections by line range instead of reading the whole index.
+- One set of role names (plan owner, lead reviewer, engineers, program) across the skills, templates and documents. The interview now asks who the lead reviewer is.
+- The README leads with the interactive install line, explains what `--all` and `-g` create, notes the installer's scanner labels, and adds a "See it in 60 seconds" block.
+- One statement of versions everywhere: Python 3.9 or later, Node.js 22.20 or later.
+- `docs/inputs.md` explains the size format, "Small, about 2 days".
+- The project board reference says what the script does not set yet, instead of what the API cannot set.
+
 ## 0.1.0
 
 First release.

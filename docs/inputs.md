@@ -17,6 +17,8 @@ The rule: give both and the plan fits them. Give one and the agent backs into th
 
 A worked example of Derive the date, produced by running the checker on the sample with its target removed, is in [derive-the-date.md](derive-the-date.md).
 
+Each work item gets a size, written as a word and a number of days, for example "Small, about 2 days" or "Medium, about 3 days". The agent proposes the sizes. The checker reads the number after "about" for the load table, so keep that form if you edit `plan.yaml` yourself.
+
 In `plan.yaml` the inputs appear as the documents under `project.ground_truth`, the optional `people` list with `allocation` (a whole number from 1 to 100, 100 if omitted), and the optional `target` block with `date` or `weeks`, next to the `breaks` list.
 
 The sections below list these and the smaller inputs the interview also asks for.
