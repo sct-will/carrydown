@@ -8,7 +8,8 @@ How it was made.
 
 - A new private repository, `your-user/your-test-repo` (a placeholder for the real name), held a copy of the sample folder so that the links in the issues resolve.
 - The commands ran from the root of the repository. Output is as printed, with the token removed and file paths shortened. The scripts never print the token.
-- The scripts have since gained a Constraints block in the Epic comment (the target delivery and the allocation by track) and a target delivery line in every sub-epic. The recorded output below predates it. The dry run now prints the same block before anything is written. The project is fictional. The numbers are the real issue numbers the run created: Epic #1, sub-epics #2 to #6, work items #7 to #15.
+- The scripts have since gained a Constraints block in the Epic comment (the target delivery and the allocation by track) and a target delivery line in every sub-epic. The write blocks below predate it. The dry runs print the block before anything is written. The project is fictional. The numbers are the real issue numbers the run created: Epic #1, sub-epics #2 to #6, work items #7 to #15.
+- The blocks that need no GitHub account were run again with the current scripts: the help text, the token walkthrough, the renderer, the scaffold, the checker, the dry runs (with `--offline`, so they read nothing from GitHub) and the developer skill. The blocks that talk to GitHub are as recorded in the original run: the token check, the writes, the second runs, the verifications and the independent count.
 - The scripts took about three and a half minutes in total, most of it pauses that keep GitHub from rate limiting the writes. Reading the dry runs takes longer than running the scripts.
 
 Each GitHub step shows the dry run first and the write second. A second run of each write step finds everything in place and creates nothing.
@@ -30,7 +31,7 @@ usage: render_ground_truth.py [-h] [--root ROOT] [--out-dir OUT_DIR]
 $ python3 scripts/scaffold_spec.py --help
 usage: scaffold_spec.py [-h] [--root ROOT] [--plan PLAN] [--init]
                         [--name NAME] [--stubs] [--refresh-headers] [--ci]
-                        [--force] [--apply]
+                        [--force] [--apply] [--allow-no-git]
 [exit 0]
 ```
 
@@ -44,15 +45,16 @@ usage: check_specs.py [-h] [--root ROOT] [--plan PLAN] [--item ITEM]
 ```text
 $ python3 scripts/github_token.py --help
 usage: github_token.py [-h] [--token-file TOKEN_FILE] [--check] [--repo REPO]
-                       [--stdin] [--from-file PATH] [--dry-run]
+                       [--stdin] [--from-file PATH] [--delete-after]
+                       [--dry-run]
 [exit 0]
 ```
 
 ```text
 $ python3 scripts/github_sync.py --help
 usage: github_sync.py [-h] [--root ROOT] [--plan PLAN] [--repo REPO]
-                      [--token-file TOKEN_FILE] [--apply] [--offline]
-                      [--verify] [--create-epic] [--update-bodies]
+                      [--token-file TOKEN_FILE] [--apply] [--allow-public]
+                      [--offline] [--verify] [--create-epic] [--update-bodies]
                       [--skip-comment] [--skip-check]
                       [--issue-type ISSUE_TYPE] [--show-body ID]
 [exit 0]
@@ -71,7 +73,7 @@ usage: github_project.py [-h] [--root ROOT] [--plan PLAN] [--repo REPO]
 ```text
 $ python3 scripts/generate_dev_skill.py --help
 usage: generate_dev_skill.py [-h] [--root ROOT] [--plan PLAN] [--apply]
-                             [--force]
+                             [--force] [--only {references}]
 [exit 0]
 ```
 
@@ -88,8 +90,13 @@ The token was stored earlier with `github_token.py --from-file`. The dry run pri
 ```text
 $ python3 scripts/github_token.py --dry-run
 Dry run. These are the steps:
-1. Create a classic token with the scopes repo and project: https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown
-   Or a fine-grained token (organisation-owned projects only): https://github.com/settings/personal-access-tokens/new
+1. Create a token first, with a 7-day expiry. Pick the kind by who owns the board:
+     Board owned by an organisation: a fine-grained token. https://github.com/settings/personal-access-tokens/new
+       Resource owner: the organisation. Expiration: 7 days. Repository access: only the one repository.
+       Repository permissions: Issues read and write, Metadata read. Organisation permission: Projects read and write.
+     Board owned by your own account: a classic token. This link ticks repo and project and names it: https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown
+       Set Expiration to 7 days. GitHub does not let fine-grained tokens use boards on a personal account.
+     Copy the token. GitHub shows it once. Revoke it when the GitHub step is done.
 2. Paste it when the script asks. The input is hidden.
 3. The script writes it to ~/.config/carrydown/github_token with mode 600.
 4. The script asks GitHub who you are and which scopes the token has.
@@ -137,7 +144,7 @@ would write docs/ground-truth/addendum.index.txt
 
 ## 4. Scaffold
 
-The sample already has its folder, so the scaffold script skips every file. In a copy that holds only `plan.yaml` it writes the README, the milestone files and the stubs, and the checker then refuses the stubs because they still hold TODO lines.
+The sample already has its folder, so the scaffold script skips every file. In a copy that holds only `plan.yaml` it writes the README, the milestone files and the stubs, and the checker then refuses the stubs because they still hold TODO lines. It also notes that the ground truth is not rendered in that copy, so its citations are not checked.
 
 ```text
 $ python3 scripts/scaffold_spec.py --root sample/expense-approvals --stubs
@@ -188,22 +195,24 @@ create: docs/spec/m5-release/wi-11-release-readiness.md  [stub]
 
 ```text
 $ python3 scripts/check_specs.py --root . --quiet   # the stubs hold TODO lines, so the checker refuses them
-1 files clean, 14 with findings (9 work items, 5 milestones)
+1 files clean, 15 with findings (9 work items, 5 milestones)
+14 file(s) still hold template text (TODO). That is expected until the specifications are written.
 [exit 1]
 ```
 
 ```text
 $ python3 scripts/check_specs.py --root . --item 3
 0 files clean, 1 with findings (1 work items, 0 milestones)
+1 file(s) still hold template text (TODO). That is expected until the specifications are written.
 WI-03 docs/spec/m2-route-to-approvers/wi-03-routing-engine.md:
-  - unfinished template text (TODO) at line 17
-  - length 76 lines is outside 80 to 340
+  - unfinished template text (TODO) at line 17, and 1 other finding(s) that usually go when the template text is replaced
 [exit 1]
 ```
 
 ```text
 $ python3 scripts/github_sync.py --root . --repo your-user/your-test-repo   # in the same copy: the checker gate stops it
-1 files clean, 14 with findings (9 work items, 5 milestones)
+1 files clean, 15 with findings (9 work items, 5 milestones)
+14 file(s) still hold template text (TODO). That is expected until the specifications are written.
 The checker found problems. Run check_specs.py to see them, fix them, or pass --skip-check.
 [exit 1]
 ```
@@ -239,14 +248,27 @@ Load (sized days of work against allocated capacity, per person and work unit)
 
 Critical path (longest dependency chain to the last item)
   WI-02 -> WI-04 -> WI-08 -> WI-11  (79 calendar days)
-    WI-02 Report form and receipt upload, by 2027-02-10, idris
-    WI-04 Approver inbox and decisions, by 2027-03-03, idris
-    WI-08 Notifications and delegates, by 2027-03-18, idris
+    WI-02 Report form and receipt upload, by 2027-02-12, idris
+    WI-04 Approver inbox and decisions, by 2027-03-05, idris
+    WI-08 Notifications and delegates, by 2027-03-19, idris
     WI-11 Release readiness and runbook, by 2027-04-21, idris
 
 Target
   Target: 2027-04-23
   The critical path ends 2027-04-21: it meets the target with 2 day(s) to spare.
+
+Fit (working days each item needs, from its size and its owner's allocation, against its window)
+  Every sized item fits between its last dependency and its complete_by date.
+
+Earliest finish (forward pass over the dependencies, from sizes and allocation)
+  WI-01 -> WI-02 -> WI-04 -> WI-08 -> WI-11  ends 2027-03-12
+    WI-01 2027-02-01 to 2027-02-03, about 3.0 working days
+    WI-02 2027-02-04 to 2027-02-12, about 6.7 working days
+    WI-04 2027-02-15 to 2027-02-23, about 6.7 working days
+    WI-08 2027-02-24 to 2027-03-04, about 6.7 working days
+    WI-11 2027-03-05 to 2027-03-12, about 5.0 working days
+  It meets the target 2027-04-23 with 42 day(s) to spare. The planned dates add the slack between items.
+  Owners are not serialised in this pass. The load table above shows whether each person's work fits each work unit.
 
 Program-owned items (outside the development plan; referenced only as program input)
   WI-05 Pilot team recruitment
@@ -266,25 +288,29 @@ Checkpoints
 
 ## 6. Issues
 
-The dry run, then the write. The Epic is created because the sample plan names none.
+The dry run, then the write. The Epic is created because the sample plan names none. The dry run here uses `--offline`: it shows the plan and counts every issue as new, because it reads nothing from GitHub. Without `--offline` and with a token, it reads the repository first and counts only what is missing.
 
 <details>
 <summary>Dry run</summary>
 
 ```text
-$ python3 scripts/github_sync.py --root sample/expense-approvals --repo your-user/your-test-repo --create-epic
+$ python3 scripts/github_sync.py --root sample/expense-approvals --repo your-user/your-test-repo --create-epic --offline
 15 files clean, 0 with findings (9 work items, 5 milestones)
 
 carrydown github_sync  DRY RUN (nothing will be written)
 repository: your-user/your-test-repo    plan: docs/spec/plan.yaml
 5 milestones, 9 work items, 2 tracks, 2 program items kept outside the plan
-repository found (private: True). Reading existing labels and issues.
+Constraints (they go into the Epic comment, and the target into every sub-epic):
+  Target delivery: 2027-04-23 (given)
+  Track Workflow: 1 person, 100 percent allocated
+  Track Experience: 1 person, 60 percent allocated
+not checked against GitHub (--offline): showing the plan only, nothing is read from GitHub
 
 Labels
-  would create label: expense-approvals
-  would create label: sub-epic
-  would create label: workflow
-  would create label: experience
+  would create label if missing: expense-approvals
+  would create label if missing: sub-epic
+  would create label if missing: workflow
+  would create label if missing: experience
 
 Epic
   would create: Expense approvals, development plan
@@ -307,17 +333,19 @@ Work items
   would create: WI-09 Ledger export job
   would create: WI-11 Release readiness and runbook
 
-Summary: would create 1 Epic, 5 sub-epics and 9 work item issues (0 sub-epics and 0 issues already exist).
+Summary
+1 Epic, 5 sub-epics, 9 work item issues
+  not checked against GitHub (--offline), so this counts every issue as new: 1 Epic, 5 sub-epics, 9 work item issues.
 Would then link each work item under its sub-epic and each sub-epic under the Epic,
 rewrite dependency ids in the bodies to issue links, update the sub-epic work item lists,
 and post the Epic roll-up comment.
-  WI-01  workflow     2027-02-04  depends: -
-  WI-02  experience   2027-02-10  depends: WI-01
+  WI-01  workflow     2027-02-03  depends: -
+  WI-02  experience   2027-02-12  depends: WI-01
   WI-03  workflow     2027-02-24  depends: WI-01
-  WI-04  experience   2027-03-03  depends: WI-02, WI-03
-  WI-06  workflow     2027-03-12  depends: WI-03
+  WI-04  experience   2027-03-05  depends: WI-02, WI-03
+  WI-06  workflow     2027-03-10  depends: WI-03
   WI-07  workflow     2027-03-17  depends: WI-03
-  WI-08  experience   2027-03-18  depends: WI-04, WI-06
+  WI-08  experience   2027-03-19  depends: WI-04, WI-06
   WI-09  workflow     2027-04-06  depends: WI-07  program input: the pilot team, named by the program
   WI-11  experience   2027-04-21  depends: WI-08, WI-09  program input: finance sign-off on the export format and retention period
 
@@ -507,12 +535,13 @@ verification passed
 
 ## 7. Project board
 
+The dry run uses `--offline`, so it shows the fields and views the plan calls for and does not look for the project or the issues. The write that follows ran against the repository from step 6.
 
 <details>
 <summary>Dry run</summary>
 
 ```text
-$ python3 scripts/github_project.py --root sample/expense-approvals --repo your-user/your-test-repo
+$ python3 scripts/github_project.py --root sample/expense-approvals --repo your-user/your-test-repo --offline
 
 carrydown github_project  DRY RUN (nothing will be written)
 project: 'Expense approvals plan'  owner: your-user  repository: your-user/your-test-repo
@@ -522,10 +551,7 @@ fields to ensure:
   Track (single select): Workflow, Experience
   Complete by (date), Checkpoint (date)
 views to ensure: Table, Board, Roadmap
-issues found in the repository: 15; missing: 0
-project does not exist yet. Would create 'Expense approvals plan'.
-
-Dry run complete. Add --apply to create the project, fields, views and items.
+offline: nothing read from GitHub
 [exit 0]
 ```
 
@@ -750,7 +776,7 @@ The sample already has its generated skill, so the dry run skips every file.
 ```text
 $ python3 scripts/generate_dev_skill.py --root sample/expense-approvals
 developer skill: expense-approvals-dev  ->  docs/dev/skills/expense-approvals-dev
-description length: 512 characters (limit 1024)
+description length: 234 characters (target under 250, limit 1024)
   skip (exists): SKILL.md
   skip (exists): README.md
   skip (exists): references/work-items.md
