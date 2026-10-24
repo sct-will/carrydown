@@ -4,7 +4,7 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ## Unreleased
 
-- Two skills you install, one skill is generated for your engineers. The generator for the engineers' skill moved into `carrydown-plan-to-github`, whose last step, "Generate the engineers' skill", runs `generate_dev_skill.py` and prints the install line. Its templates and its install, maintenance and review references moved with it. Two roles remain: the plan owner, who runs both skills and reviews the generated plan and specifications with the agent, and the engineers, who install the generated skill. The separate reviewer and the named role for the people who watch the demonstrations are gone. The self test now has 158 steps.
+- Two skills you install, one skill is generated for your engineers. The generator for the engineers' skill moved into `carrydown-plan-to-github`, whose last step, "Generate the engineers' skill", runs `generate_dev_skill.py` and prints the install line. Its templates and its install, maintenance and review references moved with it. Two roles remain: the plan owner, who runs both skills and reviews the generated plan and specifications with the agent, and the engineers, who install the generated skill. The separate reviewer and the named role for the people who watch the demonstrations are gone. The self test now has 159 steps.
 - Work outside the plan is called what it is. Work the team depends on but does not schedule, such as a sign-off or a security review, is an external item, listed under `external` in `plan.yaml`. An item that waits for one sets `external_input`, and its Depends on row, its issue and the engineers' skill say "external input". The library function is `external_ids`. The checker report heading is "External items (outside the development plan; referenced only as external input)", the sync summary says "N external items kept outside the plan", and the specification README table column is "External item". A plan written with the older key and item field still loads: `carrydown_lib.py` reads them as `external` and `external_input`, and the README refresh recognises the older column headers.
 - README rewritten around the reader: the reason first, a picture of the output, look, try and install in order of effort, a two-sided conversation, three badges and two entry points (README and the plan owner guide). START-HERE.md is a pointer. New docs: repository-metadata.md and recording-storyboard.md.
 - The README hero is 3 to 1, so the install line sits higher, and a 2 to 1 copy, `docs/images/social-preview.png`, is the social preview. The handoff diagram says that the plan owner runs each skill in their agent and that the plan and specifications are human reviewed, with the agent making the edits. The six-step flow diagram is gone.
@@ -32,15 +32,17 @@ All notable changes to this project are written here. The format follows Keep a 
 - Shorter skill descriptions and bodies, with `license`, `compatibility` and `metadata` in the frontmatter. Setup checks moved to `references/setup.md`.
 - The generated engineers' skill finds a work item file by glob and reads cited ground truth sections by line range instead of reading the whole index.
 - One set of role names (plan owner, engineers) across the skills, templates and documents.
-- The README leads with the interactive install line, explains what `--all` and `-g` create, notes the installer's scanner labels, and adds a "See it in 60 seconds" block.
+- The README leads with the interactive install line, explains what `--all` and `-g` create, notes the installer's scanner labels, and has a "Getting started" section with the install line and the first sentence to say to your agent.
 - One statement of versions everywhere: Python 3.9 or later, Node.js 22.20 or later.
+- The specification template and README say that the Ground truth row lists the sections an item is built from, and that the body may cite others for context.
+- The references say that renaming an item is safe: the hidden marker finds its issue, and the script never changes an issue title.
 - `docs/inputs.md` explains the size format, "Small, about 2 days".
 - The project board reference says what the script does not set yet, instead of what the API cannot set.
 - `scaffold_spec.py --refresh-headers` keeps rows a person filled in or added, and `generate_dev_skill.py --only references` refreshes just the references.
 - The generated skill description is quoted and checked: the name length, the folder name, a target under 250 characters and a warning above 300. It gives one work item id as an example, such as WI-01, instead of a range that would include the ids of external items.
 - The window and earliest-finish checks compare each item with its size and allocation, and the sample dates are adjusted to fit.
 - The name check uses the plan's people.
-- The self test grew to 158 steps, with a loopback GitHub mock, built Word fixtures and planning review cases.
+- The self test grew to 159 steps, with a loopback GitHub mock, built Word fixtures and planning review cases.
 
 ### Security
 
@@ -58,6 +60,7 @@ All notable changes to this project are written here. The format follows Keep a 
 - Word automatic heading numbers are rendered, headings without a number are reported, and citations are reported as unchecked when the rendered document has no numbers.
 - The plan is validated before `--report` and every other check, and bad input gives one-line findings, not tracebacks.
 - A byte order mark in a file and a Windows console encoding no longer stop a script.
+- Output piped to a reader that stops early, such as `| head`, ends without a traceback.
 
 ## 0.1.0
 

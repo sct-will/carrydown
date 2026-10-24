@@ -14,11 +14,11 @@ Run this in your project folder and pick your coding agent:
 npx skills add sct-will/carrydown
 ```
 
-Put your document in `docs/source/` and tell your agent:
+Restart your agent after the install, so it sees the two skills. Then put your document in `docs/source/` and tell your agent:
 
 > Set up a project plan from this document.
 
-To look before you install, open [the sample board](https://github.com/users/sct-will/projects/2), or [open the sample in a Codespace](https://codespaces.new/sct-will/carrydown) and watch the checker and a dry run of the issues without touching GitHub.
+To look before you install, open [the sample board](https://github.com/users/sct-will/projects/2). Or [open the sample in a Codespace](https://codespaces.new/sct-will/carrydown), a ready-made workspace in your browser. There you can watch the plan being checked and a dry run, a rehearsal of the issues with nothing written to GitHub.
 
 ## How it works
 
@@ -26,8 +26,8 @@ To look before you install, open [the sample board](https://github.com/users/sct
 
 1. **Generate.** You have the ground truth, usually an architecture document. Your agent interviews you about people, time and dates, then writes the plan and one specification per work item. Skill: [carrydown-ground-truth](skills/carrydown-ground-truth/SKILL.md).
 2. **Review.** You read the plan, `docs/spec/plan.yaml`, and the specifications in the folders under `docs/spec/`, and edit them with the agent until they are right. No separate reviewer.
-3. **Carry down to GitHub.** Commit and push the plan first, because each issue links its specification on GitHub. Say "put the plan on GitHub". Then the agent generates an epic, a sub-epic per milestone, an issue per work item with its specification, the board and the engineers' skill. It shows a dry run first and writes nothing until you say yes. Skill: [carrydown-plan-to-github](skills/carrydown-plan-to-github/SKILL.md).
-4. **Work the issues.** Each engineer installs the engineers' skill once, opens an issue, for example work item WI-03, and says "Work on WI-03". Their agent reads the specification and the sections it cites, then plans the code. The install line works once you have committed and pushed the generated skill folder. It names that folder in your repository and the engineer's agent:
+3. **Carry down to GitHub.** Commit and push the plan first (ask your agent to do it), because each issue links its specification on GitHub. Say "put the plan on GitHub". Then the agent generates an epic (one parent issue for the whole plan), a sub-epic per milestone, an issue per work item with its specification, the board and the engineers' skill. It shows a dry run first and writes nothing until you say yes. The agent prints the finished install line for you to send each engineer. Skill: [carrydown-plan-to-github](skills/carrydown-plan-to-github/SKILL.md).
+4. **Work the issues.** The plan owner sends that line to each engineer. Each engineer installs the engineers' skill once, opens an issue, for example work item WI-03, and says "Work on WI-03". Their agent reads the specification and the sections it cites, then plans the code. The install line works once you have committed and pushed the generated skill folder. It names that folder in your repository and the engineer's agent:
 
    ```bash
    npx skills add https://github.com/<owner>/<repo>/tree/main/docs/dev/skills/<project>-dev -a <agent>
@@ -47,7 +47,7 @@ The sample is a fictional expense approvals service, so the company, the people 
 
 [![The sample's GitHub Project as a table grouped by work unit, with the Title, Track, Complete by and Checkpoint columns. Five work units from 1 February to 23 April 2027, each with its milestone row and its work items, for example WI-03 Approval routing engine on the Workflow track, complete by 19 February 2027, checkpoint 26 February 2027.](docs/images/board.png)](https://github.com/users/sct-will/projects/2)
 
-*What step 3 built: [the board](https://github.com/users/sct-will/projects/2), shown as a table grouped by work unit.*
+*What step 3 built: [the board](https://github.com/users/sct-will/projects/2), shown as a table grouped by work unit, a time box of one to three weeks with an exit gate.*
 
 ## What the agent asks you
 
@@ -56,7 +56,7 @@ The first skill interviews you in six short steps. Nothing is written to GitHub 
 | The agent asks | You answer with |
 | --- | --- |
 | Which documents must the project obey, and which wins if two disagree? | File paths, and the winner |
-| Who does the work, which part of the system does each person own, from when, and at what share of their time? | Names, a track each, start dates, days off |
+| Who does the work, which part of the system does each person own, from when, and at what share of their time? | Names, a track each (a lane of work one engineer owns, such as back end or front end), start dates, days off |
 | When must it ship, or how many weeks do you have? | A date, a number of weeks, or "derive the date" |
 | Which repository, and which coding agents do the engineers use? | owner/repo and the agents |
 | What must the stakeholders see at each milestone demonstration to call it done? | Their words, which become acceptance criteria |
@@ -70,7 +70,7 @@ Then it shows the schedule, each person's load per work unit, the critical path 
 - **One specification per work item**, the smallest piece of work an engineer can finish and show, citing the sections it comes from and checked against the plan by a script that also runs in continuous integration.
 - **GitHub issues**, one per work item under a sub-epic per milestone, each telling the engineer's agent what to read.
 - **A GitHub Project board** with work units, tracks, dates and checkpoints filled in.
-- **The engineers' skill**, generated from your specifications and committed in your repository, so "Work on WI-03" makes any coding agent read the specification and its sections before touching code.
+- **The engineers' skill**, generated from your specifications and committed in your repository, so "Work on WI-03" tells the coding agent to read the specification and its sections before touching code.
 
 <details>
 <summary>Where the files go in your project</summary>
@@ -96,7 +96,7 @@ The agent builds the plan around people and the part of the system each one owns
 
 ## How it compares
 
-Plan mode and spec-driven tools plan one task from one specification, and Claude Code Project Management (CCPM) turns requirements into issues; carrydown carries one agreed ground truth across every task, dates the plan around named people and checks every specification against it, so it sits beside any of them. The FAQ has [the longer comparison](docs/faq.md#how-does-this-compare-with-plan-mode-spec-driven-tools-superpowers-and-ccpm) and [whether this is just prompts](docs/faq.md#isnt-this-just-prompts).
+Plan mode and spec-driven tools plan one task from one specification, and Claude Code Project Management (CCPM) turns requirements into issues. carrydown carries one agreed ground truth across every task, dates the plan around named people and checks every specification against it, so it sits beside any of them. The FAQ has [the longer comparison](docs/faq.md#how-does-this-compare-with-plan-mode-spec-driven-tools-superpowers-and-ccpm) and [whether this is just prompts](docs/faq.md#isnt-this-just-prompts).
 
 It is not waterfall: the plan is files in Git, the work units stretch to fit the work, and [changing the plan is cheap](docs/faq.md#isnt-this-waterfall).
 

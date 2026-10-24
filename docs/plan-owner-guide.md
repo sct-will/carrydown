@@ -1,5 +1,7 @@
 # Plan owner guide
 
+An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent. Two skills you install, one skill is generated for your engineers.
+
 The long form for the plan owner: the engineering manager or product manager who owns the plan. You do not need to write code. The short form is the README: [Getting started](../README.md#getting-started) has the install line and the first sentence to say, and [What the agent asks you](../README.md#what-the-agent-asks-you) has the questions you answer. This guide does not repeat them. It explains what happens between them, what to review and what to ask for in advance.
 
 ## Who runs what
@@ -143,6 +145,7 @@ To change the plan later, change `plan.yaml` with your agent and run the checker
 - **Critical path.** The longest chain of items that depend on each other. It sets the earliest finish date.
 - **Exit gate.** The one sentence that must be true for a work unit to count as done.
 - **Work unit.** A time block with its own length and an exit gate. It replaces the fixed-length sprint.
+- **Track.** A lane of work one engineer owns, such as back end or front end. Each work item belongs to one track.
 - **Checkpoint.** A dated integration check between the tracks, listed under `checkpoints` in `plan.yaml`. Each one runs a joint check, and each work item names the checkpoint it must be done by.
 - **Joint check.** The test a checkpoint runs, written in one sentence in the plan: what the tracks run together to prove the parts they built fit, such as a report going from the form to the database.
 - **Joint demonstration.** What the engineers whose tracks meet show together at the end of a milestone, one demonstration of the completed items working as one. The plan says what each of them shows.

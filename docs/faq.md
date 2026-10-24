@@ -14,7 +14,7 @@ Only for one command, the install line in the README's [Getting started](../READ
 
 ## Which agents work?
 
-Any agent that reads Agent Skills. The installer supports more than seventy. The README lists them. The scripts also run by hand with Python.
+Any agent that reads Agent Skills. The installer supports more than seventy. The README lists six and links [the installer's full list](https://github.com/vercel-labs/skills/blob/main/docs/agents.md). The scripts also run by hand with Python.
 
 ## What do I need installed?
 
@@ -54,7 +54,7 @@ Edit the source, render again, and run the checker. It reports cited sections th
 
 ## Can I change the plan after the issues exist?
 
-Yes. Change `plan.yaml` and the specifications. New items are added on the next `--apply`. Existing issues are left alone unless you pass `--update-bodies`. Renaming an item is safe: issues are matched by a hidden marker in the body, so a rerun finds the issue under its new label.
+Yes. Change `plan.yaml` and the specifications. New items are added on the next `--apply`. Existing issues are left alone unless you pass `--update-bodies`. Renaming an item is safe: issues are matched by a hidden marker in the body, so a rerun finds the issue and creates nothing new. The script never changes an issue title, so edit the title on GitHub if you want the new name there.
 
 ## Why work units and not sprints?
 

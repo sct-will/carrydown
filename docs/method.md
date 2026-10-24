@@ -68,10 +68,10 @@ Three rhythms.
 - Weekly. A 30-minute checkpoint with all tracks. They run the current end-to-end flow and the joint check for the date. They post a short comment.
 - Per milestone. A demonstration by the engineers who built the items, to the stakeholders. The acceptance criteria were written before the work started. The outcome is a comment on the sub-epic. Nothing about the session is automated.
 
-## Why it scales
+## What limits it
 
 - Any number of tracks. Each engineer is on one track. Checkpoints join them.
-- Milestones and items. The checker and the scripts set no limit on how many there are. The method has been run on one project of five milestones and thirty-seven items. Sub-epics group them. Specifications are written in parallel by subagents, one batch per milestone, from the same ground truth and the same template.
+- Milestones and items. The checker and the scripts set no limit on how many there are. The method has been run on one project of five milestones and thirty-seven items. Sub-epics group them. Specifications are written in parallel, one subagent per batch of two or three items, from the same ground truth and the same template.
 - Work outside the plan. Work owned outside the team stays outside the plan as numbering gaps and "external input" notes.
 - One skill in every editor. The same conventions and the same definition of done reach each engineer, in the agent they already use.
 
