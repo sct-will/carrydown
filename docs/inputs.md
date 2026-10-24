@@ -2,15 +2,22 @@
 
 The ground-truth skill interviews you for these. You can prepare them first, or answer as it asks. If you do not know an answer, use the default or say "decide later" and the agent will mark it.
 
-## Three required inputs
+## Two inputs
 
-The agent will not draft a plan until it has these three.
+1. **The ground truth.** Required. One or more documents, as .docx or .md files. The agent drafts nothing without them.
+2. **Your project constraints.** Optional, in any combination: the people, each with a track, a percent allocation, a start date and days off, and the target, a date or a number of working weeks, plus breaks as date ranges. The agent asks one question: "What constraints do you have? The people, the target date or weeks, both, or neither for now."
 
-1. **The ground truth.** One or more documents, as .docx or .md files.
-2. **The people.** Each with a track, a percent allocation, a start date and days off. Percent allocation is the share of a person's working time that goes to this plan. The agent assumes 100 percent for everyone and asks you once to confirm: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" If someone works on the plan three days in five, say 60.
-3. **The target.** A date, or a number of working weeks, plus any breaks given as date ranges.
+Percent allocation is the share of a person's working time that goes to this plan. The agent assumes 100 percent for everyone and asks you once to confirm: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" If someone works on the plan three days in five, say 60.
 
-In `plan.yaml` they appear as the documents under `project.ground_truth`, the `people` list with `allocation` (a whole number from 1 to 100, 100 if omitted), and a `target` block with `date` or `weeks`, next to the `breaks` list.
+The rule: give both and the plan fits them. Give one and the agent backs into the other. Give neither and it proposes a default and asks. There are three modes.
+
+- **Fit.** People and target given. The plan fits them, and the checker flags over-capacity and target misses.
+- **Derive the date.** People given, no target. The plan's end date is the critical path end. It is written to `plan.yaml` as `target: {date: ..., derived: true}`.
+- **Derive the capacity.** Target given, no people. The agent proposes tracks and a head count at 100 percent that meets the date, as `people` entries with `derived: true` and placeholder names such as "Engineer 1". Replace them with real people. If you give neither, the agent proposes a default two-track team and a derived date and asks.
+
+A worked example of Derive the date, produced by running the checker on the sample with its target removed, is in [derive-the-date.md](derive-the-date.md).
+
+In `plan.yaml` the inputs appear as the documents under `project.ground_truth`, the optional `people` list with `allocation` (a whole number from 1 to 100, 100 if omitted), and the optional `target` block with `date` or `weeks`, next to the `breaks` list.
 
 The sections below list these and the smaller inputs the interview also asks for.
 
@@ -40,8 +47,8 @@ Files can be `.docx` or `.md`. Give paths.
 
 | Ask yourself | Example | Default |
 | --- | --- | --- |
-| Target date or number of weeks? (required) | 2027-04-23, or 11 weeks of work. | Ask. |
-| Breaks? (required, "none" is an answer) | A company offsite week, as a date range. | None. |
+| Target date or number of weeks? (optional) | 2027-04-23, or 11 weeks of work. | Ask. |
+| Breaks? ("none" is an answer) | A company offsite week, as a date range. | None. |
 | Longest work unit? | Three weeks. | Three weeks. |
 | Integration check rhythm? | Weekly, Fridays, 30 minutes. | Weekly. |
 

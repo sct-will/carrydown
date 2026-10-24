@@ -85,7 +85,7 @@ Restart your agent.
 
    > Set up a project plan from docs/source/\<file\>.
 
-   You will see: "carrydown: interview, step 1 of 6" and a few questions. You will be asked for two more required inputs: the people, and the target date or number of weeks. Everyone is assumed to be allocated full time unless you say otherwise.
+   You will see: "carrydown: interview, step 1 of 6" and a few questions. The document is the only required input. You will also be asked what constraints you have: the people, the target date or number of weeks, both, or neither for now. Everyone is assumed to be allocated full time unless you say otherwise.
 
 5. Answer, or say "use your default". Then say:
 
@@ -178,6 +178,7 @@ No Node.js? Skip the installer. Copy the three folders in `skills/` into your ag
 ## Requirements and access
 
 - **Setup from nothing**, step by step: [macOS](docs/setup.md#macos), [Windows](docs/setup.md#windows), [Linux](docs/setup.md#linux).
+- **Inputs.** The ground truth is required. Your project constraints are optional: the people with their percent allocation, and the target date or weeks. Give both and the plan fits them. Give one and the skill backs into the other. Give neither and it proposes a default and asks.
 - **Node.js**, only to run the install line. Get it from https://nodejs.org (choose LTS). Nothing in the skills needs it after that.
 - **Python 3.9 or later**, to run the scripts. Check with `python3 --version`. Nothing else to install, not even for Word files.
 - **GitHub permission** to create issues in the repository and to create a Project in the organisation or account. Ask an organisation admin if you do not have it. Planning works without it. Only the GitHub step needs it.
