@@ -379,6 +379,11 @@ def main():
     step("dry run: scaffold_spec", [PY, "scripts/scaffold_spec.py", "--root", SAMPLE, "--stubs"])
     step("dry run: github_sync (offline)", [PY, "scripts/github_sync.py", "--root", SAMPLE, "--offline"])
     step("show one issue body", [PY, "scripts/github_sync.py", "--root", SAMPLE, "--offline", "--show-body", "WI-07"])
+    pipe = ("import subprocess, sys; p = subprocess.Popen(sys.argv[1:], stdout=subprocess.PIPE, stderr=subprocess.PIPE); "
+            "p.stdout.readline(); p.stdout.close(); err = p.stderr.read().decode(); p.wait(); print(err); print('reader stopped early')")
+    talk = "import sys; sys.path.insert(0, 'scripts'); import carrydown_lib as L; [L.say('x' * 999) for _ in range(2000)]"
+    step("output to a reader that stops early, as | head does, ends without a traceback", [PY, "-c", pipe, PY, "-c", talk],
+         contains=["reader stopped early"], absent=("Traceback", "Exception ignored", "BrokenPipeError"))
     step("dry run: github_project (offline)", [PY, "scripts/github_project.py", "--root", SAMPLE, "--offline"])
     step("dry run: generate_dev_skill", [PY, "scripts/generate_dev_skill.py", "--root", SAMPLE])
     step("dry run: github_token", [PY, "scripts/github_token.py", "--dry-run"])

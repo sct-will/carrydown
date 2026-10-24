@@ -787,7 +787,16 @@ def section_text(spec, *names):
 
 
 def say(msg=""):
-    print(msg, flush=True)
+    try:
+        print(msg, flush=True)
+    except BrokenPipeError:
+        # The reader closed the pipe, as `| head` does. Stop quietly: send the rest of the
+        # output to the null device so the exit flush raises nothing, then exit.
+        try:
+            os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        except (OSError, ValueError):
+            pass
+        raise SystemExit(1)
 
 
 def die(msg, code=2):
