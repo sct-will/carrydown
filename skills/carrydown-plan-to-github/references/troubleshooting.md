@@ -4,7 +4,7 @@ Each script prints the HTTP status and GitHub's message with the token removed. 
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `No GitHub token found` | No token file or environment variable. | Run `python3 scripts/github_token.py`. |
+| `No GitHub token found` | No token file or environment variable. | Run `python3 <skill>/scripts/github_token.py`. |
 | HTTP 401 `Bad credentials` | Token wrong, revoked or expired. | Create a new token and store it again. |
 | HTTP 403 or 404 on an organisation repository, message mentions SSO or SAML | The token is not authorised for the organisation. | Authorise it: https://github.com/settings/tokens, Configure SSO. |
 | HTTP 404 on the repository | Wrong name, or the token cannot see it. | Check `owner/name`. Check that the token has `repo` and access to the repository. |

@@ -15,7 +15,7 @@ The skill copies conventions and indexes from files that change. Treat it as a b
 Regenerate with:
 
 ```bash
-python3 scripts/generate_dev_skill.py --root . --apply --force
+python3 <skill>/scripts/generate_dev_skill.py --root . --apply --force
 ```
 
 `--force` replaces `SKILL.md` and `README.md` too. Keep a copy of hand edits first, or regenerate into a scratch folder and merge.

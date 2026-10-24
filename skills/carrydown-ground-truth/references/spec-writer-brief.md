@@ -47,7 +47,7 @@ Length: <usual range, for example 90 to 150 lines>.
 
 ## Check your work
 
-Run `python3 <path>/scripts/check_specs.py --root <project root> --item N` for each of your ids until it reports 0 findings for them. Findings about other items are not yours.
+Run `python3 <skill>/scripts/check_specs.py --root <project root> --item N` for each of your ids until it reports 0 findings for them. Findings about other items are not yours.
 
 ## Report
 

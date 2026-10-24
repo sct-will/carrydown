@@ -1,9 +1,11 @@
 ---
 name: carrydown-dev-skill
-description: Use when a project has a docs/spec folder with plan.yaml and the user wants a developer skill generated from it, so that a coding agent starts any work item by its id and reads the specification, the ground truth sections it cites and the project conventions before changing code. Generates the skill folder with SKILL.md, a README with install steps, and references for the work item index, contracts and ground truth map, then explains how each team member installs it in their agent. Also use when the user says "generate the developer skill", "make the dev skill" or "install the skill for the team".
+description: Use when a project has a docs/spec folder with plan.yaml and the user wants a developer skill generated from it, so that a coding agent starts any work item by its id and reads the specification, the ground truth sections it cites and the project conventions before changing code. Generates the skill folder with SKILL.md, a README with install steps, and references for the work item index, contracts and ground truth map, then explains how each team member installs it in their agent. Start it when the user says exactly "Generate the developer skill." It also fits "install the skill for the team".
 ---
 
 # Generate the developer skill
+
+Start phrase: "Generate the developer skill."
 
 ## What this skill does
 
@@ -20,13 +22,13 @@ This skill generates that folder from `plan.yaml`, the specifications and the re
 
 ## Where the files are
 
-`scripts/generate_dev_skill.py` and `templates/dev-skill/` sit inside this skill folder. Run the script from the user's project root with `python3` and `--root .`.
+The scripts folder and the templates folder are inside this skill, next to this SKILL.md. In the commands below, `<skill>` stands for the folder that holds this SKILL.md. Run the scripts with `python3` from the user's project root and pass `--root .`. The generator is `<skill>/scripts/generate_dev_skill.py` and its templates are in the `dev-skill` folder inside the templates folder.
 
 ## The flow
 
 ### 1. Preconditions
 
-- `docs/spec/plan.yaml` exists and `check_specs.py --root .` is clean (run it from the other skills' `scripts/` folder, or ask the user to).
+- `docs/spec/plan.yaml` exists and `check_specs.py --root .` is clean (run `python3 <skill>/scripts/check_specs.py --root .`, using the copy in this skill's scripts folder).
 - `project.dev_skill` (a lowercase name with hyphens) and `project.dev_skill_path` are set in `plan.yaml`. A good default is `<slug>-dev` at `docs/dev/skills/<slug>-dev`.
 - The ground truth is rendered at `project.ground_truth`.
 - `project.repo` and `project.branch` are set, so install lines can point at the folder on GitHub.
@@ -34,8 +36,8 @@ This skill generates that folder from `plan.yaml`, the specifications and the re
 ### 2. Dry run, then generate
 
 ```bash
-python3 scripts/generate_dev_skill.py --root .            # dry run
-python3 scripts/generate_dev_skill.py --root . --apply    # write
+python3 <skill>/scripts/generate_dev_skill.py --root .            # dry run
+python3 <skill>/scripts/generate_dev_skill.py --root . --apply    # write
 ```
 
 It writes `SKILL.md`, `README.md`, `references/work-items.md`, `references/contracts.md` and `references/ground-truth-map.md` under `project.dev_skill_path`. It skips files that exist unless you pass `--force`. It prints the length of the description, which must stay under 1,024 characters.

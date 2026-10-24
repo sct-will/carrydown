@@ -23,13 +23,13 @@ Do not script or automate the session. People decide what to show. To help them,
 
 ## Checkpoint
 
-A 30-minute integration check, weekly, with all tracks present. Not a demonstration. The people run the current end-to-end flow and the joint check named for the date in `plan.yaml`. Record it with `templates/checkpoint-comment.md`: Shown, Closed since the last checkpoint, Joint check, Blocked or at risk.
+A 30-minute integration check, weekly, with all tracks present. Not a demonstration. The people run the current end-to-end flow and the joint check named for the date in `plan.yaml`. Record it with the `checkpoint-comment.md` template: Shown, Closed since the last checkpoint, Joint check, Blocked or at risk.
 
 Every work item names one checkpoint, on or after its completion date. The joint check is the item's share of the whole: what the two tracks run together to prove their halves meet.
 
 ## Closing comment on each issue
 
-When an item closes, the developer posts the evidence with `templates/closing-comment.md`: Demo, Evidence, Decisions, Handoff. The coding agent assembles it from the commands in the specification. The developer checks it first.
+When an item closes, the developer posts the evidence with the `closing-comment.md` template: Demo, Evidence, Decisions, Handoff. The coding agent assembles it from the commands in the specification. The developer checks it first.
 
 ## The rhythm
 

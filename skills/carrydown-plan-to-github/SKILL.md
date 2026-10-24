@@ -1,9 +1,11 @@
 ---
 name: carrydown-plan-to-github
-description: Use when a docs/spec folder with plan.yaml exists and the user wants the plan on GitHub. Walks through creating and storing a GitHub token safely, runs a dry run first, then after the user says yes creates labels, one sub-epic per milestone, one issue per work item with sub-issue links, dependency links and an Epic roll-up comment, and builds a GitHub Project (v2) board with work unit, track and date fields and table, board and roadmap views. Verifies the counts through the API and lists what must be clicked by hand. Also use when the user says "create the GitHub issues and the board", "put the plan on GitHub", "create the issues" or "build the project board".
+description: Use when a docs/spec folder with plan.yaml exists and the user wants the plan on GitHub. Walks through creating and storing a GitHub token safely, runs a dry run first, then after the user says yes creates labels, one sub-epic per milestone, one issue per work item with sub-issue links, dependency links and an Epic roll-up comment, and builds a GitHub Project (v2) board with work unit, track and date fields and table, board and roadmap views. Verifies the counts through the API and lists what must be clicked by hand. Start it when the user says exactly "Create the GitHub issues and the board." It also fits "put the plan on GitHub".
 ---
 
 # Put the plan on GitHub
+
+Start phrase: "Create the GitHub issues and the board."
 
 ## What this skill does
 
@@ -21,21 +23,21 @@ The scripts are idempotent. Issues are matched by exact title, so a rerun create
 ## Rules that never bend
 
 - Ask before you write anything to GitHub. Always run the dry run first, show the user its summary, and wait for a clear yes. Writing means `--apply`. A yes to one run is not a yes to the next.
-- Never print, log, echo, paste or commit the token. Never ask the user to paste it into the chat. The token goes into a hidden prompt of `github_token.py` and a file with mode 600.
+- Never print, log, echo, paste or commit the token. Never ask the user to paste it into the chat. The token goes into a plain text file that the user names and that `github_token.py --from-file` reads, or into the hidden prompt of `github_token.py`. It ends up in a file with mode 600.
 - Never put the token in a URL, a command line argument or an environment variable that gets logged.
 - Do not delete issues, labels, projects or repositories. If something must be removed, tell the user how to do it themselves.
 - Keep to the repository and owner the user named.
 
 ## Where the files are
 
-Scripts are in `scripts/` and templates in `templates/` inside this skill folder. Run them from the user's project root with `python3` and `--root .`. Python 3.9 or later. No packages to install.
+The scripts folder and the templates folder are inside this skill, next to this SKILL.md. In the commands below, `<skill>` stands for the folder that holds this SKILL.md. Run the scripts with `python3` from the user's project root and pass `--root .`. Python 3.9 or later. No packages to install.
 
 ## The flow
 
 ### 1. Preconditions
 
 ```bash
-python3 scripts/check_specs.py --root .
+python3 <skill>/scripts/check_specs.py --root .
 ```
 
 It must report 0 findings. If it does not, stop and go back to `carrydown-ground-truth`. The sync script runs the checker again before it does anything.
@@ -44,20 +46,35 @@ Confirm with the user, in plain words: the repository (`owner/name`), whether a 
 
 ### 2. Token
 
-Read `references/token-walkthrough.md`. In short:
+Read `references/token-walkthrough.md`. The user creates a classic token in the browser with the scopes `repo` and `project` (or a fine-grained token with the equivalent permissions). Then pick one of two paths.
+
+Preferred path, no terminal prompt. The user pastes the token into a plain text file (in TextEdit, Format then Make Plain Text before saving) and tells you the file path. They never paste the token into the chat. You run:
 
 ```bash
-python3 scripts/github_token.py --dry-run      # shows the steps, asks nothing
-python3 scripts/github_token.py                # the user runs this; the input is hidden
-python3 scripts/github_token.py --check --repo owner/name
+python3 <skill>/scripts/github_token.py --from-file <path> --repo owner/name
 ```
 
-The user creates a classic token with the scopes `repo` and `project` (or a fine-grained token with the equivalent permissions), pastes it into the hidden prompt, and the script stores it at `~/.config/carrydown/github_token` with mode 600 and checks its scopes. If the organisation enforces single sign-on (SSO), the token must be authorised for it. The walkthrough explains how. If a token already exists, run only `--check`.
+The script reads the file, stores the token at `~/.config/carrydown/github_token` with mode 600, asks GitHub who owns it and which scopes it has, and tells the user to delete their copy of the file. Remind the user to delete it. The script never deletes it for them.
+
+Alternative path. The user runs the script themselves in a terminal and types the token at a hidden prompt (nothing appears as they type):
+
+```bash
+python3 <skill>/scripts/github_token.py
+```
+
+Either way, then check:
+
+```bash
+python3 <skill>/scripts/github_token.py --dry-run                         # shows the steps, asks nothing
+python3 <skill>/scripts/github_token.py --check --repo owner/name
+```
+
+`--check` says who owns the token, its scopes, and whether the repository is reachable with push access. If it says the repository is not reachable or that the token cannot push, tell the user they probably lack the organisation permission to create issues and Projects, and that an organisation administrator must grant it. If the organisation enforces single sign-on (SSO), the token must be authorised for it. In words: go to github.com/settings/tokens, find the token, click its "Configure SSO" button, and click "Authorize" next to the organisation, then run `--check` again. If a token already exists, run only `--check`.
 
 ### 3. Dry run of the issues
 
 ```bash
-python3 scripts/github_sync.py --root . --repo owner/name
+python3 <skill>/scripts/github_sync.py --root . --repo owner/name
 ```
 
 Show the user the summary: how many labels, sub-epics and issues, which exist already, the Epic decision. Offer `--show-body ID` to print one issue body without any network call. Read `references/github-structure.md` so you can explain what each part is.
@@ -67,26 +84,26 @@ Ask: "This will create N issues in owner/name. Shall I go ahead?" Wait for a yes
 ### 4. Apply
 
 ```bash
-python3 scripts/github_sync.py --root . --repo owner/name --apply
+python3 <skill>/scripts/github_sync.py --root . --repo owner/name --apply
 ```
 
 Add `--create-epic` if the user agreed to a new parent Epic, `--issue-type Task` if the organisation uses issue types, `--update-bodies` only if the user wants existing bodies rewritten. Then verify:
 
 ```bash
-python3 scripts/github_sync.py --root . --repo owner/name --verify
+python3 <skill>/scripts/github_sync.py --root . --repo owner/name --verify
 ```
 
 ### 5. Project board
 
 ```bash
-python3 scripts/github_project.py --root . --repo owner/name            # dry run
+python3 <skill>/scripts/github_project.py --root . --repo owner/name            # dry run
 ```
 
 Show the fields and views it would create. Ask for a yes. Then:
 
 ```bash
-python3 scripts/github_project.py --root . --repo owner/name --apply
-python3 scripts/github_project.py --root . --repo owner/name --verify
+python3 <skill>/scripts/github_project.py --root . --repo owner/name --apply
+python3 <skill>/scripts/github_project.py --root . --repo owner/name --verify
 ```
 
 Read `references/project-board.md` for the fields, how breaks are made and what the API cannot set.

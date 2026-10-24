@@ -269,7 +269,7 @@ def run(argv=None):
     ap.add_argument("--skip-comment", action="store_true", help="do not post or update the Epic roll-up comment")
     ap.add_argument("--skip-check", action="store_true", help="do not run the specification checker first")
     ap.add_argument("--issue-type", default="", help="GitHub issue type for work items, for example Task (organisations only)")
-    ap.add_argument("--show-body", type=int, metavar="ID", help="print the issue body for one work item id and exit (no network)")
+    ap.add_argument("--show-body", metavar="ID", help="print the issue body for one work item and exit (no network). Accepts WI-07 or 7")
     a = ap.parse_args(argv)
 
     root = Path(a.root).resolve()
@@ -283,9 +283,11 @@ def run(argv=None):
             L.say("  - " + p)
         return 1
     if a.show_body:
-        it = L.item_by_id(plan).get(a.show_body)
+        m = re.search(r"(\d+)\s*$", str(a.show_body))
+        wanted = int(m.group(1)) if m else None
+        it = L.item_by_id(plan).get(wanted)
         if not it:
-            L.die(f"no item with id {a.show_body}")
+            L.die(f"no item with id {a.show_body}. Use the tag (for example {L.tag(plan, plan['items'][0]['id'])}) or the number")
         L.say(build_item_body(plan, root, it))
         return 0
     if not a.skip_check:

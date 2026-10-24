@@ -53,7 +53,7 @@ A checkpoint is a short weekly integration check with both tracks present. Each 
 Run:
 
 ```bash
-python3 scripts/check_specs.py --root . --report
+python3 <skill>/scripts/check_specs.py --root . --report
 ```
 
 It prints the schedule, the items and days per person per work unit, the critical path and the checkpoints. Read it with the user. If one person carries much more than the other, move items across tracks where the skills allow, or stretch the date. If the critical path runs through one person, say so and ask whether to change it.
@@ -68,4 +68,4 @@ Use the plan review prompt in `review-prompts.md`. Fold in the findings the user
 
 ## 10. Fill in plan.yaml
 
-Write the decisions into `docs/spec/plan.yaml`. The annotated `templates/plan.yaml` shows every field. Then run the checker. Ask the user to read the schedule and to say yes before you scaffold the folder.
+Write the decisions into `docs/spec/plan.yaml`. The annotated `plan.yaml` template in the templates folder inside this skill shows every field. Then run the checker. Ask the user to read the schedule and to say yes before you scaffold the folder.

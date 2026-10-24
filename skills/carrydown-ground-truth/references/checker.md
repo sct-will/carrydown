@@ -1,12 +1,12 @@
 # The checker
 
-`scripts/check_specs.py` reads `plan.yaml` and the specification folder and reports faults. It never writes a file. Exit status is 0 when clean and 1 when there are findings.
+`check_specs.py`, in the scripts folder inside this skill, reads `plan.yaml` and the specification folder and reports faults. It never writes a file. Exit status is 0 when clean and 1 when there are findings.
 
 ```bash
-python3 scripts/check_specs.py --root .            # everything
-python3 scripts/check_specs.py --root . --item 3   # one item
-python3 scripts/check_specs.py --root . --report   # schedule, load table, critical path
-python3 scripts/check_specs.py --root . --json     # machine readable
+python3 <skill>/scripts/check_specs.py --root .            # everything
+python3 <skill>/scripts/check_specs.py --root . --item 3   # one item
+python3 <skill>/scripts/check_specs.py --root . --report   # schedule, load table, critical path
+python3 <skill>/scripts/check_specs.py --root . --json     # machine readable
 ```
 
 ## Plan checks
@@ -51,7 +51,7 @@ Entries are regular expressions matched whole-word and without regard to case.
 
 ## Continuous integration
 
-`python3 scripts/scaffold_spec.py --root . --ci --apply` writes `.github/workflows/check-specs.yml` from `templates/check-specs-workflow.yml` and copies `check_specs.py` and `carrydown_lib.py` to `tools/carrydown/`. The workflow runs `python3 tools/carrydown/check_specs.py --root .` on every pull request and on pushes to the default branch. A finding exits with status 1, so the job fails and the pull request shows a red mark. Mark the job as required in branch protection to block merges. Copy the two scripts again when you update the kit.
+`python3 <skill>/scripts/scaffold_spec.py --root . --ci --apply` writes `.github/workflows/check-specs.yml` from the `check-specs-workflow.yml` template and copies `check_specs.py` and `carrydown_lib.py` to `tools/carrydown/`. The workflow runs `python3 tools/carrydown/check_specs.py --root .` on every pull request and on pushes to the default branch. A finding exits with status 1, so the job fails and the pull request shows a red mark. Mark the job as required in branch protection to block merges. Copy the two scripts again when you update the kit.
 
 ## Reading the output
 

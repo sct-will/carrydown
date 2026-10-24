@@ -93,11 +93,14 @@ def check(token, repo=None):
             perms = js.get("permissions") or {}
             L.say(f"Repository {repo}: found (private: {js.get('private')}), push access: {perms.get('push')}.")
             ok &= bool(perms.get("push", True))
+            if not perms.get("push", True):
+                L.say("  The token cannot push to this repository. Ask an organisation administrator for permission to create issues and Projects in it.")
         else:
             ok = False
             L.say(f"Repository {repo}: not reachable with this token (HTTP {status}).")
             L.say("  If the repository belongs to an organisation that uses single sign-on (SSO), authorise the token for it:")
-            L.say(f"  open {SSO_URL}, find the token, choose Configure SSO, then Authorize next to the organisation.")
+            L.say(f"  open {SSO_URL}, find the token, click its Configure SSO button, then click Authorize next to the organisation.")
+            L.say("  If the repository is still not reachable, you may lack the organisation permission to create issues and Projects. Ask an organisation administrator for it.")
     L.say("Token check " + ("passed." if ok else "found problems."))
     return 0 if ok else 1
 

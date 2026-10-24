@@ -1,9 +1,11 @@
 ---
 name: carrydown-ground-truth
-description: Use when a team wants to carry an architecture document, requirements, business analyst notes, governance rules or a development standard down into a governed plan with one specification per work item. Interviews the user for inputs, renders the documents to Markdown, scaffolds the docs/spec folder and plan.yaml, drafts milestones, work units, tracks, items, dates and dependencies with the human, writes milestone files and one specification per item to a template, and runs a checker. Also use when the user says "set up a project plan from this document", "plan this from the architecture document", "write the specs", "set up the spec folder" or "carry this document down".
+description: Use when a team wants to carry an architecture document, requirements, business analyst notes, governance rules or a development standard down into a governed plan with one specification per work item. Interviews the user for inputs, renders the documents to Markdown, scaffolds the docs/spec folder and plan.yaml, drafts milestones, work units, tracks, items, dates and dependencies with the human, writes milestone files and one specification per item to a template, and runs a checker. Start it when the user says exactly "Set up a project plan from this document." It also fits requests such as "write the specs" or "set up the spec folder".
 ---
 
 # Carry a ground truth down into a plan
+
+Start phrase: "Set up a project plan from this document."
 
 ## What this skill does
 
@@ -29,7 +31,7 @@ The next skill, `carrydown-plan-to-github`, puts the plan on GitHub. The one aft
 
 ## Where the files are
 
-The scripts and templates sit inside this skill folder, next to this file: `scripts/` and `templates/`. Run them with `python3` from the user's project root and pass `--root .`. Python 3.9 or later is enough. Reading a Word document needs the `lxml` package (`pip install lxml`). Run any script with `--help` to see its options. The scripts that write files are dry runs unless you pass `--apply`.
+The scripts folder and the templates folder are inside this skill, next to this SKILL.md. In the commands below, `<skill>` stands for the folder that holds this SKILL.md. Run the scripts with `python3` from the user's project root and pass `--root .`. Python 3.9 or later is enough. Reading a Word document needs the `lxml` package (`pip install lxml`). Run any script with `--help` to see its options. The scripts that write files are dry runs unless you pass `--apply`.
 
 ## The flow
 
@@ -38,21 +40,21 @@ The scripts and templates sit inside this skill folder, next to this file: `scri
 Read `references/interview.md` and run the interview. Collect these, in small groups, and do not start before the user confirms your summary.
 
 - The ground truth documents (any mix, `.docx` or `.md`), and which one wins when they disagree.
-- The people: names or handles, the track each owns, start dates, days off, advisors who own no items.
+- The people: names or handles, their GitHub logins for assignment, the track each owns, start dates, days off, advisors who own no items.
 - The time frame: a target date or a number of weeks, pause windows, the longest a work unit may run.
-- The repository and organisation, whether a parent Epic exists, which labels exist.
+- The repository and organisation, which branch the plan is for, whether a parent Epic exists, which labels exist.
 - The agentic editors the team uses.
 - Who watches the demonstrations.
 - What the program owns and keeps outside the plan.
 - Engineering conventions for the definition of done: test command, feature flag, lint command.
 
-If the user wants to see the whole flow first, offer the sample in `sample/expense-approvals/` of the kit repository.
+If the user wants to see the whole flow first, point them to the sample in the kit repository on GitHub: https://github.com/sct-will/carrydown/tree/main/sample/expense-approvals. An install copies only this skill folder, so the sample is not on their computer.
 
 ### 2. Render the ground truth
 
 ```bash
-python3 scripts/render_ground_truth.py path/to/document.docx --root . --version 0.1
-python3 scripts/render_ground_truth.py notes.md standards.md --root .
+python3 <skill>/scripts/render_ground_truth.py path/to/document.docx --root . --version 0.1
+python3 <skill>/scripts/render_ground_truth.py notes.md standards.md --root .
 ```
 
 Use `--dry-run` first if the user wants to see what will be written. The output goes to `docs/ground-truth/<name>.md` with a section index, plus `<name>.index.txt` (one line per heading) and `figures/`. The source document stays the source of truth. Tell the user which headings have no numbers: specifications cite sections by number, so a numbered ground truth works best. Offer to renumber the source, not the rendering.
@@ -60,14 +62,14 @@ Use `--dry-run` first if the user wants to see what will be written. The output 
 ### 3. Scaffold
 
 ```bash
-python3 scripts/scaffold_spec.py --root . --init --name "Project name" --apply
+python3 <skill>/scripts/scaffold_spec.py --root . --init --name "Project name" --apply
 ```
 
-This writes a starter `docs/spec/plan.yaml` from `templates/plan.yaml`. Fill it in during step 4. When the plan is approved:
+This writes a starter `docs/spec/plan.yaml` from the `plan.yaml` template in the templates folder inside this skill. Fill it in during step 4. When the plan is approved:
 
 ```bash
-python3 scripts/scaffold_spec.py --root .                 # dry run
-python3 scripts/scaffold_spec.py --root . --apply --stubs # README, milestone folders, one stub per item
+python3 <skill>/scripts/scaffold_spec.py --root .                 # dry run
+python3 <skill>/scripts/scaffold_spec.py --root . --apply --stubs # README, milestone folders, one stub per item
 ```
 
 ### 4. Draft the plan with the user
@@ -79,7 +81,7 @@ Read `references/planning.md`. Work in this order and stop for a decision at eac
 3. Propose work units of variable length that fit the time frame and the pauses.
 4. Propose work items with ids, labels, track, owner, size, dependencies and sections cited.
 5. Set dates with the people's start dates and days off. Order work to avoid context switching and to put the shared contract first.
-6. Show the load table and the critical path: `python3 scripts/check_specs.py --root . --report`.
+6. Show the load table and the critical path: `python3 <skill>/scripts/check_specs.py --root . --report`.
 7. Mark the program boundary. Program-owned items get an id gap and appear only as "program input".
 8. Run an adversarial review of the plan with `references/review-prompts.md`. Start with this sentence, word for word: "List what is missing, wrong or improvable in this plan, reading it as each engineer would live it week by week." Fold in what the user accepts.
 
@@ -94,10 +96,10 @@ When a specification finds a conflict inside the ground truth, resolve it in the
 ### 6. Check
 
 ```bash
-python3 scripts/check_specs.py --root .
+python3 <skill>/scripts/check_specs.py --root .
 ```
 
-Fix every finding. `references/checker.md` explains each check. Offer to add the checker to continuous integration so it fails loudly on every pull request: `python3 scripts/scaffold_spec.py --root . --ci --apply` writes `.github/workflows/check-specs.yml` and copies the checker to `tools/carrydown/`. The same command runs locally. Re-run `scaffold_spec.py --refresh-headers --apply` after any change to dates, owners or dependencies, so the header tables follow the plan.
+Fix every finding. `references/checker.md` explains each check. Offer to add the checker to continuous integration so it fails loudly on every pull request: `python3 <skill>/scripts/scaffold_spec.py --root . --ci --apply` writes `.github/workflows/check-specs.yml` and copies the checker to `tools/carrydown/`. The same command runs locally. Re-run `scaffold_spec.py --refresh-headers --apply` after any change to dates, owners or dependencies, so the header tables follow the plan.
 
 ### 7. Review and hand off
 

@@ -47,7 +47,7 @@ The script is safe to rerun. It finds the project by title (or by `--project-num
 ## Verify
 
 ```bash
-python3 scripts/github_project.py --root . --repo owner/name --verify
+python3 <skill>/scripts/github_project.py --root . --repo owner/name --verify
 ```
 
 It prints the count of plan issues on the board, the number of items with each field filled, the views and their layouts, and the project URL.

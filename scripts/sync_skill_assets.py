@@ -28,7 +28,7 @@ NEEDS = {
         "templates": ["issue-body.md", "closing-comment.md", "checkpoint-comment.md"],
     },
     "carrydown-dev-skill": {
-        "scripts": ["generate_dev_skill.py", "scaffold_spec.py", "render_ground_truth.py"],
+        "scripts": ["generate_dev_skill.py", "scaffold_spec.py", "render_ground_truth.py", "check_specs.py"],
         "templates": ["dev-skill/SKILL.md", "dev-skill/README.md"],
     },
 }

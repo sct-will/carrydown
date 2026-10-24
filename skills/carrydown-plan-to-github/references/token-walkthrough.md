@@ -21,27 +21,39 @@ Fine-grained token. Fits a stricter policy, with one catch.
 
 ## Store it safely
 
-Run the script yourself in a terminal. Do not paste the token into the agent chat.
+Never paste the token into the agent chat. Pick one of two paths.
+
+Preferred path, no terminal prompt. Paste the token into a plain text file, for example `Downloads/token.txt`. In TextEdit choose Format, then Make Plain Text, before you save. Tell the agent the file path. The agent runs:
 
 ```bash
-python3 scripts/github_token.py
+python3 <skill>/scripts/github_token.py --from-file <path> --repo owner/name
 ```
 
-What it does: it asks for the token with hidden input, writes it to `~/.config/carrydown/github_token` in a folder with mode 700 and a file with mode 600, asks GitHub who the token belongs to, and compares the scopes with what the scripts need. It never prints the token.
+The script reads the file, writes the token to `~/.config/carrydown/github_token` in a folder with mode 700 and a file with mode 600, asks GitHub who the token belongs to, compares the scopes with what the scripts need, and tells you to delete your copy of the file. Delete it. The script never deletes it for you.
+
+Alternative path. Run the script yourself in a terminal and type the token at the hidden prompt. Nothing appears as you type.
+
+```bash
+python3 <skill>/scripts/github_token.py
+```
+
+It stores and checks the token the same way. The script never prints the token.
 
 Non-interactive form for automation (the token comes from another secret store, not from a file in the project):
 
 ```bash
-printf '%s' "$TOKEN_FROM_SECRET_STORE" | python3 scripts/github_token.py --stdin
+printf '%s' "$TOKEN_FROM_SECRET_STORE" | python3 <skill>/scripts/github_token.py --stdin
 ```
 
 ## Check it
 
 ```bash
-python3 scripts/github_token.py --check --repo owner/name
+python3 <skill>/scripts/github_token.py --check --repo owner/name
 ```
 
 The output says who owns the token, its scopes, and whether the repository is reachable with push access.
+
+If it says the repository is not reachable, or that the token cannot push, the usual causes are single sign-on (next section) and a missing organisation permission. Ask an organisation administrator for permission to create issues and Projects in the organisation. Then run the check again.
 
 ## Single sign-on
 
@@ -50,8 +62,8 @@ Many organisations require single sign-on (SSO). A token that works for your own
 To fix it:
 
 1. Open https://github.com/settings/tokens.
-2. Find the token and choose Configure SSO.
-3. Choose Authorize next to the organisation and complete the sign-in.
+2. Find the token and click its Configure SSO button.
+3. Click Authorize next to the organisation and complete the sign-in.
 4. Run `github_token.py --check --repo owner/name` again.
 
 If you do not see the organisation, your administrator may need to allow tokens. Ask them; do not work around it.

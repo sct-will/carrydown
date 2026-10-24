@@ -3,8 +3,8 @@
 Run these after the writes. They only read.
 
 ```bash
-python3 scripts/github_sync.py --root . --repo owner/name --verify
-python3 scripts/github_project.py --root . --repo owner/name --verify
+python3 <skill>/scripts/github_sync.py --root . --repo owner/name --verify
+python3 <skill>/scripts/github_project.py --root . --repo owner/name --verify
 ```
 
 ## What the sync verification checks
