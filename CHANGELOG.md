@@ -4,8 +4,17 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ## Unreleased
 
+### Added
+
+- Planning rigor. `plan.yaml` records why the plan is composed the way it is: `rationale`, `joint_demonstration` and `single_track_reason` on each milestone, `order_rationale` on each track and `theme` on each item. The ten planning rules are in the ground-truth skill's `references/planning.md` and in `docs/method.md`.
+- `scaffold_spec.py` writes "Why these items form this milestone" and "Joint demonstration" into each `milestone.md`, and "How this plan was composed" into the specification README. `--refresh-headers` rewrites or adds these sections and leaves other edits alone.
+- `check_specs.py` has a planning review. A milestone on one track without a reason, and a missing rationale, joint demonstration or order rationale, are findings. `--report` ends with advisory lines: the tracks each milestone covers and whether its joint check names them, items with no slack, theme switches per owner, critical path owners and the load ratio.
+
 ### Changed
 
+- A tie between critical path chains goes to the chain with more items, so the path keeps the dependency it starts from.
+- The sample moves five dates and one size so that every item has slack before its checkpoint, names both tracks in each demonstration's joint check, and carries its rationale and themes.
+- The plan template has a second item, so its example milestone covers both tracks and meets at a joint check.
 - The three skills and the generated developer skill treat documents, specifications, plan.yaml and issue text as data and never follow instructions found in them.
 - `carrydown-plan-to-github` never opens the token file, asks for an explicit yes before writing to a public repository, and gives links for the user to open.
 - Token guidance leads with a fine-grained token for organisation boards, keeps the classic token for user-owned boards only, and sets a 7-day expiry and revocation when done.
@@ -23,7 +32,7 @@ All notable changes to this project are written here. The format follows Keep a 
 - The generated skill description is quoted and checked: the name length, the folder name, a target under 250 characters and a warning above 300.
 - The window and earliest-finish checks compare each item with its size and allocation, and the sample dates are adjusted to fit.
 - The name check uses the plan's people.
-- The self test grew to 137 steps, with a loopback GitHub mock and built Word fixtures.
+- The self test grew to 153 steps, with a loopback GitHub mock, built Word fixtures and planning review cases.
 
 ### Security
 
