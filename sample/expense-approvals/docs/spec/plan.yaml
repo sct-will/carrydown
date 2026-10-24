@@ -2,7 +2,7 @@
 # Decisions in this file (order, dates, owners) were made by a person. The checker and the
 # GitHub scripts read it. See templates/plan.yaml in the repository for the annotated version.
 # The rationale, joint_demonstration and order_rationale lines say why the plan is composed the
-# way it is. The scaffold copies them into milestone.md and the README, where a reviewer can argue.
+# way it is. The scaffold copies them into milestone.md and the README, where anyone can argue.
 
 project:
   name: "Expense approvals"

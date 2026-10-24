@@ -38,24 +38,24 @@ The shortest route is the engineers' skill. It makes a coding agent read the rig
 - Documentation style in this folder. Sentence-case headings, short sentences, no em dashes or en dashes, no names of people. Owners and dates live in the GitHub issues.
 - Existing behaviour is not changed by a work item unless its file says so.
 
-Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the people accountable for the outcome. An external input is something an item needs from an external item, work outside the plan that is owned outside the team.
+Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the stakeholders. An external input is something an item needs from an external item, work outside the plan that is owned outside the team.
 
 ## How this plan was composed
 
 <!-- Written from plan.yaml. Change it there, then run scaffold_spec.py --refresh-headers --apply. -->
 
-The plan follows ten rules. The reasons below are written in `plan.yaml`, so a reviewer can argue with each one against the dates in the schedule.
+The plan follows ten rules. The reasons below are written in `plan.yaml`, so anyone can argue with each one against the dates in the schedule.
 
 1. A milestone is the thinnest vertical slice that proves one user-visible capability end to end, named for what a user can do after it. The first proves the whole path with the least behaviour, and the last proves the project can be released and run.
 2. A milestone holds items from every track the capability crosses, and the tracks meet at a named joint check before the demonstration. A milestone that stays inside one track says why.
-3. The exit gate is one sentence the people accountable for the outcome can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show.
+3. The exit gate is one sentence the stakeholders can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show.
 4. Inside a milestone the shared contract comes first, so both tracks can start without waiting. The first week leaves nobody idle.
 5. Each engineer's consecutive items stay in one part of the system, a theme. Related items for the same person sit in adjacent days to cut context switching.
 6. Size in days divided by allocation gives calendar working days: four days at 60 percent is nearly seven working days. Nobody is planned past 100 percent of allocated capacity in a work unit, aim for about 80, and days off and breaks are real.
 7. Slack sits before every checkpoint and demonstration. An item that completes on its checkpoint date has none.
 8. The critical path is read for single points of failure. If it runs through one person, the plan says so and offers an alternative.
 9. Work outside the plan, owned outside the team, keeps its ids as gaps in the numbering.
-10. The plan records its rationale where a reviewer can argue with it: for each milestone, why these items form it and what the joint demonstration proves, and for each track, why its items are in this order. The plan owner reads the plan week by week, adversarially, before anything is scaffolded.
+10. The plan records its rationale where anyone can argue with it: for each milestone, why these items form it and what the joint demonstration proves, and for each track, why its items are in this order. The plan owner reads the plan week by week, adversarially, before anything is scaffolded.
 
 ### Order of work per track
 

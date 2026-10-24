@@ -93,4 +93,4 @@ Run the review prompts from `references/review-prompts.md` once more on the fini
 
 ## What good looks like
 
-Every item has a file a coding agent can start from without opening the original document. Every acceptance criterion can be proven by a named test or a recorded check. Every milestone has an exit gate, acceptance criteria written before the work starts, and a rationale a reviewer can argue with. The checker reports 0 findings, and the user has read the plan.
+Every item has a file a coding agent can start from without opening the original document. Every acceptance criterion can be proven by a named test or a recorded check. Every milestone has an exit gate, acceptance criteria written before the work starts, and a rationale anyone can argue with. The checker reports 0 findings, and the user has read the plan.

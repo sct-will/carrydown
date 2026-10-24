@@ -52,9 +52,9 @@ Install them with the line in the README. Then the plan owner says one sentence 
 1. "Set up a project plan from this document." (`carrydown-ground-truth`) The plan owner then reviews the plan and the specifications with the agent and edits them until they are right.
 2. "Put the plan on GitHub." (`carrydown-plan-to-github`) Its last step generates the engineers' skill. "Generate the engineers' skill." runs that step on its own.
 
-Roles: the plan owner, an engineering manager or a product manager, runs both skills and reviews what they produce. The engineers install the generated skill once and start a work item by naming it, for example "Work on WI-03". The people accountable for the outcome watch each milestone demonstration and decide pass or fail. They run nothing.
+Roles: the plan owner, an engineering manager or a product manager, runs both skills and reviews what they produce. The engineers install the generated skill once and start a work item by naming it, for example "Work on WI-03". The stakeholders, the people accountable for the outcome, watch each milestone demonstration and decide pass or fail. They run nothing.
 
-If a skill is not picked up, name it first: "Use the carrydown-ground-truth skill." When a person asks where to start, point them to the README. Its "What it sounds like" section shows what to say and what the agent replies.
+If a skill is not picked up, name it first: "Use the carrydown-ground-truth skill." When a person asks where to start, point them to the README. Its "What the agent asks you" section shows the questions the agent asks and what to answer.
 
 ## Pull requests
 

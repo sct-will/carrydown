@@ -19,7 +19,7 @@ The checker confirms these parts exist and that every item of the milestone is l
 
 ## Demonstration
 
-One per milestone, given by the engineers who built the items to the people accountable for the outcome. It shows the items of the milestone working together. The exit gate is the pass criterion. The acceptance criteria say what the audience must see.
+One per milestone, given by the engineers who built the items to the stakeholders. It shows the items of the milestone working together. The exit gate is the pass criterion. The acceptance criteria say what the stakeholders must see.
 
 The demonstration is joint. The engineers whose tracks meet in the milestone give it together, each showing their half of the same run, so the stakeholders see the halves meet rather than two separate shows. `joint_demonstration` in `plan.yaml` says what they show together, in one or two sentences, for example "The Experience engineer submits a report in the web client. The Workflow engineer shows the stored state from the same run." The checkpoint on the demonstration date names each of those tracks in its joint check. A milestone that stays inside one track still has a joint demonstration: the other engineers take part and say what they show.
 

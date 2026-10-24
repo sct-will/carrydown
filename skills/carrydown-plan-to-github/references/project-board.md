@@ -21,7 +21,7 @@ If the iterations on an existing project differ from the plan, the script says s
 
 ## Views
 
-The script ensures three views named Table, Board and Roadmap. A new project has one default table view called View 1. The script renames it Table. It sets the visible fields on all three: Title, Assignees, Status, Work unit, Track, Complete by, Checkpoint and Parent issue.
+The script ensures three views named Table, Board and Roadmap. A new project has one default table view called View 1. The script renames it Table. It sets the visible fields on all of them: Title, Assignees, Status, Work unit, Track, Complete by, Checkpoint and Parent issue.
 
 ## Items
 

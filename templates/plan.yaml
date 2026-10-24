@@ -11,7 +11,7 @@
 #
 # The plan records why it is composed the way it is: a rationale and a joint demonstration
 # per milestone, and an order rationale per track. The scaffold copies them into milestone.md
-# and the README, so a reviewer can argue with them. Write no names of people in them.
+# and the README, so anyone can argue with them. Write no names of people in them.
 
 project:
   name: "Your project name"              # shown in titles and the README
@@ -77,7 +77,7 @@ milestones:                              # one per work unit. A work unit has a 
     start: 2027-01-04
     end: 2027-01-15
     demo: 2027-01-15
-    gate: "One sentence the people accountable for the outcome can check at the demonstration."
+    gate: "One sentence the stakeholders can check at the demonstration."
     rationale: "These two items are the thinnest slice that proves the whole path: the contract on one side and the screen that uses it on the other. Nothing else is needed to show the gate."
                                          # why these items form this milestone, two to four sentences
     joint_demonstration: "The Backend and Frontend engineers run one example from the screen through the contract, together, in one session."

@@ -9,11 +9,12 @@ The ground-truth skill interviews you for these. You can prepare them first, or 
 
 Percent allocation is the share of a person's working time that goes to this plan. The agent assumes 100 percent for everyone and asks you once to confirm: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" If someone works on the plan three days in five, say 60.
 
-The rule: give both and the plan fits them. Give one and the agent backs into the other. Give neither and it proposes a default and asks. There are three modes.
+The rule: give both and the plan fits them. Give one and the agent backs into the other. Give neither and it proposes a default and asks. There are four modes.
 
 - **Fit.** People and target given. The plan fits them, and the checker flags over-capacity and target misses.
 - **Derive the date.** People given, no target. The plan's end date is the critical path end. It is written to `plan.yaml` as `target: {date: ..., derived: true}`.
-- **Derive the capacity.** Target given, no people. The agent proposes tracks and a head count at 100 percent that meets the date, as `people` entries with `derived: true` and placeholder names such as "Engineer 1". Replace them with real people. If you give neither, the agent proposes a default two-track team and a derived date and asks.
+- **Derive the capacity.** Target given, no people. The agent proposes tracks and a head count at 100 percent that meets the date, as `people` entries with `derived: true` and placeholder names such as "Engineer 1". Replace them with real people.
+- **Neither given.** No people and no target. The agent proposes a default team of two tracks, "Engineer 1" and "Engineer 2" at 100 percent, and a derived date, marks both as derived, and asks you to confirm or to give real constraints.
 
 A worked example of Derive the date, produced by running the checker on the sample with its target removed, is in [derive-the-date.md](derive-the-date.md).
 
@@ -74,7 +75,7 @@ Which agentic editors do the engineers use? Any editor or command line agent tha
 
 | Ask yourself | Example | Default |
 | --- | --- | --- |
-| Who are the people accountable for the outcome, who watch the demonstrations and decide pass or fail? | The product manager and the head of operations. | Ask. |
+| Who are the stakeholders, the people accountable for the outcome, who watch the demonstrations and decide pass or fail? | The product manager and the head of operations. | Ask. |
 | How long can they give? | 45 minutes. | 45 minutes. |
 | What must they see to say a milestone is done? | "A manager approves a report from the inbox." | Write it in their words. |
 | Who gives each demonstration? | The engineers whose tracks meet in the milestone, together. | That. |

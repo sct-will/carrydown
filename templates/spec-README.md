@@ -30,7 +30,7 @@ The shortest route is the engineers' skill. It makes a coding agent read the rig
 
 {{conventions}}
 
-Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the people accountable for the outcome. An external input is something an item needs from an external item, work outside the plan that is owned outside the team.
+Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the stakeholders. An external input is something an item needs from an external item, work outside the plan that is owned outside the team.
 
 ## How this plan was composed
 

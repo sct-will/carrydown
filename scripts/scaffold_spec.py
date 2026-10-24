@@ -126,7 +126,7 @@ def joint_demonstration_text(plan, ms):
 def readme_composition(plan):
     """Body of "How this plan was composed": the ten rules, the order per track, the milestones."""
     out = [GENERATED_NOTE, "",
-           "The plan follows ten rules. The reasons below are written in `plan.yaml`, so a reviewer can argue with each one against the dates in the schedule.", ""]
+           "The plan follows ten rules. The reasons below are written in `plan.yaml`, so anyone can argue with each one against the dates in the schedule.", ""]
     out += [f"{n}. {r}" for n, r in enumerate(L.PLANNING_RULES, 1)]
     rows = []
     for t in plan["tracks"]:

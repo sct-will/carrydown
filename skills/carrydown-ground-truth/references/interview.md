@@ -71,9 +71,9 @@ Begin with `carrydown: interview, step 5 of 6`.
 
 Ask.
 
-1. Which agentic editors do the engineers use? Any editor or command line agent that reads Agent Skills works. The README lists the ones the installer knows.
-2. Who are the people accountable for the outcome, who watch the milestone demonstrations and decide pass or fail, and how long can they give? A default: 45 minutes, once per milestone.
-3. What must the audience see to say "this milestone is done"? Write down their words. They become acceptance criteria.
+1. Which agentic editors do the engineers use? Any editor or command line agent that reads Agent Skills works. The installer's list of agents and their `-a` values is at https://github.com/vercel-labs/skills/blob/main/docs/agents.md.
+2. Who are the stakeholders, the people accountable for the outcome, who watch the milestone demonstrations and decide pass or fail, and how long can they give? A default: 45 minutes, once per milestone.
+3. What must the stakeholders see to say "this milestone is done"? Write down their words. They become acceptance criteria.
 4. Who gives each demonstration? A default: the engineers whose tracks meet in the milestone, together, each showing their half of the same run. Ask whether anyone else must take part, such as an advisor.
 
 ### Work outside the plan

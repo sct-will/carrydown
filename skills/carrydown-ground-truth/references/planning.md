@@ -19,7 +19,7 @@ Read the rendered document, using its section index. Make a plain list of what m
 
 ## 2. Milestones
 
-A milestone is a step the people accountable for the outcome can see working. Each one has:
+A milestone is a step the stakeholders can see working. Each one has:
 
 - a name that says what the product's users can do after it,
 - an exit gate, one sentence that a person can check live at the demonstration,
@@ -33,7 +33,7 @@ Three rules decide what goes into a milestone. They are rules, not advice.
 
 1. A milestone is the thinnest vertical slice that proves one user-visible capability end to end. Name it for what a user can do after it. The first milestone proves the whole path with the least behaviour. The last proves the project can be released and run.
 2. A milestone holds items from every track the capability crosses. The tracks meet at a named joint check, a checkpoint with a `joint_check`, before the demonstration. The joint check names each track that meets there. A milestone that stays inside one track says why, in `single_track_reason`.
-3. The exit gate is one sentence the people accountable for the outcome can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show together, in `joint_demonstration`.
+3. The exit gate is one sentence the stakeholders can check live. The engineers whose tracks meet give the demonstration together, and the plan says what they show together, in `joint_demonstration`.
 
 A milestone that fails one of these is split, merged or explained before you go on. The checker's planning review lists the tracks each milestone covers and whether its demonstration's joint check names them.
 
@@ -92,7 +92,7 @@ Read the plan with the user, adversarially and week by week, before anything is 
 
 ## 10. Record the rationale
 
-Write down why the plan is composed the way it is, where a reviewer can argue with it. Each reason must be true of the dates.
+Write down why the plan is composed the way it is, where anyone can argue with it. Each reason must be true of the dates.
 
 - For each milestone, `rationale`: why these items form it, in two to four sentences. `joint_demonstration`: what the engineers whose tracks meet show together, in one or two sentences. `single_track_reason`, only when all its items are on one track.
 - For each track, `order_rationale`: why its items are in this order. Name each theme switch you keep, and the critical path risk with its alternative when it falls on this track.
