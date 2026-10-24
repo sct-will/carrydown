@@ -300,7 +300,7 @@ def refreshed_header(plan, it, old):
         rows.append((name, value))
     known = {n for n, _ in rows}
     rows += [(n, v) for n, v in L.table_rows(old) if n not in known]
-    return "\n".join(["| | |", "| --- | --- |"] + [f"| {n} | {v} |" for n, v in rows])
+    return "\n".join(L.HEADER_LINES + [f"| {n} | {v} |" for n, v in rows])
 
 
 def template_demonstration(plan, ms):
@@ -326,7 +326,7 @@ def refreshed_milestone_header(plan, ms, old):
     rows = [("Due", ms["end"]), ("Exit gate", ms["gate"]), ("Work items", its), ("Demonstration", demo)]
     known = {n for n, _ in rows}
     rows += [(n, v) for n, v in have if n not in known]
-    return "\n".join(["| | |", "| --- | --- |"] + [f"| {n} | {v} |" for n, v in rows])
+    return "\n".join(L.HEADER_LINES + [f"| {n} | {v} |" for n, v in rows])
 
 
 def heading_spans(lines):

@@ -186,6 +186,14 @@ def maintenance(tmp):
     step("--refresh-headers keeps a filled Size row, an added row and a custom demonstration", [PY, "scripts/check_specs.py", "--root", str(proj), "--quiet"],
          files={wi1: ["| Size | Medium, about 3 days |", "| Reviewer | Security review booked |"], ms3: [custom]})
     step("--refresh-headers is stable on a second run", run, contains=["0 file(s) written"])
+    legacy = tmp / "legacy-header"
+    shutil.copytree(ROOT / SAMPLE, legacy)
+    wi3 = legacy / "docs/spec/m2-route-to-approvers/wi-03-routing-engine.md"
+    wi3.write_text(wi3.read_text(encoding="utf-8").replace("| Field | Value |\n", "| | |\n", 1), encoding="utf-8")
+    step("a header table with the older blank header row passes the checker", [PY, "scripts/check_specs.py", "--root", str(legacy)], contains=["0 with findings"])
+    step("--refresh-headers gives the older header table its Field and Value header row",
+         [PY, "scripts/scaffold_spec.py", "--root", str(legacy), "--refresh-headers", "--apply", "--allow-no-git"], contains=["1 file(s) written"],
+         files={wi3: ["# WI-03 Approval routing engine\n\n| Field | Value |\n| --- | --- |\n| Milestone |"]})
 
 
 def composition(tmp, plan_text):
@@ -310,6 +318,17 @@ def path_safety(tmp, plan_text):
     results.append((ok, "only the image inside the document folder was copied"))
     print(("PASS " if ok else "FAIL ") + "only the image inside the document folder was copied" + ("" if ok else f" (found {figs})"))
     step("--out-dir outside the project is refused", [PY, "scripts/render_ground_truth.py", str(md), "--root", str(out), "--out-dir", "../elsewhere"], expect=2, contains=["outside the project folder"])
+    gt = d / "gt"
+    (gt / "docs/ground-truth").mkdir(parents=True)
+    kept = gt / "docs/ground-truth/architecture.md"
+    shutil.copy(ROOT / SAMPLE / "ground-truth/architecture.md", kept)
+    before = kept.read_bytes()
+    step("a source inside docs/ground-truth is refused and left as it was",
+         [PY, "scripts/render_ground_truth.py", str(kept), "--root", str(gt), "--version", "1"], expect=2,
+         contains=["would overwrite the source", "Keep the source in docs/source/", "Nothing was written."])
+    ok = kept.read_bytes() == before and not (gt / "docs/ground-truth/architecture.index.txt").exists()
+    results.append((ok, "the refused source is unchanged and no index was written"))
+    print(("PASS " if ok else "FAIL ") + "the refused source is unchanged and no index was written")
     proj = d / "proj"
     shutil.copytree(ROOT / SAMPLE, proj)
     plan = proj / "docs/spec/plan.yaml"

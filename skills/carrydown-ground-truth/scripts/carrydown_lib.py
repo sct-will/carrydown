@@ -766,7 +766,7 @@ def read_spec(path):
     order = []
     for m in re.finditer(r"^\| (.+?) \| (.*?) \|$", text, re.M):
         name = m.group(1).strip()
-        if name in ("", "---") or set(name) <= set("-: "):
+        if name in ("", "---") or set(name) <= set("-: ") or (name, m.group(2).strip()) == HEADER_HEAD:
             continue
         rows.setdefault(name, m.group(2).strip())
         order.append(name)
@@ -862,10 +862,13 @@ def expected_header(plan, it):
     return rows
 
 
+HEADER_HEAD = ("Field", "Value")
+HEADER_LINES = [f"| {HEADER_HEAD[0]} | {HEADER_HEAD[1]} |", "| --- | --- |"]
+
+
 def header_markdown(plan, it):
     rows = expected_header(plan, it)
-    w = max(len(k) for k, _ in rows)
-    out = ["| | |", "| --- | --- |"]
+    out = list(HEADER_LINES)
     for k, v in rows:
         out.append(f"| {k} | {v} |")
     return "\n".join(out)
@@ -1098,7 +1101,7 @@ def table_rows(text):
         if line.startswith("|"):
             started = True
             m = re.match(r"^\| (.+?) \| (.*?) \|$", line)
-            if m and not set(m.group(1).strip()) <= set("-: "):
+            if m and not set(m.group(1).strip()) <= set("-: ") and (m.group(1).strip(), m.group(2).strip()) != HEADER_HEAD:
                 rows.append((m.group(1).strip(), m.group(2).strip()))
         elif started:
             break

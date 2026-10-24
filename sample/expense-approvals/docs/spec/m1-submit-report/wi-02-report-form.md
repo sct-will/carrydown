@@ -1,6 +1,6 @@
 # WI-02 Report form and receipt upload
 
-| | |
+| Field | Value |
 | --- | --- |
 | Milestone | Milestone 1, Submit an expense report (`m1-submit-report`), work unit 1 |
 | Track | Experience |

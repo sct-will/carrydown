@@ -2,7 +2,7 @@
 
 Sub-epic of the {{project_name}} Epic. Work unit {{number}}, {{start}} to {{end}} (`{{folder}}`).
 
-| | |
+| Field | Value |
 | --- | --- |
 | Due | {{end}} |
 | Exit gate | {{gate}} |

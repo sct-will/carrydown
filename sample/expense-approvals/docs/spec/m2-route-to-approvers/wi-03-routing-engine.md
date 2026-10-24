@@ -1,6 +1,6 @@
 # WI-03 Approval routing engine
 
-| | |
+| Field | Value |
 | --- | --- |
 | Milestone | Milestone 2, Route to approvers (`m2-route-to-approvers`), work unit 2 |
 | Track | Workflow |

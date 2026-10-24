@@ -1,6 +1,6 @@
 # WI-06 Approval limits and separation of duties
 
-| | |
+| Field | Value |
 | --- | --- |
 | Milestone | Milestone 3, Enforce policy (`m3-enforce-policy`), work unit 3 |
 | Track | Workflow |

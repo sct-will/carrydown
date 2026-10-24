@@ -1,6 +1,6 @@
 # WI-11 Release readiness and runbook
 
-| | |
+| Field | Value |
 | --- | --- |
 | Milestone | Milestone 5, Release (`m5-release`), work unit 5 |
 | Track | Experience |

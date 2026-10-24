@@ -1,6 +1,6 @@
 # WI-09 Ledger export job
 
-| | |
+| Field | Value |
 | --- | --- |
 | Milestone | Milestone 4, Pilot with one team (`m4-pilot`), work unit 4 |
 | Track | Workflow |

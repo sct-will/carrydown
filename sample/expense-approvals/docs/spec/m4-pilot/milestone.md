@@ -2,7 +2,7 @@
 
 Sub-epic of the Expense approvals Epic. Work unit 4, 2027-03-29 to 2027-04-09 (`m4-pilot`).
 
-| | |
+| Field | Value |
 | --- | --- |
 | Due | 2027-04-09 |
 | Exit gate | A pilot team's approved reports reach the ledger by the nightly file. |

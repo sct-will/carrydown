@@ -1,6 +1,6 @@
 # WI-08 Notifications and delegates
 
-| | |
+| Field | Value |
 | --- | --- |
 | Milestone | Milestone 3, Enforce policy (`m3-enforce-policy`), work unit 3 |
 | Track | Experience |

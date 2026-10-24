@@ -2,7 +2,7 @@
 
 Sub-epic of the Expense approvals Epic. Work unit 3, 2027-03-08 to 2027-03-19 (`m3-enforce-policy`).
 
-| | |
+| Field | Value |
 | --- | --- |
 | Due | 2027-03-19 |
 | Exit gate | Every decision obeys the approval limits and separation of duties, every change is in the audit trail, and submitters are notified. |

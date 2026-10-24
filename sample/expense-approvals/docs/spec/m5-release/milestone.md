@@ -2,7 +2,7 @@
 
 Sub-epic of the Expense approvals Epic. Work unit 5, 2027-04-12 to 2027-04-23 (`m5-release`).
 
-| | |
+| Field | Value |
 | --- | --- |
 | Due | 2027-04-23 |
 | Exit gate | The flag is on in production, the runbook is handed to operations and finance has signed off. |

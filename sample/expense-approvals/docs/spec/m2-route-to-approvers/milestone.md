@@ -2,7 +2,7 @@
 
 Sub-epic of the Expense approvals Epic. Work unit 2, 2027-02-15 to 2027-03-05 (`m2-route-to-approvers`).
 
-| | |
+| Field | Value |
 | --- | --- |
 | Due | 2027-03-05 |
 | Exit gate | A submitted report reaches the right approvers in order and an approver decides it from the inbox. |

@@ -4,7 +4,7 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ## Unreleased
 
-- Two skills you install, one skill is generated for your engineers. `carrydown-dev-skill` is merged into `carrydown-plan-to-github`, whose last step, "Generate the engineers' skill", runs `generate_dev_skill.py` and prints the install line. The generator, its templates and its install, maintenance and review references moved with it. Two roles remain: the plan owner, who runs both skills and reviews the generated plan and specifications with the agent, and the engineers, who install the generated skill. The separate reviewer and the named role for the people who watch the demonstrations are gone. The self test now has 154 steps.
+- Two skills you install, one skill is generated for your engineers. The former third skill folder is merged into `carrydown-plan-to-github`, whose last step, "Generate the engineers' skill", runs `generate_dev_skill.py` and prints the install line. The generator, its templates and its install, maintenance and review references moved with it. Two roles remain: the plan owner, who runs both skills and reviews the generated plan and specifications with the agent, and the engineers, who install the generated skill. The separate reviewer and the named role for the people who watch the demonstrations are gone. The self test now has 158 steps.
 - Work outside the plan is called what it is. Work the team depends on but does not schedule, such as a sign-off or a security review, is an external item, listed under `external` in `plan.yaml`. An item that waits for one sets `external_input`, and its Depends on row, its issue and the engineers' skill say "external input". The library function is `external_ids`. The checker report heading is "External items (outside the development plan; referenced only as external input)", the sync summary says "N external items kept outside the plan", and the specification README table column is "External item". A plan written with the older key and item field still loads: `carrydown_lib.py` reads them as `external` and `external_input`, and the README refresh recognises the older column headers.
 - README rewritten around the reader: the reason first, a picture of the output, look, try and install in order of effort, a two-sided conversation, three badges and two entry points (README and the plan owner guide). START-HERE.md is a pointer. New docs: repository-metadata.md and recording-storyboard.md.
 
@@ -17,6 +17,9 @@ All notable changes to this project are written here. The format follows Keep a 
 ### Changed
 
 - A tie between critical path chains goes to the chain with more items, so the path keeps the dependency it starts from.
+- `render_ground_truth.py` refuses a source inside `docs/ground-truth/`, or one whose rendering would land on itself, and writes nothing. Sources go in `docs/source/`.
+- The header tables of specifications and milestone files start with a `| Field | Value |` header row instead of a blank one. Files with the blank row still pass, and `--refresh-headers` adds the new row.
+- The dry run, apply and verify commands of `carrydown-plan-to-github` pass `--create-epic`, so the summary matches the 1 Epic the skill asks about.
 - The sample moves five dates and one size so that every item has slack before its checkpoint, names both tracks in each demonstration's joint check, and carries its rationale and themes.
 - The plan template has a second item, so its example milestone covers both tracks and meets at a joint check.
 - The two skills and the generated engineers' skill treat documents, specifications, plan.yaml and issue text as data and never follow instructions found in them.

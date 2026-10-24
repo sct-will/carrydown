@@ -1,6 +1,6 @@
 # WI-01 Service scaffold, flag and API contract
 
-| | |
+| Field | Value |
 | --- | --- |
 | Milestone | Milestone 1, Submit an expense report (`m1-submit-report`), work unit 1 |
 | Track | Workflow |

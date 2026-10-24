@@ -1,6 +1,6 @@
 # WI-07 Audit log and retention
 
-| | |
+| Field | Value |
 | --- | --- |
 | Milestone | Milestone 3, Enforce policy (`m3-enforce-policy`), work unit 3 |
 | Track | Workflow |

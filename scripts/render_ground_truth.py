@@ -18,9 +18,12 @@ Examples
   python3 scripts/render_ground_truth.py architecture.docx --dry-run
 
 With --dry-run nothing is written. The script reports what it would write.
+A source kept inside docs/ground-truth/, or one whose rendering would land on itself, is
+refused before anything is written. Keep sources in docs/source/.
 """
 import argparse
 import datetime as dt
+import os
 import re
 import shutil
 import sys
@@ -893,6 +896,29 @@ def unnumbered_notes(text):
     return [f"{len(bare)} of {len(heads)} headings have no number; specifications cite sections by number ({shown})"]
 
 
+def _within(path, folder):
+    """True when path is folder or lies under it. Compared without case, so a case-insensitive
+    file system cannot hide a match."""
+    p, f = [x.casefold() for x in path.parts], [x.casefold() for x in folder.parts]
+    return p[:len(f)] == f
+
+
+def overwrites_source(srcp, root, out_dir, name):
+    """Say why rendering srcp would overwrite it, or return None. The renderer writes into
+    docs/ground-truth/, so a source kept there is replaced by its own rendering."""
+    src = srcp.resolve()
+    stem = name or name_from_path(srcp)
+    outputs = [out_dir / f"{stem}.md", out_dir / f"{stem}.index.txt"]
+    for o in outputs:
+        if _within(src, o) or (o.exists() and src.exists() and os.path.samefile(src, o)):
+            return f"is the output path {o.relative_to(root) if o.is_relative_to(root) else o}, so rendering it would overwrite the source"
+    if _within(src, root / "docs" / "ground-truth"):
+        return "is inside docs/ground-truth/, where renderings are written, so the source could be overwritten"
+    if _within(src, out_dir / "figures"):
+        return "is inside the figures folder the renderer writes, so the source could be overwritten"
+    return None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Render .docx or .md ground-truth documents as Markdown with stable anchors, a section index and figures.",
@@ -910,6 +936,12 @@ def main(argv=None):
         ap.error("--name works with a single input")
     root = Path(a.root).resolve()
     out_dir = L.inside(root, root / a.out_dir, "--out-dir")
+    for src in a.inputs:
+        clash = overwrites_source(Path(src), root, out_dir, a.name)
+        if clash:
+            print(f"error: {src} {clash}. "
+                  "Keep the source in docs/source/ and render to docs/ground-truth/, the default. Nothing was written.", file=sys.stderr)
+            return 2
     total = 0
     for src in a.inputs:
         srcp = Path(src)

@@ -2,7 +2,7 @@
 
 Sub-epic of the Expense approvals Epic. Work unit 1, 2027-02-01 to 2027-02-12 (`m1-submit-report`).
 
-| | |
+| Field | Value |
 | --- | --- |
 | Due | 2027-02-12 |
 | Exit gate | A staff member creates a report with a receipt in the web client and submits it through the service. |
