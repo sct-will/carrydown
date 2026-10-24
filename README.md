@@ -293,4 +293,6 @@ Report a vulnerability privately through GitHub. See [SECURITY.md](SECURITY.md).
 
 Code is licensed under the Apache License 2.0, see [LICENSE](LICENSE). The sample document, the templates text, the skills prose, the documents and the images are licensed under Creative Commons Attribution 4.0 International, see [LICENSE-CONTENT.md](LICENSE-CONTENT.md).
 
+The flow diagram and the hero image may be reused under CC BY 4.0 with attribution to Will Scott.
+
 Will Scott, Ph.D.
