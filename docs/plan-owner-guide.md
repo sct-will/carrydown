@@ -1,12 +1,12 @@
 # Plan owner guide
 
-The long form for the plan owner: the engineering lead or product manager who owns the plan. You do not need to write code. The short form is the README: [Getting started](../README.md#getting-started) has the install line, and [What it sounds like](../README.md#what-it-sounds-like) has the sentences you say to your agent and what it replies. This guide does not repeat them. It explains what happens between them, what to review and what to ask for in advance.
+The long form for the plan owner: the engineering lead, product manager or designer who owns the plan. You do not need to write code. The short form is the README: [Getting started](../README.md#getting-started) has the install line, and [What it sounds like](../README.md#what-it-sounds-like) has the sentences you say to your agent and what it replies. This guide does not repeat them. It explains what happens between them, what to review and what to ask for in advance.
 
 ## Who runs what
 
 | Role | What they do | Which skill |
 | --- | --- | --- |
-| Plan owner | The engineering lead or product manager who owns the plan. Brings the ground truth and the constraints, answers the interview, decides on what the agent drafts, says yes before anything is written to GitHub, and generates the developer skill once. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
+| Plan owner | The engineering lead, product manager or designer who owns the plan. Brings the ground truth and the constraints, answers the interview, decides on what the agent drafts, says yes before anything is written to GitHub, and generates the developer skill once. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
 | Lead reviewer | A senior engineer who spends about an hour reading the generated specifications as the person who will build them, before anything goes to GitHub. | Reviews the output of `carrydown-ground-truth` |
 | Engineers | The people building the work items, each with their own coding agent. They install the developer skill, start an item by naming it, post evidence when it closes, and give the demonstrations. | The generated developer skill, made by `carrydown-dev-skill` |
 | Program | The people accountable for the outcome. They attend the demonstrations and decide pass or fail against criteria written before the work. They run nothing, and keep their own work, the program items, outside the plan. | None |
