@@ -98,7 +98,7 @@ Systems engineers call it flow-down: a requirement at the top of a system traced
 
 ## Prerequisites
 
-You need a coding agent and Node.js 22.20 or later; your agent checks for Python 3.9 and git and tells you what to do. GitHub permissions and a token matter only at the GitHub step, where the agent walks you through them.
+You need a coding agent and Node.js 22.20 or later; your agent checks for Python 3.9 and git and tells you what to do.
 
 ## Install options
 
