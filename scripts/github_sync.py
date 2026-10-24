@@ -382,6 +382,7 @@ def _run(argv=None):
     ap.add_argument("--repo", help="owner/name. Overrides project.repo in plan.yaml")
     ap.add_argument("--token-file", help="file that holds the GitHub token")
     ap.add_argument("--apply", action="store_true", help="write to GitHub. Without it nothing is written")
+    ap.add_argument("--allow-public", action="store_true", help="allow --apply to a public repository. Issue bodies carry text from your ground truth")
     ap.add_argument("--offline", action="store_true", help="do not call GitHub at all, even to read")
     ap.add_argument("--verify", action="store_true", help="read GitHub and check that the structure matches the plan, then exit")
     ap.add_argument("--create-epic", action="store_true", help="create a parent Epic issue when project.epic is empty")
@@ -447,8 +448,14 @@ def _run(argv=None):
                 return 1
             gh = s.gh = None
             unchecked = "repository not reachable"
-        elif not a.apply:
-            L.say(f"repository found (private: {js.get('private')}). Reading existing labels and issues.")
+        else:
+            public = js.get("private") is False
+            if public and a.apply and not a.allow_public:
+                L.die(f"{owner}/{repo} is public. Issue bodies carry text from your ground truth. Rerun with --allow-public if that is intended.")
+            if not a.apply:
+                L.say(f"repository found (private: {js.get('private')}). Reading existing labels and issues.")
+            if public and not a.allow_public and not a.verify:
+                L.say(f"note: {owner}/{repo} is public, and issue bodies carry text from your ground truth. --apply will need --allow-public.")
     if a.verify:
         return verify(s, plan, root)
 
