@@ -2,9 +2,10 @@
 
 The sample plan has people and a target, so the planning step ran in the **Fit** mode: the plan was made to fit two people and the date 2027-04-23. This page shows the other case, **Derive the date**. Suppose the same plan had people but no target. The checker then reports the end of the critical path as the derived target. The skill writes that date into `plan.yaml` as `target: {date: 2027-04-21, derived: true}`, shows it to you, and asks whether it is acceptable.
 
-The output below was produced by running the checker on a copy of the sample's `plan.yaml` with the `target` block removed. Nothing in the sample itself was changed.
+The names, dates and loads below are the fictional sample's. The output was produced by running the checker on a copy of the sample's `plan.yaml` with the `target` block removed. Nothing in the sample itself was changed. From the root of the repository, the first line makes the copy and the second runs the checker on it. Delete `plan-no-target.yaml` when you are done.
 
 ```bash
+sed '/^target:/,/^$/d' sample/expense-approvals/docs/spec/plan.yaml > plan-no-target.yaml
 python3 scripts/check_specs.py --root sample/expense-approvals --plan plan-no-target.yaml --report
 ```
 
@@ -104,4 +105,4 @@ A normal check of the same copy passes, because without a target there is nothin
 15 files clean, 0 with findings (9 work items, 5 milestones)
 ```
 
-The other modes are described in [inputs.md](inputs.md#two-inputs). In **Derive the capacity** you give a target and no people, and the skill proposes a team at 100 percent as placeholder people marked `derived: true`. When you give neither, it proposes a default two-track team and a derived date and asks you to confirm.
+The other modes are described in [inputs.md](inputs.md#two-inputs). In **Derive the capacity** you give a target and no people, and the skill proposes a team at 100 percent as placeholder people marked `derived: true`. In **Neither given** it proposes a default two-track team and a derived date and asks you to confirm.

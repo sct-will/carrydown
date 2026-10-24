@@ -1,5 +1,7 @@
 # Sample: expense approvals
 
+An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent. Two skills you install, one skill is generated for your engineers.
+
 This is a sample. The project is fictional. The people, the company and the numbers are made up. Replace all of it with your own material.
 
 It shows what the two carrydown skills produce from a short ground truth, including the skill they generate for the engineers.
@@ -26,10 +28,10 @@ Ids 5 and 10 are missing on purpose. They are work the plan does not schedule, o
 
 ## Run it
 
-From the root of the repository. The renderer example writes to a separate folder, `my-test/`, so it does not overwrite the shipped sample. Delete that folder when you are done.
+From the root of the repository. The renderer example writes to a separate folder inside the sample, `sample/expense-approvals/my-test/`, so it does not overwrite the shipped rendering. Git ignores that folder. Delete it when you are done.
 
 ```bash
-python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --out-dir ../../my-test/ground-truth --version 0.3
+python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --out-dir my-test/ground-truth --version 0.3
 python3 scripts/check_specs.py --root sample/expense-approvals
 python3 scripts/check_specs.py --root sample/expense-approvals --report
 python3 scripts/github_sync.py --root sample/expense-approvals --offline

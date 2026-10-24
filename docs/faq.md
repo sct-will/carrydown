@@ -2,7 +2,7 @@
 
 ## npx: command not found
 
-`npx` comes with Node.js, which is not installed on this computer or is not on your path. Go to https://nodejs.org, download the version marked LTS, run its installer, then close and reopen your terminal and your agent, and try again. You can also ask your agent: "Node.js seems to be missing. Tell me how to install it for this computer." If you cannot install Node.js, there is a path without it: copy the two folders in `skills/` of the repository into your agent's skills folder. The README's Install options section lists the folders.
+`npx` comes with Node.js, which is not installed on this computer or is not on your path. Go to [the Node.js website](https://nodejs.org), download the version marked LTS (long-term support), run its installer, then close and reopen your terminal and your agent, and try again. You can also ask your agent: "Node.js seems to be missing. Tell me how to install it for this computer." If you cannot install Node.js, there is a path without it: copy the two folders in `skills/` of the repository into your agent's skills folder. The README's Install options section lists the folders.
 
 ## How do I start each skill?
 
@@ -30,7 +30,7 @@ No. The plan is files in Git, so changing it is cheap. Work units stretch to fit
 
 ## How does this compare with plan mode, spec-driven tools, Superpowers and CCPM?
 
-Plan mode and spec-driven tools plan one task or one feature from a specification. Superpowers is a library of skills for how an agent works. CCPM is a project management workflow that turns requirement documents into GitHub issues. Carrydown carries one agreed ground truth across every task. It dates the plan around named people with their allocation, checks every specification against that plan, fills the board and generates the per-project skill. It can sit beside any of them.
+Plan mode and spec-driven tools plan one task or one feature from a specification. Superpowers is a library of skills for how an agent works. CCPM is a project management workflow that turns requirement documents into GitHub issues. Carrydown carries one agreed ground truth across every task. It dates the plan around named people with their allocation, checks every specification against that plan, fills the board and generates the engineers' skill. It can sit beside any of them.
 
 ## What does it cost in tokens?
 

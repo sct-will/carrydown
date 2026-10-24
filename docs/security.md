@@ -10,9 +10,9 @@ The GitHub scripts need a token that can write issues and projects. A token is a
 - With `--from-file`, the script keeps your file and tells you to delete it. It deletes the file only when you pass `--delete-after`.
 - The scripts never print the token. They remove it from every error message before showing it. They never put it in a URL or a command line argument.
 - The scripts never write the token into the project. The token lives outside the repository.
-- Do not paste the token into a chat with an agent. Do not commit it. If you did either, revoke it at https://github.com/settings/tokens and make a new one.
+- Do not paste the token into a chat with an agent. Do not commit it. If you did either, revoke it on [your GitHub tokens page](https://github.com/settings/tokens) and make a new one.
 - Revoke the token when the GitHub step is done.
-- If your organisation uses single sign-on, authorise the token for it: https://github.com/settings/tokens, Configure SSO. The token check and the GitHub scripts say so in one line when GitHub asks for it.
+- If your organisation uses single sign-on, authorise the token for it: on [your GitHub tokens page](https://github.com/settings/tokens), click Configure SSO next to the token. The token check and the GitHub scripts say so in one line when GitHub asks for it.
 
 ## Dry run first
 
@@ -80,7 +80,7 @@ token.txt
 
 skills.sh lists public skill repositories and shows the results of three security scanners for each skill: Gen, Socket and Snyk. Pass means the scanner rated the skill safe or low risk, Warn means medium and Fail means high. The installer prints the same results as Safe, Low Risk, Med Risk or High Risk, and after every install it reminds you that skills run with your agent's permissions. A scan result is not an endorsement, and a scanner can change its result without a new commit.
 
-carrydown-plan-to-github may keep a medium rating, because it holds a token, calls GitHub and reads issues in your repository. The section above explains what it reads and how it treats that text. The current results are at https://skills.sh/sct-will/carrydown.
+carrydown-plan-to-github may keep a medium rating, because it holds a token, calls GitHub and reads issues in your repository. The section above explains what it reads and how it treats that text. The current results are on [the carrydown page of skills.sh](https://skills.sh/sct-will/carrydown).
 
 ## Reporting a problem
 

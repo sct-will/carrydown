@@ -51,7 +51,7 @@ gh repo edit sct-will/carrydown \
 
 ### Proposed first screen of its README
 
-The text below replaces everything above the "Renderings" section of the sample README. The renderings, the live links, the dry run and the plan report stay below it as they are. It uses the same look, try and install order as the main README, and no terminal commands, which live only in the main repository's CONTRIBUTING.md.
+The text below replaces everything above the "Renderings" section of the sample README. The renderings, the live links, the dry run and the plan report stay below it as they are. It uses the same look, try and install order as the main README. Its only terminal command is the one-line install; the commands that run the scripts live in the main repository's CONTRIBUTING.md.
 
 ```markdown
 # Expense approvals, a carrydown sample
