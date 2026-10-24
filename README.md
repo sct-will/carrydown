@@ -128,7 +128,7 @@ Planning decisions stay with people. The skills set up, draft to templates, vali
 
 **`carrydown-plan-to-github`**
 - Walks you through a GitHub token safely and runs a dry run before anything is written.
-- After your yes, creates labels, one sub-epic per milestone, one issue per work item with sub-issue links, dependency links and an Epic roll-up comment.
+- After your yes, creates labels, one sub-epic per milestone, one issue per work item with sub-issue links, dependency links and an Epic roll-up comment that states the target delivery and the people by track.
 - Builds the project board with work unit, track and date fields and three views, verifies the counts, and lists what you click by hand.
 
 **`carrydown-dev-skill`**
@@ -151,7 +151,7 @@ docs/
     SKILL.md  README.md  references/
 ```
 
-On GitHub: labels, one Epic, one sub-epic per milestone, one issue per work item as a sub-issue of its sub-epic, an Epic roll-up comment, and a project board with the Work unit, Track, Complete by and Checkpoint fields and Table, Board and Roadmap views.
+On GitHub: labels, one Epic, one sub-epic per milestone, one issue per work item as a sub-issue of its sub-epic, an Epic roll-up comment (with a Constraints block: target delivery, and people and allocation by track), and a project board with the Work unit, Track, Complete by and Checkpoint fields and Table, Board and Roadmap views.
 
 ## Install options
 

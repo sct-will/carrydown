@@ -11,7 +11,8 @@ Everything is derived from plan.yaml and the specification folder.
                  Integration points, Definition of done
   sub-issues     each work item under its sub-epic, each sub-epic under the Epic if there is one
   dependencies   ids in issue bodies rewritten to issue links, for example "WI-01 (#12)"
-  Epic comment   one roll-up comment with nested checkboxes, created once and updated on reruns
+  Epic comment   one roll-up comment with a Constraints block (target delivery, people by track)
+                 and nested checkboxes, created once and updated on reruns
 
 Safety
   This is a dry run unless you pass --apply. The dry run reads from GitHub when a token is
@@ -66,6 +67,38 @@ def definition_of_done(plan):
     items.append("The item is demonstrated at its checkpoint with the joint check run.")
     items.append("The closing comment on this issue follows the template in the specification folder README (Demo, Evidence, Decisions, Handoff) with every artifact listed above attached.")
     return "\n".join(f"- [ ] {i}" for i in items)
+
+
+def plan_end_date(plan):
+    return max((L.parse_date(it["complete_by"]) for it in plan["items"]), default=None)
+
+
+def target_phrase(plan):
+    """(date text, 'given' or 'derived') for the plan's target delivery."""
+    tdate, _ = L.target_date(plan)
+    if tdate and L.target_is_constraint(plan):
+        return L.fmt_date(tdate), "given"
+    end = plan_end_date(plan)
+    return (L.fmt_date(end) if end else "not known yet"), "derived"
+
+
+def constraints_lines(plan):
+    """The project constraints as they appear on GitHub: target delivery, then people by track."""
+    date, how = target_phrase(plan)
+    lines = [f"Target delivery: {date} (" + ("given" if how == "given" else "derived from the critical path") + ")"]
+    people = plan["people"]
+    if not people:
+        lines.append(f"People: to be assigned (derived capacity: {len(plan['tracks'])})")
+        return lines
+    for t in plan["tracks"]:
+        mine = [p for p in people if p.get("track") == t["id"]]
+        if not mine:
+            continue
+        n = len(mine)
+        total = sum(p.get("allocation", 100) for p in mine)
+        holder = " (placeholder)" if any(p.get("derived") for p in mine) else ""
+        lines.append(f"Track {t['label']}: {n} {'person' if n == 1 else 'people'}{holder}, {total} percent allocated")
+    return lines
 
 
 def first_paragraph(text):
@@ -135,6 +168,7 @@ def build_subepic_body(plan, root, ms, numbers=None):
     rel = p.relative_to(root).as_posix()
     lines = [L.section_text(spec, "Purpose"), "", f"**Exit gate.** {ms['gate']}", "",
              f"**Due.** {ms['end']}. **Demonstration.** {ms['demo']}.", "",
+             f"Target delivery for the plan: {target_phrase(plan)[0]} ({target_phrase(plan)[1]})", "",
              "### Expected outcomes", "", L.section_text(spec, "Expected outcomes"), "",
              "### Acceptance criteria", "", L.section_text(spec, "Acceptance criteria"), "",
              "### Demonstration expectations", "", L.section_text(spec, "Demonstration expectations"), "",
@@ -158,7 +192,7 @@ def build_rollup(plan, numbers, epic_number):
              f"Conventions, the checkpoint schedule and the comment templates are in [{proj['spec_dir']}/README.md]({readme}).")
     if plan["program"]["items"]:
         intro += " Program items are tracked outside these issues."
-    out = [MARKER, f"## Development plan, {proj['name']}", "", intro, ""]
+    out = [MARKER, f"## Development plan, {proj['name']}", "", "**Constraints**", ""] + [f"- {l}" for l in constraints_lines(plan)] + ["", intro, ""]
     people = {pp["id"]: pp for pp in plan["people"]}
     for ms in plan["milestones"]:
         sk = f"M{ms['number']}"
@@ -305,8 +339,12 @@ def run(argv=None):
             gh = L.GitHub(token)
     L.say("")
     L.say(f"carrydown github_sync  {'APPLY' if a.apply else 'VERIFY (read only)' if a.verify else 'DRY RUN (nothing will be written)'}")
-    L.say(f"repository: {owner}/{repo}    plan: {plan_path.relative_to(root)}")
+    plan_shown = plan_path.relative_to(root) if root in plan_path.parents else plan_path.name
+    L.say(f"repository: {owner}/{repo}    plan: {plan_shown}")
     L.say(f"{len(plan['milestones'])} milestones, {len(plan['items'])} work items, {len(plan['tracks'])} tracks, {len(plan['program']['items'])} program items kept outside the plan")
+    L.say("Constraints (they go into the Epic comment, and the target into every sub-epic):")
+    for line in constraints_lines(plan):
+        L.say("  " + line)
     if gh is None:
         L.say("no token available or --offline: showing the plan only, nothing is read from GitHub")
     s = Sync(plan, root, gh, owner, repo, a.apply)

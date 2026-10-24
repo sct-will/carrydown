@@ -15,7 +15,7 @@ Existing labels with the same name are kept.
 One issue per milestone. The title is `<subepic_prefix> <number>, <name>`, for example `Milestone 2, Route to approvers`. The body is built from `milestone.md`:
 
 1. The purpose, which is the value proposition.
-2. The exit gate and the due and demonstration dates.
+2. The exit gate and the due and demonstration dates, then one line: "Target delivery for the plan: <date> (given or derived)".
 3. Expected outcomes.
 4. Acceptance criteria as checkboxes, written before the work starts.
 5. Demonstration expectations.
@@ -40,7 +40,7 @@ Each issue is a sub-issue of its sub-epic and carries the project label and the 
 
 ## The Epic comment
 
-If an Epic exists, the script posts one comment with nested checkboxes: each sub-epic, and under it each work item with owner and date. A box is checked when its issue closes. The comment has a hidden marker, so reruns update it instead of adding a second one.
+If an Epic exists, the script posts one comment. It opens with a Constraints block: "Target delivery: <date> (given)" or "(derived from the critical path)", then one line per track such as "Track Workflow: 1 person, 100 percent allocated" (placeholder people are marked, and a plan with no people says "People: to be assigned (derived capacity: N)"). The dry run prints the same block before anything is written. Below it come nested checkboxes: each sub-epic, and under it each work item with owner and date. A box is checked when its issue closes. The comment has a hidden marker, so reruns update it instead of adding a second one.
 
 ## Idempotence and updates
 

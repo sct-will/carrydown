@@ -15,7 +15,7 @@ It reads `docs/spec/plan.yaml` and the specification folder and builds, on GitHu
 - one sub-epic issue per milestone, with a body from `milestone.md`,
 - one issue per work item with a templated body, as a sub-issue of its sub-epic,
 - links from dependency ids to issue numbers,
-- one roll-up comment with nested checkboxes on the parent Epic, if there is one,
+- one roll-up comment on the parent Epic, if there is one, that opens with a Constraints block (the target delivery, given or derived, and the people and allocation by track) followed by nested checkboxes, and a line in every sub-epic stating the target delivery,
 - a GitHub Project (v2) board with a Work unit iteration field of custom lengths, a Track field, Complete by and Checkpoint date fields, and table, board and roadmap views, with every issue placed and every field filled.
 
 The scripts are idempotent. Issues are matched by exact title, so a rerun creates nothing twice.

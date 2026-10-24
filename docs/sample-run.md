@@ -8,7 +8,7 @@ How it was made.
 
 - A new private repository, `your-user/your-test-repo` (a placeholder for the real name), held a copy of the sample folder so that the links in the issues resolve.
 - The commands ran from the root of the repository. Output is as printed, with the token removed and file paths shortened. The scripts never print the token.
-- The project is fictional. The numbers are the real issue numbers the run created: Epic #1, sub-epics #2 to #6, work items #7 to #15.
+- The scripts have since gained a Constraints block in the Epic comment (the target delivery and the allocation by track) and a target delivery line in every sub-epic. The recorded output below predates it. The dry run now prints the same block before anything is written. The project is fictional. The numbers are the real issue numbers the run created: Epic #1, sub-epics #2 to #6, work items #7 to #15.
 - The scripts took about three and a half minutes in total, most of it pauses that keep GitHub from rate limiting the writes. Reading the dry runs takes longer than running the scripts.
 
 Each GitHub step shows the dry run first and the write second. A second run of each write step finds everything in place and creates nothing.
