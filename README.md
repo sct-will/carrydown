@@ -2,7 +2,7 @@
 
 # carrydown
 
-Turn your architecture document into a plan your team and its AI coding agents can follow: dated milestones, one spec per task tied to the paragraph it came from, GitHub issues, a filled project board, and a skill that makes each developer's agent read the spec first.
+Turn your architecture document into a plan your team and its AI coding agents can follow: dated milestones, one spec per task tied to the paragraph it came from, GitHub issues, a filled project board, and a skill that makes each engineer's agent read the spec first.
 
 [![Licence](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Last commit](https://img.shields.io/github/last-commit/sct-will/carrydown?v=2)](https://github.com/sct-will/carrydown/commits/main) [![Issues](https://img.shields.io/github/issues/sct-will/carrydown?v=2)](https://github.com/sct-will/carrydown/issues) [![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-blue)](LICENSE-CONTENT.md) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-3%20skills-teal)](https://agentskills.io) [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](#prerequisites) [![Open in Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sct-will/carrydown)
 
@@ -12,34 +12,38 @@ Turn your architecture document into a plan your team and its AI coding agents c
 
 ![How carrydown works](docs/images/flow.png)
 
-Planning decisions stay with people. The skills set up, draft to templates, validate and populate.
+In this README, "you" is the plan owner.
 
-**`carrydown-ground-truth`**
-- Interviews you, renders your documents to Markdown with stable section anchors, and scaffolds `docs/spec/` with `plan.yaml`.
-- Drafts the plan with you: milestones, work units, tracks, dates, dependencies, load table, critical path, program boundary.
-- Writes one specification per work item to a template, runs the checker, and gives review prompts for the document and the plan.
-- Run by: the Plan owner. Reviewed by the Lead reviewer.
-
-**`carrydown-plan-to-github`**
-- Walks you through a GitHub token safely and runs a dry run before anything is written.
-- After your yes, creates labels, one sub-epic per milestone, one issue per work item with sub-issue links, dependency links and an Epic roll-up comment that states the target delivery and the people by track.
-- Builds the project board with work unit, track and date fields and three views, verifies the counts, and lists what you click by hand.
-- Run by: the Plan owner or a delivery manager with permission to create issues and a Project.
-
-**`carrydown-dev-skill`**
-- Generates the developer skill for your project from the specification folder.
-- The skill makes each developer's agent read the spec, the cited sections and the conventions before it changes code.
-- Its README shows each teammate how to install it in their agent.
-- Run by: the Plan owner, once, to generate the skill. The generated skill is installed and used every day by the Engineers, who start an item by naming it, for example "Work on WI-07".
+Planning decisions stay with the plan owner. The agent, following the skills, sets up, drafts to templates, validates and populates.
 
 **Roles**
 
 | Role | What they do | Which skill |
 | --- | --- | --- |
-| Plan owner | The engineering lead or product manager who owns the plan. Gives the documents and any constraints, answers the interview, approves the plan, says yes before anything is written to GitHub, and generates the developer skill. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
-| Lead reviewer | A senior engineer who spends about an hour reading the generated specifications as the person who will build them. | Reviews the output of `carrydown-ground-truth` |
-| Engineers | The people building the work items, each with their own coding agent. They start an item by naming it, for example "Work on WI-07". | The generated developer skill, made by `carrydown-dev-skill` |
-| Program | The people who watch the demonstrations and decide pass or fail. They run nothing. They attend. | None |
+| Plan owner | The engineering lead or product manager who owns the plan. Brings the ground truth and the constraints, answers the interview, decides on what the agent drafts, says yes before anything is written to GitHub, and generates the developer skill once. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
+| Lead reviewer | A senior engineer who spends about an hour reading the generated specifications as the person who will build them, before anything goes to GitHub. | Reviews the output of `carrydown-ground-truth` |
+| Engineers | The people building the work items, each with their own coding agent. They install the developer skill, start an item by naming it, post evidence when it closes, and give the demonstrations. | The generated developer skill, made by `carrydown-dev-skill` |
+| Program | The people accountable for the outcome. They attend the demonstrations and decide pass or fail against criteria written before the work. They run nothing, and keep their own work, the program items, outside the plan. | None |
+
+The agent has no role. It drafts for the plan owner, reads for the engineers and carries the ground truth between them.
+
+**`carrydown-ground-truth`**
+- Interviews you, renders your documents to Markdown with stable section anchors, and scaffolds `docs/spec/` with `plan.yaml`.
+- Drafts the plan with you: milestones, work units, tracks, dates, dependencies, load table, critical path, program boundary.
+- Writes one specification per work item to a template, runs the checker, and gives review prompts for the document and the plan.
+- Run by: Plan owner. Reviewed by: Lead reviewer.
+
+**`carrydown-plan-to-github`**
+- Walks you through a GitHub token safely and runs a dry run before anything is written.
+- After your yes, creates labels, one sub-epic per milestone, one issue per work item with sub-issue links, dependency links and an Epic roll-up comment that states the target delivery and the people by track.
+- Builds the project board with work unit, track and date fields and three views, verifies the counts, and lists what you click by hand.
+- Run by: Plan owner, or someone they name who can create issues and a Project.
+
+**`carrydown-dev-skill`**
+- Generates the developer skill for your project from the specification folder.
+- The skill makes each engineer's agent read the spec, the cited sections and the conventions before it changes code.
+- Its README shows each engineer how to install it in their agent.
+- Run by: Plan owner, once. Used by: Engineers, who install the generated skill and start an item by naming it, for example "Work on WI-07".
 
 ## Getting started
 
@@ -144,7 +148,7 @@ Restart your agent.
 
 5. **Lead reviewer.** A senior engineer reads the generated specifications in `docs/spec/` for about an hour and asks for changes before anything goes to GitHub.
 
-6. **Plan owner or delivery manager.** Say:
+6. **Plan owner, or someone they name with GitHub permission.** Say:
 
    > Create the GitHub issues and the board.
 
@@ -214,7 +218,7 @@ The sample is a fictional expense approvals service: requirements, two governanc
 
 ## FAQ
 
-**Does it write code?** No. It carries the plan down to the point where a developer and their agent can start. The developer skill then makes each work item start from its specification.
+**Does it write code?** No. It carries the plan down to the point where an engineer and their agent can start. The developer skill then makes each work item start from its specification.
 
 **What does it send to GitHub?** Issue titles and bodies built from your specification files, labels, and project fields. Nothing is sent without `--apply`. The scripts talk only to `api.github.com`. See [docs/security.md](docs/security.md).
 
@@ -232,7 +236,7 @@ More answers, including "npx: command not found", are in [docs/faq.md](docs/faq.
 <summary>Eight terms</summary>
 
 - **Ground truth.** The document or documents the project must obey: architecture, requirements, rules, standards.
-- **Work item.** The smallest piece of work a person can finish, show and close. It has one specification and one issue.
+- **Work item.** The smallest piece of work an engineer can finish, show and close. It has one specification and one issue.
 - **Work unit.** A time block with its own length and an exit gate. It replaces the fixed-length sprint.
 - **Sub-epic.** A GitHub issue for one milestone, placed under the Epic. Its work items are sub-issues.
 - **Load table.** A table of how much work each person has in each work unit.

@@ -12,7 +12,7 @@ It carries a ground-truth document down into a plan, specifications, GitHub issu
 
 ## What it is not
 
-It does not write application code. Planning decisions (owners, dates, scope, order) stay with people. You draft, check and populate. A person decides.
+It does not write application code. Planning decisions (owners, dates, scope, order) stay with the plan owner. The skills draft, check and populate. A person decides.
 
 ## Where things live
 
@@ -47,15 +47,15 @@ The self test runs every script's `--help` and dry run on the sample. If you cha
 
 ## Using the skills from a user's project
 
-Install them with the line in the README. Then the user says one sentence per stage:
+Install them with the line in the README. Then the plan owner says one sentence per stage:
 
 1. "Set up a project plan from this document." (`carrydown-ground-truth`)
 2. "Create the GitHub issues and the board." (`carrydown-plan-to-github`)
 3. "Generate the developer skill." (`carrydown-dev-skill`)
 
-Roles: the Plan owner runs the skills, a Lead reviewer reads the specifications for about an hour, the Engineers use the generated developer skill every day, and the Program only attends the demonstrations. The README has the table.
+Roles: the plan owner runs the three skills, the lead reviewer reads the generated specifications for about an hour, the engineers use the generated developer skill every day, and the program attends the demonstrations and decides pass or fail. The program runs nothing. The README has the table.
 
-If a skill is not picked up, name it first: "Use the carrydown-ground-truth skill." The steps with expected output are in the README under Getting started. The long form, for the person who owns the plan, is `docs/plan-owner-guide.md`.
+If a skill is not picked up, name it first: "Use the carrydown-ground-truth skill." The steps with expected output are in the README under Getting started. The long form, for the plan owner, is `docs/plan-owner-guide.md`.
 
 ## Pull requests
 

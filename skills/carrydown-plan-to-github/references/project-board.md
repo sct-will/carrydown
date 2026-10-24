@@ -1,6 +1,6 @@
 # The project board
 
-`github_project.py` creates or configures one GitHub Project (v2) for the plan. The project belongs to the user or organisation you name with `--owner` (default: the repository owner) and is linked to the repository.
+`github_project.py` creates or configures one GitHub Project (v2) for the plan. The project belongs to the GitHub account or organisation you name with `--owner` (default: the repository owner) and is linked to the repository.
 
 ## Fields
 

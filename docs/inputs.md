@@ -36,11 +36,11 @@ Files can be `.docx` or `.md`. Give paths.
 
 | Ask yourself | Example | Default |
 | --- | --- | --- |
-| Who does the work? | Two developers. | One to four people. |
+| Who does the work? | Two engineers. | One to four people. |
 | Which track does each own? | Workflow and Experience. | One track each. |
 | Percent allocation? | 100, or 60 for three days in five. | 100 for everyone. The agent asks once to confirm. |
 | Start dates and days off? | Start 2027-02-01. Off 2027-02-22. | Same start date, no days off. |
-| Who advises and owns no items? | A policy owner. | None. |
+| Who advises and owns no items? | Someone from security, or the author of a policy. | None. |
 | Their GitHub logins, if they should be assigned? | Leave empty for none. | Empty. |
 
 ## 3. The target and the breaks
@@ -63,13 +63,13 @@ Files can be `.docx` or `.md`. Give paths.
 
 ## 5. Agents in use
 
-Which agentic editors does the team use? Any editor or command line agent that reads Agent Skills works. The README lists the ones the installer knows. The developer skill is installed once per person per agent.
+Which agentic editors do the engineers use? Any editor or command line agent that reads Agent Skills works. The README lists the ones the installer knows. The developer skill is installed once per engineer per agent.
 
 ## 6. Demonstration audience
 
 | Ask yourself | Example | Default |
 | --- | --- | --- |
-| Who watches the demonstrations? | The product owner and the head of operations. | The program. |
+| Who is the program, the people who watch the demonstrations and decide pass or fail? | The product manager and the head of operations. | Ask. |
 | How long can they give? | 45 minutes. | 45 minutes. |
 | What must they see to say a milestone is done? | "A manager approves a report from the inbox." | Write it in their words. |
 

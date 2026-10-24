@@ -36,7 +36,7 @@ The title follows `project.title_format`, by default `{id} {label}`. The body ha
 6. Integration points. Copied from the specification.
 7. Definition of done. Built from the conventions in `plan.yaml` (test command, lint command, flag, extra lines).
 
-Each issue is a sub-issue of its sub-epic and carries the project label and the track label. If the owner has a GitHub login in `plan.yaml`, the issue is assigned.
+Each issue is a sub-issue of its sub-epic and carries the project label and the track label. If the engineer on the item (its `owner` in `plan.yaml`) has a GitHub login there, the issue is assigned.
 
 ## The Epic comment
 

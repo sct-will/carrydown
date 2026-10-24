@@ -12,7 +12,9 @@ metadata:
 
 Start phrase: "Create the GitHub issues and the board."
 
-Run by: the Plan owner or a delivery manager with permission to create issues and a Project.
+Run by: Plan owner, or someone they name who can create issues and a Project.
+
+In this skill, the user is the plan owner.
 
 ## What this skill does
 
@@ -39,7 +41,7 @@ The scripts and templates folders sit next to this SKILL.md. In the commands bel
 
 Run `python3 <skill>/scripts/check_specs.py --root .`. It must report 0 findings. If it does not, stop and go back to `carrydown-ground-truth`. The sync script runs the checker again before it does anything.
 
-Confirm with the user, in plain words: the repository (`owner/name`) and whether it is public, whether a parent Epic issue exists (its number) or may be created, the people's GitHub logins if they should be assigned, and the owner of the project board (the user or the organisation). Put the repository, Epic number and project title in `plan.yaml` under `project`.
+Confirm with the user, in plain words: the repository (`owner/name`) and whether it is public, whether a parent Epic issue exists (its number) or may be created, the people's GitHub logins if they should be assigned, and which account owns the project board (the user's own GitHub account or the organisation). Put the repository, Epic number and project title in `plan.yaml` under `project`.
 
 ### 2. Token
 

@@ -10,12 +10,12 @@ This folder is published twice. It lives in the main carrydown repository at `sa
 
 | Path | What it is | Made by |
 | --- | --- | --- |
-| `ground-truth/architecture.md` | The source document. About eight pages: context, requirements, architecture, two governance rules, a development standard, a business analyst note, interfaces and risks. | You |
+| `ground-truth/architecture.md` | The source document. About eight pages: context, requirements, architecture, two governance rules, a development standard, a business analyst note, interfaces and risks. | The plan owner |
 | `people.yaml` | Two people with tracks, percent allocation (one at 100, one at 60), days off, and an advisor. | The interview |
 | `timeline.yaml` | Start date, target date, 11 weeks of work, a pause week, the program-owned items, conventions. | The interview |
 | `docs/ground-truth/architecture.md` | The rendering with a section index. | `render_ground_truth.py` |
 | `docs/ground-truth/architecture.index.txt` | One line per heading with its line number. | `render_ground_truth.py` |
-| `docs/spec/plan.yaml` | The plan: five milestones, nine work items, two tracks, one pause, checkpoints. | You and the agent |
+| `docs/spec/plan.yaml` | The plan: five milestones, nine work items, two tracks, one pause, checkpoints. | The plan owner and the agent |
 | `docs/spec/README.md` | Conventions, schedule, comment templates and the index. | `scaffold_spec.py` |
 | `docs/spec/m*/milestone.md` | One file per milestone: the sub-epic content. | `scaffold_spec.py`, then written |
 | `docs/spec/m*/wi-NN-*.md` | One specification per work item. | `scaffold_spec.py --stubs`, then written |

@@ -20,7 +20,7 @@ TODO: Copy the exact schemas, field tables, message texts and rules from the gro
 
 ## Implementation guide
 
-TODO: Numbered steps in the order a developer would do them. Each step names the files to touch and the check that proves the step.
+TODO: Numbered steps in the order an engineer would do them. Each step names the files to touch and the check that proves the step.
 
 ## Acceptance criteria
 
@@ -37,19 +37,19 @@ Attach to the closing comment on the issue, in the template from the folder READ
 - TODO: The test suites by file, with the run line.
 - TODO: The artifact that proves the outcome: a response body, a screenshot, a record table, a diff.
 
-The coding agent produces these from the commands above. The developer checks them before posting.
+The coding agent produces these from the commands above. The engineer checks them before posting.
 
 ## Integration points
 
 TODO: One sentence naming the counterpart items on the other track, by id and label, or say that no item on the other track depends on this one.
 
 - Crosses the boundary. TODO: The concrete thing that passes between the tracks, such as a schema file, an endpoint, a package or a fixture folder.
-- Joint check. TODO: What both people run together at the checkpoint named in the header.
-- Handoff on close. TODO: What the owner tells the counterpart in the closing comment, or "none".
+- Joint check. TODO: What the engineers on both tracks run together at the checkpoint named in the header.
+- Handoff on close. TODO: What the engineer on this item tells the engineer on the counterpart item in the closing comment, or "none".
 
 ## Out of scope
 
-TODO: What a reasonable person might add to this item and should not. Point to the item or the program owner that has it.
+TODO: What a reasonable person might add to this item and should not. Point to the item that has it, or say it belongs to the program.
 
 ## Watch out for
 

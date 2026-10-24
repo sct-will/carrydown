@@ -1,15 +1,17 @@
 # Plan owner guide
 
-The long form for a product manager, a program lead or anyone who owns a plan. You do not need to write code. The short form is the [Getting started](../README.md#getting-started) section of the README. It holds the install line and the three sentences you say to your agent. This guide does not repeat them. It explains what happens between them, what to review and what to ask for in advance.
+The long form for the plan owner: the engineering lead or product manager who owns the plan. You do not need to write code. The short form is the [Getting started](../README.md#getting-started) section of the README. It holds the install line and the three sentences you say to your agent. This guide does not repeat them. It explains what happens between them, what to review and what to ask for in advance.
 
 ## Who runs what
 
 | Role | What they do | Which skill |
 | --- | --- | --- |
-| Plan owner | The engineering lead or product manager who owns the plan. Gives the documents and any constraints, answers the interview, approves the plan, says yes before anything is written to GitHub, and generates the developer skill. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
-| Lead reviewer | A senior engineer who spends about an hour reading the generated specifications as the person who will build them. | Reviews the output of `carrydown-ground-truth` |
-| Engineers | The people building the work items, each with their own coding agent. They start an item by naming it, for example "Work on WI-07". | The generated developer skill, made by `carrydown-dev-skill` |
-| Program | The people who watch the demonstrations and decide pass or fail. They run nothing. They attend. | None |
+| Plan owner | The engineering lead or product manager who owns the plan. Brings the ground truth and the constraints, answers the interview, decides on what the agent drafts, says yes before anything is written to GitHub, and generates the developer skill once. | `carrydown-ground-truth`, `carrydown-plan-to-github`, `carrydown-dev-skill` |
+| Lead reviewer | A senior engineer who spends about an hour reading the generated specifications as the person who will build them, before anything goes to GitHub. | Reviews the output of `carrydown-ground-truth` |
+| Engineers | The people building the work items, each with their own coding agent. They install the developer skill, start an item by naming it, post evidence when it closes, and give the demonstrations. | The generated developer skill, made by `carrydown-dev-skill` |
+| Program | The people accountable for the outcome. They attend the demonstrations and decide pass or fail against criteria written before the work. They run nothing, and keep their own work, the program items, outside the plan. | None |
+
+The agent has no role. It drafts for the plan owner, reads for the engineers and carries the ground truth between them.
 
 ## What you will end up with
 
@@ -19,13 +21,13 @@ You bring a document that says how the project must work, such as an architectur
 - one specification file for each piece of work (a work item), each tied to the sections of your document it comes from,
 - GitHub issues, one per work item, grouped under one issue per milestone,
 - a GitHub Project board with the dates and the people filled in,
-- a small skill linked from every issue, so each developer's agent reads the specification before it writes code.
+- a small skill linked from every issue, so each engineer's agent reads the specification before it writes code.
 
 Nothing is written to GitHub until you say yes. Work items are numbered WI-01, WI-02 and so on.
 
 Two inputs: the ground truth documents, which are required, and your project constraints, which are optional. Constraints are the people with their percent allocation and the target date or number of weeks plus breaks, in any combination. Give both and the plan fits them. Give one and the agent backs into the other. Give neither and it proposes a default and asks. Allocation is assumed to be 100 percent for everyone. The agent asks you once to confirm, and you only name a figure for someone who is lower.
 
-How long it takes. The interview and the plan review take an hour or two of your attention. The scripts take a few minutes. A senior engineer adds about an hour to review the specifications.
+How long it takes. The interview and the plan review take an hour or two of your attention. The scripts take a few minutes. The lead reviewer, a senior engineer, adds about an hour to review the specifications.
 
 ## Before you start
 
@@ -49,8 +51,8 @@ The agent asks questions in six steps. Each reply starts with the line "carrydow
 2. your constraints, if any: the people, their tracks, their percent allocation (assumed 100, confirmed once), GitHub logins, start dates and days off,
 3. the target as a date or a number of weeks, if you have one, the breaks, and the longest stretch of work you allow in one block,
 4. your GitHub repository, the branch, and whether an Epic issue exists,
-5. which agents your team uses, who watches the demonstrations, and what the program owns and keeps outside the plan,
-6. how the team runs tests and lint, and whether it uses a feature flag.
+5. which agents the engineers use, who the program is, and what the program keeps outside the plan,
+6. how the engineers run tests and lint, and whether they use a feature flag.
 
 You can answer in plain words. If you do not know an answer, say "use your default" or "decide later". The agent reads everything back as a summary. Correct it, then say yes. Nothing is written before that.
 
@@ -67,7 +69,7 @@ The agent drafts. You decide. It shows you:
 
 Questions worth asking:
 
-- What if one of the developers is out in week three?
+- What if one of the engineers is out in week three?
 - Which item can slip a week without moving the end date? Which cannot?
 - Does anyone have nothing to do, or three things due, on any day?
 - Which items wait for something the program owns?
@@ -77,7 +79,7 @@ Ask the agent to move things, then ask for the load table and the critical path 
 
 ## The lead reviewer hour
 
-When a product manager drives, a senior engineer should spend about an hour as lead reviewer of the generated specifications. They read them as the person who will build the item and ask: could I start from this file alone? This catches wrong assumptions about the existing code, which the agent cannot always see.
+Before anything goes to GitHub, the lead reviewer, a senior engineer, spends about an hour on the generated specifications. If you are a product manager, this hour matters most. The lead reviewer reads them as the person who will build the item and asks: could I start from this file alone? This catches wrong assumptions about the existing code, which the agent cannot always see.
 
 You read the "Why this work item exists" and "Acceptance criteria" parts of a few specifications. They are short. Ask the agent to open one for you.
 
@@ -111,11 +113,11 @@ The agent runs a dry run first. A dry run changes nothing. It prints a summary l
 
 ## After that
 
-The team follows a rhythm.
+The engineers follow a rhythm.
 
-- When an item is finished, the developer posts a closing comment on its issue: what they can demonstrate, the evidence, the decisions, and what the other track needs to know.
-- Every week the people meet for 30 minutes and run a joint check.
-- At the end of each work unit the developers demonstrate the milestone to you, against criteria that were written before the work started. You note pass or fail on the milestone issue.
+- When an item is finished, the engineer posts a closing comment on its issue: what they can demonstrate, the evidence, the decisions, and what the other track needs to know.
+- Every week the engineers meet for 30 minutes and run a joint check.
+- At the end of each work unit the engineers demonstrate the milestone to the program, against criteria that were written before the work started. The program decides pass or fail, and the outcome is noted on the milestone issue the same day.
 
 To change the plan later, change `plan.yaml` with your agent and run the checker again. [faq.md](faq.md) explains how to refresh the files and the issues.
 
@@ -141,5 +143,5 @@ To change the plan later, change `plan.yaml` with your agent and run the checker
 - **Exit gate.** The one sentence that must be true for a work unit to count as done.
 - **Work unit.** A time block with its own length and an exit gate. It replaces the fixed-length sprint.
 - **Checkpoint.** A short weekly meeting where the tracks run a check together to prove their halves fit.
-- **Demonstration.** A meeting at the end of a work unit where the people show the milestone working, against criteria written in advance.
+- **Demonstration.** A meeting at the end of a work unit where the engineers show the program the milestone working, against criteria written in advance.
 - **Program item.** Work the program owns outside the development plan, such as recruiting a pilot team or getting an approval.

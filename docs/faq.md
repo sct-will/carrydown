@@ -22,7 +22,7 @@ Node.js, for the install command. Python 3.9 or later, for the scripts. Nothing 
 
 ## Does it write the code?
 
-No. It carries the plan down to the point where a developer and their agent can start work. The developer skill then makes each work item start from its specification.
+No. It carries the plan down to the point where an engineer and their agent can start work. The developer skill then makes each work item start from its specification.
 
 ## Does it write my architecture document?
 

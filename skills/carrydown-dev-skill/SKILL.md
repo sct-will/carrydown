@@ -12,11 +12,13 @@ metadata:
 
 Start phrase: "Generate the developer skill."
 
-Run by: the Plan owner, once, to generate the skill. The generated skill is installed and used every day by the Engineers, who start an item by naming it, for example "Work on WI-07".
+Run by: Plan owner, once. Used by: Engineers, who install the generated skill and start an item by naming it, for example "Work on WI-07".
+
+In this skill, the user is the plan owner.
 
 ## What this skill does
 
-The specification folder is canonical, but a developer should not have to paste it into a prompt. A developer skill is a small folder in the Agent Skills format: a `SKILL.md` and reference files. Once installed, a developer names an item, for example "work on WI-07", and the coding agent reads the specification, the ground truth sections it cites and the project conventions first. This skill generates that folder from `plan.yaml`, the specifications and the rendered ground truth, then helps each person install it.
+The specification folder is canonical, but an engineer should not have to paste it into a prompt. A developer skill is a small folder in the Agent Skills format: a `SKILL.md` and reference files. Once installed, an engineer names an item, for example "work on WI-07", and the coding agent reads the specification, the ground truth sections it cites and the project conventions first. This skill generates that folder from `plan.yaml`, the specifications and the rendered ground truth, then helps the user get it to each engineer.
 
 ## Rules that never bend
 
@@ -39,6 +41,6 @@ The specification folder is canonical, but a developer should not have to paste 
    ```
 
    It writes `SKILL.md`, `README.md` and three references under `project.dev_skill_path`, skips files that exist unless you pass `--force`, and prints the length of the description.
-3. **Review and finish by hand.** Go through `references/review-checklist.md` with the user. Add what only a person knows: extra triggers in the `description`, the module layout and flags, the contracts that matter most, and topics in the ground truth map.
-4. **Install.** Read `references/install.md`. Each person installs the skill once in the agent they use. Give them the line for their agent from the generated README, and show them how to start a work item by naming it, for example "Work on WI-07". Then they review every change the agent makes.
+3. **Review and finish by hand.** Go through `references/review-checklist.md` with the user. Add what only the plan owner or the lead reviewer knows: extra triggers in the `description`, the module layout and flags, the contracts that matter most, and topics in the ground truth map.
+4. **Install.** Read `references/install.md`. Each engineer installs the skill once in the agent they use. Give the user the install line for each agent from the generated README, to send to the engineers, and show how an engineer starts a work item by naming it, for example "Work on WI-07". The engineers review every change their agent makes.
 5. **Keep it current.** Read `references/maintenance.md`. Regenerate the references whenever the plan, the specs or the rendering change, and keep `project.dev_skill_path` stable once issues link to it.

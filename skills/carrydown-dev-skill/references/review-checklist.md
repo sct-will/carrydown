@@ -8,7 +8,7 @@ Go through this with the user before you call the skill done.
 - [ ] `description` starts with "Use when".
 - [ ] `description` is under 1,024 characters. The generator prints the length.
 - [ ] `description` has no colon followed by a space (some parsers read it as a new key).
-- [ ] `description` names the triggers a developer would use: the ids, the file names, the folders.
+- [ ] `description` names the triggers an engineer would use: the ids, the file names, the folders.
 
 ## SKILL.md
 
@@ -29,7 +29,7 @@ Go through this with the user before you call the skill done.
 ## README
 
 - [ ] The install lines use the right repository and branch.
-- [ ] The table of skills folders matches the agents your team uses.
+- [ ] The table of skills folders matches the agents the engineers use.
 - [ ] It says the specification folder is canonical.
 
 ## Smoke test

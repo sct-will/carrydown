@@ -55,4 +55,4 @@ Offer this to the user after the first clean run, so the checker fails loudly on
 
 ## Reading the output
 
-Each finding names the file and a line number when it can. Fix the source, not the checker. If a finding is wrong for your project, change the configuration in `plan.yaml` and say why in the commit message.
+Each finding names the file and a line number when it can. Fix the source, not the checker. If a finding is wrong for this project, change the configuration in `plan.yaml` and say why in the commit message.

@@ -12,7 +12,9 @@ metadata:
 
 Start phrase: "Set up a project plan from this document."
 
-Run by: the Plan owner. Reviewed by the Lead reviewer.
+Run by: Plan owner. Reviewed by: Lead reviewer.
+
+In this skill, the user is the plan owner.
 
 ## What this skill does
 
@@ -21,7 +23,7 @@ A ground truth is the document a project must obey: an architecture document, re
 ## Rules that never bend
 
 - Do not draft a plan without the ground truth. Everything else is optional: when people or the target are missing, use the mode in `references/planning.md` and say which one you are in.
-- Planning decisions stay with the human. You draft, the user decides. Never pick owners, dates, scope or order without an explicit yes.
+- Planning decisions stay with the user, the plan owner. You draft, the user decides. Never pick owners, dates, scope or order without an explicit yes.
 - Ask before you write any file outside `docs/`, and never write to GitHub in this skill.
 - Every claim in a specification traces to a section of the ground truth. If it cannot be traced or verified, write "verify at implementation" and say what to look for. Never invent a function name, a file or a number.
 - Contract excerpts (schemas, rule texts, message texts) are copied word for word from the ground truth.
@@ -73,7 +75,7 @@ Read `references/planning.md` and follow its steps, stopping for a decision at e
 
 ### 5. Write milestones and specifications
 
-Read `references/writing-specs.md` and `references/milestone-and-demo.md`. Fill the TODO lines in each `milestone.md` and each stub. If your client supports subagents, write the specifications in parallel, one subagent per batch of two or three items, using `references/spec-writer-brief.md` as the brief. Otherwise write them one by one. Review every file yourself afterwards: the lead reads all of them.
+Read `references/writing-specs.md` and `references/milestone-and-demo.md`. Fill the TODO lines in each `milestone.md` and each stub. If you can start subagents, write the specifications in parallel, one subagent per batch of two or three items, using `references/spec-writer-brief.md` as the brief. Otherwise write them one by one. Review every file yourself afterwards. The lead reviewer reads them later, in step 7.
 
 When a specification finds a conflict inside the ground truth, the ground truth wins (an earlier numbered section wins over a note). Say so under "Watch out for", and list it for the next version of the document.
 
@@ -87,7 +89,7 @@ Fix every finding. `references/checker.md` explains each check and how to add th
 
 ### 7. Review and hand off
 
-Run the review prompts from `references/review-prompts.md` once more on the finished set. Show the user the index, the load table and the checker result. If a product manager is driving, recommend that a senior engineer spends an hour as lead reviewer of the generated specifications, reading them as the person who will build the item. Ask for approval. Then suggest the next skill: `carrydown-plan-to-github`.
+Run the review prompts from `references/review-prompts.md` once more on the finished set. Show the user the index, the load table and the checker result. Remind the user that the lead reviewer, a senior engineer, spends about an hour on the generated specifications, reading them as the person who will build the item, before anything goes to GitHub. If the user is a product manager, say this hour matters most. Ask the user, the plan owner, for approval. Then suggest the next skill: `carrydown-plan-to-github`.
 
 ## What good looks like
 

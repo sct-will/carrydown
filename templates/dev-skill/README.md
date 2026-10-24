@@ -2,7 +2,7 @@
 
 A developer skill for the {{project_name}} work in this repository. It follows the Agent Skills format, a folder with a `SKILL.md` and reference files, so any coding agent that supports skills can load it.
 
-When a developer asks the agent to work on a work item by id ({{example_id}}), or touches the files an item names, the skill gives the agent the steps to orient on the item, the project conventions, the definition of done and the test commands. Its reference files hold the work item index, the contract headings and the ground truth map.
+When an engineer asks the agent to work on a work item by id ({{example_id}}), or touches the files an item names, the skill gives the agent the steps to orient on the item, the project conventions, the definition of done and the test commands. Its reference files hold the work item index, the contract headings and the ground truth map.
 
 ## Why use it
 

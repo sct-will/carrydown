@@ -7,7 +7,7 @@ Sub-epic of the {{project_name}} Epic. Work unit {{number}}, {{start}} to {{end}
 | Due | {{end}} |
 | Exit gate | {{gate}} |
 | Work items | {{ids}} |
-| Demonstration | {{demo}}, both people, in a meeting session with the program. |
+| Demonstration | {{demo}}, the engineers, in one meeting with the program. |
 
 ## Purpose
 
@@ -28,8 +28,8 @@ The milestone is accepted when the program has seen each of these at the demonst
 
 ## Demonstration expectations
 
-- Given on {{demo}} by the people who own the items, to the program, in one meeting session, showing the work items of this milestone working together.
-- Nothing about the session is automated. The people decide what to show. The acceptance criteria above say what must be seen.
+- Given on {{demo}} by the engineers who built the items, to the program, in one meeting session, showing the work items of this milestone working together.
+- Nothing about the session is automated. The engineers decide what to show. The acceptance criteria above say what must be seen.
 - The outcome, pass or fail against the acceptance criteria, is noted as a comment on this sub-epic the same day.
 
 ## Work items
