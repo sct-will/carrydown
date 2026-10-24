@@ -48,11 +48,15 @@ Turn your architecture document into a plan your team and its AI coding agents c
 
 </details>
 
+Install the agent skills:
+
+Using npx:
+
 ```bash
 npx skills add sct-will/carrydown --all
 ```
 
-Restart your agent.
+Manually:
 
 <details>
 <summary>Manual install (no Node.js)</summary>
@@ -63,41 +67,39 @@ Restart your agent.
 
 </details>
 
-1. Open your coding agent in your project folder (the folder you made above). No folder yet? Say:
+Restart your agent.
+
+1. **Plan owner.** Open your coding agent in your project folder (the folder you made above). No folder yet? Say:
 
    > Make a folder called my-plan with a git repository and work there.
 
    You will see: the agent creating the folder and starting work in it.
 
-2. If you ran the install line above, skip this step. Otherwise say:
-
-   > Install carrydown for this agent: run npx skills add sct-will/carrydown --skill '*' -a \<your agent\>. If Node.js or Python 3 is missing, stop and tell me how to install it.
-
-   Then restart the agent. You will see: the installer listing three skills.
-
-3. Say:
+2. **Plan owner.** Say:
 
    > Do you have the carrydown-ground-truth skill?
 
    You will see: yes, and its start sentence.
 
-4. Put your document (.docx or .md) in `docs/source/`, then say:
+3. **Plan owner.** Put your document (.docx or .md) in `docs/source/`, then say:
 
    > Set up a project plan from docs/source/\<file\>.
 
-   You will see: "carrydown: interview, step 1 of 6" and a few questions. The document is the only required input. You will also be asked what constraints you have: the people, the target date or number of weeks, both, or neither for now. Everyone is assumed to be allocated full time unless you say otherwise.
+   Then answer the interview, or say "use your default". You will see: "carrydown: interview, step 1 of 6" and a few questions. The document is the only required input. You will also be asked what constraints you have: the people, the target date or number of weeks, both, or neither for now. Everyone is assumed to be allocated full time unless you say otherwise.
 
-5. Answer, or say "use your default". Then say:
+4. **Plan owner.** Review the plan. Say:
 
    > Show me the load table and the critical path.
 
-   Then:
+   Then, when it is right:
 
    > Yes, the plan is right.
 
    You will see: the schedule, the load table, the critical path, and the checker reporting 0 findings.
 
-6. Say:
+5. **Lead reviewer.** A senior engineer reads the generated specifications for about an hour, as the person who would build them, and asks for changes before anything goes to GitHub. You will see: one specification per work item under `docs/spec/`, each with its header, acceptance criteria and evidence section.
+
+6. **Plan owner or delivery manager.** Say:
 
    > Create the GitHub issues and the board.
 
@@ -107,11 +109,13 @@ Restart your agent.
 
    You will see: "1 Epic, N sub-epics, N work item issues" and then the board link.
 
-7. Say:
+7. **Plan owner, then Engineers.** The Plan owner says:
 
    > Generate the developer skill.
 
-   Send each developer the install line it prints. You will see: the skill folder and the install line per agent.
+   The Plan owner sends each engineer the install line it prints. Each engineer installs the generated skill and starts an item by saying "Work on WI-07". You will see: the skill folder and the install line per agent.
+
+**Program.** Attends each milestone demonstration and decides pass or fail against the criteria written before the work.
 
 The long form, with the interview, the review hour, the token and the team rhythm, is [docs/plan-owner-guide.md](docs/plan-owner-guide.md).
 
