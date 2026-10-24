@@ -1,4 +1,4 @@
-# expense-approvals-dev skill
+# Engineers' skill for Expense approvals
 
 The engineers' skill for the Expense approvals work in this repository. It follows the Agent Skills format, a folder with a `SKILL.md` and reference files, so any coding agent that supports skills can load it.
 

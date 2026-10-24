@@ -39,7 +39,7 @@ python3 scripts/github_sync.py --root sample/expense-approvals --repo YOUR-USER/
 python3 scripts/github_project.py --root sample/expense-approvals --repo YOUR-USER/YOUR-TEST-REPO
 ```
 
-The first three need no token and no network. The `--offline` form of `github_sync.py` shows the plan without a token and without reading GitHub. The full dry run on the last two lines reads GitHub, so it needs a token (run `python3 scripts/github_token.py` first) and a repository that exists. Both are dry runs. Use a throwaway repository of your own, and add `--apply` only when you have read what they would do. `docs/sample-run.md` at the top of the repository shows a real run.
+The first three need no token and no network. The `--offline` form of `github_sync.py` shows the plan without a token and without reading GitHub. The full dry run on the last two lines reads GitHub, so it reads GitHub only if you have stored a token (run `python3 scripts/github_token.py` first); without one it prints the dry run and says it was not checked against GitHub and a repository that exists. Both are dry runs. Use a throwaway repository of your own, and add `--apply` only when you have read what they would do. `docs/sample-run.md` at the top of the repository shows a real run.
 
 ## On GitHub
 
