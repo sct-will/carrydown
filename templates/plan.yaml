@@ -1,0 +1,108 @@
+# plan.yaml, the single source of truth for the schedule.
+#
+# The scripts read this file. The checker compares every specification to it.
+# The GitHub scripts build labels, sub-epics, issues and the project board from it.
+#
+# This is a small subset of YAML. Indent with spaces. Write a value that contains
+# a colon followed by a space in quotes. Dates are written YYYY-MM-DD.
+#
+# Fill it in with your agent. The interview in the ground-truth skill asks for
+# every value. Planning decisions (who owns what, which dates, which order) are yours.
+
+project:
+  name: "Your project name"              # shown in titles and the README
+  slug: your-project                     # lowercase words joined by hyphens
+  id_prefix: WI                         # work item ids read WI-01, WI-02 ...
+  repo: your-org/your-repo               # the GitHub repository for issues
+  branch: main                           # branch that holds the specification folder
+  epic: null                             # issue number of an existing parent Epic, or null
+  epic_title: "Your project, development plan"   # used only if you ask the script to create an Epic
+  subepic_prefix: "Milestone"            # sub-epic titles read "Milestone 1, name"
+  title_format: "{id} {label}"           # work item issue titles. Fields: {id}, {label}, {lower}
+  spec_dir: docs/spec                    # where the specification folder lives
+  ground_truth: docs/ground-truth/architecture.md   # the rendered ground truth the specs cite
+  project_title: "Your project plan"     # name of the GitHub Project (v2) board
+  dev_skill: your-project-dev            # name of the generated developer skill
+  dev_skill_path: docs/dev/skills/your-project-dev
+
+conventions:                             # feeds the definition of done in every issue
+  test_command: "npm test"
+  lint_command: "npm run lint"
+  feature_flag: ""                       # empty if you do not use one
+  extra:                                 # more lines for the definition of done, optional
+    - "No secrets or personal data in logs."
+
+tracks:                                  # parallel lanes of work, usually one per person
+  - id: backend
+    label: Backend
+    color: BLUE                          # GRAY BLUE GREEN YELLOW ORANGE RED PINK PURPLE
+  - id: frontend
+    label: Frontend
+    color: GREEN
+
+people:                                  # people who own items. Names stay out of specs.
+  - id: alex                             # short handle used in this file
+    name: "Alex Quill"
+    github: ""                           # GitHub login for assignment, or empty
+    track: backend
+    start: 2027-01-04
+    days_off: []                         # list of dates
+  - id: sam
+    name: "Sam Marlow"
+    github: ""
+    track: frontend
+    start: 2027-01-04
+    days_off: []
+
+advisors:                                # people who advise and own no items
+  - name: "Jordan Pike"
+    note: "Reviews contracts and security."
+
+milestones:                              # one per work unit. A work unit has a custom length.
+  - number: 1
+    name: "First milestone"
+    folder: m1-first-milestone
+    start: 2027-01-04
+    end: 2027-01-15
+    demo: 2027-01-15
+    gate: "One sentence the program can check at the demonstration."
+
+breaks:                                  # pauses between work units, optional
+  - name: "Pause"
+    start: 2027-01-18
+    end: 2027-01-22
+
+checkpoints:                             # short weekly integration checks between the tracks
+  - date: 2027-01-08
+    name: "Contract freeze"
+    joint_check: "Both tracks run the same example against the shared contract."
+
+items:                                   # the work items
+  - id: 1
+    slug: first-item                     # file name: wi-01-first-item.md
+    label: "First item"
+    milestone: 1
+    track: backend
+    owner: alex
+    complete_by: 2027-01-08
+    size: "Small, about 2 days"
+    depends: []                          # ids of items this one needs first
+    unblocks: []                         # optional. Derived from depends when empty.
+    checkpoint: 2027-01-08               # one of the checkpoint dates above
+    program_input: ""                    # text of an input the program provides, or empty
+    ground_truth: "Sections 1.1"         # the sections of the ground truth this item cites
+
+program:                                 # program-owned work, kept outside the plan as id gaps
+  items: []
+  # - id: 5
+  #   label: "Pilot team recruitment"
+
+limits:
+  spec_lines: [80, 340]                  # allowed length of a specification file
+
+banned:                                  # vocabulary the checker rejects in specs
+  # words: ["sprints?", "story points?", "velocity"]      # replaces the default list
+  # phrases: ["open questions?", "non-goals?"]            # replaces the default list
+  # vendors: []                                            # extra names, added to the built-in list
+  # names: []                                              # extra names. People in this file are always banned.
+  dashes: true                           # reject em and en dashes
