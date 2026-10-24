@@ -9,12 +9,20 @@ It does the following.
   5. Runs the dry run of every script against the sample. Nothing is written.
   6. Copies each skill folder to a temporary folder and runs a script from the copy,
      to prove that an installed skill is self-contained.
+  7. Runs the GitHub scripts against a local mock of the GitHub API (tests/mock/, on
+     127.0.0.1 only): a 502 after a create, a crash then a rerun, --verify on an unlinked
+     id, single sign-on, a timeout, a public repository, issues and comments that are not
+     the plan's, renamed issues, and the token file. It also runs the dry runs without a token.
+
+Every step runs with HOME set to an empty temporary folder and with no
+CARRYDOWN_GITHUB_TOKEN, so no stored token is ever read.
 
 Usage
   python3 scripts/selftest.py
 Exit status is 0 when every step passes and 1 otherwise.
 """
 import ast
+import atexit
 import os
 import shutil
 import subprocess
@@ -24,16 +32,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PY = sys.executable
-ENV = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+HOME = tempfile.mkdtemp(prefix="carrydown-selftest-home-")
+atexit.register(shutil.rmtree, HOME, True)
+ENV = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "HOME": HOME, "USERPROFILE": HOME}
 ENV.pop("CARRYDOWN_GITHUB_TOKEN", None)
 SAMPLE = "sample/expense-approvals"
 results = []
 
 
-def step(name, cmd, cwd=ROOT, expect=0, contains=()):
-    p = subprocess.run(cmd, cwd=cwd, env=ENV, capture_output=True, text=True)
+def step(name, cmd, cwd=ROOT, expect=0, contains=(), absent=(), stdin=""):
+    p = subprocess.run(cmd, cwd=cwd, env=ENV, capture_output=True, text=True, input=stdin)
     out = (p.stdout or "") + (p.stderr or "")
-    missing = [c for c in contains if c not in out]
+    missing = [c for c in contains if c not in out] + [f"(must be absent) {c}" for c in absent if c in out]
     ok = p.returncode == expect and not missing
     results.append((ok, name))
     print(("PASS " if ok else "FAIL ") + name)
@@ -49,7 +59,7 @@ def main():
         print(__doc__)
         return 0
     scripts = sorted((ROOT / "scripts").glob("*.py"))
-    for s in scripts:
+    for s in scripts + sorted((ROOT / "tests").rglob("*.py")):
         try:
             ast.parse(s.read_text(encoding="utf-8"))
             ok = True
@@ -114,6 +124,27 @@ def main():
                 step(f"installed copy of {skill} runs {script}", [PY, str(dst / "scripts" / script), "--root", str(ROOT / SAMPLE), "--offline", "--show-body", "3"])
             else:
                 step(f"installed copy of {skill} runs {script}", [PY, str(dst / "scripts" / script), "--root", str(ROOT / SAMPLE)])
+    step("dry run without a token says nothing was checked against GitHub", [PY, "scripts/github_sync.py", "--root", SAMPLE],
+         contains=["not checked against GitHub (no token)", f"python3 {ROOT / 'scripts' / 'github_token.py'}"], absent=["Already on GitHub: the rest"])
+    step("board dry run without a token says nothing was checked against GitHub", [PY, "scripts/github_project.py", "--root", SAMPLE],
+         contains=["not checked against GitHub (no token)"])
+    step("apply without a token names the token script by its full path", [PY, "scripts/github_sync.py", "--root", SAMPLE, "--apply"],
+         expect=1, contains=[f"No GitHub token found. Run: python3 {ROOT / 'scripts' / 'github_token.py'}"])
+    step("text that is not a token is refused before anything is sent", [PY, "scripts/github_token.py", "--stdin", "--token-file", str(Path(HOME) / "t")],
+         stdin="password-not-a-token-1234\n", expect=2, contains=["that is not a GitHub personal access token (it starts with ghp_ or github_pat_). Nothing was sent."])
+    mock = [
+        ("retry502", "mock: a 502 after a create makes no duplicate"),
+        ("partial", "mock: a rerun after a crash repairs the links"),
+        ("unlinked", "mock: --verify fails on an unlinked id"),
+        ("sso", "mock: single sign-on gives a one-line message with the fix"),
+        ("timeout", "mock: a timeout gives a one-line message"),
+        ("public", "mock: --apply to a public repository needs --allow-public"),
+        ("ownership", "mock: only labelled issues and own comments count"),
+        ("project", "mock: renamed issues are found by their marker"),
+        ("tokenfile", "mock: the token file is kept and checked before sending"),
+    ]
+    for scenario, name in mock:
+        step(name, [PY, "tests/mock/scenarios.py", scenario], contains=[f"{scenario}: all checks passed"])
     failed = [n for ok, n in results if not ok]
     print(f"\n{len(results) - len(failed)} of {len(results)} steps passed")
     return 1 if failed else 0
