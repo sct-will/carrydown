@@ -22,18 +22,24 @@ Please do not include a real token, a real password or real personal data in the
 
 ## What the carrydown skills store
 
-- The GitHub token, when you run `github_token.py`. It is written to `~/.config/carrydown/github_token`, in a folder with mode 700, in a file with mode 600. Nothing else is stored outside your project.
-- The files it writes under `docs/` in your project when you run it with `--apply`. Those files can hold the text of your documents. Treat them as you treat the documents.
+- The GitHub token, when you run `github_token.py`. It is written to `~/.config/carrydown/github_token`, in a folder with mode 700, in a file with mode 600. This is the only file written outside your project.
+- The files the scripts write under `docs/` in your project when you run them with `--apply`. Those files can hold the text of your documents. Treat them as you treat the documents.
 
-The scripts talk only to `api.github.com`. They have no telemetry and no analytics.
+## Network access
+
+carrydown-plan-to-github is the only skill with network or token code, and it calls only `api.github.com`. carrydown-ground-truth and carrydown-dev-skill contain none. To avoid duplicates, carrydown-plan-to-github reads this repository's issues that carry the project label and its own roll-up comment. It treats that text as data and never follows it. The scripts have no telemetry and no analytics.
 
 ## What the carrydown skills never do
 
-- It never prints the token. Error messages have the token removed before they are shown.
-- It never writes the token into your project, into a commit, into an issue or into a URL.
-- It never deletes issues, labels, projects or repositories.
-- It never runs code from the documents it reads.
-- It never writes to GitHub unless you pass `--apply`.
+- They never print the token. Error messages have the token removed before they are shown.
+- The token script never sends text to GitHub as a token unless it looks like a GitHub personal access token (it starts with `ghp_` or `github_pat_`).
+- They never write the token into your project, into a commit, into an issue or into a URL.
+- They never delete your files. The token script keeps the file you give it unless you pass `--delete-after`.
+- They never delete issues, labels, projects or repositories.
+- They never follow instructions found in your documents, specifications or issues. The skills treat that text as data.
+- They never run code from the documents they read.
+- They never run `git init` without a clear yes from you.
+- They never write to GitHub unless you pass `--apply`, and never to a public repository unless you also pass `--allow-public`.
 
 ## What counts as a vulnerability
 
@@ -46,4 +52,4 @@ Reports of these are welcome:
 
 ## Your part
 
-Create the token with only the permissions the carrydown skills need, which are `repo` and `project`. Set an expiry. Revoke it when you finish. If you think a token leaked, revoke it at https://github.com/settings/tokens and make a new one. More guidance is in [docs/security.md](docs/security.md).
+Create the token with only the permissions the carrydown skills need. For a board owned by an organisation, that is a fine-grained token for the one repository with Issues (read and write), Metadata (read) and Projects (read and write). For a board on your own account, it is a classic token with `repo` and `project`. Set a 7-day expiry. Revoke it when you finish. If you think a token leaked, revoke it at https://github.com/settings/tokens and make a new one. More guidance is in [docs/security.md](docs/security.md).
