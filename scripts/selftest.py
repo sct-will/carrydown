@@ -33,7 +33,7 @@ SAMPLE = "sample/expense-approvals"
 results = []
 
 
-def step(name, cmd, cwd=ROOT, expect=0, contains=(), absent=("Traceback",), env=None, files=None):
+def step(name, cmd, cwd=ROOT, expect=0, contains=(), absent=("Traceback",), env=None, files=None, order=()):
     """Run cmd and check the exit status, text that must appear, text that must not appear, and,
     with files, {path: [text, ...]} that must appear in files the command wrote."""
     run_env = dict(ENV, **(env or {}))
@@ -41,6 +41,9 @@ def step(name, cmd, cwd=ROOT, expect=0, contains=(), absent=("Traceback",), env=
     out = (p.stdout or "") + (p.stderr or "")
     missing = [c for c in contains if c not in out]
     present = [c for c in absent if c in out]
+    at = [out.find(o) for o in order]
+    if order and (-1 in at or at != sorted(at)):
+        missing.append("in this order: " + " < ".join(order))
     for path, wants in (files or {}).items():
         body = Path(path).read_text(encoding="utf-8") if Path(path).exists() else ""
         missing += [f"{Path(path).name}: {w}" for w in wants if w not in body]
@@ -93,6 +96,57 @@ def citations(tmp):
     step("an unnumbered ground truth is reported, not passed", chk, expect=1, contains=["ground truth citations not checked: the rendered document has no numbered headings"])
     gt.unlink()
     step("a missing ground truth is reported, not passed", chk, expect=1, contains=["ground truth citations not checked: the rendered document docs/ground-truth/architecture.md was not found"])
+
+
+def error_paths(tmp, plan_text):
+    """Common mistakes give one line each and never a traceback (every step checks for "Traceback")."""
+    d = tmp / "errors"
+    d.mkdir()
+
+    def variant(name, text, bom=False):
+        path = d / f"{name}.yaml"
+        path.write_bytes((b"\xef\xbb\xbf" if bom else b"") + text.encode("utf-8"))
+        return str(path)
+    chk = [PY, "scripts/check_specs.py", "--root", SAMPLE]
+    bad = {
+        "unknown milestone": (plan_text.replace("    milestone: 5\n", "    milestone: 7\n"), "item 11: unknown milestone 7"),
+        "non-ISO date": (plan_text.replace("complete_by: 2027-02-24", "complete_by: 24 Feb 2027"), "complete_by is not a date: '24 Feb 2027'"),
+        "short date": (plan_text.replace("complete_by: 2027-02-24", "complete_by: 2027-2-24"), "complete_by is not a date: '2027-2-24'"),
+        "impossible date": (plan_text.replace("complete_by: 2027-02-24", "complete_by: 2027-02-30"), "complete_by is not a date: '2027-02-30'"),
+        "allocation 60%": (plan_text.replace("allocation: 60", 'allocation: "60%"'), "idris allocation must be a whole percent from 1 to 100, got '60%'"),
+        "allocation full": (plan_text.replace("allocation: 60", "allocation: full"), "idris allocation must be a whole percent from 1 to 100, got 'full'"),
+        "weekend start": (plan_text.replace("    start: 2027-02-01\n    days_off: [2027-02-22]", "    start: 2027-01-31\n    days_off: [2027-02-22]"), "tamsin start 2027-01-31 is a weekend"),
+        "weekend day off": (plan_text.replace("days_off: [2027-03-08]", "days_off: [2027-03-06]"), "idris day off 2027-03-06 is a weekend"),
+        "quote inside a quoted value": (plan_text.replace('name: "Expense approvals"', 'name: "Expense "approvals""'), "bad double-quoted value"),
+    }
+    for label, (text, want) in bad.items():
+        v = variant(label.replace(" ", "-").replace("%", "pct"), text)
+        unreadable = label.startswith("quote")
+        step(f"plan with {label}: one line, no traceback", chk + ["--plan", v], expect=1, contains=[want])
+        step(f"plan with {label}: --report says so first", chk + ["--plan", v, "--report"], expect=1,
+             contains=[want] if unreadable else ["plan.yaml has problems:", want])
+    step("plan with a byte order mark is read", chk + ["--plan", variant("bom", plan_text, bom=True)], contains=["0 with findings"])
+    named = plan_text.replace('name: "Expense approvals"', 'name: "Expense approvals \u2264 \u2192 \u4e2d"')
+    step("a console that cannot show a character does not crash (cp1252)", chk + ["--plan", variant("enc", named), "--report"],
+         env={"PYTHONIOENCODING": "cp1252"}, contains=["Plan: Expense approvals"], absent=("Traceback", "UnicodeEncodeError"))
+    # --init with a quoted name, in a folder outside git
+    proj = d / "fresh"
+    proj.mkdir()
+    in_git = any((x / ".git").exists() for x in [proj.resolve(), *proj.resolve().parents])
+    scaffold = [PY, "scripts/scaffold_spec.py", "--root", str(proj)]
+    if not in_git:
+        step("dry run outside git refuses like --apply", scaffold + ["--init", "--name", "X"], expect=2, contains=["not inside a git repository, so nothing would be written"])
+    step("--init quotes the name and lists the placeholders", scaffold + ["--init", "--name", 'Acme "Pay": phase 2 #core', "--apply", "--allow-no-git"],
+         contains=["Placeholders still to fill in plan.yaml:", "project.repo is still your-org/your-repo", "project.dev_skill is acme-pay-phase-2-core-dev"],
+         files={proj / "docs/spec/plan.yaml": ['name: "Acme \\"Pay\\": phase 2 #core"', "slug: acme-pay-phase-2-core", "dev_skill_path: docs/dev/skills/acme-pay-phase-2-core-dev"]})
+    step("the plan written by --init reads back", [PY, "scripts/check_specs.py", "--root", str(proj), "--report"], contains=['Plan: Acme "Pay": phase 2 #core'])
+    step("the dry run counts the stubs --stubs would add", scaffold + ["--allow-no-git"], contains=["1 specification stub(s) do not exist yet. Add --stubs to include them."])
+    step("scaffold writes stubs", scaffold + ["--allow-no-git", "--apply", "--stubs"], contains=["file(s) written"])
+    plan_path = proj / "docs/spec/plan.yaml"
+    plan_path.write_text(plan_path.read_text(encoding="utf-8").replace("complete_by: 2027-01-08", "complete_by: 2027-01-09"), encoding="utf-8")
+    step("plan findings come before unfinished stubs, one line per stub", [PY, "scripts/check_specs.py", "--root", str(proj)], expect=1,
+         contains=["file(s) still hold template text (TODO)", "other finding(s) that usually go when the template text is replaced"],
+         order=["plan.yaml:", "complete_by 2027-01-09 is a weekend", "unfinished template text (TODO)"])
 
 
 def main():
@@ -167,6 +221,7 @@ def main():
                 step(f"installed copy of {skill} runs {script}", [PY, str(dst / "scripts" / script), "--root", str(ROOT / SAMPLE)])
         fixtures(Path(tmp))
         citations(Path(tmp))
+        error_paths(Path(tmp), plan_text)
     failed = [n for ok, n in results if not ok]
     print(f"\n{len(results) - len(failed)} of {len(results)} steps passed")
     return 1 if failed else 0

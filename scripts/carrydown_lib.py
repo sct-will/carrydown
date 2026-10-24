@@ -29,6 +29,19 @@ from pathlib import Path
 # a colon followed by a space in quotes.
 
 
+def safe_console():
+    """Never crash on a character the console cannot show. A Windows console or a pipe read by an
+    agent may use a code page such as cp1252; such characters are printed as escapes instead."""
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(errors="backslashreplace")
+        except (AttributeError, ValueError, OSError):
+            pass
+
+
+safe_console()
+
+
 class YamlError(ValueError):
     pass
 
@@ -85,7 +98,11 @@ def _scalar(s):
     if s[0] == '"':
         if len(s) < 2 or s[-1] != '"':
             raise YamlError(f"unterminated string: {s}")
-        return json.loads(s) if "\\u" not in s else bytes(s[1:-1], "utf-8").decode("unicode_escape")
+        try:
+            return json.loads(s)
+        except ValueError as e:
+            raise YamlError(f"bad double-quoted value {s}: {getattr(e, 'msg', e)}. "
+                            "Inside double quotes write \\\" for a quote, or use single quotes")
     if s[0] == "'":
         if len(s) < 2 or s[-1] != "'":
             raise YamlError(f"unterminated string: {s}")
@@ -325,8 +342,37 @@ def loads(text):
     return v
 
 
+def read_text(path):
+    """Read a text file as UTF-8, with or without a byte order mark (Notepad and PowerShell write one)."""
+    return Path(path).read_text(encoding="utf-8-sig")
+
+
 def load_file(path):
-    return loads(Path(path).read_text(encoding="utf-8"))
+    return loads(read_text(path))
+
+
+# ---------------------------------------------------------------------------
+# Paths and names
+# ---------------------------------------------------------------------------
+
+def inside(root, path, what="output"):
+    """Return path, resolved, when it lies inside root. Otherwise stop with a message.
+
+    Every write target that comes from plan.yaml or the command line goes through this, so a
+    value such as "../../somewhere" can never make a script write outside the project folder."""
+    base = Path(root).resolve()
+    target = Path(path)
+    target = (target if target.is_absolute() else base / target).resolve()
+    if target != base and base not in target.parents:
+        die(f"the {what} path {path} is outside the project folder {base}, so nothing was written")
+    return target
+
+
+def slugify(text):
+    """Lowercase words joined by hyphens, ASCII only: "Acme Pay, phase 2" becomes "acme-pay-phase-2"."""
+    import unicodedata
+    t = unicodedata.normalize("NFKD", str(text)).encode("ascii", "ignore").decode("ascii").lower()
+    return re.sub(r"[^a-z0-9]+", "-", t).strip("-")
 
 
 # ---------------------------------------------------------------------------
@@ -401,7 +447,7 @@ def load_plan(path):
     path = Path(path)
     try:
         raw = load_file(path)
-    except (OSError, YamlError) as e:
+    except (OSError, ValueError) as e:   # YamlError, UnicodeDecodeError and JSON errors are ValueErrors
         raise SystemExit(f"cannot read plan {path}: {e}")
     if not isinstance(raw, dict):
         raise SystemExit(f"plan {path} must be a mapping at the top level")
@@ -479,6 +525,10 @@ def _is_date(s):
         return False
 
 
+def _is_weekend(s):
+    return parse_date(s).weekday() >= 5
+
+
 def validate_plan(plan):
     P = []
     proj = plan["project"]
@@ -496,9 +546,18 @@ def validate_plan(plan):
             P.append(f"people: each person needs id and name ({p})")
         if p.get("track") not in tracks:
             P.append(f"people: {p.get('id')} has unknown track {p.get('track')!r}")
-        for d in p.get("days_off") or []:
+        if p.get("start") is not None:
+            if not _is_date(p["start"]):
+                P.append(f"people: {p.get('id')} start is not a date (use YYYY-MM-DD): {p['start']!r}")
+            elif _is_weekend(p["start"]):
+                P.append(f"people: {p.get('id')} start {p['start']} is a weekend")
+        if p.get("days_off") is not None and not isinstance(p.get("days_off"), list):
+            P.append(f"people: {p.get('id')} days_off must be a list of dates, such as [2027-02-22]")
+        for d in (p.get("days_off") if isinstance(p.get("days_off"), list) else []):
             if not _is_date(d):
                 P.append(f"people: {p.get('id')} days_off has a bad date {d!r}")
+            elif _is_weekend(d):
+                P.append(f"people: {p.get('id')} day off {d} is a weekend")
     for t in plan["tracks"]:
         if not t.get("id") or not t.get("label"):
             P.append(f"tracks: each track needs id and label ({t})")
@@ -544,6 +603,9 @@ def validate_plan(plan):
                 dm = parse_date(m["demo"])
                 if dm < s or dm > e:
                     P.append(f"milestone {n}: demo {m['demo']} is outside {m['start']} to {m['end']}")
+            for k in ("start", "end", "demo"):
+                if m.get(k) and _is_date(m[k]) and _is_weekend(m[k]):
+                    P.append(f"milestone {n}: {k} {m[k]} is a weekend")
         else:
             for k in ("start", "end", "demo"):
                 if m.get(k) and not _is_date(m[k]):
@@ -566,6 +628,8 @@ def validate_plan(plan):
             P.append(f"checkpoints: need date and name ({c})")
         else:
             cps[c["date"]] = c
+            if _is_weekend(c["date"]):
+                P.append(f"checkpoint {c['date']} is a weekend")
     prog_ids = set()
     for pi in plan["program"]["items"]:
         if not isinstance(pi.get("id"), int) or not pi.get("label"):
@@ -655,7 +719,7 @@ def validate_plan(plan):
 # ---------------------------------------------------------------------------
 
 def read_spec(path):
-    text = Path(path).read_text(encoding="utf-8")
+    text = read_text(path)
     lines = text.split("\n")
     rows = {}
     order = []
@@ -920,7 +984,7 @@ def templates_dir():
 
 
 def read_template(*parts):
-    return (templates_dir().joinpath(*parts)).read_text(encoding="utf-8")
+    return read_text(templates_dir().joinpath(*parts))
 
 
 def fill(template, values):

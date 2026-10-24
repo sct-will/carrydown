@@ -22,6 +22,7 @@ Usage
   python3 scripts/scaffold_spec.py --root . --apply --refresh-headers    sync headers with the plan
 """
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -192,6 +193,55 @@ def replace_section_table(text, heading, new_table):
     return head + "\n".join(lines[:start] + new_table.split("\n") + lines[end:])
 
 
+PLACEHOLDERS = (
+    ("project.name", '"Your project name"', "the project name, or pass --name"),
+    ("project.slug", "your-project", "lowercase words joined by hyphens, derived from --name"),
+    ("project.repo", "your-org/your-repo", "the GitHub repository for issues, as owner/name"),
+    ("project.dev_skill", "your-project-dev", "the name of the generated developer skill"),
+)
+
+
+def init_plan(root, a, git_top):
+    """Write a starter plan.yaml from the template, with the project name filled in."""
+    target = L.find_plan(root, a.plan) if a.plan else root / "docs/spec/plan.yaml"
+    target = L.inside(root, target, "plan.yaml")
+    text = L.read_template("plan.yaml")
+    if a.name:
+        slug = L.slugify(a.name) or "your-project"
+        q = lambda v: json.dumps(v, ensure_ascii=False)   # a JSON string is a valid YAML double-quoted value
+        text = text.replace('name: "Your project name"', f"name: {q(a.name)}", 1)
+        text = text.replace('project_title: "Your project plan"', f"project_title: {q(a.name + ' plan')}", 1)
+        text = text.replace('epic_title: "Your project, development plan"', f"epic_title: {q(a.name + ', development plan')}", 1)
+        text = text.replace("your-project-dev", f"{slug}-dev")
+        text = re.sub(r"(?m)^(  slug: )your-project\b", lambda m: m.group(1) + slug, text)
+    if target.exists() and not a.force:
+        print(f"plan.yaml already exists at {target}. Use --force to replace it.")
+        return 1
+    rel = target.relative_to(root)
+    if (git_top is not None and git_top != root) or root.name == "docs":
+        where = f"the top folder of its git repository is {git_top}" if git_top else "it is named docs"
+        print(f"warning: this writes {rel} under {root}, but {where}. If {root} is not the project folder "
+              f"(a docs folder would end up with docs/docs/spec), run from the project folder or pass --root.", file=sys.stderr)
+    print(f"{'writing' if a.apply else 'would write'} {rel}")
+    if a.apply:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding="utf-8")
+    todo = []
+    for key, value, what in PLACEHOLDERS:
+        if re.search(rf"(?m)^  {key.split('.')[1]}: {re.escape(value)}(\s|$)", text):
+            todo.append(f"  {key} is still {value}: {what}")
+    if a.name:
+        dev = re.search(r"(?m)^  dev_skill: (\S+)", text).group(1)
+        todo.append(f"  project.dev_skill is {dev}, derived from the name. Change it, and dev_skill_path with it, if the developer skill needs another name")
+    print("Placeholders still to fill in plan.yaml:")
+    for t in todo:
+        print(t)
+    print("The people, milestones, checkpoints and items in the file are examples to replace.")
+    if a.apply:
+        print("Fill in plan.yaml, then run this script again without --init.")
+    return 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Scaffold the specification folder from plan.yaml. Dry run unless --apply is given.",
@@ -210,30 +260,15 @@ def main(argv=None):
     a = ap.parse_args(argv)
     root = Path(a.root).resolve()
     actions = []
-    if a.apply and not a.allow_no_git and not any((d / ".git").exists() for d in [root, *root.parents]):
-        print(f"error: {root} is not inside a git repository, so nothing was written.\n"
+    # the same check for a dry run as for --apply, so a dry run never promises what --apply refuses
+    git_top = next((d for d in [root, *root.parents] if (d / ".git").exists()), None)
+    if git_top is None and not a.allow_no_git:
+        print(f"error: {root} is not inside a git repository, so nothing {'was' if a.apply else 'would be'} written.\n"
               "The plan, the specifications and every later change belong in git, so that each change is reviewed and can be undone.\n"
               "Run `git init` in the project folder (or ask your agent to), then run this command again.", file=sys.stderr)
         return 2
-
     if a.init:
-        target = L.find_plan(root, a.plan)
-        if not a.plan:
-            target = root / "docs/spec/plan.yaml"
-        text = L.read_template("plan.yaml")
-        if a.name:
-            text = text.replace('name: "Your project name"', f'name: "{a.name}"')
-            text = text.replace('project_title: "Your project plan"', f'project_title: "{a.name} plan"')
-            text = text.replace('epic_title: "Your project, development plan"', f'epic_title: "{a.name}, development plan"')
-        if target.exists() and not a.force:
-            print(f"plan.yaml already exists at {target}. Use --force to replace it.")
-            return 1
-        print(f"{'writing' if a.apply else 'would write'} {target.relative_to(root)}")
-        if a.apply:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(text, encoding="utf-8")
-            print("Fill in plan.yaml, then run this script again without --init.")
-        return 0
+        return init_plan(root, a, git_top)
 
     plan_path = L.find_plan(root, a.plan)
     if not plan_path.exists():
@@ -276,7 +311,7 @@ def main(argv=None):
         for it in plan["items"]:
             p = L.spec_path(plan, root, it)
             if p.exists():
-                old = p.read_text(encoding="utf-8")
+                old = L.read_text(p)
                 new = replace_first_table(old, L.header_markdown(plan, it))
                 if new != old:
                     actions.append(("refresh header", p, "spec"))
@@ -285,7 +320,7 @@ def main(argv=None):
         for ms in plan["milestones"]:
             p = L.milestone_path(plan, root, ms)
             if p.exists():
-                old = p.read_text(encoding="utf-8")
+                old = L.read_text(p)
                 its = ", ".join(L.tag(plan, it["id"]) for it in plan["items"] if it["milestone"] == ms["number"])
                 table = "\n".join([
                     "| | |", "| --- | --- |", f"| Due | {ms['end']} |", f"| Exit gate | {ms['gate']} |", f"| Work items | {its} |",
@@ -299,6 +334,9 @@ def main(argv=None):
     verb = "" if a.apply else "would "
     for what, path, kind in actions:
         print(f"{verb}{what}: {path.relative_to(root)}  [{kind}]")
+    missing = [it for it in plan["items"] if not L.spec_path(plan, root, it).exists()]
+    if missing and not a.stubs:
+        print(f"{len(missing)} specification stub(s) do not exist yet. Add --stubs to {'write' if a.apply else 'include'} them.")
     created = sum(1 for w, _, _ in actions if w in ("create", "overwrite"))
     print(f"{len(actions)} action(s), {created} file(s) {'written' if a.apply else 'would be written'}." + ("" if a.apply else " Dry run. Add --apply to write."))
     return 0

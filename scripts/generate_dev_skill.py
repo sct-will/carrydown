@@ -111,7 +111,7 @@ def ground_truth_map_md(plan, root):
            "Regenerating the rendering may move line numbers. Run `generate_dev_skill.py` again then.", ""]
     if gt.exists():
         import render_ground_truth as R
-        lines = gt.read_text(encoding="utf-8").split("\n")
+        lines = L.read_text(gt).split("\n")
         heads = R.collect_headings(lines)
         anchors = R.anchors_for(heads)
         out += ["## By heading", ""]
