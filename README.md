@@ -4,12 +4,7 @@
 
 Turn your architecture document into a plan your team and its AI coding agents can follow: dated milestones, one spec per task tied to the paragraph it came from, GitHub issues, a filled project board, and a skill that makes each developer's agent read the spec first.
 
-<!-- Static badges, because the dynamic ones show "repo not found" while the repository is private.
-On publish day switch back to these dynamic badges:
-https://img.shields.io/github/license/sct-will/carrydown
-https://img.shields.io/github/last-commit/sct-will/carrydown
-https://img.shields.io/github/issues/sct-will/carrydown -->
-[![Licence: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE) [![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-blue)](LICENSE-CONTENT.md) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-3%20skills-teal)](https://agentskills.io) [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](#requirements-and-access) [![Open in Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sct-will/carrydown)
+[![Licence](https://img.shields.io/github/license/sct-will/carrydown)](LICENSE) [![Last commit](https://img.shields.io/github/last-commit/sct-will/carrydown)](https://github.com/sct-will/carrydown/commits/main) [![Issues](https://img.shields.io/github/issues/sct-will/carrydown)](https://github.com/sct-will/carrydown/issues) [![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![Content: CC BY 4.0](https://img.shields.io/badge/content-CC%20BY%204.0-blue)](LICENSE-CONTENT.md) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-3%20skills-teal)](https://agentskills.io) [![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)](#requirements-and-access) [![Open in Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/sct-will/carrydown)
 
 ## See it in 60 seconds
 
@@ -224,7 +219,6 @@ More answers, including "npx: command not found", are in [docs/faq.md](docs/faq.
 
 ## Contributing
 
-Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) explains how to report a problem, propose a change, run the checks (`python3 scripts/selftest.py` and `python3 scripts/lint_prose.py`) and get a review. Issue forms and a pull request template guide you. The two workflow files that run those checks are in [docs/workflows/](docs/workflows/README.md) until they are moved to `.github/workflows/`.
 
 ## Code of conduct
 
