@@ -22,7 +22,7 @@ Each work item gets a size, written as a word and a number of days, for example 
 
 In `plan.yaml` the inputs appear as the documents under `project.ground_truth`, the optional `people` list with `allocation` (a whole number from 1 to 100, 100 if omitted), and the optional `target` block with `date` or `weeks`, next to the `breaks` list.
 
-Two more things come out of the planning conversation rather than out of your head beforehand, but it helps to think about them. Themes: the parts of the system each track touches, in a few words each, such as "web client" or "export job". Each item gets one, so the plan can keep a person on one part at a time. Rationale: why each milestone holds its items, what the engineers show together at its demonstration, and why each track's items are in their order. The agent drafts these with you and writes them into `plan.yaml` as `theme`, `rationale`, `joint_demonstration` and `order_rationale`. The checker fails a plan without the rationale.
+Two more things come out of the planning conversation, and it helps to think about them. Themes: the parts of the system each track touches, in a few words each, such as "web client" or "export job". Each item gets one, so the plan can keep a person on one part at a time. Rationale: why each milestone holds its items, what the engineers show together at its demonstration, and why each track's items are in their order. The agent drafts these with you and writes them into `plan.yaml` as `theme`, `rationale`, `joint_demonstration` and `order_rationale`. The checker fails a plan without the rationale.
 
 The sections below list these and the smaller inputs the interview also asks for.
 

@@ -777,7 +777,7 @@ The API cannot set these. Click them once in the project (see docs/faq.md):
 
 ## 8. Independent check of the counts
 
-The scripts verify their own work. This separate script reads the GitHub API directly and counts, so the numbers do not depend on the scripts that wrote them.
+The scripts verify their own work. This separate script reads the GitHub application programming interface (API) directly and counts, so the numbers do not depend on the scripts that wrote them.
 
 ```text
 $ # independent check: a separate script reads the GitHub API directly and counts

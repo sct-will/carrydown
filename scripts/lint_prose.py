@@ -6,7 +6,8 @@ Rules
   2. No credit lines for tools, and no co-author trailers.
   3. No AI vendor or model names, except in the files that hold the install
      instructions (the agent list). The patterns are written with character
-     classes so that this file does not spell the names it bans.
+     classes so that this file does not spell the names it bans. The full name of
+     the compared project CCPM is allowed where its acronym is expanded.
   4. No names of the design system this repository was modelled on, and no company name outside
      the agent lists.
   5. One retired word, which is written with a character class in the pattern below.
@@ -36,7 +37,7 @@ ALWAYS = [
     (re.compile(r"(?i)\bk[i]t\b"), "retired word. Say the carrydown skills, the two skills or the repository"),
 ]
 VENDORS = re.compile(
-    r"(?i)cl[a]ude|anthrop[i]c|open[a]i|chat[g]pt|\bg[p]t-?\d|gem[i]ni|\bc[o]pilot\b|\bc[o]dex\b|\bcurs[o]r\b|mistr[a]l|\bl[l]ama\b|deeps[e]ek|\bI[B]M\b"
+    r"(?i)cl[a]ude(?!\s+c[o]de\s+pr[o]ject\s+m[a]nagement\b)|anthrop[i]c|open[a]i|chat[g]pt|\bg[p]t-?\d|gem[i]ni|\bc[o]pilot\b|\bc[o]dex\b|\bcurs[o]r\b|mistr[a]l|\bl[l]ama\b|deeps[e]ek|\bI[B]M\b"
 )
 # Files that hold the install instructions and so may name the agents.
 VENDOR_OK = [

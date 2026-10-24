@@ -8,7 +8,7 @@ The long form for the plan owner: the engineering manager or product manager who
 
 | Role | What they do | Which skill |
 | --- | --- | --- |
-| Plan owner | The engineering manager or product manager who owns the plan. Brings the ground truth and the constraints, answers the interview, reviews the generated plan and specifications with the agent, says yes before anything is written to GitHub, and gives the engineers the generated skill. | `carrydown-ground-truth`, then `carrydown-plan-to-github` |
+| Plan owner | The engineering manager or product manager who owns the plan. Brings the ground truth and the constraints, answers the interview, reviews the generated plan and specifications with the agent, says yes before anything is written to GitHub, and gives the engineers the generated skill. | [carrydown-ground-truth](../skills/carrydown-ground-truth/), then [carrydown-plan-to-github](../skills/carrydown-plan-to-github/) |
 | Engineers | The people building the work items, each with their own coding agent. They install the generated skill once, start an item by naming it, post evidence when it closes, and give the demonstrations. | The skill that `carrydown-plan-to-github` generates for the project |
 
 Two skills you install, one skill is generated for your engineers. The demonstrations are watched by the stakeholders, the people accountable for the outcome, who decide pass or fail against criteria written before the work. They run nothing.
@@ -126,7 +126,7 @@ To change the plan later, change `plan.yaml` with your agent and run the checker
 
 ## If something goes wrong
 
-- A script fails. Ask the agent to show the message and explain it. Nothing is written until you said yes, and no script deletes anything.
+- A script fails. Ask the agent to show the message and explain it. Nothing is written until you say yes, and no script deletes anything unless you pass `--delete-after` to the token script.
 - `npx: command not found`. Node.js is missing. See [faq.md](faq.md).
 - A GitHub step is refused. The usual cause is single sign-on or a missing organisation permission. The token check names the fix.
 - The agent does not pick up a skill. Put the skill name in front of the sentence, as the [FAQ](faq.md#how-do-i-start-each-skill) shows.

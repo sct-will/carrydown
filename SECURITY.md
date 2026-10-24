@@ -16,7 +16,7 @@ Do not open a public issue for a vulnerability. Use GitHub private vulnerability
 2. Choose "Report a vulnerability".
 3. Describe what you found, the steps to reproduce it, the version, and what an attacker could do.
 
-You can go straight to https://github.com/sct-will/carrydown/security/advisories/new.
+You can go straight to [the private report form](https://github.com/sct-will/carrydown/security/advisories/new).
 
 Please do not include a real token, a real password or real personal data in the report. A redacted example is enough. The maintainer aims to acknowledge a report within seven days and to say what happens next within fourteen days. This is a one-person project, so those are targets and not promises.
 
@@ -52,4 +52,4 @@ Reports of these are welcome:
 
 ## Your part
 
-Create the token with only the permissions the carrydown skills need. For a board owned by an organisation, that is a fine-grained token for the one repository with Issues (read and write), Metadata (read) and Projects (read and write). For a board on your own account, it is a classic token with `repo` and `project`. Set a 7-day expiry. Revoke it when you finish. If you think a token leaked, revoke it at https://github.com/settings/tokens and make a new one. More guidance is in [docs/security.md](docs/security.md).
+Create the token with only the permissions the carrydown skills need. For a board owned by an organisation, that is a fine-grained token for the one repository with Issues (read and write), Metadata (read) and Projects (read and write). For a board on your own account, it is a classic token with `repo` and `project`. Set a 7-day expiry. Revoke it when you finish. If you think a token leaked, revoke it in [your GitHub token settings](https://github.com/settings/tokens) and make a new one. More guidance is in [docs/security.md](docs/security.md).
