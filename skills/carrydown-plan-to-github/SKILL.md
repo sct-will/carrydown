@@ -18,7 +18,7 @@ In this skill, the user is the plan owner.
 
 ## What this skill does
 
-It reads `docs/spec/plan.yaml` and the specification folder and builds on GitHub: labels, one sub-epic per milestone, one issue per work item as a sub-issue of its sub-epic, dependency links, an Epic roll-up comment, and a GitHub Project (v2) board with its fields and views. `references/github-structure.md` describes each part. Issues are matched by exact title, so a rerun creates nothing twice.
+It reads `docs/spec/plan.yaml` and the specification folder and builds on GitHub: labels, one sub-epic per milestone, one issue per work item as a sub-issue of its sub-epic, dependency links, an Epic roll-up comment, and a GitHub Project (v2) board with its fields and views. `references/github-structure.md` describes each part. Issues are matched by a hidden marker in the body, and by title for issues made before the marker existed, so a rerun creates nothing twice.
 
 ## Rules that never bend
 

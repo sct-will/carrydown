@@ -33,6 +33,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
+import github_client as G  # noqa: E402
 import github_sync as S  # noqa: E402
 
 CLICK = [
@@ -142,6 +143,13 @@ def load_items(gh, pid):
 
 
 def run(argv=None):
+    try:
+        return _run(argv)
+    except G.GitHubError as e:
+        return G.report(e)
+
+
+def _run(argv=None):
     ap = argparse.ArgumentParser(
         description="Create or configure a GitHub Project (v2) from plan.yaml and fill it with the plan's issues. Dry run unless --apply.",
         epilog="The token needs the project scope (classic) or Projects read and write (fine-grained), plus repo access. It is never printed.",
@@ -188,11 +196,11 @@ def run(argv=None):
     if a.offline:
         L.say("offline: nothing read from GitHub")
         return 0
-    token = L.read_token(a.token_file, required=a.apply or a.verify)
+    token = G.read_token(a.token_file, required=a.apply or a.verify)
     if not token:
-        L.say("no token available: showing the intended configuration only. Run scripts/github_token.py to set one up.")
+        L.say(f"not checked against GitHub (no token): showing the intended configuration only. To set one up, run: python3 {G.TOKEN_SCRIPT}")
         return 0
-    gh = L.GitHub(token, pause=0.3)
+    gh = G.GitHub(token, pause=0.3)
     st, ujs = gh.rest_status("GET", f"/users/{owner}")
     if st == 404:
         L.die(f"owner {owner} not found")
@@ -204,25 +212,27 @@ def run(argv=None):
     repo_node = rjs["node_id"]
     base = f"/repos/{owner_repo}/{name}"
 
-    # issues to place
+    # issues to place: only issues with the project label, matched by marker, then by title.
+    # Titles printed below are the plan's, never the ones fetched from GitHub.
     sync = S.Sync(plan, root, gh, owner_repo, name, False)
-    issues = sync.load_issues()
-    placements = []   # (issue, kind, milestone, item)
+    placements = []   # (issue, kind, milestone, item, plan title)
     epic = plan["project"].get("epic")
     epic_issue = None
     if epic:
         epic_issue = gh.rest("GET", f"{base}/issues/{epic}")
-    elif plan["project"]["epic_title"] in issues:
-        epic_issue = issues[plan["project"]["epic_title"]]
+    else:
+        epic_issue = sync.find("EPIC", plan["project"]["epic_title"])
     if epic_issue:
-        placements.append((epic_issue, "epic", None, None))
+        placements.append((epic_issue, "epic", None, None, plan["project"]["epic_title"]))
     missing = []
     for ms in plan["milestones"]:
         t = S.subepic_title(plan, ms)
-        (placements.append((issues[t], "subepic", ms, None)) if t in issues else missing.append(t))
+        iss = sync.find(f"M{ms['number']}", t)
+        (placements.append((iss, "subepic", ms, None, t)) if iss else missing.append(t))
     for it in plan["items"]:
         t = S.item_title(plan, it)
-        (placements.append((issues[t], "item", L.milestone_by_num(plan)[it["milestone"]], it)) if t in issues else missing.append(t))
+        iss = sync.find(L.tag(plan, it["id"]), t)
+        (placements.append((iss, "item", L.milestone_by_num(plan)[it["milestone"]], it, t)) if iss else missing.append(t))
     L.say(f"issues found in the repository: {len(placements)}; missing: {len(missing)}")
     for t in missing:
         L.say(f"  missing issue: {t}  (run github_sync.py --apply first)")
@@ -246,7 +256,7 @@ def run(argv=None):
             try:
                 gh.graphql("mutation($p: ID!, $r: ID!) { linkProjectV2ToRepository(input: {projectId: $p, repositoryId: $r}) { repository { id } } }", {"p": proj["id"], "r": repo_node})
                 L.say("  linked the project to the repository")
-            except L.GitHubError as e:
+            except G.GitHubError as e:
                 L.say(f"  could not link to the repository: {e}")
     if not proj:
         L.say("\nDry run complete. Add --apply to create the project, fields, views and items.")
@@ -329,7 +339,7 @@ def run(argv=None):
                 continue   # GitHub rejects visible fields on roadmap views
             try:
                 gh.graphql("mutation($v: ID!, $f: [ID!]) { updateProjectV2View(input: {viewId: $v, configuration: {visibleFieldIds: $f}}) { projectV2View { id } } }", {"v": v["id"], "f": visible})
-            except L.GitHubError as e:
+            except G.GitHubError as e:
                 L.say(f"  could not set visible fields on {vname}: {str(e)[:160]}")
         L.say("  visible fields set on the Table and Board views (the Roadmap view takes its fields from its settings)")
 
@@ -344,16 +354,16 @@ def run(argv=None):
     existing = load_items(gh, proj["id"])
     added = 0
     filled = 0
-    for issue, kind, ms, it in placements:
+    for issue, kind, ms, it, ptitle in placements:
         num = issue["number"]
         if num not in existing:
             if not a.apply:
-                L.say(f"  would add #{num} {issue['title']}")
+                L.say(f"  would add #{num} {ptitle}")
                 continue
             r = gh.graphql("mutation($p: ID!, $c: ID!) { addProjectV2ItemById(input: {projectId: $p, contentId: $c}) { item { id } } }", {"p": proj["id"], "c": issue["node_id"]})
             existing[num] = {"id": r["addProjectV2ItemById"]["item"]["id"], "values": {}}
             added += 1
-            L.say(f"  added #{num} {issue['title']}")
+            L.say(f"  added #{num} {ptitle}")
         if not a.apply or kind == "epic":
             continue
         desired = {}
@@ -387,10 +397,10 @@ def run(argv=None):
         pdata = load_project(gh, proj["id"])
         fields = field_map(pdata)
         existing = load_items(gh, proj["id"])
-        wanted_nums = {i["number"] for i, *_ in placements}
+        wanted_nums = {p[0]["number"] for p in placements}
         L.say(f"  project items that are plan issues: {len(wanted_nums & set(existing))} of {len(wanted_nums)}")
-        n_sub = sum(1 for _, k, _, _ in placements if k == "subepic")
-        n_item = sum(1 for _, k, _, _ in placements if k == "item")
+        n_sub = sum(1 for p in placements if p[1] == "subepic")
+        n_item = sum(1 for p in placements if p[1] == "item")
         expect = {"Work unit": n_sub + n_item, "Track": n_item, "Complete by": n_sub + n_item, "Checkpoint": n_sub + n_item}
         for fname in ("Work unit", "Track", "Complete by", "Checkpoint"):
             if fname not in fields:

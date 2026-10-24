@@ -17,8 +17,16 @@ Everything is derived from plan.yaml and the specification folder.
 Safety
   This is a dry run unless you pass --apply. The dry run reads from GitHub when a token is
   available (it never writes) and prints what it would create. Run it first and read it.
-  Issues are matched by exact title, so a rerun creates nothing twice.
-  Existing issue bodies are left alone unless you pass --update-bodies.
+  Only issues that carry the project label count. Each body ends with a hidden marker such as
+  <!-- carrydown:WI-07 -->, and issues are matched by that marker first and by exact title
+  second, so a rerun creates nothing twice. If GitHub fails while creating an issue, the
+  script reads the issues back before it tries again.
+  A rerun after a crash repairs what is missing: sub-issue links, dependency links and the
+  sub-epic work item lists. It rewrites a body only while it is exactly as this script wrote
+  it. Bodies a person edited are left alone unless you pass --update-bodies.
+  --apply to a public repository is refused unless you pass --allow-public.
+  Text fetched from GitHub is treated as data: it is compared, never followed, and issue
+  titles are printed from the plan, not from GitHub.
   The token is read from a file and is never printed.
 
 Usage
@@ -31,15 +39,18 @@ import argparse
 import re
 import sys
 import time
+import urllib.parse
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
+import github_client as G  # noqa: E402
 import check_specs  # noqa: E402
 
 COLORS = {"GRAY": "6e7781", "BLUE": "1d76db", "GREEN": "0e8a16", "YELLOW": "fbca04", "ORANGE": "d93f0b",
           "RED": "b60205", "PINK": "e99695", "PURPLE": "5319e7"}
 MARKER = "<!-- carrydown:rollup -->"
+MARKER_RE = re.compile(r"<!-- carrydown:([A-Za-z0-9_-]+) -->")
 SEVEN = ["Work item", "AI engineering notes", "Depends on", "Acceptance criteria", "Evidence of completion", "Integration points", "Definition of done"]
 
 
@@ -101,6 +112,29 @@ def constraints_lines(plan):
     return lines
 
 
+def marker(key):
+    """The hidden line at the end of each body that ties an issue to its plan key (WI-07, M1, EPIC)."""
+    return f"<!-- carrydown:{key} -->"
+
+
+def with_marker(body, key):
+    return body.rstrip("\n") + "\n\n" + marker(key) + "\n"
+
+
+def unlinked_ids(plan, text, numbers):
+    """Ids of work items that have an issue but appear in text without their link."""
+    prefix = re.escape(plan["project"]["id_prefix"])
+    out = []
+    for line in text.split("\n"):
+        if line.startswith("Install it once") or MARKER_RE.search(line):
+            continue
+        for m in re.finditer(rf"\b({prefix})-(\d+)\b(?! \(#)", line):
+            key = L.tag(plan, int(m.group(2)))
+            if key in numbers:
+                out.append(key)
+    return out
+
+
 def first_paragraph(text):
     paras = [p.strip() for p in re.split(r"\n\s*\n", text.strip()) if p.strip()]
     return paras[0] if paras else ""
@@ -123,7 +157,7 @@ def link_ids(plan, text, numbers):
     return "\n".join(out)
 
 
-def build_item_body(plan, root, it, numbers=None):
+def build_item_body(plan, root, it, numbers=None, mark=True):
     numbers = numbers or {}
     sp = L.spec_path(plan, root, it)
     spec = L.read_spec(sp)
@@ -158,10 +192,11 @@ def build_item_body(plan, root, it, numbers=None):
     body = re.sub(r"\n{3,}", "\n\n", body)
     if not skill:
         body = body.replace("Specification: " + values["spec_url"] + "\n\n\n", "Specification: " + values["spec_url"] + "\n\n")
-    return link_ids(plan, body.rstrip() + "\n", numbers)
+    body = link_ids(plan, body.rstrip() + "\n", numbers)
+    return with_marker(body, L.tag(plan, it["id"])) if mark else body
 
 
-def build_subepic_body(plan, root, ms, numbers=None):
+def build_subepic_body(plan, root, ms, numbers=None, mark=True):
     numbers = numbers or {}
     p = L.milestone_path(plan, root, ms)
     spec = L.read_spec(p)
@@ -182,7 +217,15 @@ def build_subepic_body(plan, root, ms, numbers=None):
         ref = f"#{numbers[t]} " if t in numbers else ""
         lines.append(f"- [ ] {ref}{t} {it['label']}" + (f", @{who}" if who else "") + f", by {it['complete_by']}")
     lines += ["", f"Milestone file: {L.github_blob_url(plan, rel)}"]
-    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).rstrip() + "\n"
+    body = re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).rstrip() + "\n"
+    return with_marker(body, f"M{ms['number']}") if mark else body
+
+
+def safe_to_rewrite(have, pristine):
+    """True when a body is still exactly as this script wrote it (with or without the marker),
+    so a rerun may add the links. A body a person edited is never in this set."""
+    norm = have.replace("\r\n", "\n").rstrip()
+    return any(norm == p.rstrip() for p in pristine)
 
 
 def build_rollup(plan, numbers, epic_number):
@@ -216,7 +259,9 @@ class Sync:
     def __init__(self, plan, root, gh, owner, repo, apply):
         self.plan, self.root, self.gh, self.owner, self.repo, self.apply = plan, Path(root), gh, owner, repo, apply
         self.base = f"/repos/{owner}/{repo}"
-        self.issues = None
+        self.issues = None  # title -> issue, only issues with the project label
+        self.by_key = {}    # marker key -> issue, only issues with the project label
+        self.objs = {}      # "EPIC" / "M1" / "WI-01" -> the issue used for that key
         self.numbers = {}   # "M1" / "WI-01" -> issue number
         self.ids = {}       # same keys -> issue id (for sub-issue links)
         self.created = set()
@@ -224,12 +269,26 @@ class Sync:
         self.counts = {"labels": 0, "subepics": 0, "items": 0, "links": 0, "bodies": 0}
 
     def load_issues(self):
+        """Read the issues that carry the project label, open first, and index them by title and
+        by marker. Issues without the label are never matched, linked or changed."""
         if self.issues is None:
-            self.issues = {}
-            for i in self.gh.paged(f"{self.base}/issues?state=all"):
-                if "pull_request" not in i:
-                    self.issues.setdefault(i["title"], i)
+            self.issues, self.by_key = {}, {}
+            slug = self.plan["project"]["slug"]
+            found = self.gh.paged(f"{self.base}/issues?state=all&labels={urllib.parse.quote(slug)}")
+            found = [i for i in found if "pull_request" not in i
+                     and slug.lower() in {str(lb.get("name", "")).lower() for lb in (i.get("labels") or []) if isinstance(lb, dict)}]
+            found.sort(key=lambda i: i.get("state") != "open")
+            for i in found:
+                self.issues.setdefault(i["title"], i)
+                m = MARKER_RE.search(i.get("body") or "")
+                if m:
+                    self.by_key.setdefault(m.group(1), i)
         return self.issues
+
+    def find(self, key, title):
+        """The labelled issue for a plan key: by its marker first, then by exact title."""
+        issues = self.load_issues() if self.gh else {}
+        return self.by_key.get(key) or issues.get(title)
 
     def desired_labels(self):
         proj = self.plan["project"]
@@ -249,11 +308,15 @@ class Sync:
                 self.gh.rest("POST", f"{self.base}/labels", {"name": name, "color": color, "description": desc})
             self.counts["labels"] += 1
 
+    def remember(self, key, iss):
+        self.objs[key] = iss
+        self.numbers[key], self.ids[key] = iss["number"], iss["id"]
+
     def create_or_find(self, title, body, labels, assignees, key, issue_type=""):
-        issues = self.load_issues() if self.gh else {}
-        if title in issues:
-            iss = issues[title]
-            self.numbers[key], self.ids[key] = iss["number"], iss["id"]
+        """Find the issue for key, or create it. Titles printed are the plan's, never GitHub's."""
+        iss = self.find(key, title)
+        if iss:
+            self.remember(key, iss)
             L.say(f"  exists #{iss['number']}: {title}")
             return iss, False
         L.say(f"  {'create' if self.apply else 'would create'}: {title}")
@@ -265,9 +328,25 @@ class Sync:
             payload["assignees"] = assignees
         if issue_type:
             payload["type"] = issue_type
-        iss = self.gh.rest("POST", f"{self.base}/issues", payload)
-        issues[title] = iss
-        self.numbers[key], self.ids[key] = iss["number"], iss["id"]
+        for attempt in (1, 2):
+            try:
+                iss = self.gh.rest("POST", f"{self.base}/issues", payload)
+                break
+            except G.GitHubError as e:
+                if e.kind not in ("server", "network"):
+                    raise
+                # GitHub may have created the issue and lost the answer: read back before trying again
+                L.say(f"    GitHub answered with an error ({e.status or e.kind}). Reading the issues back before trying again.")
+                self.issues = None
+                iss = self.find(key, title)
+                if iss:
+                    L.say(f"    found it after the error: #{iss['number']}")
+                    break
+                if attempt == 2:
+                    raise
+        self.issues[title] = iss
+        self.by_key[key] = iss
+        self.remember(key, iss)
         self.created.add(key)
         time.sleep(0.8)
         L.say(f"    -> #{iss['number']}")
@@ -287,6 +366,13 @@ class Sync:
 
 
 def run(argv=None):
+    try:
+        return _run(argv)
+    except G.GitHubError as e:
+        return G.report(e)
+
+
+def _run(argv=None):
     ap = argparse.ArgumentParser(
         description="Create labels, sub-epics, work item issues, links and the Epic roll-up comment from plan.yaml. Dry run unless --apply.",
         epilog="The token is read from --token-file, CARRYDOWN_GITHUB_TOKEN or ~/.config/carrydown/github_token. It is never printed.",
@@ -296,6 +382,7 @@ def run(argv=None):
     ap.add_argument("--repo", help="owner/name. Overrides project.repo in plan.yaml")
     ap.add_argument("--token-file", help="file that holds the GitHub token")
     ap.add_argument("--apply", action="store_true", help="write to GitHub. Without it nothing is written")
+    ap.add_argument("--allow-public", action="store_true", help="allow --apply to a public repository. Issue bodies carry text from your ground truth")
     ap.add_argument("--offline", action="store_true", help="do not call GitHub at all, even to read")
     ap.add_argument("--verify", action="store_true", help="read GitHub and check that the structure matches the plan, then exit")
     ap.add_argument("--create-epic", action="store_true", help="create a parent Epic issue when project.epic is empty")
@@ -333,10 +420,13 @@ def run(argv=None):
     plan["project"]["repo"] = f"{owner}/{repo}"
     proj = plan["project"]
     gh = None
+    unchecked = "--offline"
     if not a.offline:
-        token = L.read_token(a.token_file, required=a.apply or a.verify)
+        token = G.read_token(a.token_file, required=a.apply or a.verify)
         if token:
-            gh = L.GitHub(token)
+            gh = G.GitHub(token)
+        else:
+            unchecked = "no token"
     L.say("")
     L.say(f"carrydown github_sync  {'APPLY' if a.apply else 'VERIFY (read only)' if a.verify else 'DRY RUN (nothing will be written)'}")
     plan_shown = plan_path.relative_to(root) if root in plan_path.parents else plan_path.name
@@ -346,7 +436,9 @@ def run(argv=None):
     for line in constraints_lines(plan):
         L.say("  " + line)
     if gh is None:
-        L.say("no token available or --offline: showing the plan only, nothing is read from GitHub")
+        L.say(f"not checked against GitHub ({unchecked}): showing the plan only, nothing is read from GitHub")
+        if unchecked == "no token":
+            L.say(f"To compare with what is on GitHub, set up a token: python3 {G.TOKEN_SCRIPT}")
     s = Sync(plan, root, gh, owner, repo, a.apply)
     if gh:
         status, js = gh.rest_status("GET", s.base)
@@ -355,8 +447,15 @@ def run(argv=None):
             if a.apply or a.verify:
                 return 1
             gh = s.gh = None
-        elif not a.apply:
-            L.say(f"repository found (private: {js.get('private')}). Reading existing labels and issues.")
+            unchecked = "repository not reachable"
+        else:
+            public = js.get("private") is False
+            if public and a.apply and not a.allow_public:
+                L.die(f"{owner}/{repo} is public. Issue bodies carry text from your ground truth. Rerun with --allow-public if that is intended.")
+            if not a.apply:
+                L.say(f"repository found (private: {js.get('private')}). Reading existing labels and issues.")
+            if public and not a.allow_public and not a.verify:
+                L.say(f"note: {owner}/{repo} is public, and issue bodies carry text from your ground truth. --apply will need --allow-public.")
     if a.verify:
         return verify(s, plan, root)
 
@@ -370,11 +469,11 @@ def run(argv=None):
     epic = proj.get("epic")
     if epic and gh:
         e = gh.rest("GET", f"{s.base}/issues/{epic}")
-        s.numbers["EPIC"], s.ids["EPIC"] = e["number"], e["id"]
-        L.say(f"\nEpic: #{epic} {e['title']}")
+        s.remember("EPIC", e)
+        L.say(f"\nEpic: #{epic} (project.epic in plan.yaml)")
     elif a.create_epic and not epic:
         L.say("\nEpic")
-        body = f"Parent Epic for {proj['name']}. The sub-epics and work items are linked below as sub-issues.\n"
+        body = with_marker(f"Parent Epic for {proj['name']}. The sub-epics and work items are linked below as sub-issues.\n", "EPIC")
         s.create_or_find(proj["epic_title"], body, [proj["slug"]], [], "EPIC")
     elif not epic:
         L.say("\nEpic: none. Sub-epics will be created without a parent. Use --create-epic to create one.")
@@ -395,7 +494,10 @@ def run(argv=None):
         has_epic = bool(epic) or a.create_epic
         L.say("\nSummary")
         L.say(f"{1 if has_epic else 0} Epic, {len(plan['milestones'])} sub-epics, {len(plan['items'])} work item issues")
-        L.say(f"  to create now: {n_epic} Epic, {n_sub} sub-epics, {n_it} work item issues. Already on GitHub: the rest.")
+        if gh:
+            L.say(f"  to create now: {n_epic} Epic, {n_sub} sub-epics, {n_it} work item issues. Already on GitHub: the rest.")
+        else:
+            L.say(f"  not checked against GitHub ({unchecked}), so this counts every issue as new: {n_epic} Epic, {n_sub} sub-epics, {n_it} work item issues.")
         L.say("Would then link each work item under its sub-epic" + (" and each sub-epic under the Epic" if epic or a.create_epic else "") + ",")
         L.say("rewrite dependency ids in the bodies to issue links, update the sub-epic work item lists,")
         L.say("and " + ("post" if not a.skip_comment and (epic or a.create_epic) else "skip") + " the Epic roll-up comment.")
@@ -412,13 +514,14 @@ def run(argv=None):
     for it in plan["items"]:
         s.ensure_sub(f"M{it['milestone']}", L.tag(plan, it["id"]))
     L.say("\nLinking dependency ids and work item lists")
-    issues = s.load_issues()
     for ms in plan["milestones"]:
         key = f"M{ms['number']}"
-        cur = issues[subepic_title(plan, ms)]
+        cur = s.objs[key]
         want = build_subepic_body(plan, root, ms, s.numbers)
         have = (cur.get("body") or "").replace("\r\n", "\n")
-        if want != have and (key in s.created or a.update_bodies):
+        pristine = [build_subepic_body(plan, root, ms), build_subepic_body(plan, root, ms, mark=False),
+                    build_subepic_body(plan, root, ms, s.numbers, mark=False)]
+        if want != have and (key in s.created or a.update_bodies or safe_to_rewrite(have, pristine)):
             gh.rest("PATCH", f"{s.base}/issues/{cur['number']}", {"body": want})
             cur["body"] = want
             s.counts["bodies"] += 1
@@ -426,12 +529,13 @@ def run(argv=None):
             time.sleep(0.4)
     for it in plan["items"]:
         t = L.tag(plan, it["id"])
-        title = item_title(plan, it)
-        cur = issues[title]
+        cur = s.objs[t]
         want = build_item_body(plan, root, it, s.numbers)
         have = (cur.get("body") or "").replace("\r\n", "\n")
         is_new = t in s.created
-        if want != have and (is_new or a.update_bodies):
+        pristine = [build_item_body(plan, root, it), build_item_body(plan, root, it, mark=False),
+                    build_item_body(plan, root, it, s.numbers, mark=False)]
+        if want != have and (is_new or a.update_bodies or safe_to_rewrite(have, pristine)):
             gh.rest("PATCH", f"{s.base}/issues/{cur['number']}", {"body": want})
             cur["body"] = want
             s.counts["bodies"] += 1
@@ -441,7 +545,7 @@ def run(argv=None):
         L.say("\nEpic roll-up comment")
         num = s.numbers["EPIC"]
         text = build_rollup(plan, s.numbers, num)
-        existing = [c for c in gh.paged(f"{s.base}/issues/{num}/comments") if MARKER in (c.get("body") or "")]
+        existing = own_rollups(gh, s.base, num)
         if existing:
             if existing[0]["body"].replace("\r\n", "\n") != text:
                 gh.rest("PATCH", f"{s.base}/issues/comments/{existing[0]['id']}", {"body": text})
@@ -459,8 +563,16 @@ def run(argv=None):
     L.say("  sub-epics: #" + ", #".join(sub_epic_numbers))
     L.say(f"  work items: {len(plan['items'])} ({s.numbers[L.tag(plan, plan['items'][0]['id'])]} to {max(s.numbers[L.tag(plan, i['id'])] for i in plan['items'])})")
     L.say(f"  new sub-issue links: {s.counts['links']}, bodies rewritten: {s.counts['bodies']}")
-    L.say("Next: python3 scripts/github_project.py to build the board. Then run this script with --verify.")
+    L.say(f"Next: python3 {Path(__file__).resolve().parent / 'github_project.py'} to build the board. Then run this script with --verify.")
     return 0
+
+
+def own_rollups(gh, base, num):
+    """Roll-up comments on the Epic written by the token's own account. A comment from anyone
+    else is ignored, even when it carries the marker."""
+    me = gh.whoami().get("login")
+    return [c for c in gh.paged(f"{base}/issues/{num}/comments")
+            if MARKER in (c.get("body") or "") and (c.get("user") or {}).get("login") == me]
 
 
 def verify(s, plan, root):
@@ -472,65 +584,77 @@ def verify(s, plan, root):
     miss = [n for n in want_labels if n.lower() not in labels]
     L.say(f"  labels: {len(want_labels) - len(miss)} of {len(want_labels)} present" + (f", missing {miss}" if miss else ""))
     ok &= not miss
-    issues = s.load_issues()
     sub_ok = 0
     item_ok = 0
     link_total = 0
     for ms in plan["milestones"]:
         t = subepic_title(plan, ms)
-        if t not in issues:
+        iss = s.find(f"M{ms['number']}", t)
+        if not iss:
             L.say(f"  MISSING sub-epic: {t}")
             ok = False
             continue
         sub_ok += 1
-        s.numbers[f"M{ms['number']}"] = issues[t]["number"]
+        s.remember(f"M{ms['number']}", iss)
     for it in plan["items"]:
         t = item_title(plan, it)
-        if t not in issues:
+        iss = s.find(L.tag(plan, it["id"]), t)
+        if not iss:
             L.say(f"  MISSING work item: {t}")
             ok = False
             continue
         item_ok += 1
-        s.numbers[L.tag(plan, it["id"])] = issues[t]["number"]
+        s.remember(L.tag(plan, it["id"]), iss)
     L.say(f"  sub-epics: {sub_ok} of {len(plan['milestones'])}")
     L.say(f"  work item issues: {item_ok} of {len(plan['items'])}")
+    lists_bad = 0
     for ms in plan["milestones"]:
         key = f"M{ms['number']}"
         if key not in s.numbers:
             continue
+        mine = [L.tag(plan, it["id"]) for it in plan["items"] if it["milestone"] == ms["number"] and L.tag(plan, it["id"]) in s.numbers]
         subs = {x["number"] for x in gh.paged(f"{s.base}/issues/{s.numbers[key]}/sub_issues")}
-        want = {s.numbers[L.tag(plan, it["id"])] for it in plan["items"] if it["milestone"] == ms["number"] and L.tag(plan, it["id"]) in s.numbers}
+        want = {s.numbers[t] for t in mine}
         link_total += len(subs & want)
         if subs != want:
             L.say(f"  sub-issues of #{s.numbers[key]}: expected {sorted(want)}, found {sorted(subs)}")
             ok = False
+        body = (s.objs[key].get("body") or "").replace("\r\n", "\n")
+        unlisted = [t for t in mine if f"#{s.numbers[t]} {t}" not in body]
+        if unlisted:
+            lists_bad += 1
+            L.say(f"  work item list of #{s.numbers[key]} lacks the issue numbers of {', '.join(unlisted)}")
     L.say(f"  sub-issue links work item to sub-epic: {link_total} of {len(plan['items'])}")
+    L.say(f"  sub-epic work item lists with every issue number: {sub_ok - lists_bad} of {sub_ok}")
+    ok &= lists_bad == 0
     bad = 0
+    unlinked_total = 0
     for it in plan["items"]:
-        t = item_title(plan, it)
-        if t in issues:
-            body = (issues[t].get("body") or "").replace("\r\n", "\n")
-            heads = [l[4:] for l in body.split("\n") if l.startswith("### ")]
-            if not all(h in heads for h in SEVEN):
-                bad += 1
-                L.say(f"  body of #{issues[t]['number']} lacks a required heading")
-            unlinked = [m.group(0) for m in re.finditer(rf"\b{re.escape(plan['project']['id_prefix'])}-\d+\b(?! \(#)", body)]
-            if unlinked and L.tag(plan, it["id"]) in s.numbers:
-                # ids that are not links yet (the item's own id in a heading is allowed)
-                pass
+        key = L.tag(plan, it["id"])
+        if key not in s.objs:
+            continue
+        body = (s.objs[key].get("body") or "").replace("\r\n", "\n")
+        heads = [l[4:] for l in body.split("\n") if l.startswith("### ")]
+        if not all(h in heads for h in SEVEN):
+            bad += 1
+            L.say(f"  body of #{s.numbers[key]} {key} lacks a required heading")
+        unlinked = sorted(set(unlinked_ids(plan, body, s.numbers)))
+        if unlinked:
+            unlinked_total += 1
+            L.say(f"  body of #{s.numbers[key]} {key} has unlinked ids: {', '.join(unlinked)}")
     L.say(f"  bodies with all seven headings: {item_ok - bad} of {item_ok}")
-    ok &= bad == 0
-    epic = plan["project"].get("epic") or (issues.get(plan["project"]["epic_title"]) or {}).get("number")
+    L.say(f"  bodies with every dependency id linked: {item_ok - unlinked_total} of {item_ok}")
+    ok &= bad == 0 and unlinked_total == 0
+    epic = plan["project"].get("epic") or (s.find("EPIC", plan["project"]["epic_title"]) or {}).get("number")
     if epic:
         subs = {x["number"] for x in gh.paged(f"{s.base}/issues/{epic}/sub_issues")}
         want = {s.numbers[f"M{m['number']}"] for m in plan["milestones"] if f"M{m['number']}" in s.numbers}
         L.say(f"  sub-epics under Epic #{epic}: {len(subs & want)} of {len(want)}")
-        com = [c for c in gh.paged(f"{s.base}/issues/{epic}/comments") if MARKER in (c.get("body") or "")]
+        com = own_rollups(gh, s.base, epic)
         L.say(f"  Epic roll-up comment: {'present' if com else 'missing'}")
         ok &= bool(com) and subs >= want
     L.say("verification " + ("passed" if ok else "FAILED"))
     return 0 if ok else 1
-
 
 if __name__ == "__main__":
     sys.exit(run())

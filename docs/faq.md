@@ -38,7 +38,7 @@ Edit the source, render again, and run the checker. It reports cited sections th
 
 ## Can I change the plan after the issues exist?
 
-Yes. Change `plan.yaml` and the specifications. New items are added on the next `--apply`. Existing issues are left alone unless you pass `--update-bodies`. Do not rename an item's title after creation, because issues are matched by exact title. To rename, change the title in GitHub first and then in the plan.
+Yes. Change `plan.yaml` and the specifications. New items are added on the next `--apply`. Existing issues are left alone unless you pass `--update-bodies`. Renaming an item is safe: issues are matched by a hidden marker in the body, so a rerun finds the issue under its new label.
 
 ## Why work units and not sprints?
 
