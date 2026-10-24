@@ -26,8 +26,8 @@ The steps use PowerShell, which comes with Windows.
 2. **Install Node.js.** Go to https://nodejs.org, download the LTS installer (a `.msi` file) and run it. Click Next until it finishes. If it offers a checkbox to install necessary tools, tick it.
 3. **Install Python 3.** Go to https://www.python.org/downloads/, download the latest Python 3 and run the installer. On its first screen, tick **Add python.exe to PATH** before you click Install Now.
 4. **Install Git for Windows.** Go to https://git-scm.com, download it and run the installer. The default answers are fine.
-5. **Close PowerShell and open it again.** The new programs are found only by a new window.
-6. **Check the three programs.** Run `node --version`, `npm --version`, `python --version` and `git --version`. Each prints a version number. On Windows the Python command is often `python` and not `python3`. The scripts and the skills accept either, so use whichever works. Tell git who you are, once: `git config --global user.name "Your Name"` and `git config --global user.email "you@example.com"`.
+5. **Close PowerShell and open it again.** The new tools are found only by a new window.
+6. **Check the three tools.** Run `node --version`, `npm --version`, `python --version` and `git --version`. Each prints a version number. On Windows the Python command is often `python` and not `python3`. The scripts and the skills accept either, so use whichever works. Tell git who you are, once: `git config --global user.name "Your Name"` and `git config --global user.email "you@example.com"`.
 7. **Make your project folder.** Run `mkdir my-plan; cd my-plan; git init`. You will see `Initialized empty Git repository`. To use an existing folder, `cd` into it instead, and run `git init` there if it is new.
 8. **Install the skills.** Run the install line from the README. If PowerShell says that running scripts is disabled and names `npx.ps1`, run the same line with `npx.cmd` in place of `npx`. That avoids changing any security setting.
 9. **Restart your agent.**
@@ -35,7 +35,7 @@ The steps use PowerShell, which comes with Windows.
 ## Linux
 
 1. **Open a terminal.** Use your desktop's terminal application.
-2. **Install the programs.** On Debian or Ubuntu run `sudo apt update` and then `sudo apt install nodejs npm python3 git`. On Fedora run `sudo dnf install nodejs npm python3 git`. If `node --version` then prints a number below 22.20, install Node.js from https://nodejs.org instead.
+2. **Install the tools.** On Debian or Ubuntu run `sudo apt update` and then `sudo apt install nodejs npm python3 git`. On Fedora run `sudo dnf install nodejs npm python3 git`. If `node --version` then prints a number below 22.20, install Node.js from https://nodejs.org instead.
 3. **Check them.** Run `node --version`, `npm --version`, `python3 --version` and `git --version`. Each prints a version number. Python must be 3.9 or higher.
 4. **Tell git who you are**, once: `git config --global user.name "Your Name"` and `git config --global user.email "you@example.com"`.
 5. **Make your project folder.** Run `mkdir my-plan`, `cd my-plan`, `git init`. Or `cd` into an existing folder and run `git init` there if it is new.
@@ -60,4 +60,4 @@ The skills are self-contained, so nothing else needs copying.
 - **`python3: command not found` on Windows.** Use `python`. If neither works, rerun the Python installer, choose Modify, and tick Add Python to environment variables.
 - **The agent does not see the skills.** Restart it. Check that the skill folders are in the agent's skills folder from the table under [Install options](../README.md#install-options) in the README.
 - **`fatal: not a git repository`.** Run `git init` in your project folder, or `cd` into the folder you made.
-- **You do not have permission to install programs.** Ask your IT department for Node.js LTS, Python 3.9 or later and git. Or use a Codespace: the README's [Getting started](../README.md#getting-started) has a link that opens the repository in a browser with the tools already installed.
+- **You do not have permission to install software.** Ask your IT department for Node.js LTS, Python 3.9 or later and git. Or use a Codespace: the README's [Getting started](../README.md#getting-started) has a link that opens the repository in a browser with the tools already installed.

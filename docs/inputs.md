@@ -79,7 +79,7 @@ Which agentic editors do the engineers use? Any editor or command line agent tha
 | What must they see to say a milestone is done? | "A manager approves a report from the inbox." | Write it in their words. |
 | Who gives each demonstration? | The engineers whose tracks meet in the milestone, together. | That. |
 
-## 7. Work the plan does not schedule
+## 7. Work outside the plan
 
 | Ask yourself | Example | Default |
 | --- | --- | --- |

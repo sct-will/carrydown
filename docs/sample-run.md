@@ -220,7 +220,7 @@ The checker found problems. Run check_specs.py to see them, fix them, or pass --
 
 ## 5. Check
 
-The checker finds the worked sample clean. The report shows the schedule, the load table, the critical path, the work the plan does not schedule, the checkpoints and the planning review.
+The checker finds the worked sample clean. The report shows the schedule, the load table, the critical path, the external items, the checkpoints and the planning review.
 
 ```text
 $ python3 scripts/check_specs.py --root sample/expense-approvals
@@ -272,7 +272,7 @@ Earliest finish (forward pass over the dependencies, from sizes and allocation)
   It meets the target 2027-04-23 with 44 day(s) to spare. The planned dates add the slack between items.
   Owners are not serialised in this pass. The load table above shows whether each person's work fits each work unit.
 
-Work the plan does not schedule (owned outside the team; referenced only as program input)
+External items (outside the development plan; referenced only as external input)
   WI-05 Pilot team recruitment
   WI-10 Finance sign-off
 
@@ -333,7 +333,7 @@ $ python3 scripts/github_sync.py --root sample/expense-approvals --repo your-use
 
 carrydown github_sync  DRY RUN (nothing will be written)
 repository: your-user/your-test-repo    plan: docs/spec/plan.yaml
-5 milestones, 9 work items, 2 tracks, 2 program items kept outside the plan
+5 milestones, 9 work items, 2 tracks, 2 external items kept outside the plan
 Constraints (they go into the Epic comment, and the target into every sub-epic):
   Target delivery: 2027-04-23 (given)
   Track Workflow: 1 person, 100 percent allocated
@@ -380,8 +380,8 @@ and post the Epic roll-up comment.
   WI-06  workflow     2027-03-08  depends: WI-03
   WI-07  workflow     2027-03-17  depends: WI-03
   WI-08  experience   2027-03-17  depends: WI-04, WI-06
-  WI-09  workflow     2027-04-06  depends: WI-07  program input: the pilot team, named by the stakeholders
-  WI-11  experience   2027-04-21  depends: WI-08, WI-09  program input: finance sign-off on the export format and retention period
+  WI-09  workflow     2027-04-06  depends: WI-07  external input: the pilot team, named by the stakeholders
+  WI-11  experience   2027-04-21  depends: WI-08, WI-09  external input: finance sign-off on the export format and retention period
 
 Dry run complete. Read it, then add --apply to write.
 [exit 0]
@@ -398,7 +398,7 @@ $ python3 scripts/github_sync.py --root sample/expense-approvals --repo your-use
 
 carrydown github_sync  APPLY
 repository: your-user/your-test-repo    plan: docs/spec/plan.yaml
-5 milestones, 9 work items, 2 tracks, 2 program items kept outside the plan
+5 milestones, 9 work items, 2 tracks, 2 external items kept outside the plan
 
 Labels
   create label: expense-approvals
@@ -499,7 +499,7 @@ $ python3 scripts/github_sync.py --root sample/expense-approvals --repo your-use
 
 carrydown github_sync  APPLY
 repository: your-user/your-test-repo    plan: docs/spec/plan.yaml
-5 milestones, 9 work items, 2 tracks, 2 program items kept outside the plan
+5 milestones, 9 work items, 2 tracks, 2 external items kept outside the plan
 
 Labels
   label exists: expense-approvals
@@ -552,7 +552,7 @@ $ python3 scripts/github_sync.py --root sample/expense-approvals --repo your-use
 
 carrydown github_sync  VERIFY (read only)
 repository: your-user/your-test-repo    plan: docs/spec/plan.yaml
-5 milestones, 9 work items, 2 tracks, 2 program items kept outside the plan
+5 milestones, 9 work items, 2 tracks, 2 external items kept outside the plan
 repository found (private: True). Reading existing labels and issues.
 
 Verification (read only)

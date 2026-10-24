@@ -51,7 +51,7 @@ Exit gate. A pilot team's approved reports reach the ledger by the nightly file.
 
 | Id | Work item | Track | Complete by | Depends on | File |
 | --- | --- | --- | --- | --- | --- |
-| WI-09 | Ledger export job | Workflow | 2027-04-06 | WI-07; program input: the pilot team, named by the stakeholders | `docs/spec/m4-pilot/wi-09-ledger-export.md` |
+| WI-09 | Ledger export job | Workflow | 2027-04-06 | WI-07; external input: the pilot team, named by the stakeholders | `docs/spec/m4-pilot/wi-09-ledger-export.md` |
 
 ## Milestone 5, Release (`m5-release`)
 
@@ -59,13 +59,13 @@ Exit gate. The flag is on in production, the runbook is handed to operations and
 
 | Id | Work item | Track | Complete by | Depends on | File |
 | --- | --- | --- | --- | --- | --- |
-| WI-11 | Release readiness and runbook | Experience | 2027-04-21 | WI-08, WI-09; program input: finance sign-off on the export format and retention period | `docs/spec/m5-release/wi-11-release-readiness.md` |
+| WI-11 | Release readiness and runbook | Experience | 2027-04-21 | WI-08, WI-09; external input: finance sign-off on the export format and retention period | `docs/spec/m5-release/wi-11-release-readiness.md` |
 
-## Work the plan does not schedule
+## External items and external inputs
 
-This work is owned outside the team, not by the engineers. It has no work item file. An item that needs its result says "program input" in its Depends on row. If the input is missing, say so in the pull request and do not invent it.
+These are owned outside the team, not by the engineers. They have no work item file. An item that needs one says "external input" in its Depends on row. If the input is missing, say so in the pull request and do not invent it.
 
-| Id | Outside item | Note |
+| Id | External item | Note |
 | --- | --- | --- |
 | WI-05 | Pilot team recruitment | The stakeholders name the pilot team and confirm their cost centres before work unit 4. |
 | WI-10 | Finance sign-off | Finance operations approves the export format and the retention period before the release. |

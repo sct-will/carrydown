@@ -120,7 +120,7 @@ items:                                   # the work items
     depends: []                          # ids of items this one needs first
     unblocks: []                         # optional. Derived from depends when empty.
     checkpoint: 2027-01-08               # one of the checkpoint dates above
-    program_input: ""                    # text of an input from outside the team, or empty
+    external_input: ""                   # text of an input from outside the team, or empty
     ground_truth: "Sections 1.1"         # the sections of the ground truth this item cites
   - id: 2
     slug: second-item
@@ -133,10 +133,10 @@ items:                                   # the work items
     size: "Medium, about 3 days"
     depends: [1]
     checkpoint: 2027-01-15
-    program_input: ""
+    external_input: ""
     ground_truth: "Sections 1.2"
 
-program:                                 # work the plan does not schedule, owned outside the team, kept as id gaps
+external:                                # work outside the plan, owned outside the team, kept as id gaps
   items: []
   # - id: 5
   #   label: "Pilot team recruitment"

@@ -146,17 +146,17 @@ def readme_composition(plan):
     return "\n".join(out)
 
 
-def program_section(plan):
-    items = plan["program"]["items"]
+def external_section(plan):
+    items = plan["external"]["items"]
     if not items:
         return ""
     rows = [[L.tag(plan, p["id"]), p["label"], p.get("note", "")] for p in items]
     return (
-        "## Work the plan does not schedule\n\n"
+        "## Work outside the plan\n\n"
         "Some items depend on inputs from outside the team, such as pilot teams, approvals and reviews. "
-        "Those are marked \"program input\" in the item files. The work that provides them is owned outside the team, "
+        "Those are marked \"external input\" in the item files. The work that provides them is owned outside the team, "
         "so the plan does not schedule it. Its ids are left as gaps in the numbering on purpose, and it is not tracked as issues in this plan.\n\n"
-        + md_table(["Id", "Outside item", "Note"], rows) + "\n\n"
+        + md_table(["Id", "External item", "Note"], rows) + "\n\n"
     )
 
 
@@ -180,7 +180,7 @@ def build_readme(plan):
         "checkpoint_table": checkpoint_table(plan),
         "closing_comment": L.read_template("closing-comment.md").rstrip().replace("{{tag}}", f"{proj['id_prefix']}-NN").replace("{{label}}", "<label>"),
         "checkpoint_comment": L.read_template("checkpoint-comment.md").rstrip().replace("{{date}}", "<date>").replace("{{name}}", "<name>"),
-        "program_section": program_section(plan),
+        "external_section": external_section(plan),
         "index": index_text(plan),
         "composition": readme_composition(plan),
     }
@@ -374,9 +374,9 @@ MILESTONE_SECTIONS = (
 
 
 README_TABLES = ("| Work unit | Dates | Gate |", "| Sub-epic |", "| Date | Checkpoint | Items due | Joint check |",
-                 "| Id | Work item | Track | Complete by |", "| Id | Outside item | Note |")
+                 "| Id | Work item | Track | Complete by |", "| Id | External item | Note |")
 # Older headers of the same tables, so a README written before a rename is still refreshed.
-README_TABLE_ALIASES = {"| Id | Outside item | Note |": ("| Id | Program item | Note |",)}
+README_TABLE_ALIASES = {"| Id | External item | Note |": ("| Id | Outside item | Note |", "| Id | Program item | Note |")}
 
 
 def tables_of(lines):
@@ -400,7 +400,7 @@ def tables_of(lines):
 
 def refreshed_readme(plan, old):
     """Refresh the generated tables of the specification README (schedule, sub-epics, checkpoints,
-    index, work the plan does not schedule) and leave every other line alone. Return (text, kinds not refreshed)."""
+    index, external items) and leave every other line alone. Return (text, kinds not refreshed)."""
     lines = old.split("\n")
     fresh = build_readme(plan).split("\n")
     have, want = tables_of(lines), tables_of(fresh)

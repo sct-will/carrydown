@@ -8,7 +8,7 @@ pauses:
     end: 2027-03-26
 max_work_unit_weeks: 3             # no work unit longer than this
 demonstration_audience: "Head of finance operations and the product owner, in a 45 minute meeting."
-program_owned:                     # work owned outside the team, which the development plan does not schedule
+external_items:                    # work outside the plan, owned outside the team
   - "Pilot team recruitment"
   - "Finance sign-off on the ledger export format and retention period"
 repository: sct-will/carrydown-sample     # replace with your own

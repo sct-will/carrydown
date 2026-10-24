@@ -65,7 +65,7 @@ The agent drafts. You decide. It shows you:
 - every **work item** with an owner, a date, what it depends on and a size such as "Small, about 2 days" (the load table reads the number after "about"),
 - the **load table**, how much work each person has in each work unit as a percentage of the capacity their allocation gives them, with any work unit over 100 percent flagged,
 - the **critical path**, the chain of items that sets the end date, and whether it meets your target,
-- the **work the plan does not schedule**, owned outside the team and left as gaps in the numbering,
+- the **work outside the plan**, owned outside the team and left as gaps in the numbering,
 - the **rationale**: for each milestone, why it holds its items and what the engineers show together at its demonstration, and for each track, why its items are in this order,
 - the **planning review**, the last block of the checker report, which lists the tracks each milestone covers, items with no slack before their checkpoint, theme switches, critical path owners and the load ratio.
 
@@ -145,4 +145,4 @@ To change the plan later, change `plan.yaml` with your agent and run the checker
 - **Work unit.** A time block with its own length and an exit gate. It replaces the fixed-length sprint.
 - **Checkpoint.** A short weekly meeting where the tracks run a check together to prove their halves fit.
 - **Demonstration.** A meeting at the end of a work unit where the engineers show the stakeholders the milestone working, against criteria written in advance.
-- **Work the plan does not schedule.** Work owned outside the team, such as recruiting a pilot team or getting an approval. It keeps an id, left as a gap in the numbering, and is listed under `program` in `plan.yaml`. An item that waits for it carries a "program input" note.
+- **External item.** Work outside the plan, owned outside the team, such as recruiting a pilot team or getting an approval. It keeps an id, left as a gap in the numbering, and is listed under `external` in `plan.yaml`. An item that waits for it carries an "external input" note.

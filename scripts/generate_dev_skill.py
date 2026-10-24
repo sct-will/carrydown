@@ -59,15 +59,15 @@ def work_items_md(plan, root):
             if it["milestone"] != m["number"]:
                 continue
             deps = ", ".join(L.tag(plan, d) for d in it["depends"]) or "None"
-            if it["program_input"]:
-                deps += f"; program input: {it['program_input']}"
+            if it["external_input"]:
+                deps += f"; external input: {it['external_input']}"
             rows.append([L.tag(plan, it["id"]), it["label"], L.track_label(plan, it["track"]), it["complete_by"], deps,
                          f"`{spec_dir}/{m['folder']}/{L.tag(plan, it['id']).lower()}-{it['slug']}.md`"])
         out += [md_table(["Id", "Work item", "Track", "Complete by", "Depends on", "File"], rows), ""]
-    if plan["program"]["items"]:
-        out += ["## Work the plan does not schedule", "",
-                "This work is owned outside the team, not by the engineers. It has no work item file. An item that needs its result says \"program input\" in its Depends on row. If the input is missing, say so in the pull request and do not invent it.", "",
-                md_table(["Id", "Outside item", "Note"], [[L.tag(plan, p["id"]), p["label"], p.get("note", "")] for p in plan["program"]["items"]]), ""]
+    if plan["external"]["items"]:
+        out += ["## External items and external inputs", "",
+                "These are owned outside the team, not by the engineers. They have no work item file. An item that needs one says \"external input\" in its Depends on row. If the input is missing, say so in the pull request and do not invent it.", "",
+                md_table(["Id", "External item", "Note"], [[L.tag(plan, p["id"]), p["label"], p.get("note", "")] for p in plan["external"]["items"]]), ""]
     return "\n".join(out).rstrip() + "\n"
 
 

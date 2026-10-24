@@ -30,7 +30,7 @@ The shortest route is the developer skill. It makes a coding agent read the righ
 
 {{conventions}}
 
-Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the people accountable for the outcome. A program input is something an item needs from work the plan does not schedule, owned outside the team.
+Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the people accountable for the outcome. An external input is something an item needs from an external item, work outside the plan that is owned outside the team.
 
 ## How this plan was composed
 
@@ -70,7 +70,7 @@ Posted after each checkpoint by one of the engineers, taking turns. The outcome 
 {{checkpoint_comment}}
 ```
 
-{{program_section}}## Index
+{{external_section}}## Index
 
 Each milestone folder also holds `milestone.md`, the sub-epic content for that milestone (exit gate, acceptance criteria, demonstration expectations, work item list).
 

@@ -39,7 +39,7 @@ Work units are time boxes of variable length. A thin first slice may take a week
 
 Items are the smallest pieces an engineer can finish, show and close, usually two to five days. Each has an owner on a track, a completion date, dependencies, a size and the sections of the ground truth it cites. The load table shows items and days per person per work unit. The critical path shows the longest dependency chain.
 
-Items that depend on work owned outside the team (a pilot team, an approval, a review) carry a "program input" note. The plan does not schedule that work. It leaves a gap in the numbering.
+Items that depend on work owned outside the team (a pilot team, an approval, a review) carry an "external input" note. That work is an external item: the plan does not schedule it, and it leaves a gap in the numbering.
 
 ## Planning rigor
 
@@ -53,7 +53,7 @@ A generated task list and a plan look alike on a board. What separates them is t
 6. Size in days divided by allocation gives calendar working days: four days at 60 percent is nearly seven working days. Nobody is planned past 100 percent of allocated capacity in a work unit, aim for about 80, and days off and breaks are real.
 7. Slack sits before every checkpoint and demonstration. An item that completes on its checkpoint date has none.
 8. The critical path is read for single points of failure. If it runs through one person, the plan says so and offers an alternative.
-9. Work the plan does not schedule, owned outside the team, stays out of the plan as id gaps.
+9. Work outside the plan, owned outside the team, keeps its ids as gaps in the numbering.
 10. The plan records its rationale where a reviewer can argue with it: for each milestone, why these items form it and what the joint demonstration proves, and for each track, why its items are in this order. The plan owner reads the plan week by week, adversarially, before anything is scaffolded.
 
 In `plan.yaml` the rationale is `rationale`, `joint_demonstration` and, when needed, `single_track_reason` on each milestone, `order_rationale` on each track and `theme` on each item. The scaffold copies it into each `milestone.md` and into the "How this plan was composed" section of the specification README. The checker fails a plan that leaves a reason out, and `check_specs.py --report` ends with the planning review for the plan owner to read.
@@ -62,7 +62,7 @@ In `plan.yaml` the rationale is `rationale`, `joint_demonstration` and, when nee
 
 Every specification has the same sections, in the same order: why the item exists, outcome, context for the agent, contract or protocol, implementation guide, acceptance criteria, evidence of completion, integration points, out of scope, watch out for, references, decisions recorded. Contract excerpts are copied word for word. When the writer finds a contradiction in the ground truth, the specification records which side wins, and the contradiction goes onto the list for the next version of the document.
 
-The checker validates header rows against `plan.yaml`, section order, length, banned vocabulary, the ids of work the plan does not schedule, broken links, and the section numbers cited.
+The checker validates header rows against `plan.yaml`, section order, length, banned vocabulary, the ids of external items, broken links, and the section numbers cited.
 
 ## Step 8 in more detail
 
@@ -76,7 +76,7 @@ Three rhythms.
 
 - Any number of tracks. Each engineer is on one track. Checkpoints join them.
 - Any number of milestones and items. Sub-epics group them. Specifications are written in parallel by subagents, one batch per milestone, from the same ground truth and the same template.
-- Work outside the plan. Work owned outside the team stays out of the plan as numbering gaps and "program input" notes.
+- Work outside the plan. Work owned outside the team stays outside the plan as numbering gaps and "external input" notes.
 - One skill in every editor. The same conventions and the same definition of done reach each engineer, in the agent they already use.
 
 ## Where it strains

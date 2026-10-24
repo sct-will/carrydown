@@ -64,9 +64,9 @@ Time boxes of equal length force the work to fit the box. Work units take the le
 
 People change. Names go in `plan.yaml`, and the checker keeps them out of the specification files so the files stay true when someone swaps in. Owners live in the GitHub issues.
 
-## What is a program input?
+## What is an external input?
 
-Something an item needs from work owned outside the team, such as a pilot team, an approval or a review. Items that wait for one say "program input". The plan does not schedule that work, so it is not an issue in the plan. It keeps an id, left as a gap in the numbering, under `program` in `plan.yaml`.
+Something an item needs from work owned outside the team, such as a pilot team, an approval or a review. Items that wait for one say "external input". That work is an external item. The plan does not schedule it, so it is not an issue in the plan. It keeps an id, left as a gap in the numbering, under `external` in `plan.yaml`.
 
 ## What does the board script leave for me to click?
 

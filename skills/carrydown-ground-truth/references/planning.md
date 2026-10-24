@@ -47,7 +47,7 @@ Check: the sum of the work units plus breaks fits the time frame, and no work un
 
 A work item is the smallest piece of work that an engineer can finish, show and close. Aim for two to five days. Each has:
 
-- an id, a number that stays fixed. Leave gaps for work the plan does not schedule,
+- an id, a number that stays fixed. Leave gaps for the external items,
 - a short label in plain words,
 - a milestone, a track and an owner on that track,
 - a theme, a short label for the part of the system it touches, such as "web client" or "export job",
@@ -82,9 +82,9 @@ python3 <skill>/scripts/check_specs.py --root . --report
 
 It prints the schedule, each person's allocation, their sized days against allocated capacity per work unit (with a flag over 100 percent), the critical path, the target and whether the critical path meets it, the checkpoints and the planning review. Read it with the user. A load of 100 percent or more leaves no slack, so aim for about 80 percent at most. If one person carries much more than the other, move items across tracks where the skills allow, or stretch the date. The planning review flags a load ratio above two to one. Read the critical path for single points of failure. If it runs through one person, the plan says so and offers an alternative, in that track's `order_rationale`. Ask the user whether to change it.
 
-## 8. Work the plan does not schedule
+## 8. Work outside the plan
 
-Work owned outside the team stays out of the plan, as id gaps. Give each such piece an id from the gap (for example 5 and 10) and list it under `program.items`. In an item that waits for one, set `program_input` to a phrase that says what is needed, without the id. Specifications never mention these ids. The checker fails if they do.
+Work owned outside the team stays outside the plan, as id gaps. Each such piece is an external item. Give it an id from the gap (for example 5 and 10) and list it under `external.items`. In an item that waits for one, set `external_input` to a phrase that says what is needed, without the id. Specifications never mention these ids. The checker fails if they do.
 
 ## 9. Review the plan
 

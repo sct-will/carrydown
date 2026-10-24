@@ -174,8 +174,8 @@ def build_item_body(plan, root, it, numbers=None, mark=True):
             "before it changes code. You review every change."
         )
     deps = [f"- {L.tag(plan, d)} {L.item_by_id(plan)[d]['label']}" for d in it["depends"]]
-    if it["program_input"]:
-        deps.append(f"- Program input: {it['program_input']}")
+    if it["external_input"]:
+        deps.append(f"- External input: {it['external_input']}")
     values = {
         "complete_by": it["complete_by"],
         "checkpoint": f"{cp['date']}, {cp['name']}",
@@ -243,8 +243,8 @@ def build_rollup(plan, numbers, epic_number):
     readme = L.github_blob_url(plan, f"{proj['spec_dir']}/README.md")
     intro = (f"{len(plan['milestones'])} sub-epics, one per milestone, each holding its work item issues as sub-issues. A box is checked when its issue closes. "
              f"Conventions, the checkpoint schedule and the comment templates are in [{proj['spec_dir']}/README.md]({readme}).")
-    if plan["program"]["items"]:
-        intro += " Work the plan does not schedule is owned outside the team and tracked outside these issues."
+    if plan["external"]["items"]:
+        intro += " External items are owned outside the team and tracked outside these issues."
     out = [MARKER, f"## Development plan, {proj['name']}", "", "**Constraints**", ""] + [f"- {l}" for l in constraints_lines(plan)] + ["", intro, ""]
     people = {pp["id"]: pp for pp in plan["people"]}
     for ms in plan["milestones"]:
@@ -448,7 +448,7 @@ def _run(argv=None):
     L.say(f"carrydown github_sync  {'APPLY' if a.apply else 'VERIFY (read only)' if a.verify else 'DRY RUN (nothing will be written)'}")
     plan_shown = plan_path.relative_to(root) if root in plan_path.parents else plan_path.name
     L.say(f"repository: {owner}/{repo}    plan: {plan_shown}")
-    L.say(f"{len(plan['milestones'])} milestones, {len(plan['items'])} work items, {len(plan['tracks'])} tracks, {len(plan['program']['items'])} program items kept outside the plan")
+    L.say(f"{len(plan['milestones'])} milestones, {len(plan['items'])} work items, {len(plan['tracks'])} tracks, {len(plan['external']['items'])} external items kept outside the plan")
     L.say("Constraints (they go into the Epic comment, and the target into every sub-epic):")
     for line in constraints_lines(plan):
         L.say("  " + line)
@@ -519,7 +519,7 @@ def _run(argv=None):
         L.say("rewrite dependency ids in the bodies to issue links, update the sub-epic work item lists,")
         L.say("and " + ("post" if not a.skip_comment and (epic or a.create_epic) else "skip") + " the Epic roll-up comment.")
         for it in plan["items"]:
-            L.say(f"  {L.tag(plan, it['id'])}  {it['track']:<12} {it['complete_by']}  depends: {', '.join(L.tag(plan, d) for d in it['depends']) or '-'}" + (f"  program input: {it['program_input']}" if it['program_input'] else ""))
+            L.say(f"  {L.tag(plan, it['id'])}  {it['track']:<12} {it['complete_by']}  depends: {', '.join(L.tag(plan, d) for d in it['depends']) or '-'}" + (f"  external input: {it['external_input']}" if it['external_input'] else ""))
         L.say("\nDry run complete. Read it, then add --apply to write.")
         return 0
 

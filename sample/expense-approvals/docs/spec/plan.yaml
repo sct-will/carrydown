@@ -242,7 +242,7 @@ items:
     size: "Medium, about 4 days"
     depends: [7]
     checkpoint: 2027-04-09
-    program_input: "the pilot team, named by the stakeholders"
+    external_input: "the pilot team, named by the stakeholders"
     ground_truth: "Sections 3.6, 4.2, 7.3"
   - id: 11
     slug: release-readiness
@@ -255,10 +255,10 @@ items:
     size: "Medium, about 3 days"
     depends: [8, 9]
     checkpoint: 2027-04-23
-    program_input: "finance sign-off on the export format and retention period"
+    external_input: "finance sign-off on the export format and retention period"
     ground_truth: "Sections 5.1, 8.1"
 
-program:
+external:
   items:
     - id: 5
       label: "Pilot team recruitment"

@@ -38,7 +38,7 @@ The shortest route is the developer skill. It makes a coding agent read the righ
 - Documentation style in this folder. Sentence-case headings, short sentences, no em dashes or en dashes, no names of people. Owners and dates live in the GitHub issues.
 - Existing behaviour is not changed by a work item unless its file says so.
 
-Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the people accountable for the outcome. A program input is something an item needs from work the plan does not schedule, owned outside the team.
+Words used in every file. A work unit is a time box of variable length with an exit gate. A checkpoint is a short weekly integration check between the tracks. A demonstration is the milestone roll-up that the engineers give to the people accountable for the outcome. An external input is something an item needs from an external item, work outside the plan that is owned outside the team.
 
 ## How this plan was composed
 
@@ -54,7 +54,7 @@ The plan follows ten rules. The reasons below are written in `plan.yaml`, so a r
 6. Size in days divided by allocation gives calendar working days: four days at 60 percent is nearly seven working days. Nobody is planned past 100 percent of allocated capacity in a work unit, aim for about 80, and days off and breaks are real.
 7. Slack sits before every checkpoint and demonstration. An item that completes on its checkpoint date has none.
 8. The critical path is read for single points of failure. If it runs through one person, the plan says so and offers an alternative.
-9. Work the plan does not schedule, owned outside the team, stays out of the plan as id gaps.
+9. Work outside the plan, owned outside the team, keeps its ids as gaps in the numbering.
 10. The plan records its rationale where a reviewer can argue with it: for each milestone, why these items form it and what the joint demonstration proves, and for each track, why its items are in this order. The plan owner reads the plan week by week, adversarially, before anything is scaffolded.
 
 ### Order of work per track
@@ -140,11 +140,11 @@ Posted after each checkpoint by one of the engineers, taking turns. The outcome 
 **Blocked or at risk.** Items, cause, owner, or "none".
 ```
 
-## Work the plan does not schedule
+## Work outside the plan
 
-Some items depend on inputs from outside the team, such as pilot teams, approvals and reviews. Those are marked "program input" in the item files. The work that provides them is owned outside the team, so the plan does not schedule it. Its ids are left as gaps in the numbering on purpose, and it is not tracked as issues in this plan.
+Some items depend on inputs from outside the team, such as pilot teams, approvals and reviews. Those are marked "external input" in the item files. The work that provides them is owned outside the team, so the plan does not schedule it. Its ids are left as gaps in the numbering on purpose, and it is not tracked as issues in this plan.
 
-| Id | Outside item | Note |
+| Id | External item | Note |
 | --- | --- | --- |
 | WI-05 | Pilot team recruitment | The stakeholders name the pilot team and confirm their cost centres before work unit 4. |
 | WI-10 | Finance sign-off | Finance operations approves the export format and the retention period before the release. |

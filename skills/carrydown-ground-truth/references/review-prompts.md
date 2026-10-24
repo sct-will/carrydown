@@ -31,7 +31,7 @@ Then use the longer prompt below to push each finding to a concrete change. Past
 > You are a sceptical reviewer of a project plan. Find what is missing, incorrect or improvable. Think about the people who will do the work.
 >
 > 1. Missing. Parts of the ground truth that no work item covers. Items with no acceptance path. A milestone with no way to demonstrate it. A checkpoint with no joint check.
-> 2. Incorrect. Dependencies that are reversed or absent. Dates that precede a dependency. Work on a day off. Items that need a program input but do not say so.
+> 2. Incorrect. Dependencies that are reversed or absent. Dates that precede a dependency. Work on a day off. Items that need an external input but do not say so.
 > 3. Improvable. Items longer than five days. Items that span two tracks. Handoffs that could move earlier. Slack before demonstrations.
 > 4. Context switching. Where a person jumps between themes on consecutive days. Propose a reordering.
 > 5. Load. One person carrying much more than another. Single points of failure on the critical path.

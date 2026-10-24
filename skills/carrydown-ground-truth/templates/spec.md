@@ -49,7 +49,7 @@ TODO: One sentence naming the counterpart items on the other track, by id and la
 
 ## Out of scope
 
-TODO: What a reasonable person might add to this item and should not. Point to the item that has it, or say it is owned outside the team.
+TODO: What a reasonable person might add to this item and should not. Point to the item that has it, or say it is an external item.
 
 ## Watch out for
 

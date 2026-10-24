@@ -76,14 +76,14 @@ Ask.
 3. What must the audience see to say "this milestone is done"? Write down their words. They become acceptance criteria.
 4. Who gives each demonstration? A default: the engineers whose tracks meet in the milestone, together, each showing their half of the same run. Ask whether anyone else must take part, such as an advisor.
 
-### Work the plan does not schedule
+### Work outside the plan
 
 Ask.
 
 1. What work is owned outside the team and kept out of the development plan? Examples: recruiting pilot teams, approvals, security review, legal text, procurement.
-2. Which development items wait for one of these? Those items carry a "program input" note.
+2. Which development items wait for one of these? Those items carry an "external input" note.
 
-Explain: this work is listed under `program` in `plan.yaml`. Each piece gets an id gap and is never numbered inside the plan. Specifications mention it only as "the program input".
+Explain: each piece is an external item, listed under `external` in `plan.yaml`. Each gets an id gap and is never numbered inside the plan. Specifications mention it only as "the external input".
 
 ## Step 6 of 6. Engineering conventions
 
@@ -110,7 +110,7 @@ Write it as a short list the user can correct.
 - Repository, Epic, labels, logins.
 - Agents in use.
 - Demonstration audience, what they must see, and who gives each demonstration.
-- Work the plan does not schedule, owned outside the team, and the items that wait for it.
+- Work outside the plan, owned outside the team, and the items that wait for it.
 - Conventions: test, lint, flag, branch, extra rules.
 
 Say: "If this is right, I will render the documents and draft the plan. Nothing is written to GitHub." Then wait.

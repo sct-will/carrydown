@@ -67,7 +67,7 @@ Staff of a fictional retail company submit travel and expense reports by email a
 
 ### 1.4 Scope boundary
 
-In scope: draft, submit, route, decide, notify, audit, export. Out of scope: paying the employee (the finance system does that), importing card feeds, mileage calculation, and currency conversion beyond the fixed rate table in section 3.3. Pilot recruitment and finance sign-off are owned by the program, not by the development plan.
+In scope: draft, submit, route, decide, notify, audit, export. Out of scope: paying the employee (the finance system does that), importing card feeds, mileage calculation, and currency conversion beyond the fixed rate table in section 3.3. Pilot recruitment and finance sign-off are owned by the stakeholders, not by the development plan.
 
 ## 2. Requirements
 
@@ -330,7 +330,7 @@ One file per night, named `expenses-YYYYMMDD.csv`, with a second file `expenses-
 | --- | --- | --- |
 | R1 | The reporting line data is out of date, so routing picks the wrong manager. | Routing reads the line once at submit time and records it. Finance can ask for a re-route. |
 | R2 | Managers ignore reminders and reports pile up. | Escalation after 5 business days (section 3.5). The pilot measures time to decision. |
-| R3 | The export format changes after finance review. | The file format sits in one module and a contract test. The program owns the sign-off. |
+| R3 | The export format changes after finance review. | The file format sits in one module and a contract test. The stakeholders own the sign-off. |
 | R4 | Receipts hold personal data. | Receipt store keys are random. Receipts are never logged or put in events (GOV-2). |
 | R5 | The two tracks drift on the API. | Contracts first (DS-1.4) and a joint check at every checkpoint. |
 

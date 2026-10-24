@@ -8,7 +8,7 @@
 | Checkpoint | 2027-04-23, Release |
 | Demonstration | 2027-04-23, milestone 5 demonstration (acceptance criteria in `milestone.md` in this folder) |
 | Size | Medium, about 3 days |
-| Depends on | WI-08, WI-09; program input: finance sign-off on the export format and retention period |
+| Depends on | WI-08, WI-09; external input: finance sign-off on the export format and retention period |
 | Unblocks | None |
 | Ground truth | Sections 5.1, 8.1 |
 
@@ -32,7 +32,7 @@ The service goes to production behind the flag `EXPENSE_APPROVALS_ENABLED` (sect
 - The sample repository is new and empty. By this item the earlier items have created the service (WI-01), the report form (WI-02), the routing engine (WI-03), the inbox (WI-04), the rules module (WI-06), the audit writer (WI-07), the notification worker and the delegate screen (WI-08) and the ledger job (WI-09). Read those specifications first.
 - This item creates `docs/runbook.md`, the load check script under `tests/` and the records. It does not add product features.
 - WCAG means the Web Content Accessibility Guidelines. The recovery point objective (RPO) is 15 minutes and the recovery time objective (RTO) is 4 hours (NFR-5).
-- A program input is something an item needs from work the plan does not schedule, owned outside the team. This item has one, the finance sign-off on the export format and retention period. The stakeholders obtain it. This item only records whether it has arrived.
+- An external input is something an item needs from an external item, work outside the plan that is owned outside the team. This item has one, the finance sign-off on the export format and retention period. The stakeholders obtain it. This item only records whether it has arrived.
 - The three environments are test, staging and production (section 3.6). The rehearsal, load check and restore run in staging. Production is changed only by operations, with the runbook, after the checkpoint passes.
 - The service is one container in all three environments. Migrations only move forward, so a failed release is handled by turning the flag off, not by undoing a migration.
 - The ground truth does not give the load duration, the request mix, the backup tool or how operations pages someone. Verify each at implementation with the platform engineering team and record the answer.
@@ -62,7 +62,7 @@ Section 8.1 risks to review.
 | --- | --- | --- |
 | R1 | The reporting line data is out of date, so routing picks the wrong manager. | Routing reads the line once at submit time and records it. Finance can ask for a re-route. |
 | R2 | Managers ignore reminders and reports pile up. | Escalation after 5 business days (section 3.5). The pilot measures time to decision. |
-| R3 | The export format changes after finance review. | The file format sits in one module and a contract test. The program owns the sign-off. |
+| R3 | The export format changes after finance review. | The file format sits in one module and a contract test. The stakeholders own the sign-off. |
 | R4 | Receipts hold personal data. | Receipt store keys are random. Receipts are never logged or put in events (GOV-2). |
 | R5 | The two tracks drift on the API. | Contracts first (DS-1.4) and a joint check at every checkpoint. |
 

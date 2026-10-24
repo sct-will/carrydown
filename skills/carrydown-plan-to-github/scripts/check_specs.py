@@ -11,7 +11,7 @@ Checks, per work item
   the file is within the length bounds
   banned vocabulary (dashes, people named in the plan, AI vendor names, sprint words,
   "open questions", "non-goals"; the lists are in plan.yaml under banned)
-  no reference to the id of work the plan does not schedule, no reference to an unknown id
+  no reference to the id of an external item, no reference to an unknown id
   no broken relative link
   ground truth sections cited in the header exist in the rendered document
 Per milestone: milestone.md exists with the required parts and lists every item.
@@ -125,11 +125,11 @@ def check_item(plan, root, it, banned, gt_heads):
             for d in it["depends"]:
                 if L.tag(plan, d) not in got:
                     issues.append(f"Depends on lacks {L.tag(plan, d)} (row: {got!r})")
-            if it["program_input"] and "program input" not in got.lower():
-                issues.append(f"Depends on lacks the program input note (row: {got!r})")
-            if not it["program_input"] and "program input" in got.lower():
-                issues.append(f"Depends on has a program input note the plan does not (row: {got!r})")
-            if not it["depends"] and not it["program_input"] and got.strip().lower() not in ("none", "none."):
+            if it["external_input"] and "external input" not in got.lower():
+                issues.append(f"Depends on lacks the external input note (row: {got!r})")
+            if not it["external_input"] and "external input" in got.lower():
+                issues.append(f"Depends on has an external input note the plan does not (row: {got!r})")
+            if not it["depends"] and not it["external_input"] and got.strip().lower() not in ("none", "none."):
                 issues.append(f"Depends on should say None (row: {got!r})")
         elif name == "Unblocks":
             for u in it["unblocks"]:
@@ -192,13 +192,13 @@ def check_item(plan, root, it, banned, gt_heads):
             ln = scan_text.count("\n", 0, m.start()) + 1
             issues.append(f"{why} at line {ln}: {lines[ln - 1].strip()[:90]}")
     prefix = re.escape(plan["project"]["id_prefix"])
-    pids = L.program_ids(plan)
+    pids = L.external_ids(plan)
     known = {it2["id"] for it2 in plan["items"]}
     for m in re.finditer(rf"\b{prefix}-(\d+)\b", text):
         num = int(m.group(1))
         ln = text.count("\n", 0, m.start()) + 1
         if num in pids:
-            issues.append(f"reference to program id {m.group(0)} at line {ln}")
+            issues.append(f"reference to external item id {m.group(0)} at line {ln}")
         elif num not in known:
             issues.append(f"reference to unknown id {m.group(0)} at line {ln}")
     prose = strip_code(text)
@@ -255,8 +255,8 @@ def check_milestone(plan, root, ms):
         if it["milestone"] == ms["number"] and L.tag(plan, it["id"]) not in work:
             issues.append(f"Work items table lacks {L.tag(plan, it['id'])}")
     for m in re.finditer(rf"\b{re.escape(plan['project']['id_prefix'])}-(\d+)\b", text):
-        if int(m.group(1)) in L.program_ids(plan):
-            issues.append(f"reference to program id {m.group(0)}")
+        if int(m.group(1)) in L.external_ids(plan):
+            issues.append(f"reference to external item id {m.group(0)}")
     for pat, why in banned_patterns(plan):
         for m in pat.finditer(text):
             ln = text.count("\n", 0, m.start()) + 1
@@ -511,9 +511,9 @@ def report(plan):
             print(f"  " + (f"It meets the target {fmt(tdate)} with {gap} day(s) to spare. The planned dates add the slack between items."
                            if gap >= 0 else f"It misses the target {fmt(tdate)} by {-gap} day(s): no order of the dates can meet it with these sizes."))
         print("  Owners are not serialised in this pass. The load table above shows whether each person's work fits each work unit.")
-    pitems = plan["program"]["items"]
+    pitems = plan["external"]["items"]
     if pitems:
-        print("\nWork the plan does not schedule (owned outside the team; referenced only as program input)")
+        print("\nExternal items (outside the development plan; referenced only as external input)")
         for pi in pitems:
             print(f"  {L.tag(plan, pi['id'])} {pi['label']}")
     print("\nCheckpoints")

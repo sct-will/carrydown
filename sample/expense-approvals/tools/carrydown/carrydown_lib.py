@@ -481,8 +481,10 @@ def load_plan(path):
     plan["conventions"] = plan.get("conventions") or {}
     plan["limits"] = plan.get("limits") or {}
     plan["limits"].setdefault("spec_lines", [80, 340])
-    plan["program"] = plan.get("program") or {}
-    plan["program"].setdefault("items", [])
+    if "external" not in plan and "program" in plan:   # plans written before the rename keep working
+        plan["external"] = plan.pop("program")
+    plan["external"] = plan.get("external") or {}
+    plan["external"].setdefault("items", [])
     plan["banned"] = plan.get("banned") or {}
     b = plan["banned"]
     b.setdefault("words", list(DEFAULT_BANNED_WORDS))
@@ -494,8 +496,9 @@ def load_plan(path):
         it.setdefault("depends", [])
         it["depends"] = list(it["depends"] or [])
         it["unblocks"] = list(it.get("unblocks") or [])
-        it.setdefault("program_input", "")
-        it["program_input"] = it["program_input"] or ""
+        if "external_input" not in it and "program_input" in it:
+            it["external_input"] = it.pop("program_input")
+        it["external_input"] = it.get("external_input") or ""
         it.setdefault("size", "")
         it.setdefault("ground_truth", "")
         it.setdefault("owner", "")
@@ -666,12 +669,12 @@ def validate_plan(plan):
             cps[c["date"]] = c
             if _is_weekend(c["date"]):
                 P.append(f"checkpoint {c['date']} is a weekend")
-    prog_ids = set()
-    for pi in plan["program"]["items"]:
+    ext_ids = set()
+    for pi in plan["external"]["items"]:
         if not isinstance(pi.get("id"), int) or not pi.get("label"):
-            P.append(f"program.items: each needs integer id and label ({pi})")
+            P.append(f"external.items: each needs integer id and label ({pi})")
         else:
-            prog_ids.add(pi["id"])
+            ext_ids.add(pi["id"])
     ids = []
     items = {}
     milestones = {m.get("number"): m for m in plan["milestones"]}
@@ -684,8 +687,8 @@ def validate_plan(plan):
             P.append(f"item {iid}: duplicate id")
         ids.append(iid)
         items[iid] = it
-        if iid in prog_ids:
-            P.append(f"item {iid}: id is also a program item")
+        if iid in ext_ids:
+            P.append(f"item {iid}: id is also an external item")
         for k in ("slug", "label", "milestone", "track", "complete_by", "checkpoint"):
             if it.get(k) in (None, ""):
                 P.append(f"item {iid}: {k} is required")
@@ -726,7 +729,7 @@ def validate_plan(plan):
         iid = it.get("id")
         for d in it["depends"]:
             if d not in items:
-                P.append(f"item {iid}: depends on {d}, which is not an item (program ids are written in program_input, not depends)")
+                P.append(f"item {iid}: depends on {d}, which is not an item (external item ids are written in external_input, not depends)")
             elif d == iid:
                 P.append(f"item {iid}: depends on itself")
             elif _is_date(items[d].get("complete_by", "")) and _is_date(it.get("complete_by", "")):
@@ -841,9 +844,9 @@ def expected_header(plan, it):
     ms = milestone_by_num(plan)[it["milestone"]]
     cp = checkpoint_of(plan, it) or {"date": it.get("checkpoint", ""), "name": ""}
     tags = ", ".join(tag(plan, d) for d in it["depends"]) or "None"
-    if it["program_input"]:
+    if it["external_input"]:
         tags = (tags if tags != "None" else "").strip()
-        tags = (tags + "; " if tags else "") + f"program input: {it['program_input']}"
+        tags = (tags + "; " if tags else "") + f"external input: {it['external_input']}"
     unb = ", ".join(tag(plan, u) for u in it["unblocks"]) or "None"
     rows = [
         ("Milestone", f"Milestone {ms['number']}, {ms['name']} (`{ms['folder']}`), work unit {ms['number']}"),
@@ -884,7 +887,7 @@ PLANNING_RULES = (
     "Nobody is planned past 100 percent of allocated capacity in a work unit, aim for about 80, and days off and breaks are real.",
     "Slack sits before every checkpoint and demonstration. An item that completes on its checkpoint date has none.",
     "The critical path is read for single points of failure. If it runs through one person, the plan says so and offers an alternative.",
-    "Work the plan does not schedule, owned outside the team, stays out of the plan as id gaps.",
+    "Work outside the plan, owned outside the team, keeps its ids as gaps in the numbering.",
     "The plan records its rationale where a reviewer can argue with it: for each milestone, why these items form it and what the joint demonstration proves, "
     "and for each track, why its items are in this order. The plan owner reads the plan week by week, adversarially, before anything is scaffolded.",
 )
@@ -965,8 +968,8 @@ def slack_days(plan, item):
     return n
 
 
-def program_ids(plan):
-    return {p["id"] for p in plan["program"]["items"] if isinstance(p.get("id"), int)}
+def external_ids(plan):
+    return {p["id"] for p in plan["external"]["items"] if isinstance(p.get("id"), int)}
 
 
 # ---------------------------------------------------------------------------
