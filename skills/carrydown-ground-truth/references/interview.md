@@ -1,5 +1,7 @@
 # Interview guide
 
+Contents: [The two inputs](#the-two-inputs) · [Step 1, the ground truth](#step-1-of-6-the-ground-truth) · [Step 2, the people](#step-2-of-6-the-people-optional) · [Step 3, the target and the breaks](#step-3-of-6-the-target-and-the-breaks-optional) · [Step 4, GitHub](#step-4-of-6-github) · [Step 5, agents, demonstrations and the program boundary](#step-5-of-6-agents-demonstrations-and-the-program-boundary) · [Step 6, engineering conventions](#step-6-of-6-engineering-conventions) · [The summary to read back](#the-summary-to-read-back)
+
 Run this interview before you write anything. The user may be a product manager, so use plain words, ask a few questions at a time, and explain why you ask. Offer a default for every question. Read the answers back as one summary and wait for a yes.
 
 ## The two inputs
@@ -111,4 +113,6 @@ Write it as a short list the user can correct.
 
 Say: "If this is right, I will render the documents and draft the plan. Nothing is written to GitHub." Then wait.
 
-Offer the dry run for every script. Offer the sample if the user is unsure what the output looks like.
+Offer the dry run for every script.
+
+If the user wants to see the whole flow first, give them the browser links to open themselves, never a local folder. Do not open the links with a browser tool. An install copies only this skill folder, so the sample is not on their computer. The sample repository is https://github.com/sct-will/carrydown-sample. Its README holds the renderings and the sample output, and the repository has the live issues and the public board.

@@ -20,9 +20,9 @@ python3 <skill>/scripts/generate_dev_skill.py --root . --apply --force
 
 `--force` replaces `SKILL.md` and `README.md` too. Keep a copy of hand edits first, or regenerate into a scratch folder and merge.
 
-## What the sync script writes into issues
+## What the issues say
 
-Each issue links to the skill folder on the branch. If you move the folder, update `project.dev_skill_path` and run `github_sync.py --update-bodies`.
+The sync script writes a line into every GitHub issue that points to the skill folder on the branch and tells the developer to ask their agent to work on the item's id. Keep `project.dev_skill_path` stable once issues exist. If you move the folder, update `project.dev_skill_path` and run `github_sync.py --update-bodies`.
 
 ## Version
 
