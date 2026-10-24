@@ -188,6 +188,13 @@ def frontmatter(tmp, plan_text):
             "assert d.startswith('Orients on one Payments: phase 2 #core work item'), d; "
             "assert 'WI-01 to WI-11' in d and 'wi-01-service-scaffold' in d and 'docs/spec/' in d, d; print('parsed', len(d))")
     step("the description is a valid quoted scalar", [PY, "-c", code, str(proj / "docs/dev/skills/expense-approvals-dev/SKILL.md")], contains=["parsed 240"])
+    skill = proj / "docs/dev/skills/expense-approvals-dev"
+    step("generated text names the engineers, not developers", [PY, "-c", "print('ok')"],
+         files={skill / "SKILL.md": ["the engineer checks and posts it"], skill / "references/work-items.md": ["not by the engineers"]})
+    once = ("import sys; t = open(sys.argv[1], encoding='utf-8').read(); "
+            "n = {k: t.count(k) for k in ('`npm test`', '`npm run lint`', '`EXPENSE_APPROVALS_ENABLED`', 'npm run test:contract')}; "
+            "print(n); sys.exit(0 if set(n.values()) == {1} and 'developers' not in t else 1)")
+    step("the generated skill states each command and the flag once", [PY, "-c", once, str(skill / "SKILL.md")])
     plan.write_text(plan_text.replace("dev_skill_path: docs/dev/skills/expense-approvals-dev", "dev_skill_path: docs/dev/skills/other-name"), encoding="utf-8")
     step("the skill folder must match the skill name", gen, expect=2, contains=["must equal project.dev_skill"])
     long_name = "a" + "-b" * 40

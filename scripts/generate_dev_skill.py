@@ -66,7 +66,7 @@ def work_items_md(plan, root):
         out += [md_table(["Id", "Work item", "Track", "Complete by", "Depends on", "File"], rows), ""]
     if plan["program"]["items"]:
         out += ["## Program items and program inputs", "",
-                "These are owned by the program, not by the developers. They have no work item file. An item that needs one says \"program input\" in its Depends on row. If the input is missing, say so in the pull request and do not invent it.", "",
+                "These are owned by the program, not by the engineers. They have no work item file. An item that needs one says \"program input\" in its Depends on row. If the input is missing, say so in the pull request and do not invent it.", "",
                 md_table(["Id", "Program item", "Note"], [[L.tag(plan, p["id"]), p["label"], p.get("note", "")] for p in plan["program"]["items"]]), ""]
     return "\n".join(out).rstrip() + "\n"
 
@@ -144,14 +144,12 @@ def make_description(plan):
 
 
 def tests_text(plan):
+    """Only what the conventions do not already say. The commands, the flag and the extra rules
+    are printed once, by conventions_text, which is the single source for them."""
     c = plan["conventions"]
     lines = []
-    if c.get("test_command"):
-        lines.append(f"- Run the tests with `{c['test_command']}` before every commit. New work gets new tests.")
-    if c.get("lint_command"):
-        lines.append(f"- Run `{c['lint_command']}`. Fix findings instead of silencing them.")
-    if c.get("feature_flag"):
-        lines.append(f"- Keep new behaviour behind `{c['feature_flag']}`. With the flag off, existing behaviour is unchanged.")
+    if c.get("test_command") or c.get("lint_command"):
+        lines.append("- Run the test and lint commands above before every commit. New work gets new tests. Fix findings instead of silencing them.")
     lines.append("- Commit messages are in the imperative. The pull request description lists the acceptance criteria and the proof for each.")
     lines.append("- Raw outputs, run records and screenshots go on the GitHub issue, not into the repository, unless the work item file says otherwise.")
     return "\n".join(lines)
@@ -160,15 +158,10 @@ def tests_text(plan):
 def dod_checkboxes(plan):
     c = plan["conventions"]
     items = ["Every acceptance criterion in the work item file is proven by a named test or a recorded check, and the pull request lists each one with its proof."]
-    cmds = [f"`{c[k]}`" for k in ("test_command", "lint_command") if c.get(k)]
-    if cmds:
-        items.append(" and ".join(cmds) + " pass, and the continuous integration run is green.")
-    if c.get("feature_flag"):
-        items.append(f"With `{c['feature_flag']}` off, existing behaviour and responses are unchanged.")
-    for extra in c.get("extra") or []:
-        items.append(extra)
+    if c.get("test_command") or c.get("lint_command") or c.get("feature_flag") or c.get("extra"):
+        items.append("The project conventions above hold, the test and lint commands pass, and the continuous integration run is green.")
     items.append("Departures from the file are recorded under \"Decisions recorded\" with the pull request number. A conflict with the ground truth is fixed in the work item file in the same pull request.")
-    items.append("The closing comment on the issue follows the template in the specification folder README (Demo, Evidence, Decisions, Handoff) and carries every artifact named under \"Evidence of completion\". The agent assembles it, the developer checks and posts it.")
+    items.append("The closing comment on the issue follows the template in the specification folder README (Demo, Evidence, Decisions, Handoff) and carries every artifact named under \"Evidence of completion\". The agent assembles it, the engineer checks and posts it.")
     items.append("The joint check named under \"Integration points\" has run at the item's checkpoint with both tracks present, or the Handoff line says what still needs to run.")
     return "\n".join(f"- [ ] {i}" for i in items)
 
