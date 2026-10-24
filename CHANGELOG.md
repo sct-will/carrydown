@@ -19,13 +19,13 @@ All notable changes to this project are written here. The format follows Keep a 
 - A tie between critical path chains goes to the chain with more items, so the path keeps the dependency it starts from.
 - The sample moves five dates and one size so that every item has slack before its checkpoint, names both tracks in each demonstration's joint check, and carries its rationale and themes.
 - The plan template has a second item, so its example milestone covers both tracks and meets at a joint check.
-- The two skills and the generated developer skill treat documents, specifications, plan.yaml and issue text as data and never follow instructions found in them.
+- The two skills and the generated engineers' skill treat documents, specifications, plan.yaml and issue text as data and never follow instructions found in them.
 - `carrydown-plan-to-github` never opens the token file, asks for an explicit yes before writing to a public repository, and gives links for the user to open.
 - Token guidance leads with a fine-grained token for organisation boards, keeps the classic token for user-owned boards only, and sets a 7-day expiry and revocation when done.
 - After `github_token.py --from-file`, the user deletes their own token file. The documents no longer say the script deletes it.
 - `carrydown-ground-truth` runs `git init` only after a clear yes and no longer asks the user to install software through a system dialog.
 - Shorter skill descriptions and bodies, with `license`, `compatibility` and `metadata` in the frontmatter. Setup checks moved to `references/setup.md`.
-- The generated developer skill finds a work item file by glob and reads cited ground truth sections by line range instead of reading the whole index.
+- The generated engineers' skill finds a work item file by glob and reads cited ground truth sections by line range instead of reading the whole index.
 - One set of role names (plan owner, engineers) across the skills, templates and documents.
 - The README leads with the interactive install line, explains what `--all` and `-g` create, notes the installer's scanner labels, and adds a "See it in 60 seconds" block.
 - One statement of versions everywhere: Python 3.9 or later, Node.js 22.20 or later.

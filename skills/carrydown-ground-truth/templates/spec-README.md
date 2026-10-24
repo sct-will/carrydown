@@ -10,11 +10,11 @@ One file per development work item, plus `milestone.md` per milestone folder. Th
 | `plan.yaml` | The schedule as data: milestones, work items, owners, dates, dependencies, checkpoints. The checker and the GitHub scripts read it. |
 | `m1-.../` and the other milestone folders | The work item files, one per item, and `milestone.md` for each milestone. |
 
-The rendered ground truth lives at `{{ground_truth}}`. The developer skill that loads these conventions into a coding agent lives at `{{dev_skill_path}}`. Its README has the install steps.
+The rendered ground truth lives at `{{ground_truth}}`. The engineers' skill that loads these conventions into a coding agent lives at `{{dev_skill_path}}`. Its README has the install steps.
 
 ## How to use a specification
 
-The shortest route is the developer skill. It makes a coding agent read the right specification, the ground truth sections it cites and these conventions before it changes code. You do not paste that context by hand.
+The shortest route is the engineers' skill. It makes a coding agent read the right specification, the ground truth sections it cites and these conventions before it changes code. You do not paste that context by hand.
 
 1. Read the whole file, then the code it points to. Open the ground truth only for the sections the file cites.
 2. Propose the change in a short plan in the pull request description before writing code. Name the files you will touch.

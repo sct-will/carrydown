@@ -316,7 +316,7 @@ def path_safety(tmp, plan_text):
     plan.write_text(plan_text.replace("folder: m4-pilot", "folder: ../../../m4-pilot"), encoding="utf-8")
     step("a milestone folder outside the project is refused", [PY, "scripts/scaffold_spec.py", "--root", str(proj), "--allow-no-git"], expect=2, contains=["outside the project folder"])
     plan.write_text(plan_text.replace("dev_skill_path: docs/dev/skills/expense-approvals-dev", "dev_skill_path: ../../expense-approvals-dev"), encoding="utf-8")
-    step("a developer skill path outside the project is refused", [PY, "scripts/generate_dev_skill.py", "--root", str(proj)], expect=2, contains=["outside the project folder"])
+    step("the engineers' skill path outside the project is refused", [PY, "scripts/generate_dev_skill.py", "--root", str(proj)], expect=2, contains=["outside the project folder"])
     leaked = [x for x in (d.parent.iterdir()) if x.name in ("m4-pilot", "expense-approvals-dev", "elsewhere")]
     results.append((not leaked, "nothing was written outside the project"))
     print(("PASS " if not leaked else "FAIL ") + "nothing was written outside the project")
@@ -432,7 +432,7 @@ def main():
                 step(f"installed copy of {skill} runs the header refresh", [PY, str(dst / "scripts/scaffold_spec.py"), "--root", str(ROOT / SAMPLE), "--refresh-headers"])
         gh = Path(tmp) / "carrydown-plan-to-github"
         step("installed copy of carrydown-plan-to-github generates the engineers' skill", [PY, str(gh / "scripts/generate_dev_skill.py"), "--root", str(ROOT / SAMPLE)],
-             contains=["developer skill: expense-approvals-dev"])
+             contains=["engineers' skill: expense-approvals-dev"])
         step("installed copy of carrydown-plan-to-github refreshes only the references", [PY, str(gh / "scripts/generate_dev_skill.py"), "--root", str(ROOT / SAMPLE), "--only", "references"],
              contains=["would write: references/work-items.md", "would write: references/ground-truth-map.md"], absent=("Traceback", "SKILL.md"))
         ships = ("generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_sync.py", "github_token.py")

@@ -68,7 +68,7 @@ Files can be `.docx` or `.md`. Give paths.
 
 ## 5. Agents in use
 
-Which agentic editors do the engineers use? Any editor or command line agent that reads Agent Skills works. The README lists the ones the installer knows. The developer skill is installed once per engineer per agent.
+Which agentic editors do the engineers use? Any editor or command line agent that reads Agent Skills works. The README lists the ones the installer knows. The engineers' skill is installed once per engineer per agent.
 
 ## 6. Demonstration audience
 

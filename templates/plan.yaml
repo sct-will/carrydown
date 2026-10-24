@@ -26,7 +26,7 @@ project:
   spec_dir: docs/spec                    # where the specification folder lives
   ground_truth: docs/ground-truth/architecture.md   # the rendered ground truth the specs cite
   project_title: "Your project plan"     # name of the GitHub Project (v2) board
-  dev_skill: your-project-dev            # name of the generated developer skill
+  dev_skill: your-project-dev            # name of the generated engineers' skill
   dev_skill_path: docs/dev/skills/your-project-dev
 
 conventions:                             # feeds the definition of done in every issue

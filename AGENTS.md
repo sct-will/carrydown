@@ -8,7 +8,7 @@ Read this when you open the carrydown repository.
 - The Python scripts and Markdown templates the skills run, each skill carrying its own copy.
 - A fictional sample, `sample/expense-approvals/`, with its worked output.
 
-It carries a ground-truth document down into a plan, specifications, GitHub issues, a project board and a developer skill.
+It carries a ground-truth document down into a plan, specifications, GitHub issues, a project board and the engineers' skill.
 
 ## What it is not
 
@@ -20,7 +20,7 @@ It does not write application code. Planning decisions (owners, dates, scope, or
 | --- | --- |
 | `skills/<name>/SKILL.md` | The skill. `scripts/` and `templates/` sit beside it, plus `references/`. |
 | `scripts/`, `templates/` | The canonical copies of everything the skills carry. Edit these. |
-| `sample/expense-approvals/` | The sample: ground truth, plan, specifications, developer skill. |
+| `sample/expense-approvals/` | The sample: ground truth, plan, specifications, engineers' skill. |
 | `docs/` | Method, inputs, FAQ, security, setup, plan owner guide, sample pointer. |
 | `.github/` | Issue forms, pull request template, workflows. |
 

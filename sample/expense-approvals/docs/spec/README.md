@@ -10,7 +10,7 @@ One file per development work item, plus `milestone.md` per milestone folder. Th
 | `plan.yaml` | The schedule as data: milestones, work items, owners, dates, dependencies, checkpoints. The checker and the GitHub scripts read it. |
 | `m1-.../` and the other milestone folders | The work item files, one per item, and `milestone.md` for each milestone. |
 
-The rendered ground truth lives at `docs/ground-truth/architecture.md`. The developer skill that loads these conventions into a coding agent lives at `docs/dev/skills/expense-approvals-dev`. Its README has the install steps.
+The rendered ground truth lives at `docs/ground-truth/architecture.md`. The engineers' skill that loads these conventions into a coding agent lives at `docs/dev/skills/expense-approvals-dev`. Its README has the install steps.
 
 ## How to use a specification
 

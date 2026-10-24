@@ -7,7 +7,7 @@ Everything is derived from plan.yaml and the specification folder.
   sub-epics      one issue per milestone. Body comes from milestone.md: purpose, expected outcomes,
                  acceptance criteria, demonstration expectations and the work item list
   work items     one issue per item. Body: Work item, AI engineering notes (specification link and
-                 developer skill line), Depends on, Acceptance criteria, Evidence of completion,
+                 engineers' skill line), Depends on, Acceptance criteria, Evidence of completion,
                  Integration points, Definition of done
   sub-issues     each work item under its sub-epic, each sub-epic under the Epic if there is one
   dependencies   ids in issue bodies rewritten to issue links, for example "WI-01 (#12)"
@@ -168,7 +168,7 @@ def build_item_body(plan, root, it, numbers=None, mark=True):
     skill = ""
     if proj.get("dev_skill_path") and proj.get("repo"):
         skill = (
-            f"Developer skill: {L.github_tree_url(plan, proj['dev_skill_path'])}\n\n"
+            f"Engineers' skill: {L.github_tree_url(plan, proj['dev_skill_path'])}\n\n"
             f"Install it once following its README, then start this item by asking your coding agent to work on {L.tag(plan, it['id'])}. "
             "The skill makes the agent read the specification above, the ground truth sections it cites and the project conventions "
             "before it changes code. You review every change."

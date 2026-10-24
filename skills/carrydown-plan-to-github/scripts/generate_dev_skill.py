@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the per-project developer skill from the specification folder.
+"""Generate the per-project engineers' skill from the specification folder.
 
 Output, under project.dev_skill_path in plan.yaml
   SKILL.md                         when to use it, how to orient on an item, conventions, definition of done
@@ -168,7 +168,7 @@ def dod_checkboxes(plan):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(
-        description="Generate the developer skill folder (SKILL.md, README.md, references/) from plan.yaml, the specs and the rendered ground truth. Dry run unless --apply.",
+        description="Generate the engineers' skill folder (SKILL.md, README.md, references/) from plan.yaml, the specs and the rendered ground truth. Dry run unless --apply.",
     )
     ap.add_argument("--root", default=".", help="project root (default: current directory)")
     ap.add_argument("--plan", help="path to plan.yaml (default: <root>/docs/spec/plan.yaml)")
@@ -200,7 +200,7 @@ def main(argv=None):
         L.die(f"the last folder of project.dev_skill_path ({Path(skill_path).name}) must equal project.dev_skill ({skill_name}). "
               "Agents load a skill only when its folder and its name match")
     if not plan["items"]:
-        L.die("plan.yaml has no items yet, so there is nothing for a developer skill to describe")
+        L.die("plan.yaml has no items yet, so there is nothing for the engineers' skill to describe")
     first = plan["items"][0]
     ms1 = L.milestone_by_num(plan)[first["milestone"]]
     stem = f"{L.tag(plan, first['id']).lower()}-{first['slug']}"
@@ -229,7 +229,7 @@ def main(argv=None):
         # the references follow plan.yaml and the specs; SKILL.md and README.md may hold hand edits
         outputs = {k: v for k, v in outputs.items() if k.startswith("references/")}
     dest = L.inside(root, root / skill_path, "project.dev_skill_path")
-    L.say(f"developer skill: {skill_name}  ->  {skill_path}")
+    L.say(f"engineers' skill: {skill_name}  ->  {skill_path}")
     L.say(f"description length: {len(description)} characters (target under {DESCRIPTION_TARGET}, limit 1024)")
     if len(description) > DESCRIPTION_WARN:
         L.say(f"warning: the description is over {DESCRIPTION_WARN} characters. Shorten project.name: long descriptions are the first to be dropped when an agent lists many skills")

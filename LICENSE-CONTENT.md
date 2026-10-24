@@ -4,7 +4,7 @@ Attribution: Will Scott, https://github.com/sct-will/carrydown
 
 The following content is licensed under the Creative Commons Attribution 4.0 International licence (CC BY 4.0).
 
-- The sample project in `sample/`, including the architecture document, the plan, the milestone files, the specifications and the generated developer skill.
+- The sample project in `sample/`, including the architecture document, the plan, the milestone files, the specifications and the generated engineers' skill.
 - The text of the files in `templates/`.
 - The prose of the skills in `skills/*/SKILL.md` and `skills/*/references/`.
 - The documents in `docs/`, `README.md` and `START-HERE.md`.

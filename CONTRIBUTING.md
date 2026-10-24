@@ -58,7 +58,7 @@ Or open the repository in Codespaces. It opens on the sample output and runs the
 | `scripts/github_token.py` | Create and store a GitHub token safely, and check what it can do. |
 | `scripts/github_sync.py` | Labels, sub-epics, issues, links and the Epic comment. |
 | `scripts/github_project.py` | The GitHub Project board. |
-| `scripts/generate_dev_skill.py` | The developer skill folder. |
+| `scripts/generate_dev_skill.py` | The engineers' skill folder. |
 | `scripts/selftest.py` | The repository's own checks, with no token. |
 | `scripts/lint_prose.py` | The prose style checks. |
 | `scripts/sync_skill_assets.py` | Maintainers: copy scripts and templates into each skill folder. |

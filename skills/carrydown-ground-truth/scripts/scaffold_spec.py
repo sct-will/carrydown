@@ -238,7 +238,7 @@ PLACEHOLDERS = (
     ("project.name", '"Your project name"', "the project name, or pass --name"),
     ("project.slug", "your-project", "lowercase words joined by hyphens, derived from --name"),
     ("project.repo", "your-org/your-repo", "the GitHub repository for issues, as owner/name"),
-    ("project.dev_skill", "your-project-dev", "the name of the generated developer skill"),
+    ("project.dev_skill", "your-project-dev", "the name of the generated engineers' skill"),
 )
 
 
@@ -273,7 +273,7 @@ def init_plan(root, a, git_top):
             todo.append(f"  {key} is still {value}: {what}")
     if a.name:
         dev = re.search(r"(?m)^  dev_skill: (\S+)", text).group(1)
-        todo.append(f"  project.dev_skill is {dev}, derived from the name. Change it, and dev_skill_path with it, if the developer skill needs another name")
+        todo.append(f"  project.dev_skill is {dev}, derived from the name. Change it, and dev_skill_path with it, if the engineers' skill needs another name")
     print("Placeholders still to fill in plan.yaml:")
     for t in todo:
         print(t)

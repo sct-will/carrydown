@@ -38,7 +38,7 @@ The planning run reads the whole document once and writes one specification per 
 
 ## Does it write the code?
 
-No. It carries the plan down to the point where an engineer and their agent can start work. The developer skill then makes each work item start from its specification.
+No. It carries the plan down to the point where an engineer and their agent can start work. The engineers' skill then makes each work item start from its specification.
 
 ## Does it write my architecture document?
 

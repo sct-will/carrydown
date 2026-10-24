@@ -26,7 +26,7 @@ Every script that writes anything is a dry run until you pass `--apply`.
 | `github_token.py` | The token you give it. | The token file, mode 600. It writes without `--apply`, after you give it a token. |
 | `github_sync.py` | The folder, and GitHub (read only) in a dry run. | GitHub: labels, issues, sub-issue links, one comment. |
 | `github_project.py` | The folder, and GitHub (read only) in a dry run. | GitHub: a project, fields, views, items, field values. |
-| `generate_dev_skill.py` | The folder. | The developer skill folder. |
+| `generate_dev_skill.py` | The folder. | The engineers' skill folder. |
 
 The skills tell the agent to show you the dry run and wait for a clear yes before `--apply`.
 

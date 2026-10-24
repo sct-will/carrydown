@@ -10,7 +10,7 @@ How it was made.
 - The commands ran from the root of the repository. Output is as printed, with the token removed and file paths shortened. The scripts never print the token.
 - The scripts have since gained a Constraints block in the Epic comment (the target delivery and the allocation by track) and a target delivery line in every sub-epic. The write blocks below predate it. The dry runs print the block before anything is written. The project is fictional. The numbers are the real issue numbers the run created: Epic #1, sub-epics #2 to #6, work items #7 to #15.
 - The sample dates have since moved so that every item has slack before its checkpoint, and the plan gained its rationale. The write blocks below show the earlier dates. The blocks that need no GitHub account show the current ones.
-- The blocks that need no GitHub account were run again with the current scripts: the help text, the token walkthrough, the renderer, the scaffold, the checker, the dry runs (with `--offline`, so they read nothing from GitHub) and the developer skill. The blocks that talk to GitHub are as recorded in the original run: the token check, the writes, the second runs, the verifications and the independent count.
+- The blocks that need no GitHub account were run again with the current scripts: the help text, the token walkthrough, the renderer, the scaffold, the checker, the dry runs (with `--offline`, so they read nothing from GitHub) and the engineers' skill. The blocks that talk to GitHub are as recorded in the original run: the token check, the writes, the second runs, the verifications and the independent count.
 - The scripts took about three and a half minutes in total, most of it pauses that keep GitHub from rate limiting the writes. Reading the dry runs takes longer than running the scripts.
 
 Each GitHub step shows the dry run first and the write second. A second run of each write step finds everything in place and creates nothing.
@@ -809,7 +809,7 @@ The last step of `carrydown-plan-to-github` generates the skill the engineers in
 
 ```text
 $ python3 scripts/generate_dev_skill.py --root sample/expense-approvals
-developer skill: expense-approvals-dev  ->  docs/dev/skills/expense-approvals-dev
+engineers' skill: expense-approvals-dev  ->  docs/dev/skills/expense-approvals-dev
 description length: 234 characters (target under 250, limit 1024)
   skip (exists): SKILL.md
   skip (exists): README.md

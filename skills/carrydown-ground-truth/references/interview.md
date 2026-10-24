@@ -97,7 +97,7 @@ Ask.
 4. Are there rules for secrets, logs or personal data that every change must obey?
 5. Where does the existing code live that the work touches, if any?
 
-These answers become the definition of done in every issue and in the developer skill.
+These answers become the definition of done in every issue and in the engineers' skill.
 
 ## The summary to read back
 
