@@ -204,7 +204,20 @@ def _main(argv=None):
     ap.add_argument("--no-delete-after", dest="delete_after", action="store_false", help=argparse.SUPPRESS)
     ap.add_argument("--dry-run", action="store_true", help="print the steps and the storage path. Ask for nothing, store nothing, call nothing")
     a = ap.parse_args(argv)
-    dest = Path(os.path.expanduser(a.token_file or G.DEFAULT_TOKEN_FILE))
+    for flag, value in (("--token-file", a.token_file), ("--from-file", a.from_file), ("--repo", a.repo)):
+        if value is not None and not value.strip():
+            L.die(f"{flag} is empty. Give a value, or leave out {flag}")
+    if a.repo is not None and not L.repo_ok(a.repo):
+        L.die(f"the repository must look like owner/name, such as my-org/my-repo, got {a.repo!r}")
+    dest = Path(os.path.expanduser(a.token_file if a.token_file is not None else G.DEFAULT_TOKEN_FILE))
+    # checked before the token is read or sent anywhere
+    try:
+        if any(len(part.encode("utf-8", "replace")) > L._limits()[0] for part in dest.parts):
+            raise OSError(36, "File name too long")
+        dest.is_symlink()
+        dest.exists()
+    except (OSError, ValueError) as e:
+        L.die(f"--token-file {a.token_file} cannot be used: {getattr(e, 'strerror', None) or e}. Choose another path")
 
     if a.dry_run:
         L.say("Dry run. These are the steps:")
@@ -230,19 +243,31 @@ def _main(argv=None):
             return 1
         return check(token, a.repo)
 
-    if a.from_file:
+    loose_source = None
+    if a.from_file is not None:
         src = Path(os.path.expanduser(a.from_file))
-        if not src.is_file():
-            L.die(f"{a.from_file} is not a file")
         try:
+            regular = src.is_file()
+        except (OSError, ValueError):
+            regular = False
+        if not regular:
+            L.die(f"{a.from_file} is not a regular file. Give the path of the plain text file that holds the token")
+        try:
+            if src.stat().st_size > G.MAX_TOKEN_FILE:
+                L.die(f"{a.from_file} is larger than a token file can be. Save only the token in it")
             raw = src.read_bytes()
+            loose_source = G.loose_mode(src)
         except OSError as e:
             L.die(f"cannot read {a.from_file}: {e.strerror or e}")
         if raw[:5] == b"{\\rtf" or b"\x00" in raw[:200]:
             L.die("that file is not plain text. In TextEdit choose Format, Make Plain Text, then save again")
         token = raw.decode("utf-8-sig", "replace").strip().strip("\ufeff").strip()
     elif a.stdin:
-        token = sys.stdin.buffer.read().decode("utf-8-sig", "replace").strip()
+        # a bounded read: standard input could be a device such as /dev/zero that never ends
+        raw = sys.stdin.buffer.read(G.MAX_TOKEN_FILE + 1)
+        if len(raw) > G.MAX_TOKEN_FILE:
+            L.die("standard input holds more than a token. Pass only the token on standard input")
+        token = raw.decode("utf-8-sig", "replace").strip()
     else:
         walkthrough(L.say)
         L.say("")
@@ -256,6 +281,10 @@ def _main(argv=None):
     if dest.is_symlink():
         L.die(f"{short(dest)} is a symbolic link. The token is never written through a link. Nothing was sent. "
               "Remove the link or choose another --token-file")
+    if L.exists(dest) and not dest.is_file():
+        L.die(f"{short(dest)} is not a regular file, so the token cannot be stored there. Nothing was sent. Choose another --token-file")
+    if loose_source is not None:
+        L.say(f"warning: {a.from_file} can be read by other users (mode {loose_source:o}). Delete it as soon as the token is stored: it holds the token in plain text.")
     top = inside_git(dest)
     if top is not None:
         L.say(f"warning: {short(dest)} is inside the git repository {short(top)}. Keep the token outside every project so it is never committed.")

@@ -37,6 +37,7 @@ TOKENS_PAGE = "https://github.com/settings/tokens"
 # is used when a token is stored and when it is read, so nothing else is ever sent as a token.
 TOKEN_RE = re.compile(r"^(ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,255})$")
 TOKEN_SHAPE = "a GitHub personal access token (it starts with ghp_ or github_pat_)"
+MAX_TOKEN_FILE = 4096   # bytes. A token is under 300; a larger file is not a token file
 
 
 def refuse(msg):
@@ -58,11 +59,13 @@ def read_token_file(path, what):
     an empty file, and text that is not a token, without ever printing the file's contents."""
     shown = str(path)
     if not path.is_file():
-        refuse(f"{what} {shown} is not a file")
+        refuse(f"{what} {shown} is not a regular file")
     mode = loose_mode(path)
     if mode is not None:
         refuse(f"{what} {shown} can be read by other users (mode {mode:o}), so it was not used. Fix: chmod 600 {shown}")
     try:
+        if path.stat().st_size > MAX_TOKEN_FILE:
+            refuse(f"{what} {shown} is larger than a token file can be, so it was not used. Store the token again with python3 {TOKEN_SCRIPT}")
         token = path.read_bytes().decode("utf-8-sig").strip()
     except UnicodeDecodeError:
         refuse(f"{what} {shown} is not plain UTF-8 text, so it was not used. Store the token again with python3 {TOKEN_SCRIPT}")
@@ -82,9 +85,15 @@ def read_token(explicit=None, required=True):
     An explicit --token-file is the only source when it is given, and a missing one is an error.
     Otherwise CARRYDOWN_GITHUB_TOKEN, then the stored file. Every token is checked against TOKEN_RE
     before it is used, so a stray line or a quoted value is never sent."""
-    if explicit:
+    if explicit is not None:
+        if not str(explicit).strip():
+            refuse("--token-file is empty. Give the path of the token file, or leave out --token-file to use the stored token")
         p = Path(os.path.expanduser(explicit))
-        if not p.exists():
+        try:
+            found = p.exists()
+        except (OSError, ValueError) as e:
+            refuse(f"the token file {explicit} cannot be used: {getattr(e, 'strerror', None) or e}")
+        if not found:
             refuse(f"token file not found: {explicit}. Check the path, or leave out --token-file to use the stored token")
         return read_token_file(p, "the token file")
     env = os.environ.get("CARRYDOWN_GITHUB_TOKEN")
@@ -240,7 +249,12 @@ class GitHub:
                     self._last = time.time()
                     self.scopes = r.headers.get("X-OAuth-Scopes", self.scopes)
                     raw = r.read()
-                    return r.status, (json.loads(raw) if raw else None), r.headers
+                    try:
+                        parsed = json.loads(raw) if raw else None
+                    except ValueError:
+                        raise GitHubError(f"{method} {path} -> {r.status}: the answer is not JSON, so it is not from the GitHub API", r.status, "http",
+                                          "check the network: a proxy or a captive portal may have answered instead of GitHub")
+                    return r.status, parsed, r.headers
             except urllib.error.HTTPError as e:
                 raw = e.read().decode("utf-8", "replace")
                 self._last = time.time()
@@ -283,16 +297,30 @@ class GitHub:
         status, js, _ = self._send(method, self.api + path, data, ok=(200, 201, 202, 204, 404, 409, 422))
         return status, js
 
-    def paged(self, path, key=None):
+    def paged(self, path, key=None, limit=1000):
+        """Every page of a list. GitHub names the next page in the Link header; when it names
+        none, this was the last page. Without a Link header, a page shorter than 100 is the last.
+        Only the page number is taken from the header, so a request never goes to a host the
+        header names. limit stops a server that never ends the list."""
         out, page = [], 1
         sep = "&" if "?" in path else "?"
-        while True:
-            js = self.rest("GET", f"{path}{sep}per_page=100&page={page}")
-            chunk = js.get(key, []) if key else js
+        while page <= limit:
+            _, js, headers = self._send("GET", f"{self.api}{path}{sep}per_page=100&page={page}")
+            chunk = (js.get(key, []) if key else js) if isinstance(js, (dict, list)) else []
+            if not isinstance(chunk, list):
+                raise GitHubError(f"GET {path} returned {type(chunk).__name__}, not a list", None, "http")
             out.extend(chunk)
+            link = (headers or {}).get("Link") if headers is not None else None
+            if link is not None:
+                nxt = re.search(r'<[^>]*[?&]page=([0-9]+)[^>]*>\s*;\s*rel="next"', link)
+                if not nxt or int(nxt.group(1)) <= page:
+                    return out
+                page = int(nxt.group(1))
+                continue
             if len(chunk) < 100:
                 return out
             page += 1
+        raise GitHubError(f"GET {path} had more than {limit} pages", None, "http")
 
     def graphql(self, query, variables=None):
         safe = query.lstrip().startswith("query")   # a read; a mutation is never repeated

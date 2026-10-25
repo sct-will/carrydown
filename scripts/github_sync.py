@@ -60,7 +60,9 @@ def subepic_title(plan, ms):
 
 
 def item_title(plan, it):
-    return plan["project"]["title_format"].format(id=L.tag(plan, it["id"]), label=it["label"], lower=L.tag(plan, it["id"]).lower())
+    """The issue title of a work item. validate_plan has checked project.title_format, and every
+    script stops on a plan problem before it calls this."""
+    return L.format_title(plan["project"]["title_format"], L.tag(plan, it["id"]), it["label"])
 
 
 def definition_of_done(plan):
@@ -399,7 +401,7 @@ def _run(argv=None):
     ap.add_argument("--update-bodies", action="store_true", help="also rewrite the bodies of issues that already exist")
     ap.add_argument("--skip-comment", action="store_true", help="do not post or update the Epic roll-up comment")
     ap.add_argument("--skip-check", action="store_true", help="do not run the specification checker first")
-    ap.add_argument("--issue-type", default="", help="GitHub issue type for work items, for example Task (organizations only)")
+    ap.add_argument("--issue-type", default=None, help="GitHub issue type for work items, for example Task (organizations only)")
     ap.add_argument("--show-body", metavar="ID", help="print the issue body for one work item or sub-epic and exit (no network). Accepts WI-07, 7 or M2")
     a = ap.parse_args(argv)
     if a.offline and (a.apply or a.verify):
@@ -407,28 +409,38 @@ def _run(argv=None):
               "Leave out --offline to write or verify, or leave out the other flag for an offline dry run")
     if a.apply and a.verify:
         L.die("--apply and --verify are separate runs. Run --apply first, then --verify")
+    if a.issue_type is not None and not a.issue_type.strip():
+        L.die("--issue-type is empty. Give the issue type, such as Task, or leave out --issue-type")
+    a.issue_type = (a.issue_type or "").strip()
+    if a.show_body is not None and not a.show_body.strip():
+        L.die("--show-body is empty. Give a work item id such as WI-07 or 7, or M and a milestone number such as M2")
 
     root = L.project_root(a.root)
     plan_path = L.find_plan(root, a.plan)
-    if not plan_path.exists():
+    if not L.exists(plan_path):
         L.die(f"no plan at {plan_path}")
-    plan, problems = L.load_plan(plan_path)
+    plan, problems = L.load_plan(plan_path, root)
     if problems:
         L.say("plan.yaml has problems:")
         for p in problems:
             L.say("  - " + p)
         return 1
-    if a.show_body:
-        sm = re.fullmatch(r"\s*[Mm](\d+)\s*", str(a.show_body))
+    if a.show_body is not None:
+        # the body links the specification on GitHub, so it needs the repository, from --repo or the plan
+        if a.repo is not None or not plan["project"].get("repo"):
+            if a.repo is None:
+                L.die("--show-body needs the repository for the links in the body. Set project.repo in plan.yaml or pass --repo owner/name")
+            plan["project"]["repo"] = "/".join(L.repo_parts(plan, a.repo))
+        sm = re.fullmatch(r"\s*[Mm]0*([0-9]+)\s*", str(a.show_body))
         if sm:
             ms = {m["number"]: m for m in plan["milestones"]}.get(int(sm.group(1)))
             if not ms:
-                L.die(f"no milestone {a.show_body}. Use M followed by the milestone number, for example M{plan['milestones'][0]['number']}")
+                example = f"for example M{plan['milestones'][0]['number']}" if plan["milestones"] else "the plan has no milestones yet"
+                L.die(f"no milestone {a.show_body}. Use M followed by the milestone number, {example}")
             L.say(build_subepic_body(plan, root, ms))
             return 0
-        m = re.search(r"(\d+)\s*$", str(a.show_body))
-        wanted = int(m.group(1)) if m else None
-        it = L.item_by_id(plan).get(wanted)
+        # the same id forms as check_specs.py --item: 7, 07, WI-07 and wi-7
+        it = L.item_by_id(plan).get(L.item_number(plan, a.show_body))
         if not it:
             example = f"for example {L.tag(plan, plan['items'][0]['id'])}" if plan["items"] else "the plan has no items yet"
             L.die(f"no item with id {a.show_body}. Use the tag ({example}) or the number, or M and a milestone number")
@@ -480,7 +492,7 @@ def _run(argv=None):
             if public and not a.allow_public and not a.verify:
                 L.say(f"note: {owner}/{repo} is public, and issue bodies carry text from your ground truth. --apply will need --allow-public.")
     if a.verify:
-        return verify(s, plan, root)
+        return verify(s, plan, root, a.skip_comment)
 
     L.say("\nLabels")
     if gh:
@@ -598,7 +610,7 @@ def own_rollups(gh, base, num):
             if MARKER in (c.get("body") or "") and (c.get("user") or {}).get("login") == me]
 
 
-def verify(s, plan, root):
+def verify(s, plan, root, skip_comment=False):
     gh = s.gh
     L.say("\nVerification (read only)")
     ok = True
@@ -673,9 +685,14 @@ def verify(s, plan, root):
         subs = {x["number"] for x in gh.paged(f"{s.base}/issues/{epic}/sub_issues")}
         want = {s.numbers[f"M{m['number']}"] for m in plan["milestones"] if f"M{m['number']}" in s.numbers}
         L.say(f"  sub-epics under Epic #{epic}: {len(subs & want)} of {len(want)}")
-        com = own_rollups(gh, s.base, epic)
-        L.say(f"  Epic roll-up comment: {'present' if com else 'missing'}")
-        ok &= bool(com) and subs >= want
+        ok &= subs >= want
+        if skip_comment:
+            # a board built with --skip-comment has no roll-up comment, so it is not asked for
+            L.say("  Epic roll-up comment: not checked (--skip-comment)")
+        else:
+            com = own_rollups(gh, s.base, epic)
+            L.say(f"  Epic roll-up comment: {'present' if com else 'missing'}")
+            ok &= bool(com)
     L.say("verification " + ("passed" if ok else "FAILED"))
     return 0 if ok else 1
 

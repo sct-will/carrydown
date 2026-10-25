@@ -28,6 +28,7 @@ Usage
 """
 import argparse
 import datetime as dt
+import re
 import sys
 import time
 from pathlib import Path
@@ -173,12 +174,19 @@ def _run(argv=None):
               "Leave out --offline to write or verify, or leave out the other flag for an offline dry run")
     if a.project_number is not None and a.project_number < 1:
         L.die("--project-number must be a project number, 1 or more")
+    for flag, value in (("--owner", a.owner), ("--title", a.title)):
+        if value is not None and not value.strip():
+            L.die(f"{flag} is empty. Leave it out to use the default, or give a value")
+    if a.owner is not None and not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})", a.owner):
+        L.die(f"--owner {a.owner!r} is not a GitHub user or organization name (letters, digits and hyphens)")
+    if a.title is not None and (len(a.title) > 256 or not L._one_line(a.title)):
+        L.die("--title must be one line of at most 256 characters")
 
     root = L.project_root(a.root)
     plan_path = L.find_plan(root, a.plan)
-    if not plan_path.exists():
+    if not L.exists(plan_path):
         L.die(f"no plan at {plan_path}")
-    plan, problems = L.load_plan(plan_path)
+    plan, problems = L.load_plan(plan_path, root)
     if problems:
         L.say("plan.yaml has problems:")
         for p in problems:
