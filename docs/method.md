@@ -10,10 +10,37 @@ The idea is old in systems engineering, where it is called flow-down: a requirem
 
 | Step | What happens | Who decides | What it produces |
 | --- | --- | --- | --- |
-| 1. Generate, with `carrydown-ground-truth` | The agent renders the ground truth to Markdown with stable section anchors, interviews the plan owner about people, time and dates, and drafts the plan around those people. Then it writes one specification per work item to a fixed template, with contract excerpts copied from the ground truth. A checker validates every file against the plan. | The plan owner decides, the agent drafts | The rendered ground truth, `plan.yaml` with its load table and critical path, and one specification per work item. |
-| 2. Review | The plan owner reads the plan week by week and every specification, adversarially, and edits them with the agent until they are right. No separate reviewer. | Plan owner | A plan and specifications the plan owner approves, with 0 findings from the checker. |
-| 3. Carry down to GitHub, with `carrydown-plan-to-github` | A dry run first. After the plan owner's yes: labels, an Epic, a sub-epic per milestone, an issue per work item as a sub-issue with its specification linked, dependency links and a roll-up comment on the Epic. Then a GitHub Project (v2) board with a work unit iteration field of custom length, track, dates and three views. Last, the engineers' skill is generated from the specifications. | Plan owner, after each dry run | Issues, the board, and the engineers' skill with the install line to send each engineer. |
-| 4. Work the issues | Each engineer installs the engineers' skill once and says "Work on WI-03". The agent reads the specification, the cited sections and the conventions, then plans the code. Evidence is posted on every closed issue. Each week the tracks meet at a checkpoint, a dated integration check between them. There they run a joint check, the one-sentence test in the plan that proves the parts they built fit together. Each milestone ends with one demonstration against criteria written in advance. | Engineers show, the stakeholders decide | Code, closing comments with evidence, checkpoint comments and a demonstration note on each sub-epic. |
+| 1. Generate, with `carrydown-ground-truth` | The agent interviews the plan owner about people, time and dates. It drafts the plan and one specification per work item. | The plan owner decides, the agent drafts | The rendered ground truth, `plan.yaml` with its load table and critical path, and one specification per work item. |
+| 2. Review | The plan owner reads the plan week by week and reads every specification. They read adversarially, looking for what is wrong. They edit with the agent until both are right. There is no separate reviewer. | Plan owner | A plan and specifications the plan owner approves, with 0 findings from the checker. |
+| 3. Carry down to GitHub, with `carrydown-plan-to-github` | After a dry run and the plan owner's yes, the agent creates the issues and the board. Last, it generates the engineers' skill. | Plan owner, after each dry run | Issues, the board, and the engineers' skill with the install line to send each engineer. |
+| 4. Work the issues | Each engineer installs the engineers' skill once and says "Work on WI-03". The agent reads the specification, the cited sections and the conventions, then plans the code. | Engineers show, the stakeholders decide | Code, closing comments with evidence, checkpoint comments and a demonstration note on each sub-epic. |
+
+Step 1 does this, in order:
+
+- The agent renders the ground truth to Markdown. Each section gets a stable anchor, a link target that does not change.
+- It interviews the plan owner about people, time and dates.
+- It drafts the plan around those people.
+- It writes one specification per work item to a fixed template. Contract excerpts are copied from the ground truth.
+- A checker validates every file against the plan.
+
+Step 3 does this, in order:
+
+- It shows a dry run first. Nothing is written until the plan owner says yes.
+- It creates the labels.
+- It creates an Epic, the one parent issue for the whole plan.
+- It creates a sub-epic per milestone. A sub-epic is the parent issue for one milestone.
+- It creates an issue per work item. Each one is a sub-issue, an issue placed under its sub-epic. Each one links its specification.
+- It adds dependency links between the issues.
+- It posts a roll-up comment on the Epic. The comment states the constraints: the target delivery and the people by track. It lists each sub-epic with its work items as nested checkboxes.
+- It builds a GitHub Project (v2) board. The board has a work unit field of the iteration type. An iteration field groups items into time blocks, each with a start date and a length. Here each block is one work unit, and the lengths can differ.
+- The board also has fields for the track and the dates, and three views: Table, Board and Roadmap.
+- Last, it generates the engineers' skill from the specifications.
+
+During step 4:
+
+- Evidence is posted on every closed issue.
+- Each week the tracks meet at a checkpoint, a dated integration check between them. There they run a joint check, the one-sentence test in the plan that proves the parts they built fit together.
+- Each milestone ends with one demonstration against criteria written in advance.
 
 To see the four steps on a finished fictional sample, open [the sample board](https://github.com/users/sct-will/projects/2) and [issue 9](https://github.com/sct-will/carrydown-sample/issues/9).
 

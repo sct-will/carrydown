@@ -62,7 +62,7 @@ The first skill interviews you in six short steps. Nothing is written to GitHub 
 | What must the stakeholders see at each milestone demonstration to call it done? | Their words, which become acceptance criteria |
 | How is the code built, tested and merged here? | The commands and the branch rule |
 
-Then it shows the schedule, each person's load per work unit, the critical path (the chain of items that sets the end date) and the slack (days to spare) before every checkpoint (a dated integration check between the tracks), and asks you to review. If you have a date and no team, say so, and it derives the capacity; if you have a team and no date, it derives the date. [docs/inputs.md](docs/inputs.md) has the details.
+Then it shows you the schedule and each person's load per work unit. It shows the critical path, the chain of items that sets the end date. It shows the slack, the days to spare, before every checkpoint. A checkpoint is a dated integration check between the tracks. Then it asks you to review the plan. If you have a date and no team, say so, and it derives the capacity. If you have a team and no date, it derives the date. [docs/inputs.md](docs/inputs.md) has the details.
 
 ## What you get
 
