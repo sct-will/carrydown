@@ -445,6 +445,8 @@ def regressions(tmp, plan_text):
         ("a target of 99999999 weeks", "  date: 2027-04-23\n", "  weeks: 99999999\n", "weeks must be a whole number of working weeks"),
         ("a size of 99999999 days", 'size: "Large, about 5 days"', 'size: "Large, about 99999999 days"', "Split the item"),
         ("spec_lines given as text", "spec_lines: [80, 340]", "spec_lines: many", "limits.spec_lines must be two whole numbers"),
+        ("an item without an id", "  - id: 2\n", "  - id:\n", "items: id must be an integer"),
+        ("a break start that is not a date", "    start: 2027-03-22\n", "    start: zzz\n", "start is not a date (use YYYY-MM-DD): 'zzz'"),
     ]
     for i, (label, old, new, want) in enumerate(wrong):
         assert old in plan_text, label

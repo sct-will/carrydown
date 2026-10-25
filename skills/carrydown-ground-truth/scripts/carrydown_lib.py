@@ -702,7 +702,7 @@ def load_plan(path):
     derived = {it["id"]: [] for it in plan["items"] if isinstance(it.get("id"), int)}
     for it in plan["items"]:
         for d in it["depends"]:
-            if d in derived:
+            if d in derived and _is_int(it.get("id")):   # an item without an integer id is reported by validate_plan
                 derived[d].append(it["id"])
     for it in plan["items"]:
         it["_derived_unblocks"] = sorted(derived.get(it["id"], []))
@@ -873,8 +873,13 @@ def validate_plan(plan):
         for k in ("name", "start", "end"):
             if not br.get(k):
                 P.append(f"breaks: {k} is required")
+        for k in ("start", "end"):
+            if br.get(k) and not _is_date(br[k]):
+                P.append(f"break {br.get('name')!r}: {k} is not a date (use YYYY-MM-DD): {br[k]!r}")
         if br.get("start") and br.get("end") and _is_date(br["start"]) and _is_date(br["end"]):
             bs, be = parse_date(br["start"]), parse_date(br["end"])
+            if be < bs:
+                P.append(f"break {br.get('name')!r}: end is before start")
             for m in plan["milestones"]:
                 if m.get("start") and m.get("end") and _is_date(m["start"]) and _is_date(m["end"]):
                     if parse_date(m["start"]) <= be and bs <= parse_date(m["end"]):
