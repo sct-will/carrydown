@@ -2,6 +2,8 @@
 
 carrydown is an open source project for planning and engineering handoffs with artificial intelligence (AI) coding agents. Starting from your architecture document, your agent uses the carrydown skills to generate the project plan, specifications, GitHub epics and issues, project board, and a project-specific skill for your engineers' agents.
 
+The name reflects the idea: carry the decisions in your architecture down into the plan, the GitHub work and the instructions your engineers’ coding agents use.
+
 The plan is built around your team's availability and target date. Scripts check the specifications against the plan. Each specification cites the architecture, requirements or engineering standards it follows. The engineers' skill directs their agents to those sections before starting work. You review and refine the artifacts with your agent and approve publication to GitHub.
 
 [![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
