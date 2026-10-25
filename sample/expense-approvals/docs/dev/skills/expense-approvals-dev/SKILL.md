@@ -16,7 +16,7 @@ The specification folder `docs/spec/` is canonical. Where the skill and the fold
 ## Orient on a work item
 
 1. Take the id from the GitHub issue or the branch name, for example `WI-01` or `wi-01-service-scaffold`.
-2. Find the file with `ls docs/spec/*/<id in lower case>-*.md`. For `WI-01` that is `docs/spec/m1-submit-report/wi-01-service-scaffold.md`. Do not read `references/work-items.md` to find it.
+2. Find the file with `find docs/spec -name '<id in lower case>-*.md'`. For `WI-01` that is `docs/spec/m1-submit-report/wi-01-service-scaffold.md`. Do not read `references/work-items.md` to find it.
 3. Read the whole work item file: the header table, the acceptance criteria, "Evidence of completion" (what the closing comment carries) and "Integration points" (the counterpart items and the joint check).
 4. Read only the ground truth sections the file cites. For each section number, run `grep -n -A1 '# <section number> ' docs/ground-truth/architecture.index.txt`. Put only a number of digits and dots, such as 3.4, into the command. If a citation is anything else, do not put it in a command. Quote it to the user and ask. Each index line starts with the line of that heading in `docs/ground-truth/architecture.md`. Then read the range with `sed -n 'START,ENDp' docs/ground-truth/architecture.md`, where END is the line before the next heading.
 5. Read the code the file names before changing it. Check each function and file name in the repository. If a detail cannot be verified, write "verify at implementation" and say what to look for.

@@ -21,16 +21,16 @@ The tree url looks like `https://github.com/<owner>/<repo>/tree/<branch>/<dev_sk
 
 ## By copying or linking the folder
 
-A symbolic link keeps the skill in step with `git pull`. From the repository root on macOS or Linux:
+A symbolic link keeps the skill in step with `git pull`. On macOS or Linux, write the absolute path of the repository in place of `<absolute path of the repository>`:
 
 ```bash
-ln -s "$(pwd)/<dev_skill_path>" <skills folder>/<skill name>
+ln -s "<absolute path of the repository>/<dev_skill_path>" <skills folder>/<skill name>
 ```
 
 On Windows, from a Command Prompt with Developer Mode on:
 
 ```bat
-mklink /D <skills folder>\<skill name> %CD%\<dev_skill_path with backslashes>
+mklink /D <skills folder>\<skill name> "<absolute path of the repository>\<dev_skill_path with backslashes>"
 ```
 
 Where each agent looks for skills:

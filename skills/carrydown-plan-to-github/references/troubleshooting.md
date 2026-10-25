@@ -4,7 +4,7 @@ Each script prints the HTTP status and GitHub's message with the token removed. 
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `No GitHub token found` | No token file or environment variable. | Run `python3 <skill>/scripts/github_token.py`. |
+| `No GitHub token found` | No token file or environment variable. | Ask the user to run `python3 <skill>/scripts/github_token.py` in their own terminal and paste the token at the hidden prompt. |
 | `token file not found` | The path given to `--token-file` does not exist. The stored token is not used in its place. | Check the path, or leave out `--token-file`. |
 | `can be read by other users` | The token file has a loose mode, such as 644. | Run the `chmod 600 <path>` the message names. |
 | `does not hold a GitHub personal access token` | The file or variable holds something else, or a second line. | Store the token again with `github_token.py`. Nothing was sent. |

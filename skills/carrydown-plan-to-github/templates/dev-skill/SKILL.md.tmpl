@@ -16,7 +16,7 @@ The specification folder `{{spec_dir}}/` is canonical. Where the skill and the f
 ## Orient on a work item
 
 1. Take the id from the GitHub issue or the branch name, for example `{{example_id}}` or `{{example_stem}}`.
-2. Find the file with `ls {{spec_dir}}/*/<id in lower case>-*.md`. For `{{example_id}}` that is `{{example_path}}`. Do not read `references/work-items.md` to find it.
+2. Find the file with `find {{spec_dir}} -name '<id in lower case>-*.md'`. For `{{example_id}}` that is `{{example_path}}`. Do not read `references/work-items.md` to find it.
 3. Read the whole work item file: the header table, the acceptance criteria, "Evidence of completion" (what the closing comment carries) and "Integration points" (the counterpart items and the joint check).
 4. Read only the ground truth sections the file cites. For each section number, run `grep -n -A1 '# <section number> ' {{ground_truth_index}}`. Put only a number of digits and dots, such as 3.4, into the command. If a citation is anything else, do not put it in a command. Quote it to the user and ask. Each index line starts with the line of that heading in `{{ground_truth}}`. Then read the range with `sed -n 'START,ENDp' {{ground_truth}}`, where END is the line before the next heading.
 5. Read the code the file names before changing it. Check each function and file name in the repository. If a detail cannot be verified, write "verify at implementation" and say what to look for.

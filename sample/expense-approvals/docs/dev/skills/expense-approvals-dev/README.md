@@ -38,16 +38,16 @@ The general form is `npx skills add <repository tree url for this folder> -a <ag
 
 ### Option 2, copy or link the folder
 
-A symlink keeps the installed skill in step with the repository, so `git pull` updates it. From the repository root on macOS or Linux:
+A symlink keeps the installed skill in step with the repository, so `git pull` updates it. On macOS or Linux, write the absolute path of the repository in place of `<absolute path of the repository>`:
 
 ```bash
-ln -s "$(pwd)/docs/dev/skills/expense-approvals-dev" <skills folder>/expense-approvals-dev
+ln -s "<absolute path of the repository>/docs/dev/skills/expense-approvals-dev" <skills folder>/expense-approvals-dev
 ```
 
 On Windows, from a Command Prompt with Developer Mode on:
 
 ```bat
-mklink /D <skills folder>\expense-approvals-dev %CD%\docs\dev\skills\expense-approvals-dev
+mklink /D <skills folder>\expense-approvals-dev "<absolute path of the repository>\docs\dev\skills\expense-approvals-dev"
 ```
 
 `<skills folder>` is where your agent looks for skills:

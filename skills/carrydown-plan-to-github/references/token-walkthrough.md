@@ -27,25 +27,25 @@ Copy the token when GitHub shows it. It is shown once. When the plan and the boa
 
 ## Store it safely
 
-Never paste the token into the agent chat. Pick one of two paths.
+Never paste the token into the agent chat. Never set or read the token in the shell. Only the scripts read it. Pick one of two paths.
 
-Preferred path, no terminal prompt. Paste the token into a plain text file in a private folder outside your project. Do not use Downloads or a folder that syncs to the cloud. In TextEdit choose Format, then Make Plain Text, before you save. Tell the agent the file path, not the token. The agent passes the path to the script and never opens, reads, copies or moves the file:
+Preferred path, the hidden prompt. The agent prints this command and does not run it. Run it yourself in your own terminal and paste the token at the prompt. Nothing appears as you type:
+
+```bash
+python3 <skill>/scripts/github_token.py --repo owner/name
+```
+
+The script writes the token to `~/.config/carrydown/github_token` in a folder with mode 700 and a file with mode 600, asks GitHub who the token belongs to, and checks what it can do. The script never prints the token.
+
+Only when you have no terminal, a file. Paste the token into a plain text file in a private folder outside your project. Do not use Downloads or a folder that syncs to the cloud. In TextEdit choose Format, then Make Plain Text, before you save. Tell the agent the file path, not the token. The agent passes the path to the script and never opens, reads, copies or moves the file:
 
 ```bash
 python3 <skill>/scripts/github_token.py --from-file <path> --repo owner/name
 ```
 
-The script reads the file, writes the token to `~/.config/carrydown/github_token` in a folder with mode 700 and a file with mode 600, asks GitHub who the token belongs to, and checks what it can do. It keeps your file. Delete the file yourself once the check passes, because it still holds the token in plain text.
+It stores and checks the token the same way. It keeps your file. Delete the file yourself once the check passes, because it still holds the token in plain text. If other users can read the file, the script says so in a warning line.
 
-Alternative path. Run the script yourself in a terminal and type the token at the hidden prompt. Nothing appears as you type.
-
-```bash
-python3 <skill>/scripts/github_token.py
-```
-
-It stores and checks the token the same way. The script never prints the token.
-
-Non-interactive form for automation. You run it yourself, not the agent. Your secret store's own command writes the token to standard input. Do not put the token in a shell variable, a command line or a file in the project:
+Non-interactive form for automation. You run it yourself. The agent never runs this form. Your secret store's own command writes the token to standard input. Do not put the token in a shell variable, a command line or a file in the project:
 
 ```bash
 <your secret store's read command> | python3 <skill>/scripts/github_token.py --stdin
