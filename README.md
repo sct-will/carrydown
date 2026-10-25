@@ -28,7 +28,7 @@ Restart your agent after the install, so it sees the two skills. Then put your d
 
 > Set up a project plan from this document.
 
-To look before you install, open [the sample board](https://github.com/users/sct-will/projects/2).
+:star: To see a sample of the AI generated Github project board, milestone epics, and issues with links to the specs, before you install, your can open [the sample project board](https://github.com/users/sct-will/projects/2).
 
 ## How it works
 
