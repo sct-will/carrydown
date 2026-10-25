@@ -4,7 +4,7 @@ description: Carries an approved docs/spec/plan.yaml into GitHub as sub-epics, o
 license: Apache-2.0
 compatibility: Needs Python 3.9 or later, network access to api.github.com only, and a GitHub token the user creates.
 metadata:
-  author: sct-will
+  author: "Will Scott, PhD"
   version: "0.1.0"
 ---
 

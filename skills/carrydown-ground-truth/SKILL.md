@@ -4,7 +4,7 @@ description: Turns a ground-truth document (architecture, requirements, governan
 license: Apache-2.0
 compatibility: Needs Python 3.9 or later and git. Reads Word files with the standard library, so nothing else is installed.
 metadata:
-  author: sct-will
+  author: "Will Scott, PhD"
   version: "0.1.0"
 ---
 
