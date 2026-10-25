@@ -27,7 +27,7 @@ Do not script or automate the session. The engineers decide what to show. To hel
 
 ## Checkpoint
 
-A 30-minute integration check, weekly, with all tracks present. Not a demonstration. The engineers run the current end-to-end flow and the joint check named for the date in `plan.yaml`. Record it with the `checkpoint-comment.md` template: Shown, Closed since the last checkpoint, Joint check, Blocked or at risk.
+A 30-minute integration check on its date in `plan.yaml`, with all tracks present. Not a demonstration. The engineers run the current end-to-end flow and the joint check named for the date in `plan.yaml`. Record it with the `checkpoint-comment.md` template: Shown, Closed since the last checkpoint, Joint check, Blocked or at risk.
 
 Every work item names one checkpoint, on or after its completion date. The joint check is the item's share of the whole: what the two tracks run together to prove their halves meet.
 
@@ -38,5 +38,5 @@ When an item closes, the engineer posts the evidence with the `closing-comment.m
 ## The rhythm
 
 - Day by day, items close with evidence.
-- Weekly, a checkpoint between tracks.
+- On each checkpoint date in the plan, a checkpoint between tracks.
 - At the end of each work unit, a demonstration of the milestone against criteria written in advance.

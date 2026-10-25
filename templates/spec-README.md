@@ -52,7 +52,7 @@ Milestones are sub-epics. Each milestone is a GitHub sub-epic, and its work item
 
 {{milestone_table}}
 
-Checkpoints. A 30-minute integration check every week with all tracks present. The current end-to-end flow is run and the joint check for the date is executed between the tracks. Checkpoints are not demonstrations.
+Checkpoints. A 30-minute integration check on each date in the table below, with all tracks present. The current end-to-end flow is run and the joint check for the date is executed between the tracks. Checkpoints are not demonstrations.
 
 {{checkpoint_table}}
 

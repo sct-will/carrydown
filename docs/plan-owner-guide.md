@@ -119,7 +119,7 @@ Commit and push the plan and the specification folder first. Each issue links it
 The engineers follow a rhythm.
 
 - When an item is finished, the engineer posts a closing comment on its issue: what they can demonstrate, the evidence, the decisions, and what the other track needs to know.
-- Every week the engineers meet for 30 minutes and run a joint check.
+- On each checkpoint date in the plan, the engineers meet for 30 minutes and run the joint check for that date.
 - At the end of each work unit the engineers demonstrate the milestone to the stakeholders, against criteria that were written before the work started. They decide pass or fail, and the outcome is noted on the sub-epic the same day.
 
 To change the plan later, change `plan.yaml` with your agent and run the checker again. [faq.md](faq.md) explains how to refresh the files and the issues.

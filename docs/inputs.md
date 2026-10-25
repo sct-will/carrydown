@@ -56,7 +56,7 @@ Files can be `.docx` or `.md`. Give paths.
 | Target date or number of weeks? (optional) | 2027-04-23, or 11 weeks of work. | Ask. |
 | Breaks? ("none" is an answer) | A company offsite week, as a date range. | None. |
 | Longest work unit? | Three weeks. | Three weeks. |
-| Integration check rhythm? | Weekly, Fridays, 30 minutes. | Weekly. |
+| Integration check day and length? The plan sets the date of each checkpoint. | Fridays, 30 minutes. | Friday, 30 minutes. |
 
 ## 4. Repository and Epic
 

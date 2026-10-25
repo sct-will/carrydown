@@ -260,7 +260,7 @@ def build_rollup(plan, numbers, epic_number):
     out += ["", "### How progress is shown", "",
             "Each milestone is a sub-epic with its acceptance criteria and demonstration expectations in its body. "
             "The demonstration is given by the people who own the items, in a meeting, and its outcome is noted on the sub-epic. "
-            "Weekly checkpoints between the tracks are integration checks, not demonstrations, and their short records are comments here. "
+            "Checkpoints between the tracks, each on its date in the plan, are integration checks, not demonstrations, and their short records are comments here. "
             "Each work item closes with an evidence comment on its own issue (Demo, Evidence, Decisions, Handoff)."]
     return "\n".join(out) + "\n"
 

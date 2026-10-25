@@ -17,8 +17,8 @@ The idea is old in systems engineering, where it is called flow-down: a requirem
 
 Step 1 does this, in order:
 
-- The agent renders the ground truth to Markdown. Each section gets a stable anchor, a link target that does not change.
-- It interviews the plan owner about people, time and dates.
+- The agent interviews the plan owner about people, time and dates.
+- It renders the ground truth to Markdown. Each section gets a stable anchor, a link target that does not change.
 - It drafts the plan around those people.
 - It writes one specification per work item to a fixed template. Contract excerpts are copied from the ground truth.
 - A checker validates every file against the plan.
@@ -39,7 +39,7 @@ Step 3 does this, in order:
 During step 4:
 
 - Evidence is posted on every closed issue.
-- Each week the tracks meet at a checkpoint, a dated integration check between them. There they run a joint check, the one-sentence test in the plan that proves the parts they built fit together.
+- The tracks meet at each checkpoint, a dated integration check between them. Each checkpoint has its own date in the plan. There they run a joint check, the one-sentence test in the plan that proves the parts they built fit together.
 - Each milestone ends with one demonstration against criteria written in advance.
 
 To see the four steps on a finished fictional sample, open [the sample board](https://github.com/users/sct-will/projects/2) and [issue 9](https://github.com/sct-will/carrydown-sample/issues/9).
@@ -96,13 +96,13 @@ The checker validates header rows against `plan.yaml`, section order, length, ba
 Three rhythms.
 
 - Per work item. The engineer closes the issue with a comment: Demo, Evidence, Decisions, Handoff. The agent assembles the evidence from the commands in the specification.
-- Weekly. A 30-minute checkpoint with all tracks. They run the current end-to-end flow and the joint check for the date. They post a short comment.
+- Per checkpoint. A 30-minute integration check with all tracks, on each checkpoint date in the plan. They run the current end-to-end flow and the joint check for the date. They post a short comment.
 - Per milestone. A demonstration by the engineers who built the items, to the stakeholders. The acceptance criteria were written before the work started. The outcome is a comment on the sub-epic. Nothing about the session is automated.
 
 ## What limits it
 
 - Any number of tracks. Each engineer is on one track. Checkpoints join them.
-- Milestones and items. The checker and the scripts set no limit on how many there are. The method has been run on one project of five milestones and thirty-seven items. Sub-epics group them. Specifications are written in parallel, one subagent per batch of two or three items, from the same ground truth and the same template.
+- Milestones and items. The checker and the scripts set no limit on how many there are. The method has been run on one project of five milestones and thirty-seven items. Sub-epics group them. Specifications are written in parallel, one subagent per batch of two or three items. A subagent is a separate agent session that writes its batch from the same ground truth and the same template.
 - Work outside the plan. Work owned outside the team stays outside the plan as numbering gaps and "external input" notes.
 - One skill in every editor. The same conventions and the same definition of done reach each engineer, in the agent they already use.
 

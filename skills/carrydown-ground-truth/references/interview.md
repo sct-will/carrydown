@@ -52,7 +52,7 @@ Ask.
 1. What is the target: a date, or a number of working weeks? Which is firm? If there is none yet, say so. The plan will derive the date from the critical path. If it is weeks, the target date is worked out from the start of the first work unit, and each break adds its weeks.
 2. Are there breaks, such as holidays, offsites or a freeze? Give each as a date range. "None" is an answer.
 3. What is the longest a work unit may run? A work unit is a time box with its own length. A default: no longer than three weeks.
-4. How often can the people meet for a short integration check? A default: weekly, 30 minutes.
+4. On which weekday can the people meet for a short integration check, and for how long? A default: Friday, 30 minutes. The plan sets the date of each checkpoint.
 
 ## Step 4 of 6. GitHub
 
@@ -106,7 +106,7 @@ Write it as a short list the user can correct.
 - Ground truth: files, winner on conflict, version.
 - People and tracks, start dates, days off, advisors.
 - Parts of the system each track touches (the themes).
-- Time frame and breaks, longest work unit, checkpoint rhythm.
+- Time frame and breaks, longest work unit, checkpoint day and length.
 - Repository, Epic, labels, logins.
 - Agents in use.
 - Demonstration audience, what they must see, and who gives each demonstration.

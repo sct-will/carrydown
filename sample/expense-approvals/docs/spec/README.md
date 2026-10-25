@@ -103,7 +103,7 @@ Milestones are sub-epics. Each milestone is a GitHub sub-epic, and its work item
 | [Milestone 4, Pilot with one team](m4-pilot/milestone.md) | `m4-pilot` | 2027-03-29 to 2027-04-09 | 2027-04-09 | 2027-04-09 | A pilot team's approved reports reach the ledger by the nightly file. |
 | [Milestone 5, Release](m5-release/milestone.md) | `m5-release` | 2027-04-12 to 2027-04-23 | 2027-04-23 | 2027-04-23 | The flag is on in production, the runbook is handed to operations and finance has signed off. |
 
-Checkpoints. A 30-minute integration check every week with all tracks present. The current end-to-end flow is run and the joint check for the date is executed between the tracks. Checkpoints are not demonstrations.
+Checkpoints. A 30-minute integration check on each date in the table below, with all tracks present. The current end-to-end flow is run and the joint check for the date is executed between the tracks. Checkpoints are not demonstrations.
 
 | Date | Checkpoint | Items due | Joint check |
 | --- | --- | --- | --- |

@@ -99,7 +99,7 @@ The script does not yet set grouping, sorting, the board column field, the roadm
 
 ### 7. After
 
-Show the user the counts and the project link. Remind them of the rhythm: closing comment on every issue, a checkpoint comment each week, a demonstration note on each sub-epic.
+Show the user the counts and the project link. Remind them of the rhythm: closing comment on every issue, a checkpoint comment after each checkpoint, a demonstration note on each sub-epic.
 
 ### 8. Generate the engineers' skill
 

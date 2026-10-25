@@ -96,7 +96,7 @@ breaks:                                  # breaks between work units, optional. 
     start: 2027-01-18
     end: 2027-01-22
 
-checkpoints:                             # short weekly integration checks between the tracks
+checkpoints:                             # short integration checks between the tracks, each on its own date
   - date: 2027-01-08
     name: "Contract freeze"
     joint_check: "Backend and Frontend run the same example against the shared contract."

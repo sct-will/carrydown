@@ -55,4 +55,4 @@ If an Epic exists, the script posts one comment. It opens with a Constraints blo
 
 ## Closing the loop
 
-The specification README has two comment templates. A closing comment on each issue: Demo, Evidence, Decisions, Handoff. A checkpoint comment on the Epic after each weekly check. The outcome of a demonstration goes on the sub-epic.
+The specification README has two comment templates. A closing comment on each issue: Demo, Evidence, Decisions, Handoff. A checkpoint comment on the Epic after each checkpoint. The outcome of a demonstration goes on the sub-epic.
