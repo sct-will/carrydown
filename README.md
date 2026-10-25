@@ -1,12 +1,12 @@
 # carrydown
 
-carrydown is a planning and engineering handoff system for teams using artificial intelligence (AI) coding agents. Starting from your architecture document, your agent uses the carrydown skills to generate the project plan, specifications, GitHub epics and issues, project board, and a project-specific skill for your engineers' agents.
+carrydown is an open source project for planning and engineering handoffs with artificial intelligence (AI) coding agents. Starting from your architecture document, your agent uses the carrydown skills to generate the project plan, specifications, GitHub epics and issues, project board, and a project-specific skill for your engineers' agents.
 
-The plan is built around your team's availability and target date. Scripts check the specifications against the plan. Each specification cites the architecture, and the engineers' skill directs their agents to those sections before starting work. You review and refine the artifacts with your agent and approve publication to GitHub.
+The plan is built around your team's availability and target date. Scripts check the specifications against the plan. Each specification cites the architecture, requirements or engineering standards it follows. The engineers' skill directs their agents to those sections before starting work. You review and refine the artifacts with your agent and approve publication to GitHub.
 
 [![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
 
-[Start here](#start-here) | [How it works](#how-it-works) | [Explore the sample](#explore-the-sample) | [What you get](#what-you-get) | [Contributing and license](#contributing-and-license)
+[Start here](#start-here) | [How it works](#how-it-works) | [Explore the sample](#explore-the-sample) | [What you get](#what-you-get) | [AI governance](#how-does-carrydown-support-ai-governance) | [Contributing and license](#contributing-and-license)
 
 <br />
 
@@ -55,6 +55,8 @@ Your AI agent generates these artifacts using the carrydown skills. The plan and
 - **A GitHub Project board** with work units, tracks, dates and checkpoints filled in.
 - **The engineers' skill**, generated from your specifications and committed in your repository, so "Work on WI-03" tells the coding agent to read the specification and its sections before touching code.
 
+The plan and specifications stay in version control, with source citations, recorded planning decisions and automated consistency checks. Your team reviews the generated work and approves publication. These provide a practical foundation for governing AI-generated planning and engineering handoffs.
+
 <details>
 <summary>Where the files go in your project</summary>
 
@@ -74,6 +76,14 @@ docs/
 </details>
 
 [Read the planning method](docs/method.md) for the rules behind milestones, tracks, capacity and checkpoints.
+
+<br />
+
+## How does carrydown support AI governance?
+
+You can include governance rules and engineering standards alongside your architecture and requirements. The skills instruct your agent to cite these sources in specifications and carry the references into engineering handoffs. You review the drafts and approve publication after seeing a dry run. The plan, specifications and recorded decisions stay in your repository for review as the project changes.
+
+The automated checks validate consistency with the plan and whether cited sections exist. Your team still judges whether the generated work interprets the sources correctly and meets your organization's requirements.
 
 <br />
 
