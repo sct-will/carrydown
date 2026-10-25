@@ -48,8 +48,6 @@ python3 scripts/github_sync.py --root sample/expense-approvals --offline
 python3 scripts/github_project.py --root sample/expense-approvals --offline
 ```
 
-Or open the repository in Codespaces. It opens on the sample output and runs the first two commands for you.
-
 | Script | Purpose |
 | --- | --- |
 | `scripts/render_ground_truth.py` | `.docx` or `.md` to Markdown with a section index and figures. |

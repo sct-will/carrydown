@@ -60,4 +60,4 @@ The skills are self-contained, so nothing else needs copying.
 - **`python3: command not found` on Windows.** Use `python`. If neither works, rerun the Python installer, choose Modify, and tick Add Python to environment variables.
 - **The agent does not see the skills.** Restart it. Check that the skill folders are in the agent's skills folder from the table under [Install options](../README.md#install-options) in the README.
 - **`fatal: not a git repository`.** Run `git init` in your project folder, or `cd` into the folder you made.
-- **You do not have permission to install software.** Ask your IT department for Node.js LTS, Python 3.9 or later and git. Or use a Codespace: the README's [Getting started](../README.md#getting-started) has a link that opens the repository in a browser with the tools already installed.
+- **You do not have permission to install software.** Ask your IT department for Node.js LTS, Python 3.9 or later and git.

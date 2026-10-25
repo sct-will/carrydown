@@ -2,7 +2,7 @@ blank_issues_enabled: false
 contact_links:
   - name: Start with the README
     url: https://github.com/sct-will/carrydown#getting-started
-    about: Look at the sample board, try it in a Codespace and find the install line before you open an issue.
+    about: Look at the sample board and find the install line before you open an issue.
   - name: Report a security problem privately
     url: https://github.com/sct-will/carrydown/security/advisories/new
     about: Do not open a public issue for a vulnerability.

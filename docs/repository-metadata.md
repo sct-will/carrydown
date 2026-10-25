@@ -64,7 +64,5 @@ Start with one work item. WI-03, the approval routing engine, is a GitHub issue 
 
 **Look.** Open the [public board](https://github.com/users/sct-will/projects/2), click WI-03, then follow its specification link to the sections it cites. No account and no install.
 
-**Try.** [Open carrydown in a Codespace](https://codespaces.new/sct-will/carrydown), a ready-made computer in your browser. As it starts it runs the checker on a copy of this sample and prints the schedule, the load table and the critical path, then a dry run of the issues it would create.
-
 **Install.** Run `npx skills add sct-will/carrydown` in a project folder, put `ground-truth/architecture.md` from this repository in `docs/source/`, and tell your agent "Set up a project plan from this document." Compare your plan with this one. Nothing is written to GitHub until you say yes.
 ```

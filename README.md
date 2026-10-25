@@ -18,7 +18,7 @@ Restart your agent after the install, so it sees the two skills. Then put your d
 
 > Set up a project plan from this document.
 
-To look before you install, open [the sample board](https://github.com/users/sct-will/projects/2). Or [open carrydown in a Codespace](https://codespaces.new/sct-will/carrydown), a ready-made workspace in your browser. As it starts, it runs the sample. You can watch the plan being checked and a dry run, a rehearsal of the issues with nothing written to GitHub.
+To look before you install, open [the sample board](https://github.com/users/sct-will/projects/2).
 
 ## How it works
 
@@ -138,7 +138,7 @@ The installer prints third-party security scans; [docs/security.md](docs/securit
 <details>
 <summary>Set up macOS, Windows or Linux from nothing</summary>
 
-[docs/setup.md](docs/setup.md) goes from a computer with nothing installed to a project folder ready for the install line: [macOS](docs/setup.md#macos), [Windows](docs/setup.md#windows), [Linux](docs/setup.md#linux). If you cannot install programs, the Codespace has everything.
+[docs/setup.md](docs/setup.md) goes from a computer with nothing installed to a project folder ready for the install line: [macOS](docs/setup.md#macos), [Windows](docs/setup.md#windows), [Linux](docs/setup.md#linux).
 
 </details>
 
