@@ -1,22 +1,30 @@
-![carrydown. An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent. Two skills you install, one skill is generated for your engineers. On the right, the architecture document feeds the plan, one spec per work item, sub-epics and issues, the project board, and the engineer in the agentic editor.](docs/images/hero.png)
-
 # carrydown
-
-[![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
 
 carrydown uses two packaged AI agent skills and one generated skill to let an AI agent generate **everything between your architecture document and the first commit**. The agent creates the plan, every spec, every GitHub issue, the project board and a custom agent skill your engineers' agents use to write code.
 
-**1. Give it the ground truth.** A technical architecture document and any other context you have. If you know how many engineers you have and the target project duration, tell it that too.
 
-**2. It plans around your people.** The agent looks at people, time and dependencies. It groups related work so each milestone ends in one integrated demo by the engineers. It gives each engineer their own track, so nobody jumps between unrelated work.
+[![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
 
-**3. It carries the plan into GitHub.** A project board, an epic for the whole project, a sub-epic for each milestone and an issue for each work item. Each issue links to its own generated spec file.
 
-**4. It equips every engineer.** The agent builds a skill that helps each engineer finish their work item to spec. Their coding agents use it to read the spec and the right parts of the architecture before they write code.
+<br />
 
-Every engineer stays tied to the original architecture, carried all the way down to their agentic editor. **Two skills you install. One skill is generated for your engineers.**
+## How it works
 
-## Getting started
+![How carrydown works. Two lanes. Plan owner, an engineering or product manager: step 1 Generate, the plan owner runs carrydown-ground-truth in their agent, in: architecture document plus people and dates, out: plan.yaml and one spec per work item; step 2 Review, the plan and specs are human reviewed, with the agent making the edits; step 3 Carry down to GitHub, the plan owner runs carrydown-plan-to-github in their agent, out: epic, a sub-epic per milestone, issues with specs, board, engineers' skill, with the note dry run first, nothing is written until you say yes. One install line goes down to the Engineers lane: step 4 Work the issues, the engineer says "Work on WI-03" for work item WI-03, the agent invokes the skill, reads the spec and the cited sections, then plans the code. The ground truth document is the only amber element. A thin amber thread, labeled ground truth, cited by section, runs from it through steps 1 and 3 into step 4.](docs/images/handoff.png)
+
+1. **Generate.** Give it the ground truth, usually an architecture document, any other pertinent context you have. If you know how many engineers will be assigned, and the target project duration, tell it that too. Your agent interviews you about people, time and dates, then writes the plan and one specification per work item. The agent is instructed to project plan around your constraints. The agent looks at people, time and dependencies. It groups related work so each milestone ends in one integrated demo by the engineers. It gives each engineer their own track, so nobody jumps between unrelated work. The agent skill invoked in this step is called [carrydown-ground-truth](skills/carrydown-ground-truth/SKILL.md).
+2. **Review.** You review the generated project plan, `docs/spec/plan.yaml`, and the specifications in the folders under `docs/spec/`, and edit them with the agent until they are right. 
+3. **Carry down to GitHub.** The agent moves the plan from just YAML and SPEC.md file to a completely agent generated Github project capturing all the details. Say "put the plan on GitHub" to commit and push the plan to a project board.  Then the agent generates an epic (one parent issue for the whole plan), a sub-epic per milestone (a milestone is one demonstrable slice of the plan), and an issue per work item with its dedicated linked SPEC.md. Lastly, an engineers' agent skill is generated that helps each engineer finish their work item to spec.  The agent skill invoked in this step is called: [carrydown-plan-to-github](skills/carrydown-plan-to-github/SKILL.md).
+4. Engineers invoke the generated agent skill by targeting work item for completion. For example, if there is an issue work item "WI-03", the engineer says, "Work on WI-03". Their agent reads the specification and the sections it cites, then plans the code. The naming convention of the engineers' agent skill is dynamic, and based on the project name. The engineer installs the skill in their agentic editor using:
+
+   ```bash
+   npx skills add https://github.com/<owner>/<repo>/tree/main/docs/dev/skills/<project>-dev -a <agent>
+   ```
+
+<br />
+
+
+## Quick start
 
 Run this in your project folder and pick your coding agent:
 
@@ -28,26 +36,13 @@ Restart your agent after the install, so it sees the two skills. Then put your d
 
 > Set up a project plan from this document.
 
-:star: To see a sample of the AI generated Github project board, milestone epics, and issues with links to the specs, before you install, your can open [the sample project board](https://github.com/users/sct-will/projects/2).
 
-## How it works
 
-![How carrydown works. Two lanes. Plan owner, an engineering or product manager: step 1 Generate, the plan owner runs carrydown-ground-truth in their agent, in: architecture document plus people and dates, out: plan.yaml and one spec per work item; step 2 Review, the plan and specs are human reviewed, with the agent making the edits; step 3 Carry down to GitHub, the plan owner runs carrydown-plan-to-github in their agent, out: epic, a sub-epic per milestone, issues with specs, board, engineers' skill, with the note dry run first, nothing is written until you say yes. One install line goes down to the Engineers lane: step 4 Work the issues, the engineer says "Work on WI-03" for work item WI-03, the agent invokes the skill, reads the spec and the cited sections, then plans the code. The ground truth document is the only amber element. A thin amber thread, labeled ground truth, cited by section, runs from it through steps 1 and 3 into step 4.](docs/images/handoff.png)
+<br />
 
-1. **Generate.** You have the ground truth, usually an architecture document. Your agent interviews you about people, time and dates, then writes the plan and one specification per work item. Skill: [carrydown-ground-truth](skills/carrydown-ground-truth/SKILL.md).
-2. **Review.** You read the plan, `docs/spec/plan.yaml`, and the specifications in the folders under `docs/spec/`, and edit them with the agent until they are right. No separate reviewer.
-3. **Carry down to GitHub.** Commit and push the plan first (your agent asks you, and you can tell it to do the commit and push for you), because each issue links its specification on GitHub. Say "put the plan on GitHub". Then the agent generates an epic (one parent issue for the whole plan), a sub-epic per milestone (a milestone is one demonstrable slice of the plan), an issue per work item with its specification, the board and the engineers' skill. It shows a dry run first and writes nothing until you say yes. The agent prints the finished install line for you to send each engineer. Skill: [carrydown-plan-to-github](skills/carrydown-plan-to-github/SKILL.md).
-4. **Work the issues.** The plan owner sends that line to each engineer. Each engineer installs the engineers' skill once, opens an issue, for example work item WI-03, and says "Work on WI-03". Their agent reads the specification and the sections it cites, then plans the code. The install line works once you have committed and pushed the generated skill folder. It names that folder in your repository and the engineer's agent:
+## Live demo of carrydown AI generated output
 
-   ```bash
-   npx skills add https://github.com/<owner>/<repo>/tree/main/docs/dev/skills/<project>-dev -a <agent>
-   ```
-
-   In the sample it is `npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev -a claude-code`.
-
-You are the plan owner, an engineering manager or a product manager, and you need not write code. The [plan owner guide](docs/plan-owner-guide.md) walks each step with you.
-
-## The sample, real and public
+Provided below is a real sample of the AI generated Github project board, milestone epics, and issues with links to the specs, that you can view and interact with before you install.
 
 The sample is a fictional expense approvals service, so the company, the people and the dates are invented. Everything the two skills made from it is real and public in [carrydown-sample](https://github.com/sct-will/carrydown-sample): [plan.yaml](https://github.com/sct-will/carrydown-sample/blob/main/docs/spec/plan.yaml), [the nine specifications](https://github.com/sct-will/carrydown-sample/tree/main/docs/spec), [fifteen issues](https://github.com/sct-will/carrydown-sample/issues?q=is%3Aissue), [the board](https://github.com/users/sct-will/projects/2) and [the generated engineers' skill](https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev). A copy sits in [`sample/expense-approvals/`](sample/expense-approvals/) for the self test, and [a recorded run](docs/sample-run.md) shows what each script printed when the sample was carried into a throwaway repository.
 
