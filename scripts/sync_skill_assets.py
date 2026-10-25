@@ -6,6 +6,9 @@ So each of the two skills carries the scripts and templates it runs. carrydown-p
 also carries the generator of the engineers' skill and its templates. The canonical copies are
 in scripts/ and templates/ at the top of the repository. This script refreshes the copies.
 
+The sample project carries the checker copy that `scaffold_spec.py --ci` writes, in
+sample/expense-approvals/tools/carrydown/. It is refreshed and checked here too.
+
 The GitHub client (github_client.py, the only module with network or token code) ships only
 with carrydown-plan-to-github. The check fails if it, or any other script that is not in a
 skill's list, turns up in another skill, and if any copy of carrydown_lib.py under skills/
@@ -35,6 +38,10 @@ NEEDS = {
     },
 }
 
+# Copies outside the skills: the checker copy in the sample, as scaffold_spec.py --ci writes it.
+SAMPLE_COPIES = [("scripts/check_specs.py", "sample/expense-approvals/tools/carrydown/check_specs.py"),
+                 ("scripts/carrydown_lib.py", "sample/expense-approvals/tools/carrydown/carrydown_lib.py")]
+
 # Modules that may ship with one skill only, because they hold network or token code.
 ONLY_IN = {"github_client.py": "carrydown-plan-to-github"}
 
@@ -62,6 +69,7 @@ def plan():
             out.append((REPO / "scripts" / n, REPO / "skills" / skill / "scripts" / n))
         for t in need["templates"]:
             out.append((REPO / "templates" / t, REPO / "skills" / skill / "templates" / t))
+    out += [(REPO / src, REPO / dst) for src, dst in SAMPLE_COPIES]
     return out
 
 

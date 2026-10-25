@@ -107,7 +107,7 @@ def ground_truth_map_md(plan, root):
     gt = Path(root) / plan["project"]["ground_truth"]
     out = ["# Ground truth map", "",
            f"Headings of `{plan['project']['ground_truth']}` with GitHub anchors and line numbers, then the sections each work item cites. "
-           "Regenerating the rendering may move line numbers. Run `generate_dev_skill.py` again then.", ""]
+           "Regenerating the rendering may move line numbers. Then ask the plan owner to run `generate_dev_skill.py --only references` again.", ""]
     if gt.exists():
         lines = L.read_text(gt).split("\n")
         heads = L.collect_headings(lines)
@@ -178,7 +178,7 @@ def main(argv=None):
     ap.add_argument("--only", choices=["references"], help="write only references/ (always replaced: they are generated). "
                     "Use it after plan.yaml or a specification changes; SKILL.md and README.md keep their hand edits")
     a = ap.parse_args(argv)
-    root = Path(a.root).resolve()
+    root = L.project_root(a.root)
     plan_path = L.find_plan(root, a.plan)
     if not plan_path.exists():
         L.die(f"no plan at {plan_path}")
@@ -243,8 +243,7 @@ def main(argv=None):
             continue
         L.say(f"  {'write' if a.apply else 'would write'}: {rel} ({len(content.splitlines())} lines)")
         if a.apply:
-            p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_text(content, encoding="utf-8")
+            L.write_text(p, content)
         n += 1
     L.say(f"{n} file(s) {'written' if a.apply else 'would be written'}." + ("" if a.apply else " Dry run. Add --apply to write."))
     return 0

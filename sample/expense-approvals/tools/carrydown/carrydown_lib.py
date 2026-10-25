@@ -338,9 +338,31 @@ def loads(text):
     return v
 
 
+class TextError(SystemExit):
+    """A file that cannot be read as UTF-8 text. It is a SystemExit, so a script that does not
+    catch it stops with its one-line message and no traceback. str(e) is the message."""
+
+    def __init__(self, msg):
+        super().__init__(f"error: {msg}")
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
 def read_text(path):
-    """Read a text file as UTF-8, with or without a byte order mark (Notepad and PowerShell write one)."""
-    return Path(path).read_text(encoding="utf-8-sig")
+    """Read a text file as UTF-8, with or without a byte order mark (Notepad and PowerShell write one).
+    A file that is not UTF-8, or a path that is a folder, raises TextError with a one-line message."""
+    p = Path(path)
+    try:
+        return p.read_text(encoding="utf-8-sig")
+    except UnicodeDecodeError as e:
+        raise TextError(f"{p} is not UTF-8 text (byte 0x{e.object[e.start]:02x} at offset {e.start}). "
+                        "Save it as UTF-8, then run this again")
+    except IsADirectoryError:
+        raise TextError(f"{p} is a folder, not a file")
+    except OSError as e:
+        raise TextError(f"cannot read {p}: {e.strerror or e}")
 
 
 def load_file(path):
@@ -362,6 +384,25 @@ def inside(root, path, what="output"):
     if target != base and base not in target.parents:
         die(f"the {what} path {path} is outside the project folder {base}, so nothing was written")
     return target
+
+
+def write_text(path, text):
+    """Write a UTF-8 text file, creating its folder. A path that cannot be written stops the script
+    with a one-line message instead of a traceback."""
+    path = Path(path)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+    except OSError as e:
+        die(f"cannot write {path}: {e.strerror or e}. Check that the folder exists and that you may write to it")
+
+
+def project_root(value):
+    """The --root folder, resolved. A path that does not exist or is not a folder stops the script."""
+    root = Path(value).expanduser().resolve()
+    if not root.is_dir():
+        die(f"--root {value} is not a folder" + ("" if root.exists() else ", it does not exist") + ". Pass the project folder")
+    return root
 
 
 def slugify(text):
@@ -451,17 +492,157 @@ def _text(value):
     return value
 
 
+class PlanError(SystemExit):
+    """plan.yaml cannot be read, or a value in it has the wrong type, so no script can use it.
+    It is a SystemExit, so a script that does not catch it stops with its message and no
+    traceback. e.msg is the message without the "error: " prefix."""
+
+    def __init__(self, msg):
+        super().__init__(f"error: {msg}")
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
+def _kind(v):
+    return {dict: "a mapping", list: "a list", bool: "true or false", type(None): "empty"}.get(type(v), "text" if isinstance(v, str) else "a number")
+
+
+def _is_int(v):
+    return isinstance(v, int) and not isinstance(v, bool)
+
+
+# Fields read as text, per list of the plan. A number given for one of them is taken as text,
+# so `label: 2027` works. None means the field is empty and is treated as left out.
+_TEXT_FIELDS = {
+    "tracks": ("id", "label", "color"),
+    "people": ("id", "name", "github", "track", "start"),
+    "advisors": ("id", "name", "github", "note"),
+    "milestones": ("name", "folder", "start", "end", "demo", "gate"),
+    "breaks": ("name", "start", "end"),
+    "checkpoints": ("date", "name", "joint_check"),
+    "items": ("slug", "label", "track", "owner", "complete_by", "size", "checkpoint", "ground_truth", "external_input", "program_input"),
+    "external.items": ("label", "note"),
+    "sources": ("name", "path", "use"),
+}
+_INT_FIELDS = {"milestones": ("number",), "items": ("id", "milestone"), "external.items": ("id",)}
+_PROJECT_TEXT = ("name", "slug", "id_prefix", "repo", "branch", "epic_title", "subepic_prefix", "title_format",
+                 "spec_dir", "ground_truth", "project_title", "dev_skill", "dev_skill_path")
+
+
+def _as_text(row, key, where, P):
+    """Keep a text field as text: a number becomes text, empty means left out, anything else is a problem."""
+    if key not in row:
+        return
+    v = row[key]
+    if v is None:
+        del row[key]
+    elif isinstance(v, (int, float)) and not isinstance(v, bool):
+        row[key] = str(v)
+    elif not isinstance(v, str):
+        P.append(f"{where}.{key} must be text, got {_kind(v)}. Write it on one line, in quotes if it holds a colon and a space")
+
+
+def type_problems(plan):
+    """Problems with the shape of plan.yaml: a list where a mapping belongs, a mapping where text
+    belongs, an id that is not a whole number. Any of them stops every script, because the plan
+    cannot be read as a plan. Returns a list of one-line problems. Fixes harmless shapes in place:
+    numbers in text fields become text, and empty values count as left out."""
+    P = []
+    for key, want in (("project", dict), ("conventions", dict), ("external", dict), ("program", dict), ("limits", dict),
+                      ("banned", dict), ("tracks", list), ("people", list), ("advisors", list), ("milestones", list),
+                      ("breaks", list), ("checkpoints", list), ("items", list), ("sources", list)):
+        if plan.get(key) is not None and not isinstance(plan[key], want):
+            P.append(f"{key} must be {'a mapping of keys' if want is dict else 'a list of entries starting with -'}, got {_kind(plan[key])}")
+    if P:
+        return P
+    proj = plan.get("project") or {}
+    for k in _PROJECT_TEXT:
+        _as_text(proj, k, "project", P)
+    ep = proj.get("epic")
+    if ep is not None and not _is_int(ep) and not (isinstance(ep, str) and ep.strip().isdigit()):
+        P.append(f"project.epic must be an issue number or null, got {ep!r}")
+    rows = dict((k, plan.get(k) or []) for k in ("tracks", "people", "advisors", "milestones", "breaks", "checkpoints", "items", "sources"))
+    ext = plan.get("external") if plan.get("external") is not None else plan.get("program")
+    if isinstance(ext, dict):
+        if ext.get("items") is not None and not isinstance(ext["items"], list):
+            P.append(f"external.items must be a list of entries starting with -, got {_kind(ext['items'])}")
+        else:
+            rows["external.items"] = ext.get("items") or []
+    for group, lst in rows.items():
+        for n, row in enumerate(lst, 1):
+            if not isinstance(row, dict):
+                P.append(f"{group}: entry {n} must be a mapping such as `- id: ...`, got {_kind(row)} {row!r}"[:200])
+                continue
+            where = f"{group} entry {n}"
+            for k in _TEXT_FIELDS.get(group, ()):
+                _as_text(row, k, where, P)
+            for k in _INT_FIELDS.get(group, ()):
+                if row.get(k) is not None and not _is_int(row[k]):
+                    P.append(f"{where}.{k} must be a whole number, got {row[k]!r}")
+            for k in ("depends", "unblocks") if group == "items" else ():
+                v = row.get(k)
+                if v is None:
+                    continue
+                if not isinstance(v, list) or not all(_is_int(d) for d in v):
+                    P.append(f"{where}.{k} must be a list of item ids, such as [1, 3], got {v!r}")
+            if group == "people" and row.get("days_off") is not None:
+                v = row["days_off"]
+                if not isinstance(v, list) or not all(isinstance(d, (str, int)) and not isinstance(d, bool) for d in v):
+                    P.append(f"{where}.days_off must be a list of dates, such as [2027-02-22], got {v!r}")
+    conv = plan.get("conventions") or {}
+    for k in ("test_command", "lint_command", "feature_flag"):
+        _as_text(conv, k, "conventions", P)
+    if conv.get("extra") is not None and (not isinstance(conv["extra"], list) or not all(isinstance(x, str) for x in conv["extra"])):
+        P.append("conventions.extra must be a list of text lines")
+    lim = plan.get("limits") or {}
+    sl = lim.get("spec_lines")
+    if sl is not None and not (isinstance(sl, list) and len(sl) == 2 and all(_is_int(x) and x >= 0 for x in sl) and sl[0] <= sl[1]):
+        P.append(f"limits.spec_lines must be two whole numbers, low then high, such as [80, 340], got {sl!r}")
+    b = plan.get("banned") or {}
+    for k in ("words", "phrases", "vendors", "names"):
+        v = b.get(k)
+        if v is None:
+            continue
+        if not isinstance(v, list) or not all(isinstance(x, (str, int)) and not isinstance(x, bool) for x in v):
+            P.append(f"banned.{k} must be a list of text, got {_kind(v)}")
+            continue
+        if k != "names":
+            for pat in v:
+                try:
+                    re.compile(str(pat))
+                except re.error as e:
+                    P.append(f"banned.{k}: {str(pat)!r} is not a valid pattern ({e})")
+    for k in ("dashes", "skip_code_blocks"):
+        if k in b and not isinstance(b[k], bool):
+            P.append(f"banned.{k} must be true or false, got {b[k]!r}")
+    tg = plan.get("target")
+    if isinstance(tg, dict):
+        _as_text(tg, "date", "target", P)
+    return P
+
+
 def load_plan(path):
-    """Read plan.yaml and fill defaults. Returns (plan, problems)."""
+    """Read plan.yaml and fill defaults. Returns (plan, problems).
+
+    A plan that cannot be read, or whose values have the wrong shape, raises PlanError: no script
+    can work from it. Other problems are returned, so the checker can list them all."""
     path = Path(path)
     try:
         raw = load_file(path)
-    except (OSError, ValueError) as e:   # YamlError, UnicodeDecodeError and JSON errors are ValueErrors
-        raise SystemExit(f"cannot read plan {path}: {e}")
+    except TextError as e:
+        raise PlanError(f"cannot read plan {path}: {e.msg}")
+    except (OSError, ValueError, RecursionError) as e:   # YamlError and JSON errors are ValueErrors
+        raise PlanError(f"cannot read plan {path}: {e}")
     if not isinstance(raw, dict):
-        raise SystemExit(f"plan {path} must be a mapping at the top level")
+        raise PlanError(f"plan {path} must be a mapping at the top level, such as `project:` followed by its keys")
+    shape = type_problems(raw)
+    if shape:
+        shown = "; ".join(shape[:3]) + (f"; and {len(shape) - 3} more" if len(shape) > 3 else "")
+        raise PlanError(f"plan {path} cannot be used: {shown}")
     plan = raw
-    proj = plan.setdefault("project", {}) or {}
+    proj = plan.get("project") or {}
     plan["project"] = proj
     proj.setdefault("branch", "main")
     proj.setdefault("spec_dir", "docs/spec")
@@ -480,17 +661,22 @@ def load_plan(path):
     plan["target"] = plan.get("target") or None
     plan["conventions"] = plan.get("conventions") or {}
     plan["limits"] = plan.get("limits") or {}
-    plan["limits"].setdefault("spec_lines", [80, 340])
+    if plan["limits"].get("spec_lines") is None:
+        plan["limits"]["spec_lines"] = [80, 340]
     if "external" not in plan and "program" in plan:   # plans written before the rename keep working
         plan["external"] = plan.pop("program")
     plan["external"] = plan.get("external") or {}
-    plan["external"].setdefault("items", [])
+    plan["external"]["items"] = plan["external"].get("items") or []
     plan["banned"] = plan.get("banned") or {}
     b = plan["banned"]
-    b.setdefault("words", list(DEFAULT_BANNED_WORDS))
-    b.setdefault("phrases", list(DEFAULT_BANNED_PHRASES))
-    b["vendors"] = list(DEFAULT_BANNED_VENDORS) + [v for v in (b.get("vendors") or []) if v]
-    b.setdefault("names", [])
+    if b.get("words") is None:
+        b["words"] = list(DEFAULT_BANNED_WORDS)
+    if b.get("phrases") is None:
+        b["phrases"] = list(DEFAULT_BANNED_PHRASES)
+    b["words"] = [str(w) for w in b["words"] if w not in (None, "")]
+    b["phrases"] = [str(w) for w in b["phrases"] if w not in (None, "")]
+    b["vendors"] = list(DEFAULT_BANNED_VENDORS) + [str(v) for v in (b.get("vendors") or []) if v]
+    b["names"] = b.get("names") or []
     b.setdefault("dashes", True)
     for it in plan["items"]:
         it.setdefault("depends", [])
@@ -546,6 +732,32 @@ def load_plan(path):
     return plan, validate_plan(plan)
 
 
+MAX_WEEKS = 520           # ten years of working weeks: a larger target is a typing error
+MAX_SIZE_DAYS = 260       # a year of working days for one item
+
+
+def repo_ok(repo):
+    """True for owner/name with GitHub's characters, and neither part "." or ".."."""
+    m = re.fullmatch(r"([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+)", str(repo))
+    return bool(m) and not {m.group(1), m.group(2)} & {".", ".."}
+
+
+def relative_inside(path):
+    """True when path is relative and does not climb out of the folder it is relative to."""
+    s = str(path).replace("\\", "/")
+    if s.startswith("/") or re.match(r"^[A-Za-z]:", s) or s.startswith("~"):
+        return False
+    depth = 0
+    for part in s.split("/"):
+        if part == "..":
+            depth -= 1
+            if depth < 0:
+                return False
+        elif part not in ("", "."):
+            depth += 1
+    return True
+
+
 def _is_date(s):
     try:
         parse_date(s)
@@ -564,8 +776,14 @@ def validate_plan(plan):
     for k in ("name", "slug", "id_prefix"):
         if not proj.get(k):
             P.append(f"project.{k} is required")
-    if proj.get("repo") and not re.fullmatch(r"[\w.-]+/[\w.-]+", str(proj["repo"])):
+    if proj.get("repo") and not repo_ok(proj["repo"]):
         P.append(f"project.repo must look like owner/name, got {proj['repo']!r}")
+    for k, example in (("spec_dir", "docs/spec"), ("ground_truth", "docs/ground-truth/architecture.md")):
+        v = str(proj.get(k) or "")
+        if not v.strip():
+            P.append(f"project.{k} is empty. Leave the line out for the default {example}, or give a path")
+        elif not relative_inside(v):
+            P.append(f"project.{k} must be a path inside the project, such as {example}, got {v!r}")
     tracks = {t.get("id"): t for t in plan["tracks"]}
     if not tracks:
         P.append("tracks: at least one track is required")
@@ -611,7 +829,7 @@ def validate_plan(plan):
             P.append("target: give either date or weeks, not both")
         if "date" in tg and not _is_date(tg.get("date")):
             P.append(f"target: date is not a date: {tg.get('date')!r}")
-        if "weeks" in tg and (not isinstance(tg["weeks"], int) or isinstance(tg["weeks"], bool) or tg["weeks"] < 1):
+        if "weeks" in tg and (not isinstance(tg["weeks"], int) or isinstance(tg["weeks"], bool) or not 1 <= tg["weeks"] <= MAX_WEEKS):
             P.append(f"target: weeks must be a whole number of working weeks, got {tg['weeks']!r}")
     for m in plan["milestones"]:
         for k in RATIONALE_MILESTONE_KEYS:
@@ -660,7 +878,7 @@ def validate_plan(plan):
             for m in plan["milestones"]:
                 if m.get("start") and m.get("end") and _is_date(m["start"]) and _is_date(m["end"]):
                     if parse_date(m["start"]) <= be and bs <= parse_date(m["end"]):
-                        P.append(f"break {br['name']!r} overlaps milestone {m['number']}")
+                        P.append(f"break {br.get('name')!r} overlaps milestone {m.get('number')}")
     cps = {}
     for c in plan["checkpoints"]:
         if not c.get("date") or not _is_date(c.get("date")) or not c.get("name"):
@@ -718,6 +936,8 @@ def validate_plan(plan):
                 P.append(f"item {iid}: complete_by {it['complete_by']} is a day off for {own['id']}")
         if it.get("size") and not re.search(r"about \d+(?:\.\d+)?", str(it["size"])):
             P.append(f"item {iid}: size must say how many days, as in \"Medium, about 4 days\", got {it['size']!r}")
+        elif sized_days(it) > MAX_SIZE_DAYS:
+            P.append(f"item {iid}: size of {sized_days(it):g} days is more than {MAX_SIZE_DAYS} working days. Split the item")
         if it.get("checkpoint") and it["checkpoint"] not in cps:
             P.append(f"item {iid}: checkpoint {it['checkpoint']!r} is not in checkpoints")
         elif it.get("checkpoint") and it.get("complete_by") and _is_date(it["complete_by"]):
@@ -806,9 +1026,11 @@ def die(msg, code=2):
 
 def repo_parts(plan, override=None):
     repo = override or plan["project"].get("repo")
-    if not repo or "/" not in repo:
+    if not repo:
         die("no repository. Set project.repo in plan.yaml or pass --repo owner/name")
-    owner, name = repo.split("/", 1)
+    if not repo_ok(repo):
+        die(f"the repository must look like owner/name, such as my-org/my-repo, got {repo!r}")
+    owner, name = str(repo).split("/", 1)
     return owner, name
 
 
@@ -1252,7 +1474,7 @@ def earliest_finish(plan):
         if own and own > start:
             start = own
         for d in it["depends"]:
-            if d in items and d not in stack:
+            if d in items and d != n and d not in stack:   # a self-dependency or a cycle is reported by validate_plan
                 fin = visit(d, stack + (n,))[1] + _dt.timedelta(days=1)
                 if fin > start:
                     start, prev = fin, d
@@ -1260,7 +1482,7 @@ def earliest_finish(plan):
             start += _dt.timedelta(days=1)
         need = needed_days(plan, it)
         finish, done = start, 0.0
-        while True:
+        while (finish - start).days < 40000:   # a bound for a size the validator rejects
             if _is_working(finish, off):
                 done += 1
                 if done + 1e-9 >= need:
@@ -1273,9 +1495,9 @@ def earliest_finish(plan):
         visit(n)
     end = max(memo, key=lambda n: (memo[n][1], n))
     chain, n = [], end
-    while n is not None:
+    while n is not None and n not in chain:
         chain.append(n)
-        n = via[n]
+        n = via.get(n)
     return memo, chain[::-1]
 
 
@@ -1319,7 +1541,7 @@ def target_date(plan):
         return None, "no target"
     if "date" in tg and _is_date(tg["date"]):
         return parse_date(tg["date"]), f"{tg['date']}"
-    if isinstance(tg.get("weeks"), int):
+    if _is_int(tg.get("weeks")) and 1 <= tg["weeks"] <= MAX_WEEKS:
         start = parse_date(plan["milestones"][0]["start"])
         break_days = sum((parse_date(b["end"]) - parse_date(b["start"])).days + 1 for b in plan["breaks"] if _is_date(b.get("start")) and _is_date(b.get("end")))
         break_weeks = -(-break_days // 7)

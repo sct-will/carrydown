@@ -265,8 +265,7 @@ def init_plan(root, a, git_top):
               f"(a docs folder would end up with docs/docs/spec), run from the project folder or pass --root.", file=sys.stderr)
     print(f"{'writing' if a.apply else 'would write'} {rel}")
     if a.apply:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(text, encoding="utf-8")
+        L.write_text(target, text)
     todo = []
     for key, value, what in PLACEHOLDERS:
         if re.search(rf"(?m)^  {key.split('.')[1]}: {re.escape(value)}(\s|$)", text):
@@ -423,7 +422,7 @@ def refresh(plan, root, a, actions):
         if new != old:
             actions.append((what, path, kind))
             if a.apply:
-                L.inside(root, path, kind).write_text(new, encoding="utf-8")
+                L.write_text(L.inside(root, path, kind), new)
     for it in plan["items"]:
         p = L.spec_path(plan, root, it)
         if p.exists():
@@ -463,7 +462,11 @@ def main(argv=None):
     ap.add_argument("--apply", action="store_true", help="write files. Without it this is a dry run")
     ap.add_argument("--allow-no-git", action="store_true", help="write even when the project folder is not inside a git repository (not recommended)")
     a = ap.parse_args(argv)
-    root = Path(a.root).resolve()
+    if a.name is not None and not a.name.strip():
+        L.die("--name is empty. Give the project name, for example --name \"Expense approvals\"")
+    if a.name is not None and not a.init:
+        L.die("--name works only with --init")
+    root = L.project_root(a.root)
     actions = []
     # the same check for a dry run as for --apply, so a dry run never promises what --apply refuses
     git_top = next((d for d in [root, *root.parents] if (d / ".git").exists()), None)
@@ -495,8 +498,7 @@ def main(argv=None):
             return
         actions.append(("overwrite" if exists else "create", path, kind))
         if a.apply:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_text(content, encoding="utf-8")
+            L.write_text(path, content)
 
     plan_write(spec_dir / "README.md", build_readme(plan), "README")
     for ms in plan["milestones"]:
@@ -506,7 +508,11 @@ def main(argv=None):
                 if it["milestone"] == ms["number"]:
                     plan_write(L.spec_path(plan, root, it), build_stub(plan, it), "stub")
         elif a.apply:
-            L.inside(root, spec_dir / ms["folder"], "milestone folder").mkdir(parents=True, exist_ok=True)
+            folder = L.inside(root, spec_dir / ms["folder"], "milestone folder")
+            try:
+                folder.mkdir(parents=True, exist_ok=True)
+            except OSError as e:
+                L.die(f"cannot create {folder}: {e.strerror or e}")
     if a.ci:
         gt_dir = str(Path(plan["project"]["ground_truth"]).parent)
         wf = L.fill(L.read_template("check-specs-workflow.yml"), {"spec_dir": plan["project"]["spec_dir"], "ground_truth_dir": gt_dir, "branch": plan["project"]["branch"]})

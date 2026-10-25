@@ -31,8 +31,10 @@ date, theme switches per owner, a critical path owned by one person, and the loa
 Usage
   python3 scripts/check_specs.py --root .            check everything
   python3 scripts/check_specs.py --root . --report   print the schedule, load table and critical path
-  python3 scripts/check_specs.py --root . --item 3   check one item
-Exit status is 0 when clean and 1 when there are findings. The script never writes files.
+  python3 scripts/check_specs.py --root . --item 3   check one item (3, WI-03 and wi-3 all work)
+Exit status is 0 when clean, 1 when there are findings, and 2 when the plan cannot be read or an
+argument is wrong. With --json the output on standard output is always one JSON object, also on an
+error. The script never writes files.
 """
 import argparse
 import contextlib
@@ -70,7 +72,34 @@ def banned_patterns(plan):
     return pats
 
 
+def banned_hits(pats, text):
+    """(why, line number, line text) for each banned match. A match inside a longer match of the same
+    kind is not counted again, so "Tamsin Hale" is one finding, not one for the full name and one
+    for each part."""
+    out, spans = [], []
+    for pat, why in pats:
+        for m in pat.finditer(text):
+            if any(w == why and s <= m.start() and m.end() <= e for w, s, e in spans):
+                continue
+            spans.append((why, m.start(), m.end()))
+            ln = text.count("\n", 0, m.start()) + 1
+            out.append((why, ln, text.split("\n")[ln - 1].strip()[:90]))
+    return out
+
+
+def citation_numbers(text):
+    return re.findall(r"\b(\d+(?:\.\d+)*)\b", text or "")
+
+
+def cited_missing(numbered, cite):
+    """Section numbers in cite that are not a numbered heading of the rendering."""
+    return [num for num in citation_numbers(cite)
+            if not any(h.startswith(num + " ") or h.startswith(num + ". ") for h in numbered)]
+
+
 def ground_truth_headings(plan, root):
+    """Headings of the rendered ground truth, or None when it is missing. A file that cannot be
+    read raises L.TextError."""
     p = Path(root) / plan["project"].get("ground_truth", "")
     if not p.is_file():
         return None
@@ -110,7 +139,10 @@ def check_item(plan, root, it, banned, gt_heads):
     rel = path.relative_to(root) if path.is_relative_to(root) else path
     if not path.exists():
         return [f"MISSING {rel}"], rel
-    spec = L.read_spec(path)
+    try:
+        spec = L.read_spec(path)
+    except L.TextError as e:
+        return [f"cannot read: {e.msg}"], rel
     text, lines, rows = spec["text"], spec["lines"], spec["rows"]
     expected_title = f"# {tg} {it['label']}"
     if spec["title"] != expected_title:
@@ -187,10 +219,8 @@ def check_item(plan, root, it, banned, gt_heads):
     if n < lo or n > hi:
         issues.append(f"length {n} lines is outside {lo} to {hi}")
     scan_text = strip_code(text) if plan["banned"].get("skip_code_blocks") else text
-    for pat, why in banned:
-        for m in pat.finditer(scan_text):
-            ln = scan_text.count("\n", 0, m.start()) + 1
-            issues.append(f"{why} at line {ln}: {lines[ln - 1].strip()[:90]}")
+    for why, ln, _ in banned_hits(banned, scan_text):
+        issues.append(f"{why} at line {ln}: {lines[ln - 1].strip()[:90]}")
     prefix = re.escape(plan["project"]["id_prefix"])
     pids = L.external_ids(plan)
     known = {it2["id"] for it2 in plan["items"]}
@@ -210,9 +240,13 @@ def check_item(plan, root, it, banned, gt_heads):
     cite = rows.get("Ground truth", "")
     numbered = numbered_headings(gt_heads)
     if numbered and cite and "to be " not in cite.lower():
-        for num in re.findall(r"\b(\d+(?:\.\d+)*)\b", cite):
-            if not any(h.startswith(num + " ") or h.startswith(num + ". ") for h in numbered):
-                issues.append(f"Ground truth cites section {num}, which is not a heading in the rendered document")
+        for num in cited_missing(numbered, cite):
+            issues.append(f"Ground truth cites section {num}, which is not a heading in the rendered document")
+    # the citation in plan.yaml goes into the issue body, so it is checked the same way
+    plan_cite = it.get("ground_truth") or ""
+    if numbered and plan_cite and "to be " not in plan_cite.lower():
+        for num in cited_missing(numbered, plan_cite):
+            issues.append(f"plan.yaml ground_truth of this item cites section {num}, which is not a heading in the rendered document")
     return issues, rel
 
 
@@ -222,7 +256,10 @@ def check_milestone(plan, root, ms):
     rel = path.relative_to(root) if path.is_relative_to(root) else path
     if not path.exists():
         return [f"MISSING {rel}"], rel
-    text = L.read_text(path)
+    try:
+        text = L.read_text(path)
+    except L.TextError as e:
+        return [f"cannot read: {e.msg}"], rel
     first = text.split("\n", 1)[0].strip()
     expected = f"# Milestone {ms['number']}, {ms['name']}"
     if first != expected:
@@ -257,10 +294,8 @@ def check_milestone(plan, root, ms):
     for m in re.finditer(rf"\b{re.escape(plan['project']['id_prefix'])}-(\d+)\b", text):
         if int(m.group(1)) in L.external_ids(plan):
             issues.append(f"reference to external item id {m.group(0)}")
-    for pat, why in banned_patterns(plan):
-        for m in pat.finditer(text):
-            ln = text.count("\n", 0, m.start()) + 1
-            issues.append(f"{why} at line {ln}: {text.split(chr(10))[ln - 1].strip()[:90]}")
+    for why, ln, line in banned_hits(banned_patterns(plan), text):
+        issues.append(f"{why} at line {ln}: {line}")
     for m in re.finditer(r"\]\(((?!https?://|mailto:|#)[^)\s]+)\)", strip_code(text)):
         if not (path.parent / m.group(1).split("#")[0]).resolve().exists():
             issues.append(f"broken relative link {m.group(1)}")
@@ -273,17 +308,18 @@ def check_readme(plan, root):
     rel = path.relative_to(root) if path.is_relative_to(root) else path
     if not path.exists():
         return [f"MISSING {rel}"], rel
-    text = L.read_text(path)
+    try:
+        text = L.read_text(path)
+    except L.TextError as e:
+        return [f"cannot read: {e.msg}"], rel
     for it in plan["items"]:
         if L.tag(plan, it["id"]).lower() not in text.lower():
             issues.append(f"index lacks {L.tag(plan, it['id'])}")
     for h in ("Closing comment on an issue", "Checkpoint comment on the Epic", "Index"):
         if f"## {h}" not in text and f"### {h}" not in text:
             issues.append(f"section missing: {h}")
-    for pat, why in banned_patterns(plan):
-        for m in pat.finditer(text):
-            ln = text.count("\n", 0, m.start()) + 1
-            issues.append(f"{why} at line {ln}: {text.split(chr(10))[ln - 1].strip()[:90]}")
+    for why, ln, line in banned_hits(banned_patterns(plan), text):
+        issues.append(f"{why} at line {ln}: {line}")
     return issues, rel
 
 
@@ -527,7 +563,7 @@ def report(plan):
     print(f"  {len(findings)} finding(s)." + (" Run the checker without --report to fail on them." if findings else ""))
 
 
-PLAN_ERRORS = (KeyError, ValueError, TypeError, AttributeError, IndexError, ZeroDivisionError)
+PLAN_ERRORS = (KeyError, ValueError, TypeError, AttributeError, IndexError, ZeroDivisionError, OverflowError, RecursionError)
 
 
 def print_plan_problems(problems):
@@ -566,13 +602,16 @@ def run_checks(plan, root, a):
         load_issues.append(f"from sizes and allocation the earliest finish is {L.fmt_date(times[chain[-1]][1])}, after the target {L.fmt_date(tdate)} "
                            f"(chain {' -> '.join(L.tag(plan, n) for n in chain)})")
     banned = banned_patterns(plan)
-    gt_heads = ground_truth_headings(plan, root)
+    try:
+        gt_heads, gt_error = ground_truth_headings(plan, root), None
+    except L.TextError as e:
+        gt_heads, gt_error = [], f"ground truth citations not checked: {e.msg}"
     if load_issues:
         results["load and target"] = load_issues
     review, _ = planning_review(plan) if not a.item else ([], [])
     if review:
         results["planning review"] = review
-    cites = citation_findings(plan, gt_heads)
+    cites = [gt_error] if gt_error else citation_findings(plan, gt_heads)
     if cites and not a.item:
         results["ground truth"] = cites
     items = [it for it in plan["items"] if not a.item or it["id"] in a.item]
@@ -605,6 +644,25 @@ def run_checks(plan, root, a):
     return results, ok, n_files, len(items), unfinished
 
 
+def parse_items(plan, wanted):
+    """Item ids from --item values such as 3, WI-03 or wi-3. Returns (ids, error)."""
+    prefix = str(plan["project"].get("id_prefix") or "")
+    known = {it["id"] for it in plan["items"] if isinstance(it.get("id"), int)}
+    ext = L.external_ids(plan)
+    out = []
+    for w in wanted:
+        m = re.fullmatch(r"\s*(?:(" + re.escape(prefix) + r")-?)?0*(\d+)\s*", str(w), re.I) if prefix else re.fullmatch(r"\s*0*(\d+)\s*", str(w))
+        if not m:
+            return [], f"--item {w!r} is not an item id. Use the number or the tag, for example 3 or {prefix or 'WI'}-03"
+        n = int(m.group(m.lastindex))
+        if n in ext:
+            return [], f"--item {w}: {L.tag(plan, n)} is an external item, outside the plan, so it has no specification to check"
+        if n not in known:
+            return [], f"--item {w}: there is no item {n} in the plan. Items: {', '.join(L.tag(plan, k) for k in sorted(known)) or 'none yet'}"
+        out.append(n)
+    return out, None
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Check work item specifications against plan.yaml. Read only: this script never writes files.",
@@ -612,18 +670,39 @@ def main(argv=None):
     )
     ap.add_argument("--root", default=".", help="project root (default: current directory)")
     ap.add_argument("--plan", help="path to plan.yaml (default: <root>/docs/spec/plan.yaml)")
-    ap.add_argument("--item", type=int, action="append", help="check only this item id (repeatable)")
+    ap.add_argument("--item", action="append", help="check only this item: 3, WI-03 or wi-3 (repeatable)")
     ap.add_argument("--report", action="store_true", help="print the schedule, load table and critical path, then exit")
     ap.add_argument("--json", action="store_true", help="print the findings as JSON")
     ap.add_argument("--quiet", action="store_true", help="print only the summary line")
     a = ap.parse_args(argv)
+
+    def fail(msg):
+        """A usage or plan error: one line on standard error, and with --json one JSON object on
+        standard output. Exit status 2."""
+        if a.json:
+            print(json.dumps({"error": msg, "clean": 0, "files": 0, "findings": {}}, indent=2))
+        print(f"error: {msg}", file=sys.stderr)
+        return 2
+
+    if a.report and a.json:
+        return fail("--report prints text. Leave out --json, or leave out --report to get the findings as JSON")
     root = Path(a.root).resolve()
+    if not root.is_dir():
+        return fail(f"--root {a.root} is not a folder")
     plan_path = L.find_plan(root, a.plan)
     if not plan_path.exists():
-        print(f"error: plan not found at {plan_path}. Run from the project root or pass --root; "
-              "write a first plan with scaffold_spec.py --init", file=sys.stderr)
-        return 2
-    plan, plan_problems = L.load_plan(plan_path)
+        return fail(f"plan not found at {plan_path}. Run from the project root or pass --root; "
+                    "write a first plan with scaffold_spec.py --init")
+    if not plan_path.is_file():
+        return fail(f"the plan path {plan_path} is a folder, not a file")
+    try:
+        plan, plan_problems = L.load_plan(plan_path)
+    except L.PlanError as e:
+        return fail(e.msg)
+    if a.item:
+        a.item, err = parse_items(plan, a.item)
+        if err:
+            return fail(err)
     if a.report:
         # plan problems first: the report is only as good as the plan it reads
         if plan_problems:

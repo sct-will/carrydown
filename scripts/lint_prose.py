@@ -19,7 +19,7 @@ Rules
 Usage
   python3 scripts/lint_prose.py            lint the whole repository
   python3 scripts/lint_prose.py README.md  lint named files
-Exit status is 0 when clean and 1 when there are findings.
+Exit status is 0 when clean, 1 when there are findings and 2 when a named path is not a file.
 """
 import argparse
 import fnmatch
@@ -110,6 +110,10 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description="Lint the prose of the repository: dashes, credit lines, vendor names outside the install list.")
     ap.add_argument("paths", nargs="*", help="files to lint (default: the whole repository)")
     a = ap.parse_args(argv)
+    missing = [x for x in a.paths if not Path(x).is_file()]
+    if missing:
+        print(f"error: not a file: {', '.join(missing)}. Name files to lint, or name none to lint the whole repository", file=sys.stderr)
+        return 2
     findings = []
     n = 0
     for p in files(a.paths):
