@@ -27,6 +27,10 @@ CARRYDOWN_GITHUB_TOKEN, so no stored token is ever read.
      (with a timeout, so a hang fails the step), files that are not UTF-8, plan values of the
      wrong type, flag combinations, the renderer's path checks and the checker's --item and
      --json. The token rules, the redirect guard and the project board run against the mock.
+ 11. Keeps the defects of the second round fixed: a list or map cut short at the end of a line,
+     an item with no id, a bad title format, names and paths too long for the file system,
+     named pipes and devices given as files, empty flags, and item ids in other digits. The mock
+     adds 401, 429, the secondary rate limit, a 502 before a write and paged lists.
 
 Every step has a time limit. A step that runs past it fails as a hang.
 
@@ -414,15 +418,18 @@ def regressions(tmp, plan_text):
             (proj / "docs/spec/plan.yaml").write_text(plan, encoding="utf-8")
         return proj
 
-    def every_script(label, proj, want, expect="nonzero"):
-        root = ["--root", str(proj)]
-        step(f"{label}: check_specs", chk + root, expect=expect, contains=[want], timeout=60)
-        step(f"{label}: check_specs --report", chk + root + ["--report"], expect=expect, contains=[want], timeout=60)
-        step(f"{label}: check_specs --json", chk + root + ["--json"], expect=expect, contains=[want], timeout=60, json_out=True)
-        step(f"{label}: scaffold_spec", scaffold + root + ["--allow-no-git"], expect="nonzero", contains=[want], timeout=60)
-        step(f"{label}: generate_dev_skill", gen + root, expect="nonzero", contains=[want], timeout=60)
-        step(f"{label}: github_sync --offline", sync + root + ["--offline"], expect="nonzero", contains=[want], timeout=60)
-        step(f"{label}: github_project --offline", board + root + ["--offline"], expect="nonzero", contains=[want], timeout=60)
+    def every_script(label, proj, want, expect="nonzero", extra=()):
+        want = [want] if isinstance(want, str) else list(want)
+        root = ["--root", str(proj)] + list(extra)
+        step(f"{label}: check_specs", chk + root, expect=expect, contains=want, timeout=60)
+        step(f"{label}: check_specs --report", chk + root + ["--report"], expect=expect, contains=want, timeout=60)
+        step(f"{label}: check_specs --json", chk + root + ["--json"], expect=expect, contains=want, timeout=60, json_out=True)
+        step(f"{label}: scaffold_spec", scaffold + root + ["--allow-no-git"], expect="nonzero", contains=want, timeout=60)
+        step(f"{label}: generate_dev_skill", gen + root, expect="nonzero", contains=want, timeout=60)
+        step(f"{label}: github_sync --offline", sync + root + ["--offline"], expect="nonzero", contains=want, timeout=60)
+        step(f"{label}: github_project --offline", board + root + ["--offline"], expect="nonzero", contains=want, timeout=60)
+    regressions.every_script = every_script
+    regressions.project = project
 
     # an item that depends on itself, and a duplicate id, used to loop forever in the checker
     every_script("an item that depends on itself", project("selfdep", plan_text.replace(
@@ -559,6 +566,150 @@ def regressions(tmp, plan_text):
          files={out / "docs/ground-truth/dupfigures.md": ["(figures/dupfigures/figure-1.png)", "(figures/dupfigures/figure-1-2.png)"]})
 
 
+def round_two(tmp, plan_text):
+    """The defects found in the second round of the code-path release test stay fixed."""
+    d = tmp / "round2"
+    d.mkdir()
+    every_script, project = regressions.every_script, regressions.project
+    chk, gen = [PY, "scripts/check_specs.py"], [PY, "scripts/generate_dev_skill.py"]
+    scaffold, sync, board = [PY, "scripts/scaffold_spec.py"], [PY, "scripts/github_sync.py"], [PY, "scripts/github_project.py"]
+    render, token = [PY, "scripts/render_ground_truth.py"], [PY, "scripts/github_token.py"]
+    s = ["--root", SAMPLE]
+
+    # the plan reader: a flow value cut short is a plan error with its line, an item with no id a plan problem
+    for i, (label, old, new, want) in enumerate([
+        ("a list cut short at the end of a line", "    depends: [1]\n    checkpoint: 2027-02-12", "    depends: [\n    checkpoint: 2027-02-12", ("cannot read plan", "line 171: unterminated list")),
+        ("a map cut short at the end of a line", '    label: "Report form and receipt upload"', "    label: {", ("cannot read plan", "line 164: unterminated map")),
+        ("a list cut short after a comma", "    depends: [1]\n    checkpoint: 2027-02-12", "    depends: [1,\n    checkpoint: 2027-02-12", ("cannot read plan", "line 171: bad flow collection")),
+        ("an item with no id", "  - id: 2\n    slug: report-form", "  - slug: report-form", "items: id must be an integer"),
+        ("a title format with an unknown field", 'title_format: "{id} {label}"', 'title_format: "{id} {nope}"', "project.title_format '{id} {nope}' uses {nope}"),
+        ("a title format with a lone brace", 'title_format: "{id} {label}"', 'title_format: "{id"', "is not a valid title format"),
+        ("a title format without the id", 'title_format: "{id} {label}"', 'title_format: "{label}"', "must hold {id} or {lower}"),
+        ("a slug too long for a file name", "    slug: report-form\n", "    slug: " + "a" * 300 + "\n", "item 2: slug makes the file or folder name"),
+        ("a milestone folder too long for a path", "    folder: m1-submit-report\n", "    folder: " + "/".join(["f" * 200] * 25) + "\n", "milestone 1: folder makes the path"),
+        ("a number of 5000 digits", "    allocation: 60\n", "    allocation: " + "9" * 5000 + "\n", "allocation must be a whole percent"),
+        ("an Epic number in other digits", "  epic: null\n", "  epic: \"\uff10\uff13\"\n", "project.epic must be an issue number"),
+        ("a date in the year 9999", "    complete_by: 2027-02-10\n", "    complete_by: 9999-12-31\n", "complete_by is not a date"),
+        ("a project slug with a comma", "  slug: expense-approvals\n", '  slug: "expense,approvals"\n', "project.slug must be lowercase words joined by hyphens"),
+        ("a label with a line break", '    label: "Report form and receipt upload"', '    label: "Report form\\nand receipt upload"', "item 2: label must be one line"),
+    ]):
+        assert old in plan_text, label
+        every_script(f"plan with {label}", project(f"r2-{i}", plan_text.replace(old, new, 1)), want)
+
+    # files the scripts read must be regular files: a named pipe would wait, /dev/zero never ends
+    if hasattr(os, "mkfifo"):
+        fifo = d / "plan-fifo.yaml"
+        os.mkfifo(str(fifo))
+        for name, path in (("a named pipe", str(fifo)), ("/dev/zero", "/dev/zero"), ("/dev/null", "/dev/null")):
+            if not Path(path).exists():
+                continue
+            p = ["--plan", path]
+            step(f"--plan {name}: check_specs is one line", chk + s + p, expect=2, contains=["is not a regular file"], timeout=30)
+            step(f"--plan {name}: check_specs --json is JSON", chk + s + p + ["--json"], expect=2, contains=["is not a regular file"], json_out=True, timeout=30)
+            for label, cmd in (("scaffold_spec", scaffold + ["--allow-no-git"]), ("generate_dev_skill", gen), ("github_sync --offline", sync + ["--offline"]), ("github_project --offline", board + ["--offline"])):
+                step(f"--plan {name}: {label} is one line", cmd + s + p, expect="nonzero", contains=["is not a regular file"], timeout=30)
+        piped = project("r2-fifo-spec")
+        spec = piped / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
+        spec.unlink()
+        os.mkfifo(str(spec))
+        root = ["--root", str(piped)]
+        step("a specification that is a named pipe is a finding", chk + root, expect=1, contains=["cannot read:", "is not a regular file"], timeout=30)
+        step("a specification that is a named pipe: --show-body is one line", sync + root + ["--offline", "--show-body", "1"], expect="nonzero", contains=["is not a regular file"], timeout=30)
+        step("a specification that is a named pipe: the skill generator is one line", gen + root, expect="nonzero", contains=["is not a regular file"], timeout=30)
+        step("a specification that is a named pipe: --refresh-headers is one line", scaffold + root + ["--refresh-headers", "--allow-no-git"], expect="nonzero", contains=["is not a regular file"], timeout=30)
+        readme = piped / "docs/spec/README.md"
+        readme.unlink()
+        os.mkfifo(str(readme))
+        step("--apply --force never writes into a named pipe", scaffold + root + ["--allow-no-git", "--apply", "--force"], expect="nonzero", contains=["is not a regular file"], timeout=30)
+        gt = project("r2-fifo-gt")
+        (gt / "docs/ground-truth/architecture.md").unlink()
+        os.mkfifo(str(gt / "docs/ground-truth/architecture.md"))
+        step("a ground truth that is a named pipe is reported by the checker", chk + ["--root", str(gt)], expect=1, contains=["ground truth citations not checked:", "is not a regular file"], timeout=30)
+        src = d / "doc-fifo.md"
+        os.mkfifo(str(src))
+        out = d / "render-out"
+        out.mkdir()
+        step("a named pipe as a renderer input is one line", render + [str(src), "--root", str(out), "--dry-run"], expect=2, contains=["is not a regular file"], timeout=30)
+        md = d / "doc.md"
+        md.write_text("# Doc\n\n## 1. Part\n", encoding="utf-8")
+        (out / "docs/ground-truth").mkdir(parents=True)
+        os.mkfifo(str(out / "docs/ground-truth/doc.md"))
+        step("a named pipe where the rendering goes is in the way", render + [str(md), "--root", str(out)], expect=2, contains=["is in the way", "pipe, socket or device"], timeout=30)
+        step("--from-file with a named pipe is one line", token + ["--from-file", str(fifo)], expect=2, contains=["is not a regular file"], timeout=30)
+        if Path("/dev/zero").exists():
+            feed = "import subprocess, sys; sys.exit(subprocess.run(sys.argv[1:], stdin=open('/dev/zero', 'rb')).returncode)"
+            step("--stdin from /dev/zero stops after a token's length", [PY, "-c", feed] + token + ["--stdin", "--token-file", str(d / "tok")], expect=2,
+                 contains=["more than a token"], timeout=30)
+    bad = d / "badnumbers.docx"
+    subprocess.run([PY, "tests/fixtures/make_numbered_docx.py", str(bad), "badnumbers"], cwd=ROOT, env=ENV, check=True)
+    step("docx: level numbers that are not ASCII digits do not stop the renderer", render + [str(bad), "--root", str(d), "--dry-run"],
+         contains=["1 document(s) checked"], timeout=60)
+    md = d / "plain.md"
+    md.write_text("# Plain\n\n## 1. Part\n", encoding="utf-8")
+    step("a --name too long for the file system is refused before anything is written", render + [str(md), "--root", str(d), "--name", "n" * 300], expect=2,
+         contains=["longer than the"], timeout=30)
+    step("an empty --out-dir is refused", render + [str(md), "--root", str(d), "--out-dir", ""], expect=2, contains=["--out-dir is empty"])
+    step("an empty --root is refused by the renderer", render + [str(md), "--root", ""], expect=2, contains=["--root is empty"])
+
+    # empty flags are errors, never a fall back to a default
+    for label, cmd, want in (
+        ("github_sync --repo ''", sync + s + ["--offline", "--repo", ""], "--repo is empty"),
+        ("github_project --repo ''", board + s + ["--offline", "--repo", ""], "--repo is empty"),
+        ("github_sync --show-body ''", sync + s + ["--offline", "--show-body", ""], "--show-body is empty"),
+        ("github_sync --plan ''", sync + s + ["--offline", "--plan", ""], "--plan is empty"),
+        ("github_sync --token-file ''", sync + s + ["--token-file", ""], "--token-file is empty"),
+        ("github_sync --issue-type ''", sync + s + ["--offline", "--issue-type", ""], "--issue-type is empty"),
+        ("github_project --owner ''", board + s + ["--offline", "--owner", ""], "--owner is empty"),
+        ("github_project --title ''", board + s + ["--offline", "--title", ""], "--title is empty"),
+        ("github_project --owner with a slash", board + s + ["--offline", "--owner", "a/b"], "is not a GitHub user or organization name"),
+        ("scaffold_spec --root ''", scaffold + ["--root", ""], "--root is empty"),
+        ("generate_dev_skill --plan ''", gen + s + ["--plan", ""], "--plan is empty"),
+        ("github_token --from-file ''", token + ["--from-file", ""], "--from-file is empty"),
+        ("github_token --repo ''", token + ["--check", "--repo", ""], "--repo is empty"),
+        ("github_token --token-file ''", token + ["--check", "--token-file", ""], "--token-file is empty"),
+        ("github_token --repo with ..", token + ["--check", "--repo", "../x"], "must look like owner/name"),
+    ):
+        step(f"{label} is an error", cmd, expect="nonzero", contains=[want], timeout=60)
+    norepo = project("r2-norepo", plan_text.replace("  repo: sct-will/carrydown-sample\n", ""))
+    step("--show-body without a repository says how to give one", sync + ["--root", str(norepo), "--offline", "--show-body", "3"], expect=2,
+         contains=["--show-body needs the repository"])
+    step("--show-body with --repo and no project.repo prints the body", sync + ["--root", str(norepo), "--offline", "--show-body", "M1", "--repo", "o/r"],
+         contains=["https://github.com/o/r/blob/main/docs/spec/m1-submit-report/milestone.md"])
+    # the path is checked before the token is read, so this text, which is not a token, is never looked at
+    step("a --token-file name too long for the file system is one line", token + ["--stdin", "--token-file", str(d / ("t" * 300))], expect=2,
+         stdin="not-a-token\n", contains=["cannot be used"])
+    step("check_specs --plan '' is an error, as JSON", chk + s + ["--plan", "", "--json"], expect=2, contains=["--plan is empty"], json_out=True)
+    step("check_specs --root '' is an error, as JSON", chk + ["--root", "", "--json"], expect=2, contains=["--root is empty"], json_out=True)
+
+    # --show-body takes the same ids as --item; negative numbers and other digits are not ids
+    for w in ("WI-03", "wi-3", "03", "3"):
+        step(f"--show-body {w} prints item 3", sync + s + ["--offline", "--show-body", w], contains=["### Work item", "<!-- carrydown:WI-03 -->"])
+    for w in ("-1", "\uff10\uff13", "WI-x"):
+        step(f"--show-body {w!r} is an error", sync + s + ["--offline", "--show-body", w], expect=2, contains=["no item with id"])
+    step("--item with full-width digits is an error", chk + s + ["--item", "\uff10\uff13"], expect=2, contains=["is not an item id"])
+
+    # the generator refuses references without a skill, and the checker's exit codes match its help
+    fresh = project("r2-only")
+    shutil.rmtree(fresh / "docs/dev")
+    step("--only references --apply without SKILL.md is refused", gen + ["--root", str(fresh), "--only", "references", "--apply"], expect=2,
+         contains=["Run this script without --only first"])
+    results.append((not (fresh / "docs/dev").exists(), "the refused --only references wrote nothing"))
+    print(("PASS " if not (fresh / "docs/dev").exists() else "FAIL ") + "the refused --only references wrote nothing")
+    step("check_specs --help states the exit codes it uses", chk + ["--help"], contains=["1 when there are findings (problems with plan.yaml", "2 when the plan cannot be read"])
+
+    # messages of a script copy name only files that ship in its own skill
+    for skill, want, other in (("carrydown-ground-truth", "the rules are in references/planning.md", "How this plan was composed"),
+                               ("carrydown-plan-to-github", "under How this plan was composed", "references/planning.md")):
+        copy = d / ("copy-" + skill)
+        shutil.copytree(ROOT / "skills" / skill, copy)
+        step(f"the {skill} checker points at text that ships with it", [PY, str(copy / "scripts/check_specs.py"), "--root", str(ROOT / SAMPLE), "--report"],
+             contains=[want], absent=("Traceback", other))
+        nogt = project("r2-nogt-" + skill)
+        (nogt / "docs/ground-truth/architecture.md").unlink()
+        hint = "render_ground_truth.py" if skill == "carrydown-ground-truth" else "Render it with the carrydown-ground-truth skill"
+        step(f"the {skill} checker's render hint names what ships with it", [PY, str(copy / "scripts/check_specs.py"), "--root", str(nogt)], expect=1, contains=[hint])
+
+
 def main():
     ap = argparse.ArgumentParser(description="Self test for the carrydown skills. No token and no network.")
     ap.parse_args()
@@ -676,6 +827,7 @@ def main():
         names(Path(tmp), plan_text)
         lint_spelling(Path(tmp))
         regressions(Path(tmp), plan_text)
+        round_two(Path(tmp), plan_text)
     step("dry run without a token says nothing was checked against GitHub", [PY, "scripts/github_sync.py", "--root", SAMPLE],
          contains=["not checked against GitHub (no token)", f"python3 {ROOT / 'scripts' / 'github_token.py'}"], absent=["Already on GitHub: the rest"])
     step("board dry run without a token says nothing was checked against GitHub", [PY, "scripts/github_project.py", "--root", SAMPLE],
@@ -700,6 +852,11 @@ def main():
         ("repos", "mock: owner and repository names with - and ., a missing repository, --issue-type"),
         ("board", "mock: the project board is built, a rerun changes nothing, iterations are reconfigured"),
         ("projectnumber", "mock: --project-number for a missing project creates nothing"),
+        ("errors", "mock: 401, 429, the secondary rate limit and a 502 before a write"),
+        ("paging", "mock: lists longer than one page are read to the end by the Link header"),
+        ("verifyskip", "mock: --verify --skip-comment passes without the roll-up comment"),
+        ("titleformat", "mock: a bad title_format stops --apply before anything is sent"),
+        ("tokenloose", "mock: --from-file with a source others can read stores and warns once"),
     ]
     for scenario, name in mock:
         step(name, [PY, "tests/mock/scenarios.py", scenario], contains=[f"{scenario}: all checks passed"], timeout=120)
