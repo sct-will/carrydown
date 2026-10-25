@@ -26,7 +26,7 @@ The short form of the plan review is this one sentence. Use it first, word for w
 
 > List what is missing, wrong or improvable in this plan, reading it as each engineer would live it week by week.
 
-Then use the longer prompt below to push each finding to a concrete change. Paste `plan.yaml`, the load table, the critical path and the planning review.
+The longer prompt below supports discussion while drafting. Once the plan and specifications are complete, run the distinct second pass in `../templates/plan-review-prompt.md`. That prompt requires original source and constraint inputs, tabular coverage and risk analysis, and a repair record. Do not substitute this shorter drafting prompt for that completed-plan review.
 
 > You are a skeptical reviewer of a project plan. Find what is missing, incorrect or improvable. Think about the people who will do the work.
 >

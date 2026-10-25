@@ -1,6 +1,6 @@
 ---
 name: carrydown-plan-to-github
-description: Carries an approved docs/spec/plan.yaml into GitHub as sub-epics, one issue per work item and a Projects board, dry run first, then generates the skill each engineer installs. Use for "Put the plan on GitHub" or "Generate the engineers' skill".
+description: Publishes an approved plan to GitHub and generates the engineers' skill. Use for "Put the plan on GitHub", "Generate the engineers' skill" or "Review and repair the published plan". External updates are previewed before approval.
 license: Apache-2.0
 compatibility: Needs Python 3.9 or later, network access to api.github.com only, and a GitHub token the user creates.
 metadata:
@@ -11,6 +11,8 @@ metadata:
 # Put the plan on GitHub
 
 Start phrase: "Put the plan on GitHub." (or "Create the GitHub issues and the board."). For the last step on its own: "Generate the engineers' skill."
+
+For "Review and repair the published plan", load `references/plan-review-repair.md` and follow that path instead of the creation flow. Load its shared review prompt only when starting that review. The engineers' skill-only shortcut remains step 8.
 
 Run by: plan owner. The generated skill is used by: engineers.
 
@@ -43,6 +45,8 @@ The scripts and templates folders sit next to this SKILL.md. In the commands bel
 ### 1. Preconditions
 
 Run `python3 <skill>/scripts/check_specs.py --root .`. It must report 0 findings. If it does not, stop and go back to `carrydown-ground-truth`. The sync script runs the checker again before it does anything.
+
+For a plan just completed by the ground-truth skill, read the outcome of its second-pass report and resolve pending planning decisions with the owner. For an older plan without that report, offer the review path in `references/plan-review-repair.md`; existing scripts do not require a new report or plan field.
 
 Every issue body links its specification at `https://github.com/<owner>/<repo>/blob/<branch>/docs/spec/...`, where `<branch>` is `project.branch`. Those links work only when the specification folder is committed and pushed to that branch. Check it before any `--apply`. Ask the user to run these commands in their own terminal, from the project root, and to tell you what they print. They only read. Do not run them yourself:
 

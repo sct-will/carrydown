@@ -13,6 +13,8 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ### Added
 
+- A second-pass agent review of the completed plan and specifications, after ordinary checking and before final owner approval. Both skills carry one shared prompt and a tabular report template. The report records source coverage, evidence, reasoning, risk, owner decisions and repair verification. Detailed instructions load only when reviewing or repairing a plan.
+- A separate published-plan repair path and `github_repair.py`, dry run by default. It uses the saved pre-repair plan to reconcile generated titles, assigned engineers, track labels and parent links without changing bodies, comments, issue state or unrelated metadata. Existing creation commands and the plan format are unchanged.
 - Planning rigor. `plan.yaml` records why the plan is composed the way it is: `rationale`, `joint_demonstration` and `single_track_reason` on each milestone, `order_rationale` on each track and `theme` on each item. The ten planning rules are in the ground-truth skill's `references/planning.md` and in `docs/method.md`.
 - `scaffold_spec.py` writes "Why these items form this milestone" and "Joint demonstration" into each `milestone.md`, and "How this plan was composed" into the specification README. `--refresh-headers` rewrites or adds these sections and leaves other edits alone.
 - `check_specs.py` has a planning review. A milestone on one track without a reason, and a missing rationale, joint demonstration or order rationale, are findings. `--report` ends with advisory lines: the tracks each milestone covers and whether its joint check names them, items with no slack, theme switches per owner, critical path owners and the load ratio.

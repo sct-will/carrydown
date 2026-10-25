@@ -30,11 +30,11 @@ REPO = Path(__file__).resolve().parent.parent
 NEEDS = {
     "carrydown-ground-truth": {
         "scripts": ["render_ground_truth.py", "scaffold_spec.py", "check_specs.py"],
-        "templates": ["plan.yaml", "spec.md", "milestone.md", "spec-README.md", "closing-comment.md", "checkpoint-comment.md", "check-specs-workflow.yml"],
+        "templates": ["plan.yaml", "spec.md", "milestone.md", "spec-README.md", "closing-comment.md", "checkpoint-comment.md", "check-specs-workflow.yml", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md"],
     },
     "carrydown-plan-to-github": {
-        "scripts": ["github_token.py", "github_sync.py", "github_project.py", "github_client.py", "check_specs.py", "generate_dev_skill.py"],
-        "templates": ["issue-body.md", "closing-comment.md", "checkpoint-comment.md", "dev-skill/SKILL.md.tmpl", "dev-skill/README.md.tmpl"],
+        "scripts": ["github_token.py", "github_sync.py", "github_project.py", "github_repair.py", "github_client.py", "check_specs.py", "generate_dev_skill.py"],
+        "templates": ["issue-body.md", "closing-comment.md", "checkpoint-comment.md", "dev-skill/SKILL.md.tmpl", "dev-skill/README.md.tmpl", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md"],
     },
 }
 

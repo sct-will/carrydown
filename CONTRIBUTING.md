@@ -56,6 +56,7 @@ python3 scripts/github_project.py --root sample/expense-approvals --offline
 | `scripts/github_token.py` | Create and store a GitHub token safely, and check what it can do. |
 | `scripts/github_sync.py` | Labels, sub-epics, issues, links and the Epic comment. |
 | `scripts/github_project.py` | The GitHub Project board. |
+| `scripts/github_repair.py` | Separate, previewed repairs to existing issue metadata after an accepted plan review. |
 | `scripts/generate_dev_skill.py` | The engineers' skill folder. |
 | `scripts/selftest.py` | The repository's own checks, with no token. |
 | `scripts/lint_prose.py` | The prose style checks. |
