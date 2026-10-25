@@ -2,17 +2,19 @@
 
 # carrydown
 
-**carrydown uses two packaged AI agent skills and one generated skill to let an AI agent generate everything between your architecture document and the first commit. The agent creates the plan, every spec, every GitHub issue, the project board and a custom agent skill your engineers’ agents use to write code.**
-
-Give your AI agent a technical architecture document and any other context you have. If you know how many engineers you have and the target project duration, tell it that too.
-
-The agent drafts the project plan. It looks at people, time and dependencies. It groups related work so each milestone ends in one integrated demo by the engineers. It gives each engineer their own track, so nobody jumps between unrelated work.
-
-Then the agent puts the plan on GitHub. It creates a project board, an epic for the whole project, a sub-epic for each milestone and an issue for each work item. Each issue links to its own generated spec file. Last, it builds an agent skill for your engineers that helps each engineer finish their work item to spec. Their coding agents use it to read the spec and the right parts of the architecture before they write code.
-
-This agent-native approach keeps every engineer tied to the original architecture and ground truth, carried all the way down to their agentic editor. Two skills you install. One skill is generated for your engineers.
-
 [![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
+
+carrydown uses two packaged AI agent skills and one generated skill to let an AI agent generate **everything between your architecture document and the first commit**. The agent creates the plan, every spec, every GitHub issue, the project board and a custom agent skill your engineers' agents use to write code.
+
+**1. Give it the ground truth.** A technical architecture document and any other context you have. If you know how many engineers you have and the target project duration, tell it that too.
+
+**2. It plans around your people.** The agent looks at people, time and dependencies. It groups related work so each milestone ends in one integrated demo by the engineers. It gives each engineer their own track, so nobody jumps between unrelated work.
+
+**3. It carries the plan into GitHub.** A project board, an epic for the whole project, a sub-epic for each milestone and an issue for each work item. Each issue links to its own generated spec file.
+
+**4. It equips every engineer.** The agent builds a skill that helps each engineer finish their work item to spec. Their coding agents use it to read the spec and the right parts of the architecture before they write code.
+
+Every engineer stays tied to the original architecture, carried all the way down to their agentic editor. **Two skills you install. One skill is generated for your engineers.**
 
 ## Getting started
 
