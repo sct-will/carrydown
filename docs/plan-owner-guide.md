@@ -1,62 +1,45 @@
-# Plan owner guide
+# Review and publish your plan
 
-An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent. Two skills you install, one skill is generated for your engineers.
+Use this guide once the skills are installed and your agent is starting the interview. It takes you through answering the questions, reviewing the drafts, publishing to GitHub and updating the plan later.
 
-The long form for the plan owner: the engineering manager or product manager who owns the plan. You do not need to write code. The short form is the README: [Quick start](../README.md#quick-start) has the install line and the first sentence to say, and [What the agent asks you](../README.md#what-the-agent-asks-you) has the questions you answer. This guide does not repeat them. It explains what happens between them, what to review and what to ask for in advance.
+If you have not installed carrydown, follow [Install carrydown and start your first plan](setup.md) first. Once the interview begins, continue here. You do not need to read the optional reference pages to complete these steps.
+
+Already have a draft? Skip to [reviewing the plan](#reviewing-the-plan). Ready to publish? Skip to [prepare for GitHub](#prepare-for-github).
+
+[Answer the interview](#what-the-agent-asks-you) | [Review the plan](#reviewing-the-plan) | [Review the specifications](#reviewing-the-specifications) | [Prepare for GitHub](#prepare-for-github) | [Publish](#the-github-step) | [Hand off](#hand-the-work-to-engineers) | [Update the plan](#update-the-plan) | [Get help](#if-something-goes-wrong)
 
 ## Who runs what
 
-| Role | What they do | Which skill |
-| --- | --- | --- |
-| Plan owner | The engineering manager or product manager who owns the plan. Brings the ground truth and the constraints, answers the interview, reviews the generated plan and specifications with the agent, says yes before anything is written to GitHub, and gives the engineers the generated skill. | [carrydown-ground-truth](../skills/carrydown-ground-truth/), then [carrydown-plan-to-github](../skills/carrydown-plan-to-github/) |
-| Engineers | The people building the work items, each with their own coding agent. They install the generated skill once, start an item by naming it, post evidence when it closes, and give the demonstrations. | The skill that `carrydown-plan-to-github` generates for the project |
+| Role | What they do |
+| --- | --- |
+| Plan owner | An engineering manager, product manager or other person responsible for the plan. Answers the interview, reviews the drafts, approves publishing and gives the engineers their generated skill. |
+| Engineers | Install the generated skill, work from their specifications and demonstrate completed work. |
+| Stakeholders | The people accountable for the outcome. Watch demonstrations and decide whether the acceptance criteria have been met. They run nothing. |
 
-Two skills you install, one skill is generated for your engineers. The demonstrations are watched by the stakeholders, the people accountable for the outcome, who decide pass or fail against criteria written before the work. They run nothing.
+The agent drafts, checks and populates. You decide the owners, dates, scope and order.
 
-The agent has no role. It drafts for the plan owner, reads for the engineers and carries the ground truth between them.
+## What the agent asks you
 
-## What you will end up with
+The interview has six steps. Replies start with `carrydown: interview, step N of 6`, with the current step number in place of `N`. These questions tell you what to have ready:
 
-You bring a document that says how the project must work, such as an architecture document. You and your agent turn it into:
+| The agent asks | You answer with |
+| --- | --- |
+| Which documents must the project obey, and which wins if two disagree? | File paths, and the winner |
+| Who does the work, which part of the system does each person own, from when, and at what share of their time? | Names, a track each (a lane of work one engineer owns, such as back end or front end), allocation percentages, start dates, days off |
+| When must it ship, or how many weeks do you have? | A date, a number of weeks, or "derive the date" |
+| Which repository, and which coding agents do the engineers use? | owner/repo and the agents |
+| What must the stakeholders see at each milestone demonstration to call it done? | Their words, which become acceptance criteria |
+| How is the code built, tested and merged here? | The commands and the branch rule |
 
-- a plan with milestones, people, dates and dependencies,
-- one specification file for each piece of work (a work item), each tied to the sections of your document it comes from,
-- GitHub issues, one per work item, grouped under one issue per milestone,
-- a GitHub Project board with the dates and the people filled in,
-- the engineers' skill, linked from every issue, so each engineer's agent reads the specification before it writes code.
+Your source documents are required. Team size, allocation and target dates can be undecided. If you have a team and no date, the agent derives a date. If you have a date and no team, it proposes the capacity needed. If neither is known, it proposes a starting point and asks you to confirm it.
 
-Nothing is written to GitHub until you say yes. To see a finished result first, open [the sample board](https://github.com/users/sct-will/projects/2) and [issue 9](https://github.com/sct-will/carrydown-sample/issues/9), part of a fictional sample. Work items are numbered WI-01, WI-02 and so on.
+Allocation is the share of each person's working time available for this plan. The agent assumes 100 percent and asks you to confirm. For someone available three days in five, say 60 percent. Mention start dates, days off, breaks, work owned outside the team and any existing parent epic. An epic is the parent GitHub issue for the whole plan.
 
-Two inputs: the ground truth documents, which are required, and your project constraints, which are optional. Constraints are the people with their percent allocation and the target date or number of weeks plus breaks, in any combination. Give both and the plan fits them. Give one and the agent backs into the other. Give neither and it proposes a default and asks. Allocation is assumed to be 100 percent for everyone. The agent asks you once to confirm, and you only name a figure for someone who is lower.
+If you do not know an engineering command or branch rule, say "decide later" and ask the engineering team. You can answer in ordinary language. The agent reads your answers back before writing the plan. Correct the summary, then approve it when it is right.
 
-How long it takes. The interview and the plan review take an hour or two of your attention. Reviewing the specifications with the agent takes about another hour. The scripts take a few minutes.
+If your document has no numbered sections, ask the agent to propose numbering in the source document. Review those changes before it renders the document for planning.
 
-## Before you start
-
-Things to ask for now, because they can take days:
-
-- **Permission to create a Project** in your GitHub organization, and to create issues in the repository. Ask an organization administrator. If you do not have it yet, planning carries on. You only need it at the GitHub step.
-- **Single sign-on approval.** If your organization enforces single sign-on (SSO), your token must be approved for it. You do that yourself in two clicks (see "The token" below), but some organizations route it through an administrator.
-- **Node.js and Python 3** on the computer where your agent runs. Node.js runs the install line once, and Python runs the scripts. Your agent can check both, and [setup.md](setup.md) has the steps for each system.
-
-Things to gather:
-
-- Your document or documents, as .docx or .md files, in `docs/source/` in your project folder. If the document has no numbered sections, ask the agent to propose numbering in the source document, approve it, and have the agent render the document again.
-- A project folder that is a git repository. The agent can create it for you.
-- The facts the interview asks for. [inputs.md](inputs.md) lists them so you can prepare.
-
-## The interview
-
-The agent asks questions in six steps. Each reply starts with the line "carrydown: interview, step N of 6" so you know where you are. The steps cover:
-
-1. your documents, and which one wins if two disagree,
-2. your constraints, if any: the people, their tracks, their percent allocation (assumed 100, confirmed once), GitHub logins, start dates and days off,
-3. the target as a date or a number of weeks, if you have one, the breaks, and the longest stretch of work you allow in one block,
-4. your GitHub repository, the branch, and whether an Epic issue exists,
-5. which agents the engineers use, who watches the demonstrations, and what work is owned outside the team,
-6. how the engineers run tests and lint, and whether they use a feature flag.
-
-You can answer in plain words. If you do not know an answer, say "use your default" or "decide later". The agent reads everything back as a summary. Correct it, then say yes. Nothing is written before that.
+Optional preparation: the [detailed inputs checklist](inputs.md) includes examples, defaults and a form to copy. You can also answer the questions as the agent asks them.
 
 ## Reviewing the plan
 
@@ -88,6 +71,22 @@ Before anything goes to GitHub, you review the generated specifications with the
 
 The checker compares every specification to the plan. It runs on your computer, and the agent can add it to continuous integration (CI, the automatic checks on every pull request). In CI it fails loudly: a red mark on any pull request that makes a specification disagree with the plan. Ask the agent to add the specification checker to CI.
 
+## Prepare for GitHub
+
+You can draft and review locally before publishing. If permissions may take time, ask for them during the review. Before you publish, you need:
+
+- A GitHub repository, identified as `owner/repository`, and the branch that will hold the planning files.
+- Permission to create issues in that repository and a project board in the account or organization that will own it.
+- The parent epic's issue number, if one exists, or approval to create one.
+- Engineers' GitHub usernames, if the issues should be assigned to them.
+- A GitHub token, prepared in the next section. If your organization uses single sign-on (SSO), it may require authorization or administrator approval.
+
+When you are ready, tell the agent:
+
+> Put the plan on GitHub.
+
+The second skill checks the files and walks you through the publishing steps. Ask the agent for help with any prerequisite you do not recognize.
+
 ## The token
 
 A token is a long password that lets the scripts create issues and a Project for you. The agent gives you the link. Open it yourself.
@@ -112,25 +111,59 @@ If you think the token leaked, revoke it on [your GitHub tokens page](https://gi
 
 ## The GitHub step
 
-Commit and push the plan and the specification folder first. Each issue links its specification on GitHub, and the link only works once the file is pushed. The agent checks this and asks you if it is not done. You can tell it to do the commit and push for you. Then the agent runs a dry run. A dry run changes nothing. The board step has its own dry run and its own yes. It prints a summary line like "1 Epic, 5 sub-epics, 9 work item issues". Read the numbers, then say whether to go ahead. After the write it checks the counts through GitHub, builds the board and fills in the dates. Then it gives you a short list of settings that GitHub only lets a person click, such as how the board groups its cards, and tells you where. Last, it generates the engineers' skill and gives you the install line to send each engineer. Commit and push the generated skill folder too, because the install line reads it from GitHub.
+1. **Put the reviewed files in the repository.** Commit and push the plan and specification folder to the intended branch. Each issue links its specification there, so the file must be available first. The agent checks this. You can ask it to commit and push for you, or have your engineering team do that.
+2. **Review the issues dry run.** A dry run previews the changes. The agent prints counts such as "1 Epic, 5 sub-epics, 9 work item issues" and names the repository. Check the destination, counts and proposed content. Say whether to proceed.
+3. **Review the board dry run.** The board has a separate preview and approval. Check its owner, name, fields and dates before saying yes.
+4. **Finish the board settings.** After publishing, the agent verifies the results and gives you the board link. It lists settings you must choose in GitHub, such as grouping and sorting. Follow that list to finish the view.
+5. **Review the engineers' skill.** The agent generates it from your specifications and asks you to review the project conventions. Commit and push this folder too, so engineers can install it from the repository.
 
-## After that
+You are ready to hand off when the issues link to their specifications, the board shows the plan and the generated skill is available on the intended branch. If a destination is public, review the content for publication before approving the write.
 
-The engineers follow a rhythm.
+## Hand the work to engineers
 
-- When an item is finished, the engineer posts a closing comment on its issue: what they can demonstrate, the evidence, the decisions, and what the other track needs to know.
-- On each checkpoint date in the plan, the engineers meet for 30 minutes and run the joint check for that date.
-- At the end of each work unit the engineers demonstrate the milestone to the stakeholders, against criteria that were written before the work started. They decide pass or fail, and the outcome is noted on the sub-epic the same day.
+The agent supplies a complete installation command for your project's generated skill. Send that command and the board link to the engineers. They install the generated skill once in their coding agents. Each starts an item by naming it, for example "Work on WI-03". Their agent reads the specification and its cited source sections before planning code.
 
-To change the plan later, change `plan.yaml` with your agent and run the checker again. [faq.md](faq.md) explains how to refresh the files and the issues.
+The engineers follow three rhythms:
+
+- **Each work item:** post a closing comment with what they can demonstrate, the evidence, decisions and anything another track needs to know.
+- **Each checkpoint:** meet for the planned integration check and run the joint check, the test that proves the tracks fit together. Post the result.
+- **Each milestone:** demonstrate the completed capability to the stakeholders against its written acceptance criteria. Record pass or fail on the milestone's sub-epic.
+
+The stakeholders decide whether the outcome meets the criteria. You keep the plan current as the team learns.
+
+## Update the plan
+
+Open the same project in your coding agent and describe what changed. Review the affected items and dates before publishing another update. You can use these prompts.
+
+### Change people, dates or dependencies
+
+> Update the plan for these changes. Show me the effects on each person's load, the critical path and the checkpoints. Refresh the specification headers and run the checker. Show me the differences before changing GitHub.
+
+Give the names, availability, dates or dependencies that changed. The agent updates `docs/spec/plan.yaml`, refreshes the affected specification headers and checks the files. Read the revised schedule and approve it only when it fits.
+
+### Change the source document
+
+> The source document has changed. Render it again, identify the affected specifications and update the plan with me. Run the checker before we publish anything.
+
+Edit the source document rather than its rendered copy. The checker flags citations to sections that no longer exist; review the affected content with the agent as well. A valid section number alone does not prove that a specification still matches the revised document.
+
+### Publish an approved update
+
+> Show me a dry run to bring GitHub up to date with this approved plan. Include the existing issue bodies that need updating.
+
+Commit and push the revised planning files first. The synchronization scripts match existing issues, add new items and leave existing bodies unchanged unless an update is requested. Ask the agent to show which bodies it would rewrite. Approve the issue and board updates after their previews. The scripts do not delete issues or change issue titles; handle retired work or title changes on GitHub yourself.
+
+If specifications or engineering conventions changed, ask the agent to refresh the engineers' skill too. Review, commit and push that change, then have the engineers update their installed copy.
 
 ## If something goes wrong
 
-- A script fails. Ask the agent to show the message and explain it. Nothing is written until you say yes, and no script deletes anything unless you pass `--delete-after` to the token script.
-- `npx: command not found`. Node.js is missing. See [faq.md](faq.md).
-- A GitHub step is refused. The usual cause is single sign-on or a missing organization permission. The token check names the fix.
-- The agent does not pick up a skill. Put the skill name in front of the sentence, as the [FAQ](faq.md#how-do-i-start-each-skill) shows.
-- You want to start over. Delete the `docs/spec/` folder in your project and ask again. The scripts never touch your source documents.
+- **The agent does not recognize a stage.** Name its skill explicitly: "Use the carrydown-ground-truth skill" for planning, or "Use the carrydown-plan-to-github skill" for publishing. Then describe what you want to do.
+- **A checker reports findings.** Ask the agent to explain each finding and fix the plan or specifications with you. Ask for a clean check before publishing.
+- **A publishing step is refused.** Ask the agent to explain the token or permission check. Confirm the repository, board owner and any single sign-on authorization. Do not paste a token into chat.
+- **A publishing run stops partway through.** Ask the agent to inspect what exists and show another dry run. A rerun matches existing issues and repairs missing links. Review the preview before approving it.
+- **You want to rebuild the draft.** Ask the agent to show what would change and preserve reviewed work before replacing files. You do not need to delete the planning folder to adjust a plan.
+
+For installation problems, use the [setup guide's troubleshooting](setup.md#when-something-does-not-work). The [planning method](method.md) and [security guide](security.md) provide optional background.
 
 ## Glossary
 

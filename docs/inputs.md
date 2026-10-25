@@ -1,6 +1,6 @@
 # Inputs checklist
 
-The ground-truth skill interviews you for these. You can prepare them first, or answer as it asks. If you do not know an answer, use the default or say "decide later" and the agent will mark it.
+This optional checklist helps you prepare for the planning interview. The ground-truth skill interviews you for these inputs. You can prepare them first, or answer as it asks. If you do not know an answer, use the default or say "decide later" and the agent will mark it.
 
 ## Two inputs
 
@@ -69,7 +69,7 @@ Files can be `.docx` or `.md`. Give paths.
 
 ## 5. Agents in use
 
-Which agentic editors do the engineers use? Any editor or command line agent that reads Agent Skills works. The README lists the ones the installer knows. The engineers' skill is installed once per engineer per agent.
+Which agentic editors do the engineers use? Any editor or command line agent that reads Agent Skills works. The setup guide contains the agent install list. The engineers' skill is installed once per engineer per agent.
 
 ## 6. Demonstration audience
 

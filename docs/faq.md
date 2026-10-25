@@ -2,23 +2,23 @@
 
 ## How do I start each skill?
 
-Two skills you install, one skill is generated for your engineers. Say one sentence per skill: "Set up a project plan from this document." and then "Put the plan on GitHub." The last step of the second skill generates the engineers' skill. To run that step on its own, say "Generate the engineers' skill." If your agent does not pick a skill up, put "Use the carrydown-ground-truth skill." (or `carrydown-plan-to-github`) in front.
+Planning starts with the first conversation in [start your plan](setup.md#start-your-plan). Publishing starts after review in [prepare for GitHub](plan-owner-guide.md#prepare-for-github). The generated engineers' skill is the last step of publishing.
 
 ## npx: command not found
 
-`npx` comes with Node.js, which is not installed on this computer or is not on your path. Go to [the Node.js website](https://nodejs.org), download the version marked LTS (long-term support), run its installer, then close and reopen your terminal and your agent, and try again. You can also ask your agent: "Node.js seems to be missing. Tell me how to install it for this computer." If you cannot install Node.js, there is a path without it: copy the two folders in `skills/` of the repository into your agent's skills folder. [The README's requirements and installation options section](../README.md#requirements-and-installation-options) lists the folders.
+The terminal cannot find the installer command supplied by Node.js. Follow [the installation fix](setup.md#the-install-command-is-missing-or-blocked) for the checks and next action.
 
 ## Do I need a terminal?
 
-You use a terminal to install the skills and check that they are available. The [Quick start](../README.md#quick-start) shows the commands, and the [setup guide](setup.md) explains where to enter them. After installation, you work in your agent's chat. If you create a GitHub token, save it in a plain text file outside the project and give the agent the path. It runs the token script for you, so you do not need to enter the token in a terminal prompt. Never paste the token into the chat.
+You use one to install and check the skills. After installation, you work in your agent's chat. The [installation walkthrough](setup.md#install-the-two-skills) explains where to enter the commands and what to select.
 
 ## Which agents work?
 
-Any agent that reads Agent Skills. The installer supports more than seventy. [The README's requirements and installation options section](../README.md#requirements-and-installation-options) lists six and links [the installer's full list](https://github.com/vercel-labs/skills/blob/main/docs/agents.md). The scripts also run by hand with Python.
+Use a coding agent that supports Agent Skills and can read and edit project files and run commands. The [agent install list](setup.md#choose-a-coding-agent) provides setup links and supported choices.
 
 ## What do I need installed?
 
-A coding agent that can read and edit project files and run commands, Node.js 22.20 or later for the installer, Python 3.9 or later for the scripts, and Git to download the skills and track changes. Word files need no extra Python packages. The [setup guide](setup.md#prepare-your-computer) walks you through the checks. A [manual installation](setup.md#manual-install-without-nodejs) lets you skip Node.js.
+A coding agent, Node.js for the installer, Python for the scripts and Git. The [computer preparation steps](setup.md#prepare-your-computer) list versions and checks. Manual installation is available on the same page if you cannot use Node.js.
 
 ## Isn't this just prompts?
 
@@ -48,15 +48,15 @@ No. The document must exist and be worth trusting. The carrydown skills render i
 
 ## My document is a Word file with no section numbers.
 
-The agent will render it anyway. Specifications work best when sections have numbers, because every item cites the sections it comes from. Ask the agent to propose numbering for the source document. Change the source, not the rendering, and render again.
+The agent can render it. Numbered sections make citations easier to maintain. Ask the agent to propose numbering in the source document and review it before planning.
 
 ## What if my ground truth changes?
 
-Edit the source, render again, and run the checker. It reports cited sections that no longer exist. Update `plan.yaml` if dates or dependencies change, then run `scaffold_spec.py --refresh-headers --apply` so every header follows the plan. Rewrite the issue bodies with `github_sync.py --update-bodies` only if you want GitHub to match the files.
+Update the source document, then review the affected plan and specifications with your agent. Follow [change the source document](plan-owner-guide.md#change-the-source-document) for the steps and publishing guidance.
 
 ## Can I change the plan after the issues exist?
 
-Yes. Change `plan.yaml` and the specifications. New items are added on the next `--apply`. Existing issues are left alone unless you pass `--update-bodies`. Renaming an item is safe: issues are matched by a hidden marker in the body, so a rerun finds the issue and creates nothing new. The script never changes an issue title, so edit the title on GitHub if you want the new name there.
+Yes. Review local changes first, then preview the updates to GitHub. Existing issue bodies are updated only when requested, and issues are never deleted by the scripts. Follow [update the plan](plan-owner-guide.md#update-the-plan).
 
 ## Why work units and not sprints?
 
@@ -72,7 +72,7 @@ Something an item needs from work owned outside the team, such as a pilot team, 
 
 ## What does the board script leave for me to click?
 
-The script creates the fields and the views and sets each view's name, layout and visible fields. It does not yet set group by, sort order or the board's column field, although GitHub's endpoint for creating a view now accepts them. It also does not set the roadmap's date fields and zoom, slice by, field sums or the project workflows. You click those once. The list is printed at the end of `github_project.py` and written in the plan-to-github skill.
+The agent gives you a list after it creates the board. It includes view settings such as grouping, sorting and roadmap dates, plus workflows. Finish those settings in GitHub as part of [the publishing steps](plan-owner-guide.md#the-github-step).
 
 ## Why do the work units show as breaks in the roadmap?
 

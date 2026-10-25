@@ -2,7 +2,7 @@
 
 An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent. Two skills you install, one skill is generated for your engineers.
 
-The carrydown skills carry a ground truth document down into a governed plan. The plan has one specification per work item, a set of GitHub issues, a project board and the engineers' skill that every issue links to. This page explains the four steps and what each one produces. It also says which parts the carrydown skills do for you and which stay with the plan owner and the engineers.
+The carrydown skills carry a ground truth document down into a governed plan. The plan has one specification per work item, a set of GitHub issues, a project board and the engineers' skill that every issue links to. This optional reference explains the planning rules and why they matter. The plan owner and engineers make the decisions; the skills draft and check the files.
 
 The idea is old in systems engineering, where it is called flow-down: a requirement at the top is traced to every part below it. The carrydown skills apply the same idea to software work done with coding agents. One document, one unbroken line through the plan, the specifications, the issues, the board and the agent.
 
@@ -14,35 +14,6 @@ The idea is old in systems engineering, where it is called flow-down: a requirem
 | 2. Review | The plan owner reads the plan week by week and reads every specification. They read adversarially, looking for what is wrong. They edit with the agent until both are right. There is no separate reviewer. | Plan owner | A plan and specifications the plan owner approves, with 0 findings from the checker. |
 | 3. Carry down to GitHub, with `carrydown-plan-to-github` | After a dry run and the plan owner's yes, the agent creates the issues and the board. Last, it generates the engineers' skill. | Plan owner, after each dry run | Issues, the board, and the engineers' skill with the install line to send each engineer. |
 | 4. Work the issues | Each engineer installs the engineers' skill once and says "Work on WI-03". The agent reads the specification, the cited sections and the conventions, then plans the code. | Engineers show, the stakeholders decide | Code, closing comments with evidence, checkpoint comments and a demonstration note on each sub-epic. |
-
-Step 1 does this, in order:
-
-- The agent interviews the plan owner about people, time and dates.
-- It renders the ground truth to Markdown. Each section gets a stable anchor, a link target that does not change.
-- It drafts the plan around those people.
-- It writes one specification per work item to a fixed template. Contract excerpts are copied from the ground truth.
-- A checker validates every file against the plan.
-
-Step 3 does this, in order:
-
-- It shows a dry run first. Nothing is written until the plan owner says yes.
-- It creates the labels.
-- It creates an Epic, the one parent issue for the whole plan.
-- It creates a sub-epic per milestone. A sub-epic is the parent issue for one milestone.
-- It creates an issue per work item. Each one is a sub-issue, an issue placed under its sub-epic. Each one links its specification.
-- It adds dependency links between the issues.
-- It posts a roll-up comment on the Epic. The comment states the constraints: the target delivery and the people by track. It lists each sub-epic with its work items as nested checkboxes.
-- It builds a GitHub Project (v2) board. The board has a work unit field of the iteration type. An iteration field groups items into time blocks, each with a start date and a length. Here each block is one work unit, and the lengths can differ.
-- The board also has fields for the track and the dates, and three views: Table, Board and Roadmap.
-- Last, it generates the engineers' skill from the specifications.
-
-During step 4:
-
-- Evidence is posted on every closed issue.
-- The tracks meet at each checkpoint, a dated integration check between them. Each checkpoint has its own date in the plan. There they run a joint check, the one-sentence test in the plan that proves the parts they built fit together.
-- Each milestone ends with one demonstration against criteria written in advance.
-
-To see the four steps on a finished fictional sample, open [the sample board](https://github.com/users/sct-will/projects/2) and [issue 9](https://github.com/sct-will/carrydown-sample/issues/9).
 
 Planning decisions stay with the plan owner. The agent drafts, validates and populates. It does not decide who does what, when, or in which order.
 
@@ -90,14 +61,6 @@ In `plan.yaml` the rationale is `rationale`, `joint_demonstration` and, when nee
 Every specification has the same sections, in the same order: why the item exists, outcome, context for the agent, contract or protocol, implementation guide, acceptance criteria, evidence of completion, integration points, out of scope, watch out for, references, decisions recorded. Contract excerpts are copied word for word. When the writer finds a contradiction in the ground truth, the specification records which side wins, and the contradiction goes onto the list for the next version of the document.
 
 The checker validates header rows against `plan.yaml`, section order, length, banned vocabulary, the ids of external items, broken links, and the section numbers cited.
-
-## Step 4 in more detail
-
-Three rhythms.
-
-- Per work item. The engineer closes the issue with a comment: Demo, Evidence, Decisions, Handoff. The agent assembles the evidence from the commands in the specification.
-- Per checkpoint. A 30-minute integration check with all tracks, on each checkpoint date in the plan. They run the current end-to-end flow and the joint check for the date. They post a short comment.
-- Per milestone. A demonstration by the engineers who built the items, to the stakeholders. The acceptance criteria were written before the work started. The outcome is a comment on the sub-epic. Nothing about the session is automated.
 
 ## What limits it
 

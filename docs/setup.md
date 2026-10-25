@@ -1,18 +1,29 @@
-# Set up your computer and start a plan
+# Install carrydown and start your first plan
 
-This guide takes you from a first installation to the carrydown interview. You do not need to write code. You will install a few supporting tools, open a project folder and copy commands into a terminal.
+Follow this page from computer setup through your first conversation with carrydown. You do not need to write code. Installation and troubleshooting stay on this page.
 
-Already have a coding agent, Node.js, Python and Git? Go to [open your project folder](#open-your-project-folder). Otherwise, start below.
+**My computer is ready:** skip to [open your project folder](#open-your-project-folder).
 
-[Choose an agent](#choose-a-coding-agent) | [Prepare your computer](#prepare-your-computer) | [Open a project](#open-your-project-folder) | [Install](#install-the-two-skills) | [Check](#check-the-installation) | [Start a plan](#start-your-plan) | [Get help](#when-something-does-not-work)
+**The skills are already installed:** skip to [start your plan](#start-your-plan).
+
+[Choose an agent](#choose-a-coding-agent) | [Prepare your computer](#prepare-your-computer) | [Open a project](#open-your-project-folder) | [Install](#install-the-two-skills) | [Check](#check-the-installation) | [Start a plan](#start-your-plan) | [Other options](#other-installation-options) | [Get help](#when-something-does-not-work)
 
 ## Choose a coding agent
 
 A coding agent is an application that can read and edit files in a folder and run commands for you. You use its chat to ask carrydown to draft and check the plan. Choose an agent that supports Agent Skills and gives you those capabilities.
 
-If your team already uses one, start there. Otherwise, the [agent install list in the README](../README.md#choose-where-to-install) links to official setup instructions. Install your chosen agent and sign in before continuing. Its account, subscription and organization permissions depend on the product you choose.
+If your team already uses one, start there. Otherwise, choose one from this install list and follow its official setup instructions. Install it and sign in, then continue below. Its account, subscription and organization permissions are separate from carrydown.
 
-Use the agent's local project mode for this walkthrough. If your team uses a remote workspace, ask them to help you prepare that workspace. The files, tools and skills must be available where the agent runs.
+| Agent | Official setup instructions |
+| --- | --- |
+| Claude Code | [Install and sign in](https://code.claude.com/docs/en/quickstart) |
+| GitHub Copilot | [Set up the agent in your editor](https://code.visualstudio.com/docs/setup/copilot) |
+| Cursor | [Get started](https://cursor.com/docs) |
+| Codex | [Install and sign in](https://developers.openai.com/codex/quickstart) |
+| Gemini CLI | [Install the agent](https://geminicli.com/docs/get-started/installation/) |
+| IBM Bob | [Download and get started](https://www.ibm.com/products/bob) |
+
+The installer supports [more agents](https://github.com/vercel-labs/skills/blob/main/docs/agents.md). Use the agent's local project mode for this walkthrough. If your team uses a remote workspace, prepare that workspace instead: the files, tools and skills must be available where the agent runs.
 
 ## Prepare your computer
 
@@ -22,7 +33,7 @@ Use the agent's local project mode for this walkthrough. If your team uses a rem
 | Python | Runs the carrydown scripts that create and check planning files. | 3.9 or later. Choose a current Python 3 release for a new installation. |
 | Git | Downloads the skills and records changes to the plan. | Use a current release provided for your system. |
 
-Pick your system: [macOS](#macos), [Windows](#windows) or [Linux](#linux). These tools are free. Your coding agent may require a separate subscription.
+Pick your system: [macOS](#macos), [Windows](#windows) or [Linux](#linux). These tools are free. Your coding agent may require a separate subscription. For [manual installation without Node.js](#manual-install-without-nodejs), skip Node.js and prepare Python and Git before opening your project folder.
 
 A **terminal** is a window where you enter commands. Copy only the text inside each command block, paste it into the terminal and press Enter. For a block with several lines, run one line at a time. Messages such as `command not found` mean a tool is missing or the terminal cannot find it; [installation help](#when-something-does-not-work) explains what to do.
 
@@ -162,9 +173,9 @@ The choices can vary by installer version. Use these answers when they appear:
 
 Use the arrow keys to move through terminal menus. In a multiple-selection list, Space usually selects or clears a choice, and Enter continues. Follow the key hints shown by your installer.
 
-Wait until the installer reports completion and the terminal is ready for another command. You should see both skill names in its installation summary. Security scan results may also appear; [the security guide](security.md#what-skillssh-shows) explains them.
+Wait until the installer reports completion and the terminal is ready for another command. You should see both skill names in its installation summary. Security scan results may also appear; the optional [security guide](security.md#what-skillssh-shows) explains them.
 
-If your agent is missing from the chooser, use its [complete installation command in the README](../README.md#choose-where-to-install). For a personal installation across projects, that list also provides commands with `--global`. You only need one installation scope.
+If your agent is missing from the chooser, use its [complete installation command below](#choose-where-to-install). Then continue to the installation check.
 
 ## Check the installation
 
@@ -194,21 +205,172 @@ The list confirms the installed files. To make the agent load them, close and re
 4. The agent checks the setup. It may ask to initialize Git for this folder. That creates a local history so changes can be tracked; it does not upload the project. You can approve it for this folder.
 5. The interview begins. Replies start with `carrydown: interview, step N of 6`, with a number in place of `N`. Answer in ordinary language. If you do not know a date, team size or other detail, say so; the agent can propose a starting point for you to review.
 
-After the interview, review the plan and specifications with your agent. The [README's questions table](../README.md#what-the-agent-asks-you) helps you prepare. The [plan owner guide](plan-owner-guide.md) explains what to review and how to hand the work to engineers.
+**You are ready when the agent begins the interview.**
 
-When the plan is ready, say "Put the plan on GitHub." The second skill helps you prepare the repository, permissions and token. You approve each publishing step after seeing a dry run.
+**Next:** [Review and publish your plan](plan-owner-guide.md). That guide helps you answer the interview, review the drafts and carry the approved plan into GitHub.
 
-## Manual install, without Node.js
+---
+
+## Other installation options
+
+The default route above installs both skills for one agent in one project. Use these options only if you want a different scope, need to select an agent explicitly or cannot use the installer. After an alternative installation, continue with [check the installation](#check-the-installation), or [start your plan](#start-your-plan) after a manual installation.
+
+### Choose where to install
+
+**This project is the recommended starting point.** The skills are available in the project folder where you run the command. Open that folder whenever you use carrydown.
+
+**All your projects is a personal installation.** It makes the skills available to your agent across projects on this computer. It does not install them for other people. Choose one scope; you do not need to run both commands.
+
+Open your agent's entry below for complete commands. Each command selects both carrydown skills and the named agent. You still review the installer's confirmation.
+
+<details>
+<summary>Claude Code</summary>
+
+**This project:** run this from your project folder.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent claude-code
+```
+
+**All your projects:** run this instead for a personal installation.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent claude-code --global
+```
+
+</details>
+
+<details>
+<summary>GitHub Copilot</summary>
+
+**This project:** run this from your project folder.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent github-copilot
+```
+
+**All your projects:** run this instead for a personal installation.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent github-copilot --global
+```
+
+</details>
+
+<details>
+<summary>Cursor</summary>
+
+**This project:** run this from your project folder.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent cursor
+```
+
+**All your projects:** run this instead for a personal installation.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent cursor --global
+```
+
+</details>
+
+<details>
+<summary>Codex</summary>
+
+**This project:** run this from your project folder.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent codex
+```
+
+**All your projects:** run this instead for a personal installation.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent codex --global
+```
+
+</details>
+
+<details>
+<summary>Gemini CLI</summary>
+
+**This project:** run this from your project folder.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent gemini-cli
+```
+
+**All your projects:** run this instead for a personal installation.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent gemini-cli --global
+```
+
+</details>
+
+<details>
+<summary>IBM Bob</summary>
+
+**This project:** run this from your project folder.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent bob
+```
+
+**All your projects:** run this instead for a personal installation.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent bob --global
+```
+
+</details>
+
+### Manual install, without Node.js
+
+<details>
+<summary>Installation steps and destination folders</summary>
 
 Use this route if you cannot install Node.js. You still need a coding agent, Python and Git to use carrydown for planning. Skip the `npx` commands in this guide.
 
 1. Open [the carrydown repository](https://github.com/sct-will/carrydown) in your browser. Choose **Code**, then **Download ZIP**.
 2. Extract the downloaded archive. Open the extracted folder, then open `skills`. It contains `carrydown-ground-truth` and `carrydown-plan-to-github`.
-3. In the [README's installation section](../README.md#requirements-and-installation-options), expand **Install by copying folders, without Node.js**. Find your agent in the destination table and choose the project or home column. Create the destination folders if they do not exist. On Windows, your home folder is usually under `C:\Users\` followed by your account name.
+3. Find your agent in the destination table below. Choose the project column for this project, or the home column for a personal installation. Create the destination folders if they do not exist. On Windows, your home folder is usually under `C:\Users\` followed by your account name.
 4. Copy both complete skill folders into that destination. Copy their contents together, including `SKILL.md`, `scripts`, `templates` and `references`. Copying only `SKILL.md` leaves the scripts out.
 5. If folders beginning with a dot are hidden, press Command, Shift and Period in macOS Finder. In Windows File Explorer, enable **Hidden items** in the View menu. On many Linux file managers, Control and H shows hidden files.
 6. Open each copied skill folder and confirm that `SKILL.md` and its supporting folders are inside. For example, a project installation using the shared skills folder has `.agents/skills/carrydown-ground-truth/SKILL.md` and `.agents/skills/carrydown-plan-to-github/SKILL.md`.
 7. Close and reopen your agent in the project folder. Continue at [start your plan](#start-your-plan). If the agent does not recognize the first skill, use the explicit start phrase in [the help below](#the-agent-does-not-see-the-skills).
+
+A dot at the beginning of a folder name means it may be hidden. `~/` means your home folder, such as `/Users/your-name/` on macOS or `C:\Users\your-name\` on Windows.
+
+| Agent | Inside your project folder | Inside your home folder |
+| --- | --- | --- |
+| Claude Code | `.claude/skills/` | `~/.claude/skills/` |
+| GitHub Copilot | `.agents/skills/` | `~/.copilot/skills/` |
+| Cursor | `.agents/skills/` | `~/.cursor/skills/` |
+| Codex | `.agents/skills/` | `~/.agents/skills/` |
+| Gemini CLI | `.agents/skills/` | `~/.gemini/skills/` |
+| IBM Bob | `.bob/skills/` | `~/.bob/skills/` |
+
+</details>
+
+<details>
+<summary>Preview the skills or install for every agent</summary>
+
+**Preview before installing.** This lists the skills available from carrydown. It does not install them.
+
+```bash
+npx skills add sct-will/carrydown --list
+```
+
+**Install for every supported agent.** This installs both skills for all agents at project scope and skips the installer's confirmation prompts. Use it only when you want that broader installation.
+
+```bash
+npx skills add sct-will/carrydown --all
+```
+
+For the usual installation, use the default route above.
+
+</details>
 
 ## When something does not work
 
@@ -264,20 +426,16 @@ If you installed it recently, close and reopen the agent. If the check still fai
 Check these in order:
 
 1. Open the same project folder where you installed the skills. A project installation is available in that folder.
-2. Run `npx skills list` there, or `npx skills list --global` for a personal installation. Both skill names should appear. For a manual installation, check the copied folders as described above.
+2. Follow [check the installation](#check-the-installation) for your chosen scope. Both skill names should appear. For a manual installation, check the copied folders as described above.
 3. End the agent session and start a new one, or close and reopen the application. Enable Agent Skills in its settings if the agent requires that.
 4. In its chat, say:
 
    > Use the carrydown-ground-truth skill. Set up a project plan from this document.
 
-5. If the skills are still missing, use the complete command for your agent in the [README install list](../README.md#choose-where-to-install) and repeat the check. If the installer reports a permission error creating a symlink, choose **Copy** or use the manual installation route.
+5. If the skills are still missing, use the complete command for your agent in the [agent command list](#choose-where-to-install) and repeat the check. If the installer reports a permission error creating a symlink, choose **Copy** or use the manual installation route.
 
 ### You need help from your organization
 
 If you cannot install software, send your support team this request:
 
 > I need to run the carrydown planning skills in a local project folder. Please help me set up an approved coding agent with file and command access, Node.js 22.20 or later with npx, a current Python 3 release and Git. The installer needs access to the Node package registry and GitHub. I will need repository and project-board permissions later, when I publish the reviewed plan.
-
-### You are unsure what to answer
-
-Tell the agent what you know and what is undecided. You do not need a complete schedule to begin. Before it writes the plan, the agent reads back the assumptions for you to review. The [input guide](inputs.md) explains the questions.

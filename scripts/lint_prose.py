@@ -45,7 +45,7 @@ VENDORS = re.compile(
 )
 # Files that hold the install instructions and so may name the agents.
 VENDOR_OK = [
-    "README.md",
+    "docs/setup.md",
     "templates/dev-skill/README.md.tmpl",
     "skills/*/templates/dev-skill/README.md.tmpl",
     "skills/carrydown-plan-to-github/references/engineers-skill-install.md",
