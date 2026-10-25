@@ -17,7 +17,7 @@ GitHub also provides Title, Assignees, Status, Labels, Parent issue and Sub-issu
 
 Each iteration has its own start date and duration in days, taken from the milestone dates. Days that fall between two iterations are a break. GitHub shows them as breaks in the Roadmap and on the iteration settings. The script lets each work unit run on to the day before the next one starts, so ordinary weekends are not breaks. A break from your `breaks` list is left as a real gap, from the break start to the day before the next work unit.
 
-If the iterations on an existing project differ from the plan, the script says so and changes nothing. Pass `--reconfigure-iterations` to replace them. Replacing iterations can detach items from their old iteration, so rerun the script afterwards to fill the field again.
+If the iterations on an existing project differ from the plan, the script says so and changes nothing. Pass `--reconfigure-iterations` to replace them. Replacing iterations can detach items from their old iteration, so rerun the script afterward to fill the field again.
 
 ## Views
 

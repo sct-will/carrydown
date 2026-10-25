@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Read [START-HERE.md](https://github.com/sct-will/carrydown/blob/main/START-HERE.md) and the [FAQ](https://github.com/sct-will/carrydown/blob/main/docs/faq.md) first. They answer most questions.
+        Read the [README](https://github.com/sct-will/carrydown/blob/main/README.md) and the [FAQ](https://github.com/sct-will/carrydown/blob/main/docs/faq.md) first. They answer most questions.
   - type: textarea
     id: question
     attributes:

@@ -362,10 +362,10 @@ def lint_spelling(tmp):
     d = tmp / "lint"
     d.mkdir()
     bad, good = d / "british.md", d / "us.md"
-    bad.write_text("The organi" + "sation changed its behavio" + "ur. We author" + "ise it and label" + "led it.\n", encoding="utf-8")
-    good.write_text("The organization changed its behavior. We authorize it and labeled it. Advise, promise, exercise, enterprise, otherwise.\n", encoding="utf-8")
+    bad.write_text("The organi" + "sation changed its behavio" + "ur. We author" + "ise it and label" + "led it. Restart it afterward" + "s.\n", encoding="utf-8")
+    good.write_text("The organization changed its behavior. We authorize it and labeled it. Restart it afterward. Advise, promise, exercise, enterprise, otherwise.\n", encoding="utf-8")
     lint = [PY, "scripts/lint_prose.py"]
-    step("lint: British spellings are flagged", lint + [str(bad)], expect=1, contains=["British spelling, use US English (organi" + "sation)", "(behavio" + "ur)", "(author" + "ise)", "(label" + "led)"])
+    step("lint: British spellings are flagged", lint + [str(bad)], expect=1, contains=["British spelling, use US English (organi" + "sation)", "(behavio" + "ur)", "(author" + "ise)", "(label" + "led)", "(afterward" + "s)"])
     step("lint: US spellings and real -ise words are clean", lint + [str(good)], contains=["0 findings"])
 
 

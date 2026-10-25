@@ -129,7 +129,7 @@ You need a coding agent and Node.js 22.20 or later; your agent checks for Python
 | Gemini CLI | `gemini-cli` | `.agents/skills/` | `~/.gemini/skills/` |
 | IBM Bob | `bob` | `.bob/skills/` | `~/.bob/skills/` |
 
-The installer knows [many more agents](https://github.com/vercel-labs/skills/blob/main/docs/agents.md), and any agent that reads the [Agent Skills format](https://agentskills.io) can use the skills. Without Node.js, copy the two folders in `skills/` into the folder from the table. Restart your agent afterwards.
+The installer knows [many more agents](https://github.com/vercel-labs/skills/blob/main/docs/agents.md), and any agent that reads the [Agent Skills format](https://agentskills.io) can use the skills. Without Node.js, copy the two folders in `skills/` into the folder from the table. Restart your agent afterward.
 
 The installer prints third-party security scans; [docs/security.md](docs/security.md) explains what each skill touches.
 
@@ -144,6 +144,6 @@ The installer prints third-party security scans; [docs/security.md](docs/securit
 
 ## Contributing and license
 
-[CONTRIBUTING.md](CONTRIBUTING.md) shows how to run the scripts and checks yourself, under the [code of conduct](CODE_OF_CONDUCT.md); [SECURITY.md](SECURITY.md) covers private reports. Code is under [Apache 2.0](LICENSE) and the words and images under [CC BY 4.0](LICENSE-CONTENT.md), so reuse the diagrams with attribution to Will Scott. More: [plan owner guide](docs/plan-owner-guide.md), [FAQ](docs/faq.md), [method](docs/method.md), [changelog](CHANGELOG.md).
+[CONTRIBUTING.md](CONTRIBUTING.md) shows how to run the scripts and checks yourself, under the [code of conduct](CODE_OF_CONDUCT.md); [SECURITY.md](SECURITY.md) covers private reports. Everything in this repository is licensed under [Apache 2.0](LICENSE). More: [plan owner guide](docs/plan-owner-guide.md), [FAQ](docs/faq.md), [method](docs/method.md), [changelog](CHANGELOG.md).
 
 If carrydown helped you, star the repository so the next plan owner finds it. If it broke on your document, open a ["My ground truth looks like this"](https://github.com/sct-will/carrydown/issues/new?template=ground_truth.yml) issue, because that is the feedback I most want.

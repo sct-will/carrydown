@@ -75,7 +75,7 @@ Read `references/planning.md` and follow its steps, stopping for a decision at e
 
 ### 5. Write milestones and specifications
 
-Read `references/writing-specs.md` and `references/milestone-and-demo.md`. Fill the TODO lines in each `milestone.md` and each stub. If you can start subagents, write the specifications in parallel, one subagent per batch of two or three items, using `references/spec-writer-brief.md` as the brief. Otherwise write them one by one. Review every file yourself afterwards. The user reviews them with you in step 7.
+Read `references/writing-specs.md` and `references/milestone-and-demo.md`. Fill the TODO lines in each `milestone.md` and each stub. If you can start subagents, write the specifications in parallel, one subagent per batch of two or three items, using `references/spec-writer-brief.md` as the brief. Otherwise write them one by one. Review every file yourself afterward. The user reviews them with you in step 7.
 
 When a specification finds a conflict inside the ground truth, the ground truth wins (an earlier numbered section wins over a note). Say so under "Watch out for", and list it for the next version of the document.
 

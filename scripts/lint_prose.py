@@ -45,7 +45,7 @@ VENDORS = re.compile(
 )
 # Files that hold the install instructions and so may name the agents.
 VENDOR_OK = [
-    "README.md", "START-HERE.md",
+    "README.md",
     "templates/dev-skill/README.md.tmpl",
     "skills/*/templates/dev-skill/README.md.tmpl",
     "skills/carrydown-plan-to-github/references/engineers-skill-install.md",
@@ -67,7 +67,7 @@ BRIT_WORDS = (
     r"harbo[u]r\w*|rumo[u]r\w*|endeavo[u]r\w*|vapo[u]r\w*|savo[u]r\w*|armo[u]r\w*|"
     r"cent[r]e[sd]?|centr[i]ng|met[r]es?|lit[r]es?|fib[r]es?|theat[r]es?|calib[r]e|"
     r"(?:un|re|mis)?(?:label|model|travel|cancel|signal|level|fuel|channel|counsel|marshal|total|equal|quarrel|jewel)l(?:ed|ing|er|ers)|"
-    r"licen[c]e[sd]?|progra[m]{2}e[s]?|judge[m]ent[s]?|toward[s]|among[s]t|whil[s]t|catalog[u]e[s]?|"
+    r"licen[c]e[sd]?|progra[m]{2}e[s]?|judge[m]ent[s]?|toward[s]|afterward[s]|among[s]t|whil[s]t|catalog[u]e[s]?|"
     r"[g]rey|scepti[c]\w*|arte[f]act[s]?|defen[c]e|offen[c]e|pretenc[e]|a[g]eing|alumin[i]um|practi[s]e[ds]?|learn[t]|spel[t]|"
     r"cheq[u]e|ker[b]s?|t[y]res?|mo[u]ld\w*|plo[u]gh\w*|speciali[t]y|acknowledgem[e]nt|fulfi[l]\b|enro[l]\b|instal[m]ent|"
     r"skil[f]ul|wil[f]ul|sto[r]eys?|manoe[u]vre\w*|ana[e]mi\w*|pa[e]diatric\w*|sul[p]hur|ton[n]es?|dra[u]ght"

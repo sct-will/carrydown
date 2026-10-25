@@ -80,7 +80,7 @@ If you change the checker, the plan format or a template, also regenerate the sa
 python3 scripts/check_specs.py --root sample/expense-approvals
 ```
 
-If you change something that talks to GitHub, say in the pull request how you tested it. A dry run is not enough. Use a throwaway private repository of your own, and delete it afterwards.
+If you change something that talks to GitHub, say in the pull request how you tested it. A dry run is not enough. Use a throwaway private repository of your own, and delete it afterward.
 
 ## Style rules for prose and comments
 
@@ -115,6 +115,5 @@ If you change something that talks to GitHub, say in the pull request how you te
 
 By contributing you agree that:
 
-- code you contribute (the Python scripts and the workflow files) is licensed under the Apache License 2.0, see [LICENSE](LICENSE),
-- content you contribute (the sample, the templates text, the skills prose, the documents and any images) is licensed under Creative Commons Attribution 4.0 International, see [LICENSE-CONTENT.md](LICENSE-CONTENT.md),
+- everything you contribute (code, documents, templates, skills, the sample and any images) is licensed under the Apache License 2.0, see [LICENSE](LICENSE),
 - you have the right to contribute it under those terms.
