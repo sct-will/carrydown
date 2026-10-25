@@ -244,8 +244,10 @@ PLACEHOLDERS = (
 
 def init_plan(root, a, git_top):
     """Write a starter plan.yaml from the template, with the project name filled in."""
-    target = L.find_plan(root, a.plan) if a.plan else root / "docs/spec/plan.yaml"
+    target = L.find_plan(root, a.plan) if a.plan is not None else root / "docs/spec/plan.yaml"
     target = L.inside(root, target, "plan.yaml")
+    if any(len(part.encode("utf-8", "replace")) > L._limits()[0] for part in target.parts):
+        L.die(f"--plan {a.plan} holds a file or folder name longer than the file system allows")
     text = L.read_template("plan.yaml")
     if a.name:
         slug = L.slugify(a.name) or "your-project"
@@ -255,7 +257,7 @@ def init_plan(root, a, git_top):
         text = text.replace('epic_title: "Your project, development plan"', f"epic_title: {q(a.name + ', development plan')}", 1)
         text = text.replace("your-project-dev", f"{slug}-dev")
         text = re.sub(r"(?m)^(  slug: )your-project\b", lambda m: m.group(1) + slug, text)
-    if target.exists() and not a.force:
+    if L.exists(target) and not a.force:
         print(f"plan.yaml already exists at {target}. Use --force to replace it.")
         return 1
     rel = target.relative_to(root)
@@ -479,10 +481,10 @@ def main(argv=None):
         return init_plan(root, a, git_top)
 
     plan_path = L.find_plan(root, a.plan)
-    if not plan_path.exists():
+    if not L.exists(plan_path):
         print(f"error: no plan at {plan_path}. Run with --init first.", file=sys.stderr)
         return 2
-    plan, problems = L.load_plan(plan_path)
+    plan, problems = L.load_plan(plan_path, root)
     if problems:
         print("plan.yaml has problems. Fix them first:")
         for p in problems:

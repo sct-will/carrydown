@@ -180,9 +180,9 @@ def main(argv=None):
     a = ap.parse_args(argv)
     root = L.project_root(a.root)
     plan_path = L.find_plan(root, a.plan)
-    if not plan_path.exists():
+    if not L.exists(plan_path):
         L.die(f"no plan at {plan_path}")
-    plan, problems = L.load_plan(plan_path)
+    plan, problems = L.load_plan(plan_path, root)
     if problems:
         L.say("plan.yaml has problems:")
         for p in problems:
@@ -230,6 +230,10 @@ def main(argv=None):
         # the references follow plan.yaml and the specs; SKILL.md and README.md may hold hand edits
         outputs = {k: v for k, v in outputs.items() if k.startswith("references/")}
     dest = L.inside(root, root / skill_path, "project.dev_skill_path")
+    if a.only == "references" and not L.exists(dest / "SKILL.md"):
+        # references alone would leave a folder no agent loads: SKILL.md is what makes it a skill
+        L.die(f"{skill_path}/SKILL.md does not exist yet, so there is no engineers' skill to refresh. "
+              "Run this script without --only first: it writes SKILL.md, README.md and the references")
     L.say(f"engineers' skill: {skill_name}  ->  {skill_path}")
     L.say(f"description length: {len(description)} characters (target under {DESCRIPTION_TARGET}, limit 1024)")
     if len(description) > DESCRIPTION_WARN:

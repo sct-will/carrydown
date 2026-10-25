@@ -32,9 +32,10 @@ Usage
   python3 scripts/check_specs.py --root .            check everything
   python3 scripts/check_specs.py --root . --report   print the schedule, load table and critical path
   python3 scripts/check_specs.py --root . --item 3   check one item (3, WI-03 and wi-3 all work)
-Exit status is 0 when clean, 1 when there are findings, and 2 when the plan cannot be read or an
-argument is wrong. With --json the output on standard output is always one JSON object, also on an
-error. The script never writes files.
+Exit status is 0 when clean, and 1 when there are findings, including problems with the values in
+plan.yaml, which are listed first. It is 2 when the plan cannot be read at all (a missing file, a
+syntax error, a value of the wrong shape) or an argument is wrong. With --json the output on
+standard output is always one JSON object, also on an error. The script never writes files.
 """
 import argparse
 import contextlib
@@ -46,6 +47,21 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
+
+HERE = Path(__file__).resolve().parent
+
+
+def _ships(*rel):
+    """True when a file this script's messages name ships next to it: in the same skill when the
+    script is an installed copy, or in the ground-truth skill when it is the repository's master.
+    A copy in another skill names the skill instead, so no message points at a missing file."""
+    return any((d.joinpath(*rel)).is_file() for d in (HERE.parent, HERE.parent / "skills" / "carrydown-ground-truth"))
+
+
+def _script_hint(name, what):
+    """`name` when that script ships next to this one, else the skill that has it."""
+    return f"{name} {what}".strip() if (HERE / name).is_file() else "the carrydown-ground-truth skill"
+
 
 MILESTONE_PARTS = ["Purpose", "Expected outcomes", "Acceptance criteria", "Demonstration expectations", "Work items"]
 
@@ -101,7 +117,7 @@ def ground_truth_headings(plan, root):
     """Headings of the rendered ground truth, or None when it is missing. A file that cannot be
     read raises L.TextError."""
     p = Path(root) / plan["project"].get("ground_truth", "")
-    if not p.is_file():
+    if not L.exists(p):
         return None
     heads = []
     fence = False
@@ -125,7 +141,7 @@ def citation_findings(plan, gt_heads):
     if not plan["items"]:
         return []
     if gt_heads is None:
-        return [f"ground truth citations not checked: the rendered document {plan['project'].get('ground_truth')} was not found. Render it with render_ground_truth.py"]
+        return [f"ground truth citations not checked: the rendered document {plan['project'].get('ground_truth')} was not found. Render it with {_script_hint('render_ground_truth.py', '')}"]
     if not numbered_headings(gt_heads):
         return ["ground truth citations not checked: the rendered document has no numbered headings. "
                 "Specifications cite sections by number, so number the headings in the source document and render it again"]
@@ -137,7 +153,7 @@ def check_item(plan, root, it, banned, gt_heads):
     path = L.spec_path(plan, root, it)
     tg = L.tag(plan, it["id"])
     rel = path.relative_to(root) if path.is_relative_to(root) else path
-    if not path.exists():
+    if not L.exists(path):
         return [f"MISSING {rel}"], rel
     try:
         spec = L.read_spec(path)
@@ -234,7 +250,7 @@ def check_item(plan, root, it, banned, gt_heads):
     prose = strip_code(text)
     for m in re.finditer(r"\]\(((?!https?://|mailto:|#)[^)\s]+)(?:\s+\"[^\"]*\")?\)", prose):
         target = m.group(1).split("#")[0]
-        if target and not (path.parent / target).resolve().exists():
+        if target and not L.exists((path.parent / target).resolve()):
             issues.append(f"broken relative link {m.group(1)}")
     # ground truth citations
     cite = rows.get("Ground truth", "")
@@ -254,7 +270,7 @@ def check_milestone(plan, root, ms):
     issues = []
     path = L.milestone_path(plan, root, ms)
     rel = path.relative_to(root) if path.is_relative_to(root) else path
-    if not path.exists():
+    if not L.exists(path):
         return [f"MISSING {rel}"], rel
     try:
         text = L.read_text(path)
@@ -297,7 +313,7 @@ def check_milestone(plan, root, ms):
     for why, ln, line in banned_hits(banned_patterns(plan), text):
         issues.append(f"{why} at line {ln}: {line}")
     for m in re.finditer(r"\]\(((?!https?://|mailto:|#)[^)\s]+)\)", strip_code(text)):
-        if not (path.parent / m.group(1).split("#")[0]).resolve().exists():
+        if not L.exists((path.parent / m.group(1).split("#")[0]).resolve()):
             issues.append(f"broken relative link {m.group(1)}")
     return issues, rel
 
@@ -306,7 +322,7 @@ def check_readme(plan, root):
     issues = []
     path = Path(root) / plan["project"]["spec_dir"] / "README.md"
     rel = path.relative_to(root) if path.is_relative_to(root) else path
-    if not path.exists():
+    if not L.exists(path):
         return [f"MISSING {rel}"], rel
     try:
         text = L.read_text(path)
@@ -557,13 +573,15 @@ def report(plan):
         due = [L.tag(plan, it["id"]) for it in plan["items"] if it["checkpoint"] == c["date"]]
         print(f"  {c['date']}  {c['name']}: {', '.join(due) or 'none closing'}")
     findings, lines = planning_review(plan)
-    print("\nPlanning review (advisory, except lines marked finding; the rules are in references/planning.md)")
+    where = ("references/planning.md" if _ships("references", "planning.md")
+             else f"{plan['project']['spec_dir']}/README.md, under How this plan was composed")
+    print(f"\nPlanning review (advisory, except lines marked finding; the rules are in {where})")
     for line in lines:
         print(line)
     print(f"  {len(findings)} finding(s)." + (" Run the checker without --report to fail on them." if findings else ""))
 
 
-PLAN_ERRORS = (KeyError, ValueError, TypeError, AttributeError, IndexError, ZeroDivisionError, OverflowError, RecursionError)
+PLAN_ERRORS = (KeyError, ValueError, TypeError, AttributeError, IndexError, ZeroDivisionError, OverflowError, RecursionError, OSError)
 
 
 def print_plan_problems(problems):
@@ -651,10 +669,9 @@ def parse_items(plan, wanted):
     ext = L.external_ids(plan)
     out = []
     for w in wanted:
-        m = re.fullmatch(r"\s*(?:(" + re.escape(prefix) + r")-?)?0*(\d+)\s*", str(w), re.I) if prefix else re.fullmatch(r"\s*0*(\d+)\s*", str(w))
-        if not m:
+        n = L.item_number(plan, w)
+        if n is None:
             return [], f"--item {w!r} is not an item id. Use the number or the tag, for example 3 or {prefix or 'WI'}-03"
-        n = int(m.group(m.lastindex))
         if n in ext:
             return [], f"--item {w}: {L.tag(plan, n)} is an external item, outside the plan, so it has no specification to check"
         if n not in known:
@@ -666,7 +683,8 @@ def parse_items(plan, wanted):
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Check work item specifications against plan.yaml. Read only: this script never writes files.",
-        epilog="Exit status 0 when clean, 1 when there are findings, 2 on a usage or plan error.",
+        epilog="Exit status 0 when clean, 1 when there are findings (problems with plan.yaml values included), "
+               "2 when the plan cannot be read or an argument is wrong.",
     )
     ap.add_argument("--root", default=".", help="project root (default: current directory)")
     ap.add_argument("--plan", help="path to plan.yaml (default: <root>/docs/spec/plan.yaml)")
@@ -686,17 +704,22 @@ def main(argv=None):
 
     if a.report and a.json:
         return fail("--report prints text. Leave out --json, or leave out --report to get the findings as JSON")
-    root = Path(a.root).resolve()
-    if not root.is_dir():
-        return fail(f"--root {a.root} is not a folder")
-    plan_path = L.find_plan(root, a.plan)
-    if not plan_path.exists():
-        return fail(f"plan not found at {plan_path}. Run from the project root or pass --root; "
-                    "write a first plan with scaffold_spec.py --init")
-    if not plan_path.is_file():
-        return fail(f"the plan path {plan_path} is a folder, not a file")
+    why = L.root_problem(a.root)
+    if why:
+        return fail(why)
+    root = Path(a.root).expanduser().resolve()
     try:
-        plan, plan_problems = L.load_plan(plan_path)
+        plan_path = L.find_plan(root, a.plan)
+    except L.PlanError as e:
+        return fail(e.msg)
+    if not L.exists(plan_path):
+        return fail(f"plan not found at {plan_path}. Run from the project root or pass --root; "
+                    f"write a first plan with {_script_hint('scaffold_spec.py', '--init')}")
+    why = L.regular_file_problem(plan_path)
+    if why:
+        return fail(f"the plan path {why}" if why.startswith(str(plan_path)) else why)
+    try:
+        plan, plan_problems = L.load_plan(plan_path, root)
     except L.PlanError as e:
         return fail(e.msg)
     if a.item:
@@ -712,8 +735,10 @@ def main(argv=None):
         try:
             with contextlib.redirect_stdout(buf):
                 report(plan)
-        except PLAN_ERRORS:
+        except PLAN_ERRORS as e:
             if not plan_problems:
+                if isinstance(e, OSError):
+                    return fail(f"cannot read a file of the project: {e.strerror or e}" + (f" ({e.filename})" if e.filename else ""))
                 raise
             print("The report needs the problems above fixed first.")
             return 1
@@ -721,8 +746,10 @@ def main(argv=None):
         return 1 if plan_problems else 0
     try:
         results, ok, n_files, n_items, unfinished = run_checks(plan, root, a)
-    except PLAN_ERRORS:
+    except PLAN_ERRORS as e:
         if not plan_problems:
+            if isinstance(e, OSError):
+                return fail(f"cannot read a file of the project: {e.strerror or e}" + (f" ({e.filename})" if e.filename else ""))
             raise
         if a.json:
             print(json.dumps({"clean": 0, "files": 0, "findings": {"plan.yaml": plan_problems}}, indent=2))

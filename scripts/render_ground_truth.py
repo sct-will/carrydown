@@ -220,8 +220,12 @@ def render_markdown(src, fig_prefix):
             if base not in local.parents or local.suffix.lower() not in IMAGE_EXTENSIONS:
                 notes.append(f"not copied (outside the document folder or not an image): {target}")
                 return mo.group(0)
-            if not local.is_file():
-                notes.append(f"image not found: {target}")
+            try:
+                found = local.is_file()
+            except (OSError, ValueError):
+                found = False
+            if not found:
+                notes.append(f"image not found, or not a regular file: {target}")
                 return mo.group(0)
             try:
                 data = local.read_bytes()
@@ -251,6 +255,13 @@ W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 R = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
 A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 MONO_FONTS = ("Mono", "Consolas", "Courier", "Menlo", "Source Code")
+
+
+def num(value, default=None, signed=False):
+    """A whole number from a Word attribute, or default. ASCII digits only and at most nine, so a
+    damaged or crafted document cannot make int() fail or build a huge number."""
+    s = str(value).strip() if value is not None else ""
+    return int(s) if re.fullmatch(r"-?[0-9]{1,9}" if signed else r"[0-9]{1,9}", s) else default
 
 
 def q(tag, ns=W):
@@ -319,7 +330,7 @@ class Numbering:
             aid = a.get(q("abstractNumId"))
             lv = {}
             for l in a.findall(q("lvl")):
-                ilvl = int(l.get(q("ilvl")) or 0)
+                ilvl = num(l.get(q("ilvl")), 0)
 
                 def val(tag, default=None):
                     e = l.find(q(tag))
@@ -329,8 +340,8 @@ class Numbering:
                 lv[ilvl] = {
                     "fmt": val("numFmt", "decimal"),
                     "text": val("lvlText"),
-                    "start": int(start) if str(start).lstrip("-").isdigit() else 1,
-                    "restart": int(restart) if restart is not None and str(restart).isdigit() else None,
+                    "start": num(start, 1, signed=True),
+                    "restart": num(restart),
                     "pstyle": val("pStyle"),
                     "legal": l.find(q("isLgl")) is not None,
                 }
@@ -343,8 +354,8 @@ class Numbering:
             ov = {}
             for o in n.findall(q("lvlOverride")):
                 so = o.find(q("startOverride"))
-                if so is not None and str(so.get(q("val"))).isdigit():
-                    ov[int(o.get(q("ilvl")) or 0)] = int(so.get(q("val")))
+                if so is not None and num(so.get(q("val"))) is not None:
+                    ov[num(o.get(q("ilvl")), 0)] = num(so.get(q("val")))
             self.nums[n.get(q("numId"))] = (ref.get(q("val")) if ref is not None else None, ov)
         # an abstract definition that only links to a numbering style borrows that style's list
         for aid, sid in links.items():
@@ -494,10 +505,10 @@ def render_docx(src, fig_prefix):
                     e = numpr.find(q("numId"))
                     info["numId"] = e.get(q("val")) if e is not None else None
                     e = numpr.find(q("ilvl"))
-                    info["ilvl"] = int(e.get(q("val"))) if e is not None else None
+                    info["ilvl"] = num(e.get(q("val"))) if e is not None else None
                 e = ppr.find(q("outlineLvl"))
-                if e is not None and str(e.get(q("val"))).isdigit():
-                    info["outline"] = int(e.get(q("val")))
+                if e is not None and num(e.get(q("val"))) is not None:
+                    info["outline"] = num(e.get(q("val")))
             styles[sid] = info
 
     def style_attr(sid, key):
@@ -531,8 +542,8 @@ def render_docx(src, fig_prefix):
         before the style id. A paragraph or style outline level also marks a heading."""
         st = st or style_of(p)
         ol = p.find(q("pPr") + "/" + q("outlineLvl"))
-        if ol is not None and str(ol.get(q("val"))).isdigit():
-            v = int(ol.get(q("val")))
+        if ol is not None and num(ol.get(q("val"))) is not None:
+            v = num(ol.get(q("val")))
             return v + 1 if v <= 8 else None
         for cand in (style_name(st), st):
             m = re.fullmatch(r"(?i)heading\s*([1-9])", cand or "")
@@ -551,7 +562,7 @@ def render_docx(src, fig_prefix):
             e = numpr.find(q("numId"))
             nid = e.get(q("val")) if e is not None else None
             e = numpr.find(q("ilvl"))
-            ilvl = int(e.get(q("val"))) if e is not None and str(e.get(q("val"))).isdigit() else None
+            ilvl = num(e.get(q("val"))) if e is not None else None
         if nid is None:
             nid = style_attr(st, "numId")
             if ilvl is None:
@@ -1002,7 +1013,7 @@ def overwrites_source(srcp, root, out_dir, name):
     stem = name or name_from_path(srcp)
     outputs = [out_dir / f"{stem}.md", out_dir / f"{stem}.index.txt"]
     for o in outputs:
-        if _within(src, o) or (o.exists() and src.exists() and os.path.samefile(src, o)):
+        if _within(src, o) or (L.exists(o) and L.exists(src) and os.path.samefile(src, o)):
             return f"is the output path {o.relative_to(root) if o.is_relative_to(root) else o}, so rendering it would overwrite the source"
     if _within(src, root / "docs" / "ground-truth"):
         return "is inside docs/ground-truth/, where renderings are written, so the source could be overwritten"
@@ -1048,22 +1059,40 @@ def main(argv=None):
         return fail(f"--date {a.date!r} is not a date. Write it as YYYY-MM-DD, such as 2027-02-01")
     if not str(a.version).strip():
         return fail("--version is empty. Give the document version, such as 0.3")
+    why = L.root_problem(a.root)
+    if why:
+        return fail(why)
     root = Path(a.root).expanduser().resolve()
-    if not root.is_dir():
-        return fail(f"--root {a.root} is not a folder" + ("" if root.exists() else ", it does not exist") + ". Pass the project folder")
+    if not str(a.out_dir).strip():
+        return fail("--out-dir is empty. Leave it out for docs/ground-truth, or give a folder inside the project")
+    name_max, path_max = L._limits()
+    if any(len(part.encode("utf-8", "replace")) > name_max for part in Path(a.out_dir).parts):
+        return fail(f"--out-dir holds a folder name longer than the {name_max} bytes the file system allows")
     out_dir = L.inside(root, root / a.out_dir, "--out-dir")
-    if out_dir.exists() and not out_dir.is_dir():
+    if L.exists(out_dir) and not out_dir.is_dir():
         return fail(f"--out-dir {a.out_dir} is a file, not a folder")
+
+    def too_long(path):
+        """Why path cannot be written on this file system, or None."""
+        for part in path.parts:
+            if len(part.encode("utf-8", "replace")) > name_max:
+                return f"the name {part[:40]}... is longer than the {name_max} bytes the file system allows"
+        if len(str(path).encode("utf-8", "replace")) >= path_max:
+            return f"the path {str(path)[:40]}... is longer than the {path_max} bytes the file system allows"
+        return None
 
     # 1. check every input and every output path
     jobs = []
     seen = {}
     for src in a.inputs:
         srcp = Path(src)
-        if not srcp.exists():
-            return fail(f"{src} does not exist")
-        if not srcp.is_file():
+        if not L.exists(srcp):
+            return fail(f"{src} does not exist" + (", or its name is longer than the file system allows" if too_long(srcp.absolute()) else ""))
+        if srcp.is_dir():
             return fail(f"{src} is a folder, not a file. Name the document files to render")
+        why = L.regular_file_problem(srcp)
+        if why:
+            return fail(why)
         ext = srcp.suffix.lower()
         if ext not in (".docx", ".md", ".markdown"):
             return fail(f"{src}: only .docx and .md are supported. Save the document as Word (.docx) or Markdown (.md)")
@@ -1080,9 +1109,14 @@ def main(argv=None):
         fig_dir = L.inside(out_dir, out_dir / "figures" / name, "figures")
         out_md = L.inside(out_dir, out_dir / f"{name}.md", "--name")
         out_idx = L.inside(out_dir, out_dir / f"{name}.index.txt", "--name")
+        for target in (out_md, out_idx, fig_dir):
+            why = too_long(target)
+            if why:
+                return fail(f"{src} cannot be rendered to {name}: {why}. Pass a shorter --name or --out-dir")
         for target, what in ((out_md, "file"), (out_idx, "file"), (fig_dir, "folder")):
-            if target.exists() and (target.is_dir() if what == "file" else not target.is_dir()):
-                return fail(f"{target} is in the way: it is a {'folder' if target.is_dir() else 'file'} where the rendering writes a {what}")
+            if L.exists(target) and (not target.is_file() if what == "file" else not target.is_dir()):
+                kind = "folder" if target.is_dir() else "file" if target.is_file() else "pipe, socket or device"
+                return fail(f"{target} is in the way: it is a {kind} where the rendering writes a {what}")
         jobs.append((src, srcp, ext, name, fig_dir, out_md, out_idx))
 
     # 2. render every input in memory
@@ -1095,8 +1129,18 @@ def main(argv=None):
                 body, figs, notes = render_markdown(srcp, f"figures/{name}")
         except DocxError as e:
             return fail(f"{src}: {e}")
+        except (ValueError, KeyError, IndexError, TypeError, AttributeError, RecursionError) as e:
+            # a part of the document that is valid XML but not what Word writes
+            return fail(f"{src}: a part of the document holds a value Word does not write ({type(e).__name__}: {str(e)[:120]}). Save the document again in Word")
         except OSError as e:
             return fail(f"cannot read {src}: {e.strerror or e}")
+        for fname, _ in figs.files:
+            target = fig_dir / fname
+            why = too_long(target)
+            if why:
+                return fail(f"{src}: figure {fname[:40]} cannot be written: {why}")
+            if L.exists(target) and not target.is_file():
+                return fail(f"{target} is in the way: it is not a regular file where the rendering writes a figure")
         text, index_txt, n_head = finish(body, srcp.name, a.version, a.date)
         notes += unnumbered_notes(text)
         rendered.append((srcp, figs, notes, text, index_txt, n_head, fig_dir, out_md, out_idx))

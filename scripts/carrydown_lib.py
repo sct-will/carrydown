@@ -12,6 +12,8 @@ import datetime as _dt
 import json
 import os
 import re
+import stat as _stat
+import string
 import sys
 from pathlib import Path
 
@@ -114,9 +116,11 @@ def _scalar(s):
         return True
     if low == "false":
         return False
-    if re.fullmatch(r"-?\d+", s):
+    # ASCII digits only. A run of more than 30 digits stays text: no id, count or percent is that
+    # long, and int() of thousands of digits is refused by Python. The validator reports it.
+    if re.fullmatch(r"-?[0-9]{1,30}", s):
         return int(s)
-    if re.fullmatch(r"-?\d+\.\d+", s):
+    if re.fullmatch(r"-?[0-9]{1,30}\.[0-9]{1,30}", s):
         return float(s)
     return s
 
@@ -155,6 +159,8 @@ def _flow(s):
         pos[0] += 1
         out = []
         ws()
+        if pos[0] >= len(s):
+            raise YamlError(f"unterminated list, a [ with no ]: {s}")
         if s[pos[0]] == "]":
             pos[0] += 1
             return out
@@ -175,6 +181,8 @@ def _flow(s):
         pos[0] += 1
         out = {}
         ws()
+        if pos[0] >= len(s):
+            raise YamlError(f"unterminated map, a {{ with no }}: {s}")
         if s[pos[0]] == "}":
             pos[0] += 1
             return out
@@ -331,7 +339,16 @@ class _Reader:
 
 def loads(text):
     r = _Reader(text)
-    v = r.block(0)
+    try:
+        v = r.block(0)
+    except YamlError as e:
+        # a value on one line, such as a flow list cut short, is reported with the line it is on:
+        # the reader has just moved past that line, so r.i is its line number
+        if str(e).startswith("line "):
+            raise
+        raise YamlError(f"line {max(r.i, 1)}: {e}")
+    except RecursionError:
+        raise YamlError(f"line {max(r.i, 1)}: lists or maps nested too deeply")
     r.skip_blank()
     if r.i < len(r.raw):
         raise YamlError(f"line {r.i + 1}: unexpected content")
@@ -350,10 +367,32 @@ class TextError(SystemExit):
         return self.msg
 
 
+def regular_file_problem(path):
+    """Why path cannot be read as a file, or None when it is a regular file. A folder, a named
+    pipe or a device such as /dev/zero is refused before it is opened: reading a pipe waits for
+    a writer, and reading /dev/zero never ends. A path that does not exist returns None, so the
+    caller reports it in its own words."""
+    try:
+        mode = os.stat(str(path)).st_mode
+    except FileNotFoundError:
+        return None
+    except (OSError, ValueError) as e:
+        return f"cannot read {path}: {getattr(e, 'strerror', None) or e}"
+    if _stat.S_ISDIR(mode):
+        return f"{path} is a folder, not a file"
+    if not _stat.S_ISREG(mode):
+        return f"{path} is not a regular file (it is a named pipe, a socket or a device). Name a text file"
+    return None
+
+
 def read_text(path):
     """Read a text file as UTF-8, with or without a byte order mark (Notepad and PowerShell write one).
-    A file that is not UTF-8, or a path that is a folder, raises TextError with a one-line message."""
+    A file that is not UTF-8, or a path that is a folder, a pipe or a device, raises TextError with
+    a one-line message."""
     p = Path(path)
+    why = regular_file_problem(p)
+    if why:
+        raise TextError(why)
     try:
         return p.read_text(encoding="utf-8-sig")
     except UnicodeDecodeError as e:
@@ -391,18 +430,43 @@ def write_text(path, text):
     with a one-line message instead of a traceback."""
     path = Path(path)
     try:
+        if path.exists() and not path.is_file():
+            # opening a named pipe for writing waits for a reader, so it is refused, as is a folder
+            die(f"cannot write {path}: it is {'a folder' if path.is_dir() else 'not a regular file'}. Move it out of the way, then run this again")
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
     except OSError as e:
         die(f"cannot write {path}: {e.strerror or e}. Check that the folder exists and that you may write to it")
 
 
+def root_problem(value):
+    """Why value cannot be the project folder, or None. Shared by every script's --root."""
+    if not str(value).strip():
+        return "--root is empty. Pass the project folder, for example --root ."
+    try:
+        root = Path(value).expanduser().resolve()
+        if root.is_dir():
+            return None
+        return f"--root {value} is not a folder" + ("" if root.exists() else ", it does not exist") + ". Pass the project folder"
+    except (OSError, ValueError, RuntimeError) as e:
+        return f"--root {value} cannot be used: {getattr(e, 'strerror', None) or e}. Pass the project folder"
+
+
 def project_root(value):
     """The --root folder, resolved. A path that does not exist or is not a folder stops the script."""
-    root = Path(value).expanduser().resolve()
-    if not root.is_dir():
-        die(f"--root {value} is not a folder" + ("" if root.exists() else ", it does not exist") + ". Pass the project folder")
-    return root
+    why = root_problem(value)
+    if why:
+        die(why)
+    return Path(value).expanduser().resolve()
+
+
+def exists(path):
+    """Path.exists() that answers False instead of raising, for a name too long for the file
+    system or a path the user may not search. Python 3.9 raises on both."""
+    try:
+        return Path(path).exists()
+    except (OSError, ValueError):
+        return False
 
 
 def slugify(text):
@@ -417,10 +481,14 @@ def slugify(text):
 # ---------------------------------------------------------------------------
 
 def parse_date(s):
+    """A YYYY-MM-DD date from 1900 to 2999. A year outside that range is a typing error, and date
+    arithmetic near the year 9999 would overflow."""
     if isinstance(s, _dt.date):
         return s
-    if not isinstance(s, str) or not re.fullmatch(r"\d{4}-\d\d-\d\d", s.strip()):
+    if not isinstance(s, str) or not re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", s.strip()):
         raise ValueError(f"not a date (use YYYY-MM-DD): {s!r}")
+    if not 1900 <= int(s.strip()[:4]) <= 2999:
+        raise ValueError(f"not a date from 1900 to 2999: {s!r}")
     return _dt.date.fromisoformat(s.strip())
 
 
@@ -430,6 +498,15 @@ def fmt_date(d):
 
 def tag(plan, n):
     return f"{plan['project']['id_prefix']}-{int(n):02d}"
+
+
+def item_number(plan, text):
+    """The item number in an id written 3, 03, WI-03, wi-3 or WI03, or None. ASCII digits only,
+    so a negative number or a full-width digit is not an id."""
+    prefix = str(plan["project"].get("id_prefix") or "")
+    pat = (r"\s*(?:" + re.escape(prefix) + r"-?)?0*([0-9]+)\s*") if prefix else r"\s*0*([0-9]+)\s*"
+    m = re.fullmatch(pat, str(text), re.I)
+    return int(m.group(1)) if m else None
 
 
 def item_by_id(plan):
@@ -467,14 +544,18 @@ PLAN_NAMES = ("plan.yaml", "docs/spec/plan.yaml")
 
 
 def find_plan(root, explicit=None):
+    """The plan path: --plan when given, else docs/spec/plan.yaml or plan.yaml under root. An
+    empty --plan raises PlanError, so it never falls back to the default plan."""
+    if explicit is not None and not str(explicit).strip():
+        raise PlanError("--plan is empty. Leave it out to use docs/spec/plan.yaml, or give the path of the plan")
     if explicit:
         p = Path(explicit)
         if not p.is_absolute():
-            p = Path(root) / p if not p.exists() else p
+            p = Path(root) / p if not exists(p) else p
         return p
     for cand in ("docs/spec/plan.yaml", "plan.yaml"):
         p = Path(root) / cand
-        if p.exists():
+        if exists(p):
             return p
     return Path(root) / "docs/spec/plan.yaml"
 
@@ -561,8 +642,12 @@ def type_problems(plan):
     for k in _PROJECT_TEXT:
         _as_text(proj, k, "project", P)
     ep = proj.get("epic")
-    if ep is not None and not _is_int(ep) and not (isinstance(ep, str) and ep.strip().isdigit()):
+    if ep is not None and not _is_int(ep) and not (isinstance(ep, str) and re.fullmatch(r"[0-9]{1,18}", ep.strip())):
         P.append(f"project.epic must be an issue number or null, got {ep!r}")
+    elif isinstance(ep, str):
+        proj["epic"] = int(ep.strip())   # the number goes into API paths, so it is kept as ASCII digits only
+    if _is_int(proj.get("epic")) and proj["epic"] < 0:
+        P.append(f"project.epic must be an issue number or null, got {proj['epic']!r}")
     rows = dict((k, plan.get(k) or []) for k in ("tracks", "people", "advisors", "milestones", "breaks", "checkpoints", "items", "sources"))
     ext = plan.get("external") if plan.get("external") is not None else plan.get("program")
     if isinstance(ext, dict):
@@ -623,16 +708,18 @@ def type_problems(plan):
     return P
 
 
-def load_plan(path):
+def load_plan(path, root=None):
     """Read plan.yaml and fill defaults. Returns (plan, problems).
 
     A plan that cannot be read, or whose values have the wrong shape, raises PlanError: no script
-    can work from it. Other problems are returned, so the checker can list them all."""
+    can work from it. Other problems are returned, so the checker can list them all. root is the
+    project folder the paths in the plan are relative to; it is used to check their length."""
     path = Path(path)
     try:
         raw = load_file(path)
     except TextError as e:
-        raise PlanError(f"cannot read plan {path}: {e.msg}")
+        msg = "it" + e.msg[len(str(path)):] if e.msg.startswith(str(path) + " ") else e.msg
+        raise PlanError(f"cannot read plan {path}: {msg}")
     except (OSError, ValueError, RecursionError) as e:   # YamlError and JSON errors are ValueErrors
         raise PlanError(f"cannot read plan {path}: {e}")
     if not isinstance(raw, dict):
@@ -705,7 +792,7 @@ def load_plan(path):
             if d in derived and _is_int(it.get("id")):   # an item without an integer id is reported by validate_plan
                 derived[d].append(it["id"])
     for it in plan["items"]:
-        it["_derived_unblocks"] = sorted(derived.get(it["id"], []))
+        it["_derived_unblocks"] = sorted(derived.get(it.get("id"), []))
         if not it["unblocks"]:
             it["unblocks"] = it["_derived_unblocks"]
     # banned names come only from the plan: the people and advisors in it, and banned.names.
@@ -729,6 +816,7 @@ def load_plan(path):
     plan["_banned_names"] = sorted(set(n for n in names if n))
     plan["_banned_exact"] = sorted(set(exact))
     plan["_path"] = str(path)
+    plan["_root"] = str(root) if root is not None else None
     return plan, validate_plan(plan)
 
 
@@ -770,12 +858,114 @@ def _is_weekend(s):
     return parse_date(s).weekday() >= 5
 
 
+TITLE_FIELDS = ("id", "label", "lower")   # the fields item_title in github_sync.py supplies
+MAX_TITLE = 256       # GitHub refuses a longer issue title
+MAX_LABEL = 50        # GitHub refuses a longer label name
+SLUG_RE = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
+ID_PREFIX_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]*(-[A-Za-z0-9_]+)*")
+
+
+def format_title(fmt, tag_text, label):
+    """An issue title from project.title_format. Only {id}, {label} and {lower} are filled in,
+    and only after title_format_problem found nothing wrong with fmt."""
+    return fmt.format(id=tag_text, label=label, lower=tag_text.lower())
+
+
+def title_format_problem(fmt):
+    """Why project.title_format cannot make issue titles, or None. It may hold the fields {id},
+    {label} and {lower}, with no conversion and no format spec, and literal braces doubled. It
+    must hold {id} or {lower}, so no two work items get the same title."""
+    if not isinstance(fmt, str):
+        return None   # reported by type_problems
+    head = f"project.title_format {fmt!r}"
+    try:
+        parts = list(string.Formatter().parse(fmt))
+    except ValueError as e:
+        return f"{head} is not a valid title format ({e}). Use {{id}}, {{label}} and {{lower}}, and write a literal brace as {{{{ or }}}}"
+    fields = []
+    for _, name, spec, conv in parts:
+        if name is None:
+            continue
+        if name not in TITLE_FIELDS or spec or conv:
+            shown = "{" + name + ("!" + conv if conv else "") + (":" + spec if spec else "") + "}"
+            return f"{head} uses {shown}. Only {{id}}, {{label}} and {{lower}} can be used, as written, and a literal brace is written {{{{ or }}}}"
+        fields.append(name)
+    if not {"id", "lower"} & set(fields):
+        return f"{head} must hold {{id}} or {{lower}}, so that every work item issue gets its own title"
+    return None
+
+
+def _one_line(value):
+    """True when a text value has no line break and no other control character."""
+    return not isinstance(value, str) or not any(ord(c) < 32 or c == "\x7f" for c in value)
+
+
+def _limits():
+    """(longest name, longest path) in bytes that the file system takes."""
+    if os.name == "nt":
+        return 255, 260
+    try:
+        return os.pathconf("/", "PC_NAME_MAX"), os.pathconf("/", "PC_PATH_MAX")
+    except (AttributeError, ValueError, OSError):
+        return 255, 1024
+
+
+def path_problems(plan):
+    """Plan values that make a file or folder name, or a whole path, longer than the file system
+    allows. A script would otherwise stop on "File name too long" halfway through its work."""
+    name_max, path_max = _limits()
+    proj = plan["project"]
+    base = plan.get("_root") or (str(Path(plan["_path"]).resolve().parent) if plan.get("_path") else os.getcwd())
+    cands = []   # (what, relative path)
+    spec_dir = proj.get("spec_dir")
+    if isinstance(spec_dir, str) and spec_dir.strip():
+        cands.append(("project.spec_dir", f"{spec_dir}/README.md"))
+        by_num = {m.get("number"): m for m in plan["milestones"]}
+        for m in plan["milestones"]:
+            if isinstance(m.get("folder"), str) and m["folder"]:
+                cands.append((f"milestone {m.get('number')}: folder", f"{spec_dir}/{m['folder']}/milestone.md"))
+        for it in plan["items"]:
+            ms = by_num.get(it.get("milestone"))
+            if _is_int(it.get("id")) and isinstance(it.get("slug"), str) and ms and isinstance(ms.get("folder"), str) and isinstance(proj.get("id_prefix"), str):
+                name = f"{proj['id_prefix']}-{it['id']:02d}".lower() + f"-{it['slug']}.md"
+                cands.append((f"item {it['id']}: slug", f"{spec_dir}/{ms['folder']}/{name}"))
+    gt = proj.get("ground_truth")
+    if isinstance(gt, str) and gt.strip():
+        cands.append(("project.ground_truth", re.sub(r"\.md$", ".index.txt", gt) if gt.endswith(".md") else gt))
+    dsp = proj.get("dev_skill_path")
+    if isinstance(dsp, str) and dsp.strip():
+        cands.append(("project.dev_skill_path", f"{dsp}/references/ground-truth-map.md"))
+    out, seen = [], set()
+    for what, rel in cands:
+        for part in rel.replace("\\", "/").split("/"):
+            n = len(part.encode("utf-8", "replace"))
+            if n > name_max and (what, part) not in seen:
+                seen.add((what, part))
+                out.append(f"{what} makes the file or folder name {part[:40]!r}... {n} bytes long, more than the {name_max} the file system allows. Shorten it")
+        n = len((base.rstrip("/\\") + "/" + rel).encode("utf-8", "replace"))
+        if n >= path_max and what not in seen:
+            seen.add(what)
+            out.append(f"{what} makes the path {rel[:40]!r}... {n} bytes long with the project folder, more than the {path_max} the file system allows. Shorten it")
+    return out
+
+
 def validate_plan(plan):
     P = []
     proj = plan["project"]
     for k in ("name", "slug", "id_prefix"):
         if not proj.get(k):
             P.append(f"project.{k} is required")
+    if proj.get("slug") and not (SLUG_RE.fullmatch(proj["slug"]) and len(proj["slug"]) <= MAX_LABEL):
+        P.append(f"project.slug must be lowercase words joined by hyphens, at most {MAX_LABEL} characters (it is the GitHub label of every issue), got {proj['slug'][:80]!r}")
+    if proj.get("id_prefix") and not (ID_PREFIX_RE.fullmatch(proj["id_prefix"]) and len(proj["id_prefix"]) <= 20):
+        P.append(f"project.id_prefix must be letters and digits that start with a letter, at most 20, such as WI, got {proj['id_prefix'][:40]!r}")
+    for k in _PROJECT_TEXT:
+        if not _one_line(proj.get(k)):
+            P.append(f"project.{k} must be one line, with no line break or control character")
+    tf = title_format_problem(proj.get("title_format"))
+    if tf:
+        P.append(tf)
+    P += path_problems(plan)
     if proj.get("repo") and not repo_ok(proj["repo"]):
         P.append(f"project.repo must look like owner/name, got {proj['repo']!r}")
     for k, example in (("spec_dir", "docs/spec"), ("ground_truth", "docs/ground-truth/architecture.md")):
@@ -807,7 +997,11 @@ def validate_plan(plan):
                 P.append(f"people: {p.get('id')} day off {d} is a weekend")
     for t in plan["tracks"]:
         if not t.get("id") or not t.get("label"):
-            P.append(f"tracks: each track needs id and label ({t})")
+            P.append(f"tracks: each track needs id and label ({t})"[:300])
+        elif len(t["id"]) > MAX_LABEL or not _one_line(t["id"]) or "," in t["id"]:
+            P.append(f"tracks: id {t['id'][:60]!r} is a GitHub label, so it is one line with no comma, at most {MAX_LABEL} characters")
+        if not _one_line(t.get("label")):
+            P.append(f"tracks: {t.get('id')} label must be one line")
     for p in plan["people"]:
         al = p.get("allocation")
         if not isinstance(al, int) or isinstance(al, bool) or not (1 <= al <= 100):
@@ -815,6 +1009,8 @@ def validate_plan(plan):
     for p in plan["people"]:
         if "derived" in p and not isinstance(p["derived"], bool):
             P.append(f"people: {p.get('id')} derived must be true or false")
+    if isinstance(proj.get("epic_title"), str) and len(proj["epic_title"]) > MAX_TITLE:
+        P.append(f"project.epic_title is {len(proj['epic_title'])} characters. GitHub takes at most {MAX_TITLE}")
     tg = plan.get("target")
     if tg is None:
         pass   # the target is optional. Without one, the plan's end date is derived from the critical path
@@ -849,6 +1045,13 @@ def validate_plan(plan):
         for k in ("name", "folder", "start", "end", "demo", "gate"):
             if not m.get(k):
                 P.append(f"milestone {n}: {k} is required")
+        for k in ("name", "folder"):
+            if not _one_line(m.get(k)):
+                P.append(f"milestone {n}: {k} must be one line, with no line break or control character")
+        if isinstance(m.get("name"), str) and isinstance(proj.get("subepic_prefix"), str):
+            title = f"{proj['subepic_prefix']} {n}, {m['name']}"
+            if len(title) > MAX_TITLE:
+                P.append(f"milestone {n}: the sub-epic title is {len(title)} characters. GitHub takes at most {MAX_TITLE}. Shorten the name")
         if all(_is_date(m.get(k)) for k in ("start", "end", "demo") if m.get(k)) and m.get("start") and m.get("end"):
             s, e = parse_date(m["start"]), parse_date(m["end"])
             if e < s:
@@ -915,6 +1118,12 @@ def validate_plan(plan):
         for k in ("slug", "label", "milestone", "track", "complete_by", "checkpoint"):
             if it.get(k) in (None, ""):
                 P.append(f"item {iid}: {k} is required")
+        if not _one_line(it.get("label")):
+            P.append(f"item {iid}: label must be one line, with no line break or control character")
+        elif it.get("label") and isinstance(proj.get("id_prefix"), str) and not tf and isinstance(proj.get("title_format"), str):
+            title = format_title(proj["title_format"], f"{proj['id_prefix']}-{iid:02d}", it["label"])
+            if len(title) > MAX_TITLE:
+                P.append(f"item {iid}: the issue title is {len(title)} characters. GitHub takes at most {MAX_TITLE}. Shorten the label")
         if it.get("slug") and not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", str(it["slug"])):
             P.append(f"item {iid}: slug must be lowercase words joined by hyphens")
         if it.get("track") not in tracks:
@@ -1030,7 +1239,9 @@ def die(msg, code=2):
 
 
 def repo_parts(plan, override=None):
-    repo = override or plan["project"].get("repo")
+    if override is not None and not str(override).strip():
+        die("--repo is empty. Give the repository as owner/name, or leave out --repo to use project.repo in plan.yaml")
+    repo = override if override is not None else plan["project"].get("repo")
     if not repo:
         die("no repository. Set project.repo in plan.yaml or pass --repo owner/name")
     if not repo_ok(repo):

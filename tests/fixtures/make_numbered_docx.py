@@ -20,6 +20,8 @@ Modes
   malformed  a main part that is not well-formed XML.
   nomedia    a figure whose image part is missing from the archive.
   dupfigures two figures captioned "Figure 1" with different images.
+  badnumbers level and outline numbers that are not ASCII digits ("x0", a superscript two),
+             as a damaged or crafted document holds. The renderer must not fail on them.
 
 Usage
   python3 tests/fixtures/make_numbered_docx.py OUT.docx [MODE]
@@ -181,6 +183,9 @@ def build(out, mode):
         ("word/media/image1.png", png),
         ("word/media/image2.png", png + b"2"),
     ]
+    if mode == "badnumbers":
+        parts = [(n, d.replace('w:ilvl="', 'w:ilvl="x').replace('<w:outlineLvl w:val="', '<w:outlineLvl w:val="\u00b2')
+                  if isinstance(d, str) else d) for n, d in parts]
     if mode == "nomedia":
         parts = [x for x in parts if not x[0].startswith("word/media/")]
     if mode == "doctype-utf16":
