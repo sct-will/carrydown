@@ -4,7 +4,7 @@ carrydown is an open source project for planning and engineering handoffs with a
 
 The name reflects the idea: carry the decisions in your architecture down into the plan, the GitHub work and the instructions your engineers’ coding agents use.
 
-**That generated skill is the handoff.** An engineer installs it once, then says "Work on WI-03." The skill directs their coding agent to read the specification, the source sections it cites and the project conventions before planning the code.
+**That generated skill is the handoff.** An engineer installs it once, then names a work item. The skill directs their coding agent to read the specification, the source sections it cites and the project conventions before planning the code.
 
 The plan is built around your team's availability and target date. Scripts check the specifications against the plan. Each specification cites the architecture, requirements or engineering standards it follows. You review and refine the artifacts with your agent and approve publication to GitHub.
 
