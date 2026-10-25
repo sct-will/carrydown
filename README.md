@@ -1,10 +1,37 @@
 # carrydown
 
-carrydown uses two packaged AI agent skills and one generated skill to let an AI agent generate **everything between your architecture document and the first commit**. The agent creates the project plan, every spec, every GitHub milestone epic and issue, the project board and a custom agent skill your engineers' agents use to write code.
-
+carrydown uses two packaged artificial intelligence (AI) agent skills to turn your architecture document into a project plan, specifications, GitHub issues and a project board. It then generates a project-specific skill that guides each engineer's coding agent through the work.
 
 [![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
 
+[Quick start](#quick-start) | [How it works](#how-it-works) | [Explore the sample](#explore-the-sample) | [What you get](#what-you-get) | [What the agent asks you](#what-the-agent-asks-you) | [Requirements and installation options](#requirements-and-installation-options) | [Contributing and license](#contributing-and-license)
+
+<br />
+
+## Quick start
+
+Start with the [setup guide](docs/setup.md). It walks you through preparing your computer. If your coding agent, Node.js, Python and Git are ready, follow these steps.
+
+1. **Open your project folder.** This is the folder where your document and the plan will live. Open an existing project in your coding agent, or create and open a new folder named `carrydown-plan`.
+2. **Install the two skills.** Open a terminal in that folder. A terminal is where you enter commands; use your agent's terminal if it has one. Copy this command, paste it into the terminal and press Enter:
+
+   ```bash
+   npx skills add sct-will/carrydown
+   ```
+
+   If asked to download the `skills` installer, confirm to continue. Select both `carrydown-ground-truth` and `carrydown-plan-to-github`, your coding agent, and **Project** scope. If asked for an installation method, keep **Symlink**, the recommended choice. [The installation walkthrough](docs/setup.md#install-the-two-skills) explains the choices and what success looks like.
+3. **Check the installation.** In the same terminal, run:
+
+   ```bash
+   npx skills list
+   ```
+
+   Look for both skill names. Then close and reopen your coding agent or start a new agent session, and open the same project folder. If either skill is missing, use the [installation help](docs/setup.md#when-something-does-not-work).
+4. **Add your document and start.** In your project folder, create a folder named `docs`, then a folder named `source` inside it. Copy your Word (`.docx`) or Markdown (`.md`) document into `docs/source/`. In the agent's chat, say:
+
+   > Set up a project plan from this document.
+
+   Your agent checks the setup, then interviews you about the document and your constraints. If it asks to initialize Git, it is asking to keep a local history of your plan. You can approve that for this project. You review the plan and specifications before anything goes to GitHub.
 
 <br />
 
@@ -12,78 +39,29 @@ carrydown uses two packaged AI agent skills and one generated skill to let an AI
 
 ![How carrydown works. Two lanes. Plan owner, an engineering or product manager: step 1 Generate, the plan owner runs carrydown-ground-truth in their agent, in: architecture document plus people and dates, out: plan.yaml and one spec per work item; step 2 Review, the plan and specs are human reviewed, with the agent making the edits; step 3 Carry down to GitHub, the plan owner runs carrydown-plan-to-github in their agent, out: epic, a sub-epic per milestone, issues with specs, board, engineers' skill, with the note dry run first, nothing is written until you say yes. One install line goes down to the Engineers lane: step 4 Work the issues, the engineer says "Work on WI-03" for work item WI-03, the agent invokes the skill, reads the spec and the cited sections, then plans the code. The ground truth document is the only amber element. A thin amber thread, labeled ground truth, cited by section, runs from it through steps 1 and 3 into step 4.](docs/images/handoff.png)
 
-1. **Generate.** Give it the ground truth, usually an architecture document, any other pertinent context you have. If you know how many engineers will be assigned, and the target project duration, tell it that too. Your agent interviews you about people, time and dates, then writes the plan and one specification per work item. The agent is instructed to project plan around your constraints. The agent looks at people, time and dependencies. It groups related work so each milestone ends in one integrated demo by the engineers. It gives each engineer their own track, so nobody jumps between unrelated work. The agent skill invoked in this step is called [carrydown-ground-truth](skills/carrydown-ground-truth/SKILL.md).
-2. **Review.** You review the generated project plan, `docs/spec/plan.yaml`, and the specifications in the folders under `docs/spec/`, and edit them with the agent until they are right. 
-3. **Carry down to GitHub.** The agent moves the plan from just YAML and SPEC.md file to a completely agent generated Github project capturing all the details. Say "put the plan on GitHub" to commit and push the plan to a project board.  Then the agent generates an epic (one parent issue for the whole plan), a sub-epic per milestone (a milestone is one demonstrable slice of the plan), and an issue per work item with its dedicated linked SPEC.md. Lastly, an engineers' agent skill is generated that helps each engineer finish their work item to spec.  The agent skill invoked in this step is called: [carrydown-plan-to-github](skills/carrydown-plan-to-github/SKILL.md).
-4. Engineers invoke the generated agent skill by targeting work item for completion. For example, if there is an issue work item "WI-03", the engineer says, "Work on WI-03". Their agent reads the specification and the sections it cites, then plans the code. The naming convention of the engineers' agent skill is dynamic, and based on the project name. The engineer installs the skill in their agentic editor using:
+1. **Generate.** Give your agent the ground truth, usually an architecture document, and any other relevant context. If you know the team size and target project duration, include them. The [carrydown-ground-truth](skills/carrydown-ground-truth/SKILL.md) skill interviews you, then drafts a plan and one specification per work item around your constraints. Each engineer has a track, or lane of work. Each milestone ends with an integrated demonstration.
+2. **Review.** Review the plan in `docs/spec/plan.yaml` and the specifications under `docs/spec/`. Edit them with your agent until they are right. You decide the owners, dates, scope and order.
+3. **Carry down to GitHub.** Commit and push the approved plan and specifications first. Then say "Put the plan on GitHub." The [carrydown-plan-to-github](skills/carrydown-plan-to-github/SKILL.md) skill shows dry runs and asks for approval before creating the issues and board. It creates a parent epic for the plan, a sub-epic for each milestone, and an issue linking to each work item's specification. Finally, it generates the engineers' skill.
+4. **Work the issues.** Each engineer installs the generated skill once, then names a work item: "Work on WI-03." Their agent reads the specification and the sections it cites, then plans the code. The generated skill is named after the project.
 
-   ```bash
-   npx skills add https://github.com/<owner>/<repo>/tree/main/docs/dev/skills/<project>-dev -a <agent>
-   ```
+<details>
+<summary>Install the generated skill for engineers</summary>
 
-<br />
-
-
-## Quick start
-
-Run this in your project folder and pick your coding agent:
+Commit and push the generated skill folder before engineers install it. Use your repository, branch, project name and agent in this command:
 
 ```bash
-npx skills add sct-will/carrydown
+npx skills add https://github.com/<owner>/<repo>/tree/<branch>/docs/dev/skills/<project>-dev -a <agent>
 ```
 
-Restart your agent after the install, so it sees the two skills. Then put your document in `docs/source/` and tell your agent:
-
-> Set up a project plan from this document.
-
-
+</details>
 
 <br />
 
+## Explore the sample
 
-## Detailed install
+Explore carrydown's sample project board, milestone epics and work item issues. Each work item links to its specification. You can browse the sample before installing.
 
-You need a coding agent and Node.js 22.20 or later; your agent checks for Python 3.9 and git and tells you what to do. For step 3 you need permission to create issues and a project in the repository, and a GitHub token, which the second skill helps you create.
-
-<details>
-<summary>Install for one agent, every agent, your user account or by hand</summary>
-
-- `--skill '*' -a <agent>` installs both skills for one agent without questions, for example `npx skills add sct-will/carrydown --skill '*' -a claude-code`.
-- `--all` installs into `.agents/skills/`, which most agents read, and into `.claude/skills/` and `agent/skills/`. Any other agent gets the skills only when its folder already exists in the project. Commit only the folders your engineers use.
-- `-g -a <agent>` installs for your user account. Keep the `-a`, or `-g` writes into every supported agent's folder.
-- `--list` shows the skills without installing them.
-
-| Agent | `-a` value | Project folder | User folder |
-| --- | --- | --- | --- |
-| Claude Code | `claude-code` | `.claude/skills/` | `~/.claude/skills/` |
-| GitHub Copilot | `github-copilot` | `.agents/skills/` | `~/.copilot/skills/` |
-| Cursor | `cursor` | `.agents/skills/` | `~/.cursor/skills/` |
-| Codex | `codex` | `.agents/skills/` | `~/.agents/skills/` |
-| Gemini CLI | `gemini-cli` | `.agents/skills/` | `~/.gemini/skills/` |
-| IBM Bob | `bob` | `.bob/skills/` | `~/.bob/skills/` |
-
-The installer knows [many more agents](https://github.com/vercel-labs/skills/blob/main/docs/agents.md), and any agent that reads the [Agent Skills format](https://agentskills.io) can use the skills. Without Node.js, copy the two folders in `skills/` into the folder from the table. Restart your agent afterward.
-
-The installer prints third-party security scans; [docs/security.md](docs/security.md) explains what each skill touches.
-
-</details>
-
-<details>
-<summary>Set up macOS, Windows or Linux from nothing</summary>
-
-[docs/setup.md](docs/setup.md) goes from a computer with nothing installed to a project folder ready for the install line: [macOS](docs/setup.md#macos), [Windows](docs/setup.md#windows), [Linux](docs/setup.md#linux).
-
-</details>
-
-
-<br />
-
-
-## Live demo
-
-Provided below is actual sample output a carrydown AI generated Github project board, milestone epics, and issues with links to the specs, that you can view and interact with before you install.
-
-The sample is a based on a fictional expense approvals service, so the company, the people and the dates are invented. However, everything the two skills made from it is real and public in [carrydown-sample](https://github.com/sct-will/carrydown-sample): [plan.yaml](https://github.com/sct-will/carrydown-sample/blob/main/docs/spec/plan.yaml), [the nine specifications](https://github.com/sct-will/carrydown-sample/tree/main/docs/spec), [fifteen issues](https://github.com/sct-will/carrydown-sample/issues?q=is%3Aissue), [the board](https://github.com/users/sct-will/projects/2) and [the generated engineers' skill](https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev). A copy sits in [`sample/expense-approvals/`](sample/expense-approvals/) for the self test, and [a recorded run](docs/sample-run.md) shows what each script printed when the sample was carried into a throwaway repository.
+The sample is based on a fictional expense approvals service, so the company, the people and the dates are invented. Everything the two skills made from it is real and public in [carrydown-sample](https://github.com/sct-will/carrydown-sample): [plan.yaml](https://github.com/sct-will/carrydown-sample/blob/main/docs/spec/plan.yaml), [the nine specifications](https://github.com/sct-will/carrydown-sample/tree/main/docs/spec), [fifteen issues](https://github.com/sct-will/carrydown-sample/issues?q=is%3Aissue), [the board](https://github.com/users/sct-will/projects/2) and [the generated engineers' skill](https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev). A copy sits in [`sample/expense-approvals/`](sample/expense-approvals/) for the self test, and [a recorded run](docs/sample-run.md) shows what each script printed when the sample was carried into a throwaway repository.
 
 [![Issue 9 in the sample repository, WI-03 Approval routing engine, as GitHub renders it. Open, parent Milestone 2, Route to approvers. The body gives the target completion date, the checkpoint, why the item exists, then the AI engineering notes: a link to the specification, a link to the engineers' skill, the instruction to install it once and ask your coding agent to work on WI-03, and the ground truth sections 3.4, 3.5 and 7.1.](docs/images/issue-9.png)](https://github.com/sct-will/carrydown-sample/issues/9)
 
@@ -95,23 +73,9 @@ The sample is a based on a fictional expense approvals service, so the company, 
 
 <br />
 
-## Agent skill interview
+## What you get
 
-At startup, the [carrydown-ground-truth](skills/carrydown-ground-truth/SKILL.md) skill interviews you in six short steps. Then it shows you the schedule and each person's load per work unit. It shows the critical path, the chain of items that sets the end date. It shows the slack, the days to spare, before every checkpoint. A checkpoint is a dated integration check between the tracks. Then it asks you to review the plan. If you have a date and no team, say so, and it derives the capacity. If you have a team and no date, it derives the date. [docs/inputs.md](docs/inputs.md) has the details.
-
-| The agent asks | You answer with |
-| --- | --- |
-| Which documents must the project obey, and which wins if two disagree? | File paths, and the winner |
-| Who does the work, which part of the system does each person own, from when, and at what share of their time? | Names, a track each (a lane of work one engineer owns, such as back end or front end), start dates, days off |
-| When must it ship, or how many weeks do you have? | A date, a number of weeks, or "derive the date" |
-| Which repository, and which coding agents do the engineers use? | owner/repo and the agents |
-| What must the stakeholders see at each milestone demonstration to call it done? | Their words, which become acceptance criteria |
-| How is the code built, tested and merged here? | The commands and the branch rule |
-
-
-<br />
-
-## AI generated outputs
+The plan and every specification trace back to the same ground truth, with dates and capacity checked against the named team.
 
 - **A plan** in `docs/spec/plan.yaml`: milestones, tracks, owners and dates fitted to your people and time, with a load table and a critical path, and a written reason for every milestone.
 - **One specification per work item**, the smallest piece of work an engineer can finish and show, citing the sections it comes from and checked against the plan by a script that also runs in continuous integration (automatic checks on every pull request).
@@ -137,16 +101,206 @@ docs/
 
 </details>
 
-The agent builds the plan around people and the part of the system each one owns. Each engineer owns one track and stays on one theme, one part of the system, at a time, so they switch context less. A milestone takes items from the tracks it needs. The tracks meet at a checkpoint, a dated integration check between them. There they run a joint check, the one-sentence test in the plan that proves the parts they built fit together.
+[Read the planning method](docs/method.md) for the rules behind milestones, tracks, capacity and checkpoints.
 
-The milestone ends with one demonstration of integrated functionality, given by the engineers whose tracks meet. An item's size is the working days it needs at full attention. Size divided by allocation, the share of a person's time given to this plan, gives calendar time. Nobody passes 100 percent of their time in a work unit. Slack, the days to spare, sits before every checkpoint. The critical path is the chain of items that sets the end date. It is checked for who owns each item on it, because one absent owner there would move the end date. The reason for each milestone is written in the plan, and the checker's "Planning review" reports coverage, theme switches, slack and load so you can argue with it. [The method](docs/method.md) lists the ten rules.
+<br />
 
-## How it compares
+## What the agent asks you
 
-Plan mode, an agent's built-in planning step, plans one task. Spec-driven tools, which start from a written specification, plan one task from that specification. Claude Code Project Management (CCPM) turns requirements into issues. carrydown carries one agreed ground truth across every task, dates the plan around named people and checks every specification against it, so it sits beside any of them. The FAQ has [the longer comparison](docs/faq.md#how-does-this-compare-with-plan-mode-spec-driven-tools-superpowers-and-claude-code-project-management-ccpm) and [whether this is just prompts](docs/faq.md#isnt-this-just-prompts).
+At startup, the [carrydown-ground-truth](skills/carrydown-ground-truth/SKILL.md) skill interviews you in six short steps.
 
-It is not waterfall: the plan is files in Git, the work units stretch to fit the work, and [changing the plan is cheap](docs/faq.md#isnt-this-waterfall).
+| The agent asks | You answer with |
+| --- | --- |
+| Which documents must the project obey, and which wins if two disagree? | File paths, and the winner |
+| Who does the work, which part of the system does each person own, from when, and at what share of their time? | Names, a track each (a lane of work one engineer owns, such as back end or front end), allocation percentages, start dates, days off |
+| When must it ship, or how many weeks do you have? | A date, a number of weeks, or "derive the date" |
+| Which repository, and which coding agents do the engineers use? | owner/repo and the agents |
+| What must the stakeholders see at each milestone demonstration to call it done? | Their words, which become acceptance criteria |
+| How is the code built, tested and merged here? | The commands and the branch rule |
 
+After the interview, the agent shows you the schedule and each person's load per work unit, or time block. It shows the critical path, the chain of items that sets the end date, and the slack, or days to spare, before each checkpoint. A checkpoint is a dated integration check between tracks. Then it asks you to review the plan. If you have a date and no team, it derives the capacity needed. If you have a team and no date, it derives the date. [Read the input guide](docs/inputs.md) for details.
+
+<br />
+
+## Requirements and installation options
+
+For the usual installation, follow [Quick start](#quick-start). This section explains what you need and offers other ways to install.
+
+| What you need | Why you need it | Where to start |
+| --- | --- | --- |
+| A coding agent with access to your project files and permission to run commands | It runs the skills and helps you review the plan. | Use your team's agent, or choose one from the install list below. Its account or subscription is separate from carrydown. |
+| Node.js 22.20 or later | It provides `npx`, which runs the skills installer. | [Prepare your computer](docs/setup.md#prepare-your-computer). |
+| Python 3.9 or later | It runs the planning and checking scripts. | [Prepare your computer](docs/setup.md#prepare-your-computer). Install a current Python 3 release if you are starting fresh. |
+| Git | The installer uses it to download the skills. It also keeps a history of your plan and specifications. | [Prepare your computer](docs/setup.md#prepare-your-computer). Git works locally before you connect to GitHub. |
+
+### Choose where to install
+
+**This project is the recommended starting point.** The skills are available in the project folder where you run the command. Open that folder whenever you use carrydown.
+
+**All your projects is a personal installation.** It makes the skills available to your agent across projects on this computer. It does not install them for other people. Choose one scope; you do not need to run both commands.
+
+Open your agent's entry below for complete commands and its official setup instructions. Each command selects both carrydown skills and the named agent. You still review the installer's confirmation. After installation, [check the skills and reopen your agent](docs/setup.md#check-the-installation).
+
+<details>
+<summary>Claude Code</summary>
+
+[Set up Claude Code](https://code.claude.com/docs/en/quickstart) if you have not installed and signed in to it yet.
+
+**This project:** run this from your project folder.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent claude-code
+```
+
+**All your projects:** run this instead for a personal installation.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent claude-code --global
+```
+
+</details>
+
+<details>
+<summary>GitHub Copilot</summary>
+
+[Set up GitHub Copilot](https://code.visualstudio.com/docs/setup/copilot) if you have not installed and signed in to it yet.
+
+**This project:** run this from your project folder.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent github-copilot
+```
+
+**All your projects:** run this instead for a personal installation.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent github-copilot --global
+```
+
+</details>
+
+<details>
+<summary>Cursor</summary>
+
+[Set up Cursor](https://cursor.com/docs) if you have not installed and signed in to it yet.
+
+**This project:** run this from your project folder.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent cursor
+```
+
+**All your projects:** run this instead for a personal installation.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent cursor --global
+```
+
+</details>
+
+<details>
+<summary>Codex</summary>
+
+[Set up Codex](https://developers.openai.com/codex/quickstart) if you have not installed and signed in to it yet.
+
+**This project:** run this from your project folder.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent codex
+```
+
+**All your projects:** run this instead for a personal installation.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent codex --global
+```
+
+</details>
+
+<details>
+<summary>Gemini CLI</summary>
+
+[Set up Gemini CLI](https://geminicli.com/docs/get-started/installation/) if you have not installed and signed in to it yet.
+
+**This project:** run this from your project folder.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent gemini-cli
+```
+
+**All your projects:** run this instead for a personal installation.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent gemini-cli --global
+```
+
+</details>
+
+<details>
+<summary>IBM Bob</summary>
+
+[Set up IBM Bob](https://www.ibm.com/products/bob) if you have not installed and signed in to it yet.
+
+**This project:** run this from your project folder.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent bob
+```
+
+**All your projects:** run this instead for a personal installation.
+
+```bash
+npx skills add sct-will/carrydown --skill '*' --agent bob --global
+```
+
+</details>
+
+The installer supports [more agents](https://github.com/vercel-labs/skills/blob/main/docs/agents.md). The skills use the [Agent Skills format](https://agentskills.io). Run the installation where your agent works; a remote workspace needs the skills and supporting software in that workspace.
+
+<details>
+<summary>Install by copying folders, without Node.js</summary>
+
+Use the [manual installation walkthrough](docs/setup.md#manual-install-without-nodejs). It explains how to download the repository, find the two skill folders and copy them to the right place. You still need a coding agent, Python and Git for planning.
+
+These are the destination folders. A dot at the beginning means the folder may be hidden. `~/` means your home folder, such as `/Users/your-name/` on macOS or `C:\Users\your-name\` on Windows. Use the project column for this project or the home column for a personal installation.
+
+| Agent | Inside your project folder | Inside your home folder |
+| --- | --- | --- |
+| Claude Code | `.claude/skills/` | `~/.claude/skills/` |
+| GitHub Copilot | `.agents/skills/` | `~/.copilot/skills/` |
+| Cursor | `.agents/skills/` | `~/.cursor/skills/` |
+| Codex | `.agents/skills/` | `~/.agents/skills/` |
+| Gemini CLI | `.agents/skills/` | `~/.gemini/skills/` |
+| IBM Bob | `.bob/skills/` | `~/.bob/skills/` |
+
+</details>
+
+<details>
+<summary>Preview the skills or install for every agent</summary>
+
+**Preview before installing.** This lists the skills available from carrydown. It does not install them.
+
+```bash
+npx skills add sct-will/carrydown --list
+```
+
+**Install for every supported agent.** This installs both skills for all agents at project scope and skips the installer's confirmation prompts. Use it only when you want that broader installation.
+
+```bash
+npx skills add sct-will/carrydown --all
+```
+
+For most people, choosing one agent in Quick start is enough.
+
+</details>
+
+### Get help with installation
+
+The [setup guide](docs/setup.md) covers [macOS](docs/setup.md#macos), [Windows](docs/setup.md#windows), [Linux](docs/setup.md#linux), [checking the installation](docs/setup.md#check-the-installation) and [common problems](docs/setup.md#when-something-does-not-work). The installer may show security scan results; [the security guide](docs/security.md#what-skillssh-shows) explains them.
+
+### When you are ready for GitHub
+
+You can draft and review the plan locally first. To publish it, you need a GitHub repository, permission to create issues there, permission to create the project board, and a GitHub token. The second skill walks you through these when you say "Put the plan on GitHub." It shows a dry run and waits for your approval before publishing. The [plan owner guide](docs/plan-owner-guide.md#the-github-step) explains the handoff.
 
 <br />
 
@@ -154,4 +308,4 @@ It is not waterfall: the plan is files in Git, the work units stretch to fit the
 
 [CONTRIBUTING.md](CONTRIBUTING.md) shows how to run the scripts and checks yourself, under the [code of conduct](CODE_OF_CONDUCT.md); [SECURITY.md](SECURITY.md) covers private reports. Everything in this repository is licensed under [Apache 2.0](LICENSE). More: [plan owner guide](docs/plan-owner-guide.md), [FAQ](docs/faq.md), [method](docs/method.md), [changelog](CHANGELOG.md).
 
-If carrydown helped you, star the repository so the next plan owner finds it. If you see any bug, open a [issue](https://github.com/sct-will/carrydown/issues).
+If carrydown helped you, star the repository so the next plan owner finds it. If you see any bug, open an [issue](https://github.com/sct-will/carrydown/issues).

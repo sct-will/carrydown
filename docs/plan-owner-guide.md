@@ -2,7 +2,7 @@
 
 An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent. Two skills you install, one skill is generated for your engineers.
 
-The long form for the plan owner: the engineering manager or product manager who owns the plan. You do not need to write code. The short form is the README: [Getting started](../README.md#getting-started) has the install line and the first sentence to say, and [What the agent asks you](../README.md#what-the-agent-asks-you) has the questions you answer. This guide does not repeat them. It explains what happens between them, what to review and what to ask for in advance.
+The long form for the plan owner: the engineering manager or product manager who owns the plan. You do not need to write code. The short form is the README: [Quick start](../README.md#quick-start) has the install line and the first sentence to say, and [What the agent asks you](../README.md#what-the-agent-asks-you) has the questions you answer. This guide does not repeat them. It explains what happens between them, what to review and what to ask for in advance.
 
 ## Who runs what
 

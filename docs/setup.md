@@ -1,63 +1,283 @@
-# Setup from nothing
+# Set up your computer and start a plan
 
-The long form of the [prerequisites line in the README](../README.md#prerequisites). It takes you from a computer with nothing installed to a project folder where you can install the carrydown skills. Pick your system. Each section says what to click or type and what you will see.
+This guide takes you from a first installation to the carrydown interview. You do not need to write code. You will install a few supporting tools, open a project folder and copy commands into a terminal.
 
-You need four things: a terminal, Node.js (only to run the install line), Python 3.9 or later (to run the scripts) and git (to keep the plan under version control). Everything here is free.
+Already have a coding agent, Node.js, Python and Git? Go to [open your project folder](#open-your-project-folder). Otherwise, start below.
 
-A note on version numbers. The skills installer needs Node.js 22.20 or later. Install the version marked LTS (long-term support) from [the Node.js website](https://nodejs.org) and you will have it. On Linux, the version in the system package manager is sometimes older. If `node --version` prints a number below 22.20, install from nodejs.org instead.
+[Choose an agent](#choose-a-coding-agent) | [Prepare your computer](#prepare-your-computer) | [Open a project](#open-your-project-folder) | [Install](#install-the-two-skills) | [Check](#check-the-installation) | [Start a plan](#start-your-plan) | [Get help](#when-something-does-not-work)
 
-## macOS
+## Choose a coding agent
 
-1. **Open Terminal.** Press Command and Space, type `Terminal`, press Return. A window opens with a line that ends in `%` or `$`. You type commands there and press Return after each one.
-2. **Install Node.js.** Go to [the Node.js website](https://nodejs.org), download the LTS installer (a `.pkg` file), open it and click Continue until it finishes. If you already use Homebrew, run `brew install node` instead.
-3. **Check Node.js.** Close Terminal and open it again, then run `node --version` and `npm --version`. Each prints a version number such as `v24.11.1` and `11.6.2`. `command not found` means the installer did not finish or Terminal was not reopened.
-4. **Check Python.** Run `python3 --version`. If Python is missing, macOS opens a window asking to install the command line developer tools. Click Install, accept the license, wait a few minutes, and run the command again. It prints `Python 3.` followed by 9 or higher.
-5. **Check git.** Run `git --version`. The same developer tools window may appear. Once it prints `git version 2.` and a number, tell git who you are, once:
-   `git config --global user.name "Your Name"` and `git config --global user.email "you@example.com"`.
-6. **Make your project folder.** Run `mkdir my-plan`, then `cd my-plan`, then `git init`. You will see `Initialized empty Git repository`. To use an existing folder, `cd` into it instead. If it is not yet a git repository, run `git init` there.
-7. **Install the skills.** From inside the folder, run the install line from the README. It may ask you to confirm a download.
-8. **Restart your agent** so it sees the skills.
+A coding agent is an application that can read and edit files in a folder and run commands for you. You use its chat to ask carrydown to draft and check the plan. Choose an agent that supports Agent Skills and gives you those capabilities.
 
-## Windows
+If your team already uses one, start there. Otherwise, the [agent install list in the README](../README.md#choose-where-to-install) links to official setup instructions. Install your chosen agent and sign in before continuing. Its account, subscription and organization permissions depend on the product you choose.
 
-The steps use PowerShell, which comes with Windows.
+Use the agent's local project mode for this walkthrough. If your team uses a remote workspace, ask them to help you prepare that workspace. The files, tools and skills must be available where the agent runs.
 
-1. **Open PowerShell.** Click Start, type `PowerShell`, press Enter. A blue or black window opens with a line that ends in `>`.
-2. **Install Node.js.** Go to [the Node.js website](https://nodejs.org), download the LTS installer (a `.msi` file) and run it. Click Next until it finishes. If it offers a checkbox to install necessary tools, tick it.
-3. **Install Python 3.** Go to [the Python downloads page](https://www.python.org/downloads/), download the latest Python 3 and run the installer. On its first screen, tick **Add python.exe to PATH** before you click Install Now.
-4. **Install Git for Windows.** Go to [the Git website](https://git-scm.com), download it and run the installer. The default answers are fine.
-5. **Close PowerShell and open it again.** The new tools are found only by a new window.
-6. **Check the tools.** Run `node --version`, `npm --version`, `python --version` and `git --version`. Each prints a version number. On Windows the Python command is often `python` and not `python3`. The scripts and the skills accept either, so use whichever works. Tell git who you are, once: `git config --global user.name "Your Name"` and `git config --global user.email "you@example.com"`.
-7. **Make your project folder.** Run `mkdir my-plan; cd my-plan; git init`. You will see `Initialized empty Git repository`. To use an existing folder, `cd` into it instead, and run `git init` there if it is new.
-8. **Install the skills.** Run the install line from the README. If PowerShell says that running scripts is disabled and names `npx.ps1`, run the same line with `npx.cmd` in place of `npx`. That avoids changing any security setting.
-9. **Restart your agent.**
+## Prepare your computer
 
-## Linux
+| Tool | What it does | Required version |
+| --- | --- | --- |
+| Node.js | Provides `npx`, which downloads and runs the skills installer. | 22.20 or later. Choose a supported long-term support (LTS) release for a new installation. |
+| Python | Runs the carrydown scripts that create and check planning files. | 3.9 or later. Choose a current Python 3 release for a new installation. |
+| Git | Downloads the skills and records changes to the plan. | Use a current release provided for your system. |
 
-1. **Open a terminal.** Use your desktop's terminal application.
-2. **Install the tools.** On Debian or Ubuntu run `sudo apt update` and then `sudo apt install nodejs npm python3 git`. On Fedora run `sudo dnf install nodejs npm python3 git`. If `node --version` then prints a number below 22.20, install Node.js from [the Node.js website](https://nodejs.org) instead.
-3. **Check them.** Run `node --version`, `npm --version`, `python3 --version` and `git --version`. Each prints a version number. Python must be 3.9 or higher.
-4. **Tell git who you are**, once: `git config --global user.name "Your Name"` and `git config --global user.email "you@example.com"`.
-5. **Make your project folder.** Run `mkdir my-plan`, `cd my-plan`, `git init`. Or `cd` into an existing folder and run `git init` there if it is new.
-6. **Install the skills.** Run the install line from the README.
-7. **Restart your agent.**
+Pick your system: [macOS](#macos), [Windows](#windows) or [Linux](#linux). These tools are free. Your coding agent may require a separate subscription.
+
+A **terminal** is a window where you enter commands. Copy only the text inside each command block, paste it into the terminal and press Enter. For a block with several lines, run one line at a time. Messages such as `command not found` mean a tool is missing or the terminal cannot find it; [installation help](#when-something-does-not-work) explains what to do.
+
+### macOS
+
+1. **Open Terminal.** Press Command and Space, type `Terminal`, then press Return.
+2. **Check for Node.js.** Run:
+
+   ```bash
+   node --version
+   ```
+
+   A result such as `v24.0.0` is a version number. Version 22.20 or later meets the requirement. If the command is missing or the version is too old, open the [Node.js download page](https://nodejs.org/en/download). Choose an LTS release and the macOS Installer (`.pkg`). Open the downloaded file and follow its installer. Close Terminal and reopen it, then run the check again.
+3. **Check for Python.** Run:
+
+   ```bash
+   python3 --version
+   ```
+
+   Look for `Python 3.9` or later; `3.10`, `3.11` and later versions also qualify. If it is missing or too old, install a current Python 3 release from the [Python macOS downloads](https://www.python.org/downloads/macos/). Open the downloaded `.pkg` and follow its installer. If macOS offers command line developer tools when you run the check, you can install those, then check the Python version again.
+4. **Check for Git.** Run:
+
+   ```bash
+   git --version
+   ```
+
+   A result beginning with `git version` means Git is available. If macOS offers command line developer tools, click Install and wait for them to finish. If Git is still missing, run:
+
+   ```bash
+   xcode-select --install
+   ```
+
+   Follow the installation window, then run the Git check again. See [Git's macOS instructions](https://git-scm.com/install/mac) if the installation does not complete.
+
+Close and reopen your coding agent after installing software so it can find the new tools. Continue to [open your project folder](#open-your-project-folder).
+
+### Windows
+
+1. **Open PowerShell.** Click Start, type `PowerShell`, then open Windows PowerShell or PowerShell. You will enter the commands below in that window.
+2. **Check for Node.js.** Run:
+
+   ```powershell
+   node --version
+   ```
+
+   Look for version 22.20 or later, such as `v24.0.0`. If it is missing or too old, open the [Node.js download page](https://nodejs.org/en/download). Choose an LTS release and the Windows Installer (`.msi`). Open the download and follow its installer. Close PowerShell and reopen it, then check again.
+3. **Check for Python.** Run:
+
+   ```powershell
+   python --version
+   ```
+
+   Look for `Python 3.9` or later. If Python is missing, opens a store page or reports an older version, install the Python install manager from the [Python Windows downloads](https://www.python.org/downloads/windows/). Then close and reopen PowerShell and run the check again. The manager can install a current Python release on first use. If you already have a working Python 3.9 or later, keep using it. [Python's Windows guide](https://docs.python.org/3/using/windows.html) covers installation and command problems.
+4. **Check for Git.** Run:
+
+   ```powershell
+   git --version
+   ```
+
+   A result beginning with `git version` means Git is available. If the command is not recognized, download and run the installer from [Git for Windows](https://git-scm.com/install/windows). The default choices are suitable for this walkthrough. Close PowerShell and reopen it, then check again.
+
+Close and reopen your coding agent after installing software so it can find the new tools. Continue to [open your project folder](#open-your-project-folder).
+
+### Linux
+
+1. **Open Terminal** from your application menu.
+2. **Check the tools.** Run each command separately:
+
+   ```bash
+   node --version
+   python3 --version
+   git --version
+   ```
+
+   You need Node.js 22.20 or later, Python 3.9 or later, and a result beginning with `git version`. Skip installation for any tool that already meets the requirement.
+3. **Install missing Python or Git.** On Debian or Ubuntu, run:
+
+   ```bash
+   sudo apt update
+   sudo apt install python3 git
+   ```
+
+   On Fedora, use this instead:
+
+   ```bash
+   sudo dnf install python3 git
+   ```
+
+   `sudo` asks for permission to install system software. Type your computer password when prompted; the terminal may show no characters as you type. On other distributions, follow [Python's Unix guide](https://docs.python.org/3/using/unix.html) and [Git's Linux instructions](https://git-scm.com/install/linux).
+4. **Install missing or older Node.js.** Open the [Node.js download page](https://nodejs.org/en/download), select Linux and an LTS release, and follow the instructions for your installation method. Distribution packages can be older than carrydown's requirement. Check the result with `node --version`; if you need help choosing a method, ask your system administrator for Node.js 22.20 or later with `npx` available.
+
+Close and reopen your terminal and coding agent after installing software, then run the checks again. Continue below once all three tools are available.
+
+## Open your project folder
+
+The project folder holds the document you bring and the plan carrydown creates. It can be an existing software project or a new folder for planning.
+
+1. **Choose a folder.** To start fresh, use Finder on macOS, File Explorer on Windows or your Linux file manager to create a folder named `carrydown-plan` in Documents. If you already have a project, use that folder instead.
+2. **Open it in your coding agent.** Use the application's Open Folder or Open Project control. If your agent runs in a terminal, open a terminal in the folder and start the agent using its setup instructions.
+3. **Open a terminal in that folder.** If your application has a Terminal menu, open a new terminal there. Otherwise, open your system terminal, type `cd` followed by a space, then drag the project folder into the terminal. The terminal inserts its path; leave any automatic quoting in place and press Enter. `cd` changes the folder where commands run. If dragging is unavailable, copy the folder's full path from your file manager and paste it after `cd `, with quotation marks around the path.
+4. **Check the location.** On macOS or Linux, run:
+
+   ```bash
+   pwd
+   ```
+
+   On Windows PowerShell, run:
+
+   ```powershell
+   Get-Location
+   ```
+
+   The printed path should end with your project folder's name. If it points somewhere else, return to step 3 before installing.
+
+Run the remaining terminal commands from this folder. If your coding agent occupies the terminal, use a second terminal opened in the same folder for installation.
+
+## Install the two skills
+
+Copy this into the terminal, then press Enter:
+
+```bash
+npx skills add sct-will/carrydown
+```
+
+The installer downloads the skills into your project. An internet connection is needed. You do not need a GitHub token to install from this public repository.
+
+The choices can vary by installer version. Use these answers when they appear:
+
+| If the installer asks about | Choose |
+| --- | --- |
+| Downloading or running the `skills` package | Confirm to continue. |
+| Which skills to install | Both `carrydown-ground-truth` and `carrydown-plan-to-github`. |
+| Which agent to use | The coding agent you opened for this project. |
+| Installation scope | **Project**, so the skills are installed for this folder. |
+| Installation method | **Symlink**, the recommended default. It creates links to one copy of each skill. If your computer does not allow links, choose **Copy** instead. |
+| Confirming the installation | Review the selected skills, agent and project scope, then confirm. |
+
+Use the arrow keys to move through terminal menus. In a multiple-selection list, Space usually selects or clears a choice, and Enter continues. Follow the key hints shown by your installer.
+
+Wait until the installer reports completion and the terminal is ready for another command. You should see both skill names in its installation summary. Security scan results may also appear; [the security guide](security.md#what-skillssh-shows) explains them.
+
+If your agent is missing from the chooser, use its [complete installation command in the README](../README.md#choose-where-to-install). For a personal installation across projects, that list also provides commands with `--global`. You only need one installation scope.
+
+## Check the installation
+
+From the same project folder, run:
+
+```bash
+npx skills list
+```
+
+Look for both `carrydown-ground-truth` and `carrydown-plan-to-github`. Other skills may also appear. A personal installation uses this check instead:
+
+```bash
+npx skills list --global
+```
+
+The list confirms the installed files. To make the agent load them, close and reopen the application or end the current agent session and start a new one. Open the same project folder. If the agent still cannot use either skill, follow [the help below](#the-agent-does-not-see-the-skills).
+
+## Start your plan
+
+1. In the project folder, create a folder named `docs`, then a folder named `source` inside it. Use your file manager or ask the agent to create them.
+2. Copy your architecture or requirements document into `docs/source/`. Use a Word file ending in `.docx` or a Markdown file ending in `.md`. Export older Word files to `.docx` first. You can include more than one document.
+3. In the agent's chat, say:
+
+   > Set up a project plan from this document.
+
+   If there is more than one document, name the files you want it to use. You can ask the agent to list the files in `docs/source/` if you are unsure of their names.
+4. The agent checks the setup. It may ask to initialize Git for this folder. That creates a local history so changes can be tracked; it does not upload the project. You can approve it for this folder.
+5. The interview begins. Replies start with `carrydown: interview, step N of 6`, with a number in place of `N`. Answer in ordinary language. If you do not know a date, team size or other detail, say so; the agent can propose a starting point for you to review.
+
+After the interview, review the plan and specifications with your agent. The [README's questions table](../README.md#what-the-agent-asks-you) helps you prepare. The [plan owner guide](plan-owner-guide.md) explains what to review and how to hand the work to engineers.
+
+When the plan is ready, say "Put the plan on GitHub." The second skill helps you prepare the repository, permissions and token. You approve each publishing step after seeing a dry run.
 
 ## Manual install, without Node.js
 
-If you cannot or do not want to install Node.js, skip the installer.
+Use this route if you cannot install Node.js. You still need a coding agent, Python and Git to use carrydown for planning. Skip the `npx` commands in this guide.
 
-1. Open [the carrydown repository](https://github.com/sct-will/carrydown) in your browser.
-2. Click the green **Code** button, then **Download ZIP**.
-3. Unzip the file. Inside it is a folder called `skills` with two folders: `carrydown-ground-truth` and `carrydown-plan-to-github`.
-4. Copy those two folders into your agent's skills folder. The paths for each agent are in the table under [Install options](../README.md#install-options) in the README. Use the project folder column to install for one project, or the user folder column to install for yourself everywhere. Create the skills folder if it does not exist.
-5. Restart your agent.
-
-The skills are self-contained, so nothing else needs copying.
+1. Open [the carrydown repository](https://github.com/sct-will/carrydown) in your browser. Choose **Code**, then **Download ZIP**.
+2. Extract the downloaded archive. Open the extracted folder, then open `skills`. It contains `carrydown-ground-truth` and `carrydown-plan-to-github`.
+3. In the [README's installation section](../README.md#requirements-and-installation-options), expand **Install by copying folders, without Node.js**. Find your agent in the destination table and choose the project or home column. Create the destination folders if they do not exist. On Windows, your home folder is usually under `C:\Users\` followed by your account name.
+4. Copy both complete skill folders into that destination. Copy their contents together, including `SKILL.md`, `scripts`, `templates` and `references`. Copying only `SKILL.md` leaves the scripts out.
+5. If folders beginning with a dot are hidden, press Command, Shift and Period in macOS Finder. In Windows File Explorer, enable **Hidden items** in the View menu. On many Linux file managers, Control and H shows hidden files.
+6. Open each copied skill folder and confirm that `SKILL.md` and its supporting folders are inside. For example, a project installation using the shared skills folder has `.agents/skills/carrydown-ground-truth/SKILL.md` and `.agents/skills/carrydown-plan-to-github/SKILL.md`.
+7. Close and reopen your agent in the project folder. Continue at [start your plan](#start-your-plan). If the agent does not recognize the first skill, use the explicit start phrase in [the help below](#the-agent-does-not-see-the-skills).
 
 ## When something does not work
 
-- **`npx: command not found` or `npx` is not recognized.** Node.js is not installed, or your terminal was opened before the install. Close the terminal, open a new one and try again. See the [FAQ](faq.md#npx-command-not-found).
-- **`python3: command not found` on Windows.** Use `python`. If neither works, rerun the Python installer, choose Modify, and tick Add Python to environment variables.
-- **The agent does not see the skills.** Restart it. Check that the skill folders are in the agent's skills folder from the table under [Install options](../README.md#install-options) in the README.
-- **`fatal: not a git repository`.** Run `git init` in your project folder, or `cd` into the folder you made.
-- **You do not have permission to install software.** Ask your IT department for Node.js LTS, Python 3.9 or later and git.
+### The install command is missing or blocked
+
+**`npx: command not found` or `npx` is not recognized.** Install Node.js using the instructions for your system, then close and reopen the terminal and agent. Check:
+
+```bash
+node --version
+npx --version
+```
+
+Both should print version numbers. If Node.js works but `npx` does not, repair or reinstall Node.js with its package tools included.
+
+**PowerShell says `npx.ps1` cannot run because scripts are disabled.** Use this command instead:
+
+```powershell
+npx.cmd skills add sct-will/carrydown
+```
+
+For the installation check, run:
+
+```powershell
+npx.cmd skills list
+```
+
+This uses the Windows command launcher without changing your execution policy.
+
+**The installer cannot download the skills.** Check your internet connection. On a managed computer, ask your support team whether downloads from the Node package registry and GitHub are allowed. Copy the error message when asking for help.
+
+### Python or Git is missing
+
+**The agent cannot find Python.** On macOS or Linux, check:
+
+```bash
+python3 --version
+```
+
+On Windows, check:
+
+```powershell
+python --version
+```
+
+If you installed it recently, close and reopen the agent. If the check still fails, return to your system's preparation steps. Tell the agent which command worked so it can use that command for the scripts.
+
+**`git` is not recognized or not found.** Follow your system's Git installation steps, then reopen the terminal and agent.
+
+**The folder is not a Git repository.** This is different from Git being missing. Ask the agent to initialize Git in your project folder. Review the folder it names, then approve. You can draft a plan locally before connecting a GitHub repository.
+
+### The agent does not see the skills
+
+Check these in order:
+
+1. Open the same project folder where you installed the skills. A project installation is available in that folder.
+2. Run `npx skills list` there, or `npx skills list --global` for a personal installation. Both skill names should appear. For a manual installation, check the copied folders as described above.
+3. End the agent session and start a new one, or close and reopen the application. Enable Agent Skills in its settings if the agent requires that.
+4. In its chat, say:
+
+   > Use the carrydown-ground-truth skill. Set up a project plan from this document.
+
+5. If the skills are still missing, use the complete command for your agent in the [README install list](../README.md#choose-where-to-install) and repeat the check. If the installer reports a permission error creating a symlink, choose **Copy** or use the manual installation route.
+
+### You need help from your organization
+
+If you cannot install software, send your support team this request:
+
+> I need to run the carrydown planning skills in a local project folder. Please help me set up an approved coding agent with file and command access, Node.js 22.20 or later with npx, a current Python 3 release and Git. The installer needs access to the Node package registry and GitHub. I will need repository and project-board permissions later, when I publish the reviewed plan.
+
+### You are unsure what to answer
+
+Tell the agent what you know and what is undecided. You do not need a complete schedule to begin. Before it writes the plan, the agent reads back the assumptions for you to review. The [input guide](inputs.md) explains the questions.

@@ -6,19 +6,19 @@ Two skills you install, one skill is generated for your engineers. Say one sente
 
 ## npx: command not found
 
-`npx` comes with Node.js, which is not installed on this computer or is not on your path. Go to [the Node.js website](https://nodejs.org), download the version marked LTS (long-term support), run its installer, then close and reopen your terminal and your agent, and try again. You can also ask your agent: "Node.js seems to be missing. Tell me how to install it for this computer." If you cannot install Node.js, there is a path without it: copy the two folders in `skills/` of the repository into your agent's skills folder. [The README's Install options section](../README.md#install-options) lists the folders.
+`npx` comes with Node.js, which is not installed on this computer or is not on your path. Go to [the Node.js website](https://nodejs.org), download the version marked LTS (long-term support), run its installer, then close and reopen your terminal and your agent, and try again. You can also ask your agent: "Node.js seems to be missing. Tell me how to install it for this computer." If you cannot install Node.js, there is a path without it: copy the two folders in `skills/` of the repository into your agent's skills folder. [The README's requirements and installation options section](../README.md#requirements-and-installation-options) lists the folders.
 
 ## Do I need a terminal?
 
-Only for one command, the install line in the README's [Getting started](../README.md#getting-started). After that you talk to your agent. If you create a GitHub token, you can save it in a plain text file and give the agent the path, and the agent runs `github_token.py --from-file` for you, so there is no terminal prompt.
+You use a terminal to install the skills and check that they are available. The [Quick start](../README.md#quick-start) shows the commands, and the [setup guide](setup.md) explains where to enter them. After installation, you work in your agent's chat. If you create a GitHub token, save it in a plain text file outside the project and give the agent the path. It runs the token script for you, so you do not need to enter the token in a terminal prompt. Never paste the token into the chat.
 
 ## Which agents work?
 
-Any agent that reads Agent Skills. The installer supports more than seventy. [The README's Install options section](../README.md#install-options) lists six and links [the installer's full list](https://github.com/vercel-labs/skills/blob/main/docs/agents.md). The scripts also run by hand with Python.
+Any agent that reads Agent Skills. The installer supports more than seventy. [The README's requirements and installation options section](../README.md#requirements-and-installation-options) lists six and links [the installer's full list](https://github.com/vercel-labs/skills/blob/main/docs/agents.md). The scripts also run by hand with Python.
 
 ## What do I need installed?
 
-Node.js 22.20 or later, for the install command. Python 3.9 or later, for the scripts. Nothing else, not even for Word files. Your agent can check these and tell you.
+A coding agent that can read and edit project files and run commands, Node.js 22.20 or later for the installer, Python 3.9 or later for the scripts, and Git to download the skills and track changes. Word files need no extra Python packages. The [setup guide](setup.md#prepare-your-computer) walks you through the checks. A [manual installation](setup.md#manual-install-without-nodejs) lets you skip Node.js.
 
 ## Isn't this just prompts?
 
