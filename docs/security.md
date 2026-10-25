@@ -2,7 +2,7 @@
 
 ## The token
 
-The GitHub scripts need a token that can write issues and projects. A token is a password.
+The GitHub scripts require a personal access token with permission to write issues and projects.
 
 - Use a 7-day expiry. For a board owned by an organization, create a fine-grained token limited to the one repository, with Issues (read and write), Metadata (read) and the organization permission Projects (read and write). For a board on your own account, create a classic token with the scopes `repo` and `project`, because GitHub does not let fine-grained tokens use those boards. See [the token walkthrough](../skills/carrydown-plan-to-github/references/token-walkthrough.md) in the plan-to-github skill.
 - Store it with `python3 scripts/github_token.py`. The script reads it from a hidden prompt, a plain text file you name (`--from-file`), or standard input. It writes `~/.config/carrydown/github_token` in a folder with mode 700 and a file with mode 600.

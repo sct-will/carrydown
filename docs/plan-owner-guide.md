@@ -2,7 +2,7 @@
 
 Use this guide once the skills are installed and your agent is starting the interview. It takes you through answering the questions, reviewing the drafts, publishing to GitHub and updating the plan later.
 
-If you have not installed carrydown, follow [Install carrydown and start your first plan](setup.md) first. Once the interview begins, continue here. You do not need to read the optional reference pages to complete these steps.
+If you have not installed carrydown, follow [Install carrydown and start your first plan](setup.md) first. Once the interview begins, continue here. Reference pages provide optional background.
 
 Already have a draft? Skip to [reviewing the plan](#reviewing-the-plan). Ready to publish? Skip to [prepare for GitHub](#prepare-for-github).
 
@@ -35,7 +35,7 @@ Your source documents are required. Team size, allocation and target dates can b
 
 Allocation is the share of each person's working time available for this plan. The agent assumes 100 percent and asks you to confirm. For someone available three days in five, say 60 percent. Mention start dates, days off, breaks, work owned outside the team and any existing parent epic. An epic is the parent GitHub issue for the whole plan.
 
-If you do not know an engineering command or branch rule, say "decide later" and ask the engineering team. You can answer in ordinary language. The agent reads your answers back before writing the plan. Correct the summary, then approve it when it is right.
+Confirm engineering commands and branch rules with the engineering team, or mark them "decide later". The agent summarizes your answers before writing the plan. Review and correct the summary before approving it.
 
 If your document has no numbered sections, ask the agent to propose numbering in the source document. Review those changes before it renders the document for planning.
 
@@ -63,11 +63,11 @@ Questions worth asking:
 - Which milestone has the weakest exit gate?
 - Is each stated reason true of the dates? Pick one and check it against the schedule.
 
-Ask the agent to move things, then ask for the load table and the critical path again. Say that the plan is right only when it is. This is your most important step.
+After schedule changes, review the updated load table and critical path before approving the plan.
 
 ## Reviewing the specifications
 
-Before anything goes to GitHub, you review the generated specifications with the agent, for about an hour. There is no separate reviewer. Ask the agent to take you through them one at a time, and read each as the engineer who will build the item: could they start from this file alone? Begin with "Why this work item exists" and "Acceptance criteria". They are short. Ask the agent to show you the existing code a specification relies on, because a wrong assumption about that code is the mistake it is most likely to make. Ask for changes in plain words. The agent edits the files and runs the checker again.
+Review each generated specification with the agent before publishing. Check whether an engineer could start work from the file alone. Begin with "Why this work item exists" and "Acceptance criteria", then verify assumptions against any existing code the specification relies on. Request revisions as needed. The agent edits the files and runs the checker again.
 
 The checker compares every specification to the plan. It runs on your computer, and the agent can add it to continuous integration (CI, the automatic checks on every pull request). In CI it fails loudly: a red mark on any pull request that makes a specification disagree with the plan. Ask the agent to add the specification checker to CI.
 
@@ -85,11 +85,11 @@ When you are ready, tell the agent:
 
 > Put the plan on GitHub.
 
-The second skill checks the files and walks you through the publishing steps. Ask the agent for help with any prerequisite you do not recognize.
+The second skill checks the files and prerequisites before proceeding with publication.
 
 ## The token
 
-A token is a long password that lets the scripts create issues and a Project for you. The agent gives you the link. Open it yourself.
+Use a GitHub personal access token to authorize issue and project creation. Open the token creation link supplied by the agent.
 
 1. **Pick the kind.** If an organization owns the board, create a fine-grained token on [GitHub's new fine-grained token page](https://github.com/settings/personal-access-tokens/new) for the one repository, with Issues read and write, Metadata read, and the organization permission Projects read and write. Only if your own user account owns the board, use a classic token from [the pre-filled classic token page](https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown). It ticks `repo` and `project` for you.
 2. **Set the expiry to 7 days.** Click Generate token. Copy the token. GitHub shows it once.
@@ -161,7 +161,7 @@ If specifications or engineering conventions changed, ask the agent to refresh t
 - **A checker reports findings.** Ask the agent to explain each finding and fix the plan or specifications with you. Ask for a clean check before publishing.
 - **A publishing step is refused.** Ask the agent to explain the token or permission check. Confirm the repository, board owner and any single sign-on authorization. Do not paste a token into chat.
 - **A publishing run stops partway through.** Ask the agent to inspect what exists and show another dry run. A rerun matches existing issues and repairs missing links. Review the preview before approving it.
-- **You want to rebuild the draft.** Ask the agent to show what would change and preserve reviewed work before replacing files. You do not need to delete the planning folder to adjust a plan.
+- **You want to rebuild the draft.** Ask the agent to show the proposed changes and preserve reviewed work before replacing files.
 
 For installation problems, use the [setup guide's troubleshooting](setup.md#when-something-does-not-work). The [planning method](method.md) and [security guide](security.md) provide optional background.
 

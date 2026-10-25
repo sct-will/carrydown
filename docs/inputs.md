@@ -1,6 +1,6 @@
 # Inputs checklist
 
-This optional checklist helps you prepare for the planning interview. The ground-truth skill interviews you for these inputs. You can prepare them first, or answer as it asks. If you do not know an answer, use the default or say "decide later" and the agent will mark it.
+This optional checklist helps you prepare for the planning interview. The ground-truth skill interviews you for these inputs. You can prepare them first, or answer as it asks. Use defaults or mark undecided details as "decide later".
 
 ## Two inputs
 
@@ -54,7 +54,7 @@ Files can be `.docx` or `.md`. Give paths.
 | Ask yourself | Example | Default |
 | --- | --- | --- |
 | Target date or number of weeks? (optional) | 2027-04-23, or 11 weeks of work. | Ask. |
-| Breaks? ("none" is an answer) | A company offsite week, as a date range. | None. |
+| Breaks? | A company offsite week, as a date range. | None. |
 | Longest work unit? | Three weeks. | Three weeks. |
 | Integration check day and length? The plan sets the date of each checkpoint. | Fridays, 30 minutes. | Friday, 30 minutes. |
 

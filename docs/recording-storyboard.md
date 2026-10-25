@@ -14,8 +14,8 @@ A plan for a silent screen recording, sixty seconds long, that shows the sample 
 
 | # | Time | On screen | Caption |
 | --- | --- | --- | --- |
-| 1 | 0 to 6 s | The sample's architecture document open in the editor, scrolling slowly past numbered sections to section 3.5. | Every project has the document nobody can hold in their head. An agent can. |
-| 2 | 6 to 14 s | The agent chat. The plan owner types "Set up a project plan from this document." The reply starts with `carrydown: interview, step 1 of 6`. | You ask in plain words, and the agent interviews you in six short steps. |
+| 1 | 0 to 6 s | The sample's architecture document open in the editor, scrolling slowly past numbered sections to section 3.5. | Carry your architecture document into a plan, specifications and a GitHub board. |
+| 2 | 6 to 14 s | The agent chat. The plan owner types "Set up a project plan from this document." The reply starts with `carrydown: interview, step 1 of 6`. | The agent interviews you in six steps to prepare the plan. |
 | 3 | 14 to 20 s | A quick run of interview answers: two people, one of them at 60 percent, a target of 2027-04-23. Then the agent's summary and the plan owner's yes. | Your people, their time and your date. Nothing is written before you agree. |
 | 4 | 20 to 28 s | The plan owner types "Show me the load table and the critical path." The load table appears; a soft highlight rests on the row for the person at 60 percent, then on "No person is over 100 percent of allocated capacity in any work unit." | The plan fits the people you actually have. |
 | 5 | 28 to 34 s | The critical path block, `WI-01 -> WI-02 -> WI-04 -> WI-08 -> WI-11`, and the line saying it meets the target with 2 days to spare. | The critical path shows what would slip, before it does. |
@@ -27,8 +27,8 @@ A plan for a silent screen recording, sixty seconds long, that shows the sample 
 
 To post beside the recording, in this order:
 
-1. Every project has the document nobody can hold in their head. An agent can.
-2. You ask in plain words, and the agent interviews you in six short steps.
+1. Carry your architecture document into a plan, specifications and a GitHub board.
+2. The agent interviews you in six steps to prepare the plan.
 3. Your people, their time and your date. Nothing is written before you agree.
 4. The plan fits the people you actually have.
 5. The critical path shows what would slip, before it does.

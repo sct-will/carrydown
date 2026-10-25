@@ -1,6 +1,6 @@
 # Install carrydown and start your first plan
 
-Follow this page from computer setup through your first conversation with carrydown. You do not need to write code. Installation and troubleshooting stay on this page.
+Follow this page from computer setup through your first conversation with carrydown. It includes installation, verification and troubleshooting.
 
 **My computer is ready:** skip to [open your project folder](#open-your-project-folder).
 
@@ -10,7 +10,7 @@ Follow this page from computer setup through your first conversation with carryd
 
 ## Choose a coding agent
 
-A coding agent is an application that can read and edit files in a folder and run commands for you. You use its chat to ask carrydown to draft and check the plan. Choose an agent that supports Agent Skills and gives you those capabilities.
+Choose a coding agent that supports Agent Skills and can read and edit project files and run commands. Carrydown uses those capabilities to draft and check the plan.
 
 If your team already uses one, start there. Otherwise, choose one from this install list and follow its official setup instructions. Install it and sign in, then continue below. Its account, subscription and organization permissions are separate from carrydown.
 
@@ -35,7 +35,7 @@ The installer supports [more agents](https://github.com/vercel-labs/skills/blob/
 
 Pick your system: [macOS](#macos), [Windows](#windows) or [Linux](#linux). These tools are free. Your coding agent may require a separate subscription. For [manual installation without Node.js](#manual-install-without-nodejs), skip Node.js and prepare Python and Git before opening your project folder.
 
-A **terminal** is a window where you enter commands. Copy only the text inside each command block, paste it into the terminal and press Enter. For a block with several lines, run one line at a time. Messages such as `command not found` mean a tool is missing or the terminal cannot find it; [installation help](#when-something-does-not-work) explains what to do.
+Run the commands below in your terminal, one line at a time. For missing commands or installation errors, use [installation help](#when-something-does-not-work).
 
 ### macOS
 
@@ -46,7 +46,7 @@ A **terminal** is a window where you enter commands. Copy only the text inside e
    node --version
    ```
 
-   A result such as `v24.0.0` is a version number. Version 22.20 or later meets the requirement. If the command is missing or the version is too old, open the [Node.js download page](https://nodejs.org/en/download). Choose an LTS release and the macOS Installer (`.pkg`). Open the downloaded file and follow its installer. Close Terminal and reopen it, then run the check again.
+   Confirm Node.js is version 22.20 or later. If the command is missing or the version is too old, open the [Node.js download page](https://nodejs.org/en/download). Choose an LTS release and the macOS Installer (`.pkg`). Open the downloaded file and follow its installer. Close Terminal and reopen it, then run the check again.
 3. **Check for Python.** Run:
 
    ```bash
@@ -60,7 +60,7 @@ A **terminal** is a window where you enter commands. Copy only the text inside e
    git --version
    ```
 
-   A result beginning with `git version` means Git is available. If macOS offers command line developer tools, click Install and wait for them to finish. If Git is still missing, run:
+   If macOS offers command line developer tools, click Install and wait for them to finish. If Git is still missing, run:
 
    ```bash
    xcode-select --install
@@ -93,7 +93,7 @@ Close and reopen your coding agent after installing software so it can find the 
    git --version
    ```
 
-   A result beginning with `git version` means Git is available. If the command is not recognized, download and run the installer from [Git for Windows](https://git-scm.com/install/windows). The default choices are suitable for this walkthrough. Close PowerShell and reopen it, then check again.
+   If the command is not recognized, download and run the installer from [Git for Windows](https://git-scm.com/install/windows). The default choices are suitable for this walkthrough. Close PowerShell and reopen it, then check again.
 
 Close and reopen your coding agent after installing software so it can find the new tools. Continue to [open your project folder](#open-your-project-folder).
 
@@ -122,18 +122,18 @@ Close and reopen your coding agent after installing software so it can find the 
    sudo dnf install python3 git
    ```
 
-   `sudo` asks for permission to install system software. Type your computer password when prompted; the terminal may show no characters as you type. On other distributions, follow [Python's Unix guide](https://docs.python.org/3/using/unix.html) and [Git's Linux instructions](https://git-scm.com/install/linux).
+   These commands require administrator privileges. Password input may be hidden. On other distributions, follow [Python's Unix guide](https://docs.python.org/3/using/unix.html) and [Git's Linux instructions](https://git-scm.com/install/linux).
 4. **Install missing or older Node.js.** Open the [Node.js download page](https://nodejs.org/en/download), select Linux and an LTS release, and follow the instructions for your installation method. Distribution packages can be older than carrydown's requirement. Check the result with `node --version`; if you need help choosing a method, ask your system administrator for Node.js 22.20 or later with `npx` available.
 
 Close and reopen your terminal and coding agent after installing software, then run the checks again. Continue below once all three tools are available.
 
 ## Open your project folder
 
-The project folder holds the document you bring and the plan carrydown creates. It can be an existing software project or a new folder for planning.
+Use an existing software project or create a dedicated folder for the plan.
 
 1. **Choose a folder.** To start fresh, use Finder on macOS, File Explorer on Windows or your Linux file manager to create a folder named `carrydown-plan` in Documents. If you already have a project, use that folder instead.
 2. **Open it in your coding agent.** Use the application's Open Folder or Open Project control. If your agent runs in a terminal, open a terminal in the folder and start the agent using its setup instructions.
-3. **Open a terminal in that folder.** If your application has a Terminal menu, open a new terminal there. Otherwise, open your system terminal, type `cd` followed by a space, then drag the project folder into the terminal. The terminal inserts its path; leave any automatic quoting in place and press Enter. `cd` changes the folder where commands run. If dragging is unavailable, copy the folder's full path from your file manager and paste it after `cd `, with quotation marks around the path.
+3. **Open a terminal in that folder.** If your application has a Terminal menu, open a new terminal there. Otherwise, open your system terminal, type `cd` followed by a space, then drag the project folder into the terminal. Keep the inserted path and its quoting, then press Enter. If dragging is unavailable, copy the folder's full path from your file manager and paste it after `cd `, with quotation marks around the path.
 4. **Check the location.** On macOS or Linux, run:
 
    ```bash
@@ -152,13 +152,13 @@ Run the remaining terminal commands from this folder. If your coding agent occup
 
 ## Install the two skills
 
-Copy this into the terminal, then press Enter:
+Run this from your project folder:
 
 ```bash
 npx skills add sct-will/carrydown
 ```
 
-The installer downloads the skills into your project. An internet connection is needed. You do not need a GitHub token to install from this public repository.
+The installer downloads the skills into your project. Installation requires an internet connection but no GitHub token.
 
 The choices can vary by installer version. Use these answers when they appear:
 
@@ -201,9 +201,9 @@ The list confirms the installed files. To make the agent load them, close and re
 
    > Set up a project plan from this document.
 
-   If there is more than one document, name the files you want it to use. You can ask the agent to list the files in `docs/source/` if you are unsure of their names.
-4. The agent checks the setup. It may ask to initialize Git for this folder. That creates a local history so changes can be tracked; it does not upload the project. You can approve it for this folder.
-5. The interview begins. Replies start with `carrydown: interview, step N of 6`, with a number in place of `N`. Answer in ordinary language. If you do not know a date, team size or other detail, say so; the agent can propose a starting point for you to review.
+   For multiple documents, specify which files to use. The agent can list the files in `docs/source/`.
+4. The agent checks the setup and requests approval if Git needs to be initialized. Initialization is local and does not upload the project.
+5. The interview begins. Replies identify the current step as `carrydown: interview, step N of 6`. Dates, team size and other constraints can remain undecided; the agent proposes assumptions for review.
 
 **You are ready when the agent begins the interview.**
 
