@@ -4,7 +4,7 @@
 
 Give your coding agent the architecture document, or other context, and optionally the project constraints: the number of engineers who will work on the project and the target duration. It drafts the plan, writes one specification per work item, carries both into GitHub as an epic, a sub-epic per milestone, issues and a project board, and generates an agent skill every engineer's agent uses to read the right sections before it writes code. Two skills you install, one skill is generated for your engineers.
 
-[![CI](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
+[![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
 
 ## Getting started
 
