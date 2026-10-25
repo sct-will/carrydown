@@ -1,10 +1,12 @@
 # carrydown
 
-carrydown is an open source project for planning and engineering handoffs with artificial intelligence (AI) coding agents. Starting from your architecture document, your agent uses the carrydown skills to generate the project plan, specifications, GitHub epics and issues, project board, and a project-specific skill for your engineers' agents.
+carrydown is an open source project for planning and engineering handoffs with artificial intelligence (AI) coding agents. Your agent uses two carrydown skills to turn your architecture into a project plan, specifications, GitHub epics and issues, and a project board. The last step generates a project-specific skill for your engineers' coding agents.
 
 The name reflects the idea: carry the decisions in your architecture down into the plan, the GitHub work and the instructions your engineers’ coding agents use.
 
-The plan is built around your team's availability and target date. Scripts check the specifications against the plan. Each specification cites the architecture, requirements or engineering standards it follows. The engineers' skill directs their agents to those sections before starting work. You review and refine the artifacts with your agent and approve publication to GitHub.
+**That generated skill is the handoff.** An engineer installs it once, then says "Work on WI-03." The skill directs their coding agent to read the specification, the source sections it cites and the project conventions before planning the code.
+
+The plan is built around your team's availability and target date. Scripts check the specifications against the plan. Each specification cites the architecture, requirements or engineering standards it follows. You review and refine the artifacts with your agent and approve publication to GitHub.
 
 [![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
 
@@ -27,7 +29,7 @@ The plan is built around your team's availability and target date. Scripts check
 1. **Plan for your team.** Give your agent the ground truth, usually an architecture document, and any other relevant context. If you know the team size and target project duration, include them. The `carrydown-ground-truth` skill interviews you, then drafts a plan and one specification per work item around your constraints. Each engineer has a track, or lane of work. Each milestone ends with an integrated demonstration.
 2. **Review and approve.** Review the plan in `docs/spec/plan.yaml` and the specifications under `docs/spec/`. Edit them with your agent until they are right. You decide the owners, dates, scope and order.
 3. **Publish to GitHub.** Commit and push the approved plan and specifications first. Then say "Put the plan on GitHub." The `carrydown-plan-to-github` skill shows dry runs and asks for approval before creating the issues and board. It creates a parent epic for the plan, a sub-epic for each milestone, and an issue linking to each work item's specification. Finally, it generates the engineers' skill.
-4. **Work from the specification.** Each engineer installs the generated skill once, then names a work item: "Work on WI-03." Their agent reads the specification and the sections it cites, then plans the code. The generated skill is named after the project.
+4. **Work from the specification.** Each engineer installs the generated skill once, then names a work item: "Work on WI-03." The skill directs their agent to read the specification, its cited source sections and the project conventions before planning the code. The generated skill is named after the project.
 
 <br />
 
