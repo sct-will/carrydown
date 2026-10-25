@@ -1,6 +1,6 @@
 ---
 name: carrydown-ground-truth
-description: Turns a ground-truth document (architecture, requirements, governance rules, .docx or .md) into a reviewed plan.yaml and one spec per work item in docs/spec/. Use for "Set up a project plan from this document" or "write the specs".
+description: Turns ground truth and project constraints into a plan and specifications, then runs a second-pass agent review and repairs accepted findings. Use for "Set up a project plan from this document", "write the specs" or reviewing a local plan.
 license: Apache-2.0
 compatibility: Needs Python 3.9 or later and git. Reads Word files with the standard library, so nothing else is installed.
 metadata:
@@ -12,13 +12,15 @@ metadata:
 
 Start phrase: "Set up a project plan from this document." (or "write the specs").
 
+For a second-pass review of an existing local plan, locate its canonical files and confirmed constraints, then run steps 6 and 7. Do not repeat the creation steps. For an already published plan, use the publishing skill's review and repair path.
+
 Run by: plan owner.
 
 In this skill, the user is the plan owner.
 
 ## What this skill does
 
-A ground truth is the document a project must obey: an architecture document, requirements, a business analyst note, governance rules, a development standard. This skill interviews the user, renders the documents to Markdown with stable section anchors, scaffolds `docs/spec/`, drafts the plan with the user, writes one specification per work item to a fixed template and runs the checker. The next skill, `carrydown-plan-to-github`, puts the plan on GitHub and generates the skill each engineer installs.
+A ground truth is the document a project must obey: an architecture document, requirements, a business analyst note, governance rules, a development standard. This skill interviews the user, renders the documents to Markdown with stable section anchors, scaffolds `docs/spec/`, drafts the plan with the user, writes one specification per work item to a fixed template and runs the checker. A separate second pass challenges the finished set and records accepted repairs before final approval. The next skill, `carrydown-plan-to-github`, puts the plan on GitHub and generates the skill each engineer installs.
 
 ## Rules that never bend
 
@@ -75,7 +77,7 @@ Read `references/planning.md` and follow its steps, stopping for a decision at e
 
 ### 5. Write milestones and specifications
 
-Read `references/writing-specs.md` and `references/milestone-and-demo.md`. Fill the TODO lines in each `milestone.md` and each stub. Write the specifications in batches of two or three related items, with `references/spec-writer-brief.md` as the brief for each batch. Run the checker after each batch. Review every file yourself afterward. The user reviews them with you in step 7.
+Read `references/writing-specs.md` and `references/milestone-and-demo.md`. Fill the TODO lines in each `milestone.md` and each stub. Write the specifications in batches of two or three related items, with `references/spec-writer-brief.md` as the brief for each batch. Run the checker after each batch. Review every file yourself afterward. The user reviews the finished files with you in step 8.
 
 When a specification finds a conflict inside the ground truth, the ground truth wins (an earlier numbered section wins over a note). Say so under "Watch out for", and list it for the next version of the document.
 
@@ -87,10 +89,14 @@ python3 <skill>/scripts/check_specs.py --root .
 
 Fix every finding. `references/checker.md` explains each check and how to add the checker to continuous integration. Offer that to the user. Re-run `scaffold_spec.py --refresh-headers --apply` after any change to dates, owners or dependencies.
 
-### 7. Review and hand off
+### 7. Second-pass agent review
 
-Run the review prompts from `references/review-prompts.md` once more on the finished set. Show the user the index, the load table and the checker result. Then the user, the plan owner, reviews the plan and the specifications with you before anything goes to GitHub. Go through the files one by one and read each as the engineer who will build the item: could they start from this file alone? Where a file assumes something about the existing code, show the user that code. Make the edits the user asks for, run the checker again, and ask for approval. Then suggest the next skill: `carrydown-plan-to-github`.
+After the finished set passes step 6, load `templates/plan-review-prompt.md` and run its separate review and accepted-repair procedure. Load `templates/plan-review-report.md` when writing the report. This pass is automatic for newly completed plans and can be requested for an existing local plan. The user decides changes to owners, dates, scope and order. Keep this pass local; it needs no GitHub access.
+
+### 8. Review and hand off
+
+Show the user the index, review tables, updated load table and checker result. Review the files with them as the engineer who will build each item. Record unresolved decisions and accepted risks, verify accepted repairs and ask for final plan approval. Then suggest `carrydown-plan-to-github`.
 
 ## What good looks like
 
-Every item has a file a coding agent can start from without opening the original document. Every acceptance criterion can be proven by a named test or a recorded check. Every milestone has an exit gate, acceptance criteria written before the work starts, and a rationale anyone can argue with. The checker reports 0 findings, and the user has read the plan.
+Every item has a file a coding agent can start from without opening the original document. Every acceptance criterion can be proven by a named test or a recorded check. Every milestone has an exit gate, acceptance criteria written before the work starts, and a rationale anyone can argue with. The checker reports 0 findings. The second-pass report records source coverage, findings, owner decisions and repair evidence, and the user has read the plan.

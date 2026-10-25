@@ -199,6 +199,7 @@ class H(BaseHTTPRequestHandler):
             b = self.body()
             iss = S.add_issue(b["title"], b.get("body"), b.get("labels") or [], issue_type=b.get("type"),
                               repository="/".join(p.split("/")[2:4]))
+            iss["assignees"] = [{"login": name} for name in b.get("assignees", [])]
             return self.send(201, iss)
         m = re.fullmatch(base + r"/issues/(\d+)", p)
         if m:
@@ -206,16 +207,33 @@ class H(BaseHTTPRequestHandler):
                 return self.send(404, {"message": "Not Found"})
             iss = S.issues[int(m.group(1)) - 1]
             if method == "PATCH":
-                iss.update(self.body())
+                change = self.body()
+                if "labels" in change:
+                    change["labels"] = [{"name": name} for name in change["labels"]]
+                if "assignees" in change:
+                    change["assignees"] = [{"login": name} for name in change["assignees"]]
+                iss.update(change)
             return self.send(200, iss)
+        m = re.fullmatch(base + r"/issues/(\d+)/parent", p)
+        if m and method == "GET":
+            child = int(m.group(1))
+            parent = next((number for number, children in S.subs.items() if child in children), None)
+            return self.send(200, S.issues[parent - 1]) if parent else self.send(404, {"message": "Not Found"})
         m = re.fullmatch(base + r"/issues/(\d+)/sub_issues", p)
         if m:
             n = int(m.group(1))
             lst = S.subs.setdefault(n, [])
             if method == "GET":
                 return self.page([S.issues[x - 1] for x in lst], q, p)
-            cid = self.body()["sub_issue_id"]
-            lst.append(next(i["number"] for i in S.issues if i["id"] == cid))
+            body = self.body()
+            cid = body["sub_issue_id"]
+            child = next(i["number"] for i in S.issues if i["id"] == cid)
+            if body.get("replace_parent"):
+                for children in S.subs.values():
+                    if child in children:
+                        children.remove(child)
+            if child not in lst:
+                lst.append(child)
             return self.send(201, S.issues[n - 1])
         m = re.fullmatch(base + r"/issues/(\d+)/comments", p)
         if m:

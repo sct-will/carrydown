@@ -740,6 +740,8 @@ def main():
     step("output to a reader that stops early, as | head does, ends without a traceback", [PY, "-c", pipe, PY, "-c", talk],
          contains=["reader stopped early"], absent=("Traceback", "Exception ignored", "BrokenPipeError"))
     step("dry run: github_project (offline)", [PY, "scripts/github_project.py", "--root", SAMPLE, "--offline"])
+    step("dry run: github_repair (offline)", [PY, "scripts/github_repair.py", "--root", SAMPLE, "--offline"],
+         contains=["offline: nothing read from GitHub; no files written"])
     step("dry run: generate_dev_skill", [PY, "scripts/generate_dev_skill.py", "--root", SAMPLE])
     step("dry run: github_token", [PY, "scripts/github_token.py", "--dry-run"])
     plan_text = (ROOT / SAMPLE / "docs/spec/plan.yaml").read_text(encoding="utf-8")
@@ -814,7 +816,7 @@ def main():
              contains=["engineers' skill: expense-approvals-dev"])
         step("installed copy of carrydown-plan-to-github refreshes only the references", [PY, str(gh / "scripts/generate_dev_skill.py"), "--root", str(ROOT / SAMPLE), "--only", "references"],
              contains=["would write: references/work-items.md", "would write: references/ground-truth-map.md"], absent=("Traceback", "SKILL.md"))
-        ships = ("generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_sync.py", "github_token.py")
+        ships = ("generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_repair.py", "github_sync.py", "github_token.py")
         extra = sorted(x.name for x in (gh / "scripts").glob("*.py") if x.name not in ships)
         results.append((not extra, "carrydown-plan-to-github ships only the scripts it runs"))
         print(("PASS " if not extra else "FAIL ") + "carrydown-plan-to-github ships only the scripts it runs" + (f" (remove {', '.join(extra)})" if extra else ""))
@@ -862,6 +864,7 @@ def main():
     ]
     for scenario, name in mock:
         step(name, [PY, "tests/mock/scenarios.py", scenario], contains=[f"{scenario}: all checks passed"], timeout=120)
+    step("isolated issue metadata repairs preserve history and recover safely", [PY, "tests/test_github_repair.py"], contains=["OK"], timeout=120)
     failed = [n for ok, n in results if not ok]
     print(f"\n{len(results) - len(failed)} of {len(results)} steps passed")
     return 1 if failed else 0

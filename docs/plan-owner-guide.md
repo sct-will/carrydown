@@ -6,7 +6,7 @@ If you have not installed carrydown, follow [Install carrydown and start your fi
 
 Already have a draft? Skip to [reviewing the plan](#reviewing-the-plan). Ready to publish? Skip to [prepare for GitHub](#prepare-for-github).
 
-[Answer the interview](#what-the-agent-asks-you) | [Review the plan](#reviewing-the-plan) | [Review the specifications](#reviewing-the-specifications) | [Prepare for GitHub](#prepare-for-github) | [Publish](#the-github-step) | [Hand off](#hand-the-work-to-engineers) | [Update the plan](#update-the-plan) | [Get help](#if-something-goes-wrong)
+[Answer the interview](#what-the-agent-asks-you) | [Review the plan](#reviewing-the-plan) | [Second-pass review](#the-second-pass-agent-review) | [Review the specifications](#reviewing-the-specifications) | [Prepare for GitHub](#prepare-for-github) | [Publish](#the-github-step) | [Hand off](#hand-the-work-to-engineers) | [Update the plan](#update-the-plan) | [Get help](#if-something-goes-wrong)
 
 ## Who runs what
 
@@ -64,6 +64,16 @@ Questions worth asking:
 - Is each stated reason true of the dates? Pick one and check it against the schedule.
 
 After schedule changes, review the updated load table and critical path before approving the plan.
+
+## The second-pass agent review
+
+After the finished plan and specifications pass the ordinary checker, the agent makes a separate adversarial review. It returns to the source material and confirmed constraints, then challenges coverage, dependencies, people, allocation, tracks, milestone composition and timing. It also considers improvements and their tradeoffs. This is a distinct pass, even when a fresh agent context is unavailable.
+
+Read `docs/spec/plan-review.md`, or the same file in your configured specification directory. Its coverage table shows which requirements and review areas were assessed. Its findings table gives evidence, reasoning, likelihood, impact, confidence and a proposed change. The decision table records what you accept, reject or defer and how accepted repairs were verified.
+
+You decide changes to owners, dates, scope and order. The agent applies the repairs you accept, updates affected specifications and milestone content, refreshes generated headers and reruns the checker and schedule report. Review the repaired plan and remaining risks before final approval. A clean checker or an agent review with no findings is not a guarantee that the plan is right.
+
+For an existing local plan, say "Review this plan with the second-pass prompt." For a published plan, say "Review and repair the published plan." The published-plan path saves the old plan, reviews actual GitHub artifacts and previews external repairs after the local changes are accepted. It preserves issue numbers and human edits. The agent records any update that remains publication pending.
 
 ## Reviewing the specifications
 
@@ -151,7 +161,7 @@ Edit the source document rather than its rendered copy. The checker flags citati
 
 > Show me a dry run to bring GitHub up to date with this approved plan. Include the existing issue bodies that need updating.
 
-Commit and push the revised planning files first. The synchronization scripts match existing issues, add new items and leave existing bodies unchanged unless an update is requested. Ask the agent to show which bodies it would rewrite. Approve the issue and board updates after their previews. The scripts do not delete issues or change issue titles; handle retired work or title changes on GitHub yourself.
+Commit and push the revised planning files first. The synchronization scripts match existing issues, add new items and leave existing bodies unchanged unless an update is requested. Ask the agent to show which bodies it would rewrite. Approve the issue and board updates after their previews. The ordinary sync does not delete issues or change issue titles. After a second-pass review, the separate `github_repair.py` command can preview and repair generated titles, the plan owner's assignment, track labels and parent links using the saved pre-repair plan. Human title changes and retired work require your decision. Read the [published-plan repair procedure](../skills/carrydown-plan-to-github/references/plan-review-repair.md) before applying it.
 
 If specifications or engineering conventions changed, ask the agent to refresh the engineers' skill too. Review, commit and push that change, then have the engineers update their installed copy.
 
