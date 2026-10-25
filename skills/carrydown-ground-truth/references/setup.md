@@ -10,7 +10,7 @@ If Python is missing or older than 3.9:
 
 - macOS. The command may open a window offering the command line developer tools. Tell the user what the window is. They can click Install and wait a few minutes, or install Python from [the Python downloads page](https://www.python.org/downloads/). Then they run the check again.
 - Windows. They install Python 3 from [the Python downloads page](https://www.python.org/downloads/) and tick "Add python.exe to PATH" on the first screen, then open a new terminal.
-- Linux. They install `python3` with the system package manager, for example `sudo apt install python3`.
+- Linux. They install `python3` with the system package manager, or ask their administrator to install it.
 
 ## Node.js
 

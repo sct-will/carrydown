@@ -1,17 +1,17 @@
 # The checker
 
-`check_specs.py`, in the scripts folder inside this skill, reads `plan.yaml` and the specification folder and reports faults. It never writes a file. Exit status is 0 when clean and 1 when there are findings.
+`check_specs.py`, in the scripts folder inside this skill, reads `plan.yaml` and the specification folder and reports faults. It never writes a file. Exit status is 0 when clean, 1 when there are findings, and 2 when the plan cannot be read or an argument is wrong. With `--json` the output is always one JSON object, also on an error.
 
 ```bash
 python3 <skill>/scripts/check_specs.py --root .            # everything
-python3 <skill>/scripts/check_specs.py --root . --item 3   # one item
+python3 <skill>/scripts/check_specs.py --root . --item 3   # one item, also --item WI-03
 python3 <skill>/scripts/check_specs.py --root . --report   # schedule, load table, critical path, planning review
 python3 <skill>/scripts/check_specs.py --root . --json     # machine readable
 ```
 
 ## Plan checks
 
-Required fields. Unique ids. The rationale fields and `theme`, when present, are text. Milestones numbered 1 to N in order, with ordered dates and a demonstration inside the work unit. Breaks that do not overlap a work unit. Each item has a known track, a known owner on the same track, a completion date inside its work unit on a weekday that is not a day off, a checkpoint that exists and is on or after the completion date. Dependencies refer to known items and finish no later than the item. No dependency cycle. If `unblocks` is written, it matches the inverse of `depends`.
+Required fields. Values of the right type: a value that has the wrong shape, such as a list where text belongs, stops the checker with one line. Unique ids. The rationale fields and `theme`, when present, are text. Milestones numbered 1 to N in order, with ordered dates and a demonstration inside the work unit. Breaks that do not overlap a work unit. Each item has a known track, a known owner on the same track, a completion date inside its work unit on a weekday that is not a day off, a checkpoint that exists and is on or after the completion date. Dependencies refer to known items and finish no later than the item. No dependency cycle. If `unblocks` is written, it matches the inverse of `depends`.
 
 ## Planning review
 

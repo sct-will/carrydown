@@ -41,17 +41,13 @@ Written by the scaffold script from `plan.yaml`. Do not edit it by hand. After a
 
 Technical items 90 to 260 lines. Run, pilot and documentation items 80 to 160 lines. The checker allows the range in `limits.spec_lines` of `plan.yaml`.
 
-## Parallel writing
-
-If you can start subagents:
+## Writing in batches
 
 1. Make sure `plan.yaml` is approved and the stubs exist.
-2. Split the items into batches of two or three. Give related items to one subagent. Keep each subagent's files separate.
-3. Fill in `spec-writer-brief.md` once: the project folder, the ground truth path, the layout of code the project will have, one paragraph per item. Give every subagent the same brief and its item ids.
-4. Tell each subagent to edit only its stubs, to leave the title and header table alone, and to run `check_specs.py --item N` until clean.
-5. When they finish, read every file yourself. Check contract excerpts against the ground truth. Check that dependency items agree on names and shapes. Run the whole checker.
-
-If you cannot start subagents, do the same work sequentially, item by item, and run the checker after each.
+2. Split the items into batches of two or three. Keep related items in one batch.
+3. Fill in `spec-writer-brief.md` once: the project folder, the ground truth path, the layout of code the project will have, one paragraph per item. Use the same brief for every batch.
+4. In each batch, edit only that batch's stubs. Leave the title and header table alone. Run `check_specs.py --item N` for each item until it is clean.
+5. When every batch is done, read every file again. Check contract excerpts against the ground truth. Check that dependency items agree on names and shapes. Run the whole checker.
 
 ## Conflicts inside the ground truth
 

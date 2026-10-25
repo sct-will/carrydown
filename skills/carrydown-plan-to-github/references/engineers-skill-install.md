@@ -6,7 +6,7 @@ Each engineer installs the skill once, in the agent they use. Then they start a 
 
 ## With the skills command line tool
 
-The tool needs Node.js 22.20 or later. Run one line from the project root. Add `-g` to install for your user account instead of the project, and keep the `-a` value: without it, `-g` writes into the folder of every agent the tool supports. The tool copies the folder, so run it again after the skill changes.
+The tool needs Node.js 22.20 or later. Each engineer runs one line in their own terminal, from the project root. The agent prints the line and does not run it. Add `-g` to install for your user account instead of the project, and keep the `-a` value: without it, `-g` writes into the folder of every agent the tool supports. The tool copies the folder, so run it again after the skill changes.
 
 ```bash
 npx skills add <repository tree url of the skill folder> -a claude-code
@@ -38,10 +38,10 @@ Where each agent looks for skills:
 | Agent | Project folder | User folder |
 | --- | --- | --- |
 | Claude Code | `.claude/skills/` | `~/.claude/skills/` |
-| GitHub Copilot | `.agents/skills/` | `~/.copilot/skills/` |
-| Cursor | `.agents/skills/` | `~/.cursor/skills/` |
+| GitHub Copilot | `.agents/skills/` | `~/.agents/skills/` |
+| Cursor | `.agents/skills/` | `~/.agents/skills/` |
 | Codex | `.agents/skills/` | `~/.agents/skills/` |
-| Gemini CLI | `.agents/skills/` | `~/.gemini/skills/` |
+| Gemini CLI | `.agents/skills/` | `~/.agents/skills/` |
 | IBM Bob | `.bob/skills/` | `~/.bob/skills/` |
 | Any other agent that reads Agent Skills | its project skills folder | its user skills folder |
 

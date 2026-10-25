@@ -29,7 +29,7 @@ Copy the token when GitHub shows it. It is shown once. When the plan and the boa
 
 Never paste the token into the agent chat. Pick one of two paths.
 
-Preferred path, no terminal prompt. Paste the token into a plain text file outside your project, for example `Downloads/token.txt`. In TextEdit choose Format, then Make Plain Text, before you save. Tell the agent the file path, not the token. The agent never opens the file. It passes the path to the script:
+Preferred path, no terminal prompt. Paste the token into a plain text file in a private folder outside your project. Do not use Downloads or a folder that syncs to the cloud. In TextEdit choose Format, then Make Plain Text, before you save. Tell the agent the file path, not the token. The agent passes the path to the script and never opens, reads, copies or moves the file:
 
 ```bash
 python3 <skill>/scripts/github_token.py --from-file <path> --repo owner/name
@@ -45,10 +45,10 @@ python3 <skill>/scripts/github_token.py
 
 It stores and checks the token the same way. The script never prints the token.
 
-Non-interactive form for automation (the token comes from another secret store, not from a file in the project):
+Non-interactive form for automation. You run it yourself, not the agent. Your secret store's own command writes the token to standard input. Do not put the token in a shell variable, a command line or a file in the project:
 
 ```bash
-printf '%s' "$TOKEN_FROM_SECRET_STORE" | python3 <skill>/scripts/github_token.py --stdin
+<your secret store's read command> | python3 <skill>/scripts/github_token.py --stdin
 ```
 
 ## Check it
@@ -76,7 +76,7 @@ If you do not see the organization, your administrator may need to allow tokens.
 
 ## Where the scripts look
 
-In this order: the `--token-file` option, the environment variable `CARRYDOWN_GITHUB_TOKEN`, then `~/.config/carrydown/github_token`.
+When you pass `--token-file`, only that file. Otherwise the environment variable `CARRYDOWN_GITHUB_TOKEN`, then `~/.config/carrydown/github_token`. A token file that other users can read is refused, with the fix `chmod 600 <path>`. Text that is not a token, or a token with a second line, is refused before anything is sent.
 
 ## Never
 

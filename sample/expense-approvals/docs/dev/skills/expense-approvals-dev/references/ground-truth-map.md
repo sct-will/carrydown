@@ -1,6 +1,6 @@
 # Ground truth map
 
-Headings of `docs/ground-truth/architecture.md` with GitHub anchors and line numbers, then the sections each work item cites. Regenerating the rendering may move line numbers. Run `generate_dev_skill.py` again then.
+Headings of `docs/ground-truth/architecture.md` with GitHub anchors and line numbers, then the sections each work item cites. Regenerating the rendering may move line numbers. Then ask the plan owner to run `generate_dev_skill.py --only references` again.
 
 ## By heading
 

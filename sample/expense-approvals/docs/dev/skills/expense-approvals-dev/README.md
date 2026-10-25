@@ -23,7 +23,7 @@ Choose one option. Install it once per computer or once per project. Then start 
 
 ### Option 1, the skills command line tool
 
-Run one line for your agent. Add `-g` to install for your user account instead of this project, and keep the `-a` value: without it, `-g` writes into the folder of every agent the tool supports. The tool copies the folder, so run the line again after the skill changes.
+Run one line for your agent, in your own terminal. An agent that reads this file prints the line for you and does not run it. Add `-g` to install for your user account instead of this project, and keep the `-a` value: without it, `-g` writes into the folder of every agent the tool supports. The tool copies the folder, so run the line again after the skill changes.
 
 ```bash
 npx skills add https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev -a claude-code
@@ -55,10 +55,10 @@ mklink /D <skills folder>\expense-approvals-dev %CD%\docs\dev\skills\expense-app
 | Agent | Project folder | User folder |
 | --- | --- | --- |
 | Claude Code | `.claude/skills/` | `~/.claude/skills/` |
-| GitHub Copilot | `.agents/skills/` | `~/.copilot/skills/` |
-| Cursor | `.agents/skills/` | `~/.cursor/skills/` |
+| GitHub Copilot | `.agents/skills/` | `~/.agents/skills/` |
+| Cursor | `.agents/skills/` | `~/.agents/skills/` |
 | Codex | `.agents/skills/` | `~/.agents/skills/` |
-| Gemini CLI | `.agents/skills/` | `~/.gemini/skills/` |
+| Gemini CLI | `.agents/skills/` | `~/.agents/skills/` |
 | IBM Bob | `.bob/skills/` | `~/.bob/skills/` |
 | Any other agent that reads Agent Skills | its skills folder | its user skills folder |
 

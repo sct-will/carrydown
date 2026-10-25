@@ -1,6 +1,6 @@
 # Brief for specification writers
 
-Copy this brief, fill in the fields in angle brackets once, and give the same text to every subagent along with its item ids. Remove this paragraph.
+Copy this brief, fill in the fields in angle brackets once, and use the same text for every batch of items along with its item ids. Remove this paragraph.
 
 ---
 

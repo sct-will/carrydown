@@ -44,7 +44,7 @@ The scripts and templates folders sit next to this SKILL.md. In the commands bel
 
 Run `python3 <skill>/scripts/check_specs.py --root .`. It must report 0 findings. If it does not, stop and go back to `carrydown-ground-truth`. The sync script runs the checker again before it does anything.
 
-Every issue body links its specification at `https://github.com/<owner>/<repo>/blob/<branch>/docs/spec/...`, where `<branch>` is `project.branch`. Those links work only when the specification folder is committed and pushed to that branch. Check it before any `--apply`:
+Every issue body links its specification at `https://github.com/<owner>/<repo>/blob/<branch>/docs/spec/...`, where `<branch>` is `project.branch`. Those links work only when the specification folder is committed and pushed to that branch. Check it before any `--apply`. These commands only read. `git fetch` contacts the remote, so ask the user before you run it:
 
 ```bash
 git status --porcelain docs/spec
@@ -52,13 +52,13 @@ git fetch origin <branch>
 git log origin/<branch>..HEAD --oneline -- docs/spec
 ```
 
-The first and the last command must print nothing. If the first prints a file, the plan or a specification is not committed. If the last prints a commit, it is not pushed. Ask the user to commit and push the plan and the specifications, and say they can tell you to do the commit and push for them. Then check again.
+The first and the last command must print nothing. If the first prints a file, the plan or a specification is not committed. If the last prints a commit, it is not pushed. Ask the user to commit and push the plan and the specifications. Do not run `git commit` or `git push` yourself unless the user asks for that command in this chat. Then check again.
 
 Confirm with the user, in plain words: the repository (`owner/name`) and whether it is public, whether a parent Epic issue exists (its number) or may be created, the people's GitHub logins if they should be assigned, and which account owns the project board (the user's own GitHub account or the organization). Put the repository, Epic number and project title in `plan.yaml` under `project`.
 
 ### 2. Token
 
-Read `references/token-walkthrough.md` and relay it in your own words. For a board owned by an organization: a fine-grained token for the one repository. Only for a board owned by a user account: a classic token with `repo` and `project`. Expiry 7 days, revoked when the plan is on GitHub. The user saves the token in a plain text file outside the project and tells you the path. You never open that file. Run:
+Read `references/token-walkthrough.md` and relay it in your own words. For a board owned by an organization: a fine-grained token for the one repository. Only for a board owned by a user account: a classic token with `repo` and `project`. Expiry 7 days, revoked when the plan is on GitHub. The user saves the token in a plain text file in a private folder outside the project, and tells you the path. Pass the path to the script. Never open, read, copy or move that file. Run:
 
 ```bash
 python3 <skill>/scripts/github_token.py --from-file <path> --repo owner/name
@@ -78,6 +78,8 @@ Ask: "This will create 1 Epic, N sub-epics and N work item issues in owner/name.
 
 ### 4. Apply and verify
 
+Run `--apply` only after the user answered yes to that question for this run.
+
 ```bash
 python3 <skill>/scripts/github_sync.py --root . --repo owner/name --create-epic --apply
 python3 <skill>/scripts/github_sync.py --root . --repo owner/name --create-epic --verify
@@ -91,7 +93,7 @@ Add `--issue-type Task` if the organization uses issue types, `--update-bodies` 
 python3 <skill>/scripts/github_project.py --root . --repo owner/name            # dry run
 ```
 
-Show the fields and views it would create. Ask for a yes. Then run the same command with `--apply`, and again with `--verify`. `references/project-board.md` has the fields, how breaks are made and what the script does not set.
+Show the fields and views it would create. Ask: "This will create the board and its fields in the account that owns it. Shall I go ahead?" Run the same command with `--apply` only after a yes for this run. Then run it with `--verify`. `references/project-board.md` has the fields, how breaks are made and what the script does not set.
 
 ### 6. Tell the user what to click
 
@@ -110,13 +112,13 @@ python3 <skill>/scripts/generate_dev_skill.py --root .            # dry run
 python3 <skill>/scripts/generate_dev_skill.py --root . --apply    # write
 ```
 
-It writes `SKILL.md`, `README.md` and three references, skips files that exist unless you pass `--force`, and prints the length of the description. Go through `references/engineers-skill-review.md` with the user and add what only they know. Then print the install line for the engineers, from the generated README, for example:
+It writes `SKILL.md`, `README.md` and three references, skips files that exist unless you pass `--force`, and prints the length of the description. Go through `references/engineers-skill-review.md` with the user and add what only they know. Then print the install line for the engineers, from the generated README, for each engineer to run in their own terminal. Do not run it yourself. For example:
 
 ```bash
 npx skills add https://github.com/<owner>/<repo>/tree/<branch>/<dev_skill_path> -a <agent>
 ```
 
-The line works once the folder is on `project.branch` on GitHub, so ask the user to commit and push it. `references/engineers-skill-install.md` has every agent, the copy and link options and the team rollout. `references/engineers-skill-maintenance.md` says when to regenerate. The engineers review every change their agent makes.
+The line works once the folder is on `project.branch` on GitHub, so ask the user to commit and push it. Do not commit or push it yourself unless the user asks for that command in this chat. `references/engineers-skill-install.md` has every agent, the copy and link options and the team rollout. `references/engineers-skill-maintenance.md` says when to regenerate. The engineers review every change their agent makes.
 
 ## When something fails
 
