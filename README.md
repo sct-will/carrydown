@@ -2,11 +2,13 @@
 
 # carrydown
 
-Give your coding agent the architecture document, any supporting context and, if you have them, your constraints: how many engineers and how long. The agent drafts the plan. It weighs people, time and dependencies, groups the work into milestones that each end in a demonstration by the engineers, and gives each engineer a track to keep context switching down.
+Give your AI agent a technical architecture document and any other context you have. If you know how many engineers you have and the target project duration, tell it that too.
 
-Then it carries the plan into GitHub: an epic for the project, a sub-epic for each milestone, an issue for each work item linked to its specification, and a project board. Last, it generates a skill that every engineer's agent uses to read the item's specification and the sections of the architecture it cites before writing code.
+The agent drafts the project plan. It looks at people, time and dependencies. It groups related work so each milestone ends in one integrated demo by the engineers. It gives each engineer their own track, so nobody jumps between unrelated work.
 
-The architecture is settled before the first commit and travels with every engineer, into the editor they already use. Two skills you install, one skill is generated for your engineers.
+Then the agent puts the plan on GitHub. It creates a project board, an epic for the whole project, a sub-epic for each milestone and an issue for each work item. Each issue links to its own generated spec file. Last, it builds an agent skill for your engineers that helps each engineer finish their work item to spec. Their coding agents use it to read the spec and the right parts of the architecture before they write code.
+
+This agent-native approach keeps every engineer tied to the original architecture and ground truth, carried all the way down to their agentic editor. Two skills you install. One skill is generated for your engineers.
 
 [![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
 
