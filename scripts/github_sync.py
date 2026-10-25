@@ -402,8 +402,13 @@ def _run(argv=None):
     ap.add_argument("--issue-type", default="", help="GitHub issue type for work items, for example Task (organizations only)")
     ap.add_argument("--show-body", metavar="ID", help="print the issue body for one work item or sub-epic and exit (no network). Accepts WI-07, 7 or M2")
     a = ap.parse_args(argv)
+    if a.offline and (a.apply or a.verify):
+        L.die(f"--offline cannot be combined with {'--apply' if a.apply else '--verify'}: both need GitHub. "
+              "Leave out --offline to write or verify, or leave out the other flag for an offline dry run")
+    if a.apply and a.verify:
+        L.die("--apply and --verify are separate runs. Run --apply first, then --verify")
 
-    root = Path(a.root).resolve()
+    root = L.project_root(a.root)
     plan_path = L.find_plan(root, a.plan)
     if not plan_path.exists():
         L.die(f"no plan at {plan_path}")
@@ -425,13 +430,14 @@ def _run(argv=None):
         wanted = int(m.group(1)) if m else None
         it = L.item_by_id(plan).get(wanted)
         if not it:
-            L.die(f"no item with id {a.show_body}. Use the tag (for example {L.tag(plan, plan['items'][0]['id'])}) or the number")
+            example = f"for example {L.tag(plan, plan['items'][0]['id'])}" if plan["items"] else "the plan has no items yet"
+            L.die(f"no item with id {a.show_body}. Use the tag ({example}) or the number, or M and a milestone number")
         L.say(build_item_body(plan, root, it))
         return 0
     if not a.skip_check:
         rc = check_specs.main(["--root", str(root), "--plan", str(plan_path), "--quiet"])
         if rc != 0:
-            L.say("The checker found problems. Run check_specs.py to see them, fix them, or pass --skip-check.")
+            L.say("The checker found problems, so nothing was sent to GitHub. Run check_specs.py to see them and fix them, then run this again.")
             return 1
     owner, repo = L.repo_parts(plan, a.repo)
     plan["project"]["repo"] = f"{owner}/{repo}"

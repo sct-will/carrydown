@@ -15,10 +15,13 @@ import datetime as _dt
 import http.client
 import json
 import os
+import re
 import socket
+import stat
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -30,25 +33,69 @@ TOKEN_SCRIPT = Path(__file__).resolve().parent / "github_token.py"
 TOKENS_PAGE = "https://github.com/settings/tokens"
 
 
-def token_candidates(explicit=None):
-    out = []
-    if explicit:
-        out.append(("--token-file", Path(os.path.expanduser(explicit))))
-    out.append(("default file", Path(os.path.expanduser(DEFAULT_TOKEN_FILE))))
-    return out
+# A GitHub personal access token: classic (ghp_) or fine-grained (github_pat_). The same pattern
+# is used when a token is stored and when it is read, so nothing else is ever sent as a token.
+TOKEN_RE = re.compile(r"^(ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,255})$")
+TOKEN_SHAPE = "a GitHub personal access token (it starts with ghp_ or github_pat_)"
+
+
+def refuse(msg):
+    """Stop with one line on standard error and exit status 1. Never called with a token in msg."""
+    raise SystemExit(f"error: {msg}")
+
+
+def loose_mode(path):
+    """The mode of a file that others can read or write, such as 0o644, or None when it is private.
+    Only POSIX systems have these bits. On Windows the folder permissions protect the file."""
+    if os.name != "posix":
+        return None
+    mode = stat.S_IMODE(os.stat(path).st_mode)
+    return mode if mode & 0o077 else None
+
+
+def read_token_file(path, what):
+    """The token in path, checked. Refuses a file others can read, a file that is not UTF-8 text,
+    an empty file, and text that is not a token, without ever printing the file's contents."""
+    shown = str(path)
+    if not path.is_file():
+        refuse(f"{what} {shown} is not a file")
+    mode = loose_mode(path)
+    if mode is not None:
+        refuse(f"{what} {shown} can be read by other users (mode {mode:o}), so it was not used. Fix: chmod 600 {shown}")
+    try:
+        token = path.read_bytes().decode("utf-8-sig").strip()
+    except UnicodeDecodeError:
+        refuse(f"{what} {shown} is not plain UTF-8 text, so it was not used. Store the token again with python3 {TOKEN_SCRIPT}")
+    except OSError as e:
+        refuse(f"cannot read {what} {shown}: {e.strerror or e}")
+    if not token:
+        refuse(f"{what} {shown} is empty. Store the token again with python3 {TOKEN_SCRIPT}")
+    if not TOKEN_RE.match(token):
+        refuse(f"{what} {shown} does not hold {TOKEN_SHAPE}, or holds more than one line. Nothing was sent. "
+               f"Store the token again with python3 {TOKEN_SCRIPT}")
+    return token
 
 
 def read_token(explicit=None, required=True):
-    """Return the token string, or None. Never prints it."""
+    """Return the token string, or None. Never prints it.
+
+    An explicit --token-file is the only source when it is given, and a missing one is an error.
+    Otherwise CARRYDOWN_GITHUB_TOKEN, then the stored file. Every token is checked against TOKEN_RE
+    before it is used, so a stray line or a quoted value is never sent."""
+    if explicit:
+        p = Path(os.path.expanduser(explicit))
+        if not p.exists():
+            refuse(f"token file not found: {explicit}. Check the path, or leave out --token-file to use the stored token")
+        return read_token_file(p, "the token file")
     env = os.environ.get("CARRYDOWN_GITHUB_TOKEN")
-    if env and not explicit:
-        return env.strip()
-    for _, p in token_candidates(explicit):
-        try:
-            if p.exists():
-                return p.read_text(encoding="utf-8-sig").strip()
-        except OSError:
-            continue
+    if env is not None and env.strip():
+        token = env.strip()
+        if not TOKEN_RE.match(token):
+            refuse(f"CARRYDOWN_GITHUB_TOKEN does not hold {TOKEN_SHAPE}, or holds more than one line. Nothing was sent")
+        return token
+    p = Path(os.path.expanduser(DEFAULT_TOKEN_FILE))
+    if p.exists():
+        return read_token_file(p, "the stored token file")
     if required:
         raise SystemExit(
             f"No GitHub token found. Run: python3 {TOKEN_SCRIPT}\n"
@@ -131,6 +178,28 @@ def classify(code, raw_message, headers, method, path):
     return GitHubError(msg, code, "http")
 
 
+class _SameHostRedirect(urllib.request.HTTPRedirectHandler):
+    """Follow a redirect only to the host the request went to. A redirect to any other host is
+    refused, so the Authorization header never reaches it."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        old = urllib.parse.urlsplit(req.full_url)
+        new = urllib.parse.urlsplit(urllib.parse.urljoin(req.full_url, newurl))
+        if (new.scheme, new.netloc.lower()) != (old.scheme, old.netloc.lower()):
+            raise GitHubError(f"{req.get_method()} {old.path} -> {code}: GitHub redirected to another host ({new.netloc}). "
+                              "The redirect was not followed, so the token was not sent there", code, "redirect",
+                              "check the repository name and the owner, then rerun")
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
+_OPENER = urllib.request.build_opener(_SameHostRedirect)
+
+
+def _urlopen(req, timeout):
+    """Every request goes through here: the opener that refuses redirects to another host."""
+    return _OPENER.open(req, timeout=timeout)
+
+
 class GitHub:
     """Minimal GitHub client. The token never leaves this object and never appears in messages."""
 
@@ -167,7 +236,7 @@ class GitHub:
                 time.sleep(wait)
             req = urllib.request.Request(url, method=method, data=body, headers=self._headers())
             try:
-                with urllib.request.urlopen(req, timeout=60) as r:
+                with _urlopen(req, timeout=60) as r:
                     self._last = time.time()
                     self.scopes = r.headers.get("X-OAuth-Scopes", self.scopes)
                     raw = r.read()

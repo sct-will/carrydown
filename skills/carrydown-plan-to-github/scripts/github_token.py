@@ -23,13 +23,17 @@ Usage
   python3 scripts/github_token.py --dry-run          print the steps, store nothing, ask nothing
   python3 scripts/github_token.py --check            check the token the GitHub scripts would use, and exit
   python3 scripts/github_token.py --check --repo owner/name   also check access to that repository
-  printf '%s' "$TOKEN" | python3 scripts/github_token.py --stdin   non-interactive store
-  python3 scripts/github_token.py --from-file ~/Downloads/token.txt   no prompt: read a plain text file
+  python3 scripts/github_token.py --stdin            non-interactive store, the token on standard input
+  python3 scripts/github_token.py --from-file PATH   no prompt: read a plain text file
 
 The --from-file form is for people who prefer not to use a terminal prompt. Paste the token into
-a plain text file with any editor, save it outside the project, and give the script the path.
-The script keeps that file. Delete it yourself once the token is stored, or pass --delete-after
-to have the script delete it after the token is stored and verified. It never prints the token.
+a plain text file with any editor, save it in a private folder outside the project, and give the
+script the path. The script keeps that file. Delete it yourself once the token is stored, or pass
+--delete-after to have the script delete it after the token is stored and verified. It never
+prints the token.
+
+The stored file is written with mode 600 and never through a symbolic link. A token file that
+other users can read is refused when it is read, with the fix: chmod 600 <path>.
 
 Before anything is sent to GitHub, the script checks that the text looks like a GitHub personal
 access token (it starts with ghp_ or github_pat_). If it does not, nothing is sent.
@@ -37,9 +41,9 @@ access token (it starts with ghp_ or github_pat_). If it does not, nothing is se
 import argparse
 import getpass
 import os
-import re
 import stat
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -49,7 +53,7 @@ import github_client as G  # noqa: E402
 CLASSIC_URL = "https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown"
 FINE_URL = "https://github.com/settings/personal-access-tokens/new"
 SSO_URL = "https://github.com/settings/tokens"
-TOKEN_RE = re.compile(r"^(ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,255})$")
+TOKEN_RE = G.TOKEN_RE
 NOT_A_TOKEN = "that is not a GitHub personal access token (it starts with ghp_ or github_pat_). Nothing was sent."
 NEW_TOKEN = (f"make a new token (fine-grained for an organization board: {FINE_URL}; "
              f"classic for a board on your own account: {CLASSIC_URL}) and store it again")
@@ -73,17 +77,52 @@ def short(path):
 
 
 def store(path, token):
+    """Write the token to path with mode 600 and return the path.
+
+    The file is written to a new private file next to it and then moved into place, so it is never
+    readable by others, not even for a moment. A symbolic link at the path is refused rather than
+    followed. Folders that do not exist are created with mode 700. An existing folder keeps its
+    mode, except carrydown's own default folder, which is always made private."""
     path = Path(os.path.expanduser(str(path)))
-    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.is_symlink():
+        L.die(f"{short(path)} is a symbolic link. The token is never written through a link. Remove the link or choose another --token-file")
+    if path.exists() and not path.is_file():
+        L.die(f"{short(path)} is not a file. Choose another --token-file")
+    created = []
+    d = path.parent
+    while not d.exists():
+        created.append(d)
+        d = d.parent
     try:
-        os.chmod(path.parent, 0o700)
-    except OSError:
-        pass
-    fd = os.open(str(path), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-    with os.fdopen(fd, "w") as f:
-        f.write(token.strip() + "\n")
-    os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)
+        for folder in reversed(created):
+            folder.mkdir(mode=0o700)
+            os.chmod(folder, 0o700)
+        if path.parent == Path(os.path.expanduser(G.DEFAULT_TOKEN_FILE)).parent:
+            os.chmod(path.parent, 0o700)
+        fd, tmp = tempfile.mkstemp(prefix=".carrydown-token-", dir=str(path.parent))
+        try:
+            os.chmod(tmp, stat.S_IRUSR | stat.S_IWUSR)
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(token.strip() + "\n")
+            os.replace(tmp, str(path))
+        except BaseException:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            raise
+    except OSError as e:
+        L.die(f"cannot write the token to {short(path)}: {e.strerror or e}. Choose a folder you may write to with --token-file, "
+              "or fix the permissions of that folder")
     return path
+
+
+def inside_git(path):
+    """The top folder of the git repository that holds path, or None."""
+    for d in path.resolve().parents:
+        if (d / ".git").exists():
+            return d
+    return None
 
 
 def check(token, repo=None):
@@ -155,7 +194,7 @@ def _main(argv=None):
     )
     ap.add_argument("--token-file", help=f"where to store or read the token (default: {G.DEFAULT_TOKEN_FILE})")
     ap.add_argument("--check", action="store_true",
-                    help="check the token the GitHub scripts would use (--token-file, then CARRYDOWN_GITHUB_TOKEN, then the stored file), store nothing")
+                    help="check the token the GitHub scripts would use (--token-file when given, else CARRYDOWN_GITHUB_TOKEN, else the stored file), store nothing")
     ap.add_argument("--repo", help="owner/name. Also check that the token reaches this repository")
     ap.add_argument("--stdin", action="store_true", help="read the token from standard input instead of prompting")
     ap.add_argument("--from-file", metavar="PATH", help="read the token from this plain text file instead of prompting")
@@ -182,7 +221,8 @@ def _main(argv=None):
         return 0
 
     if a.check:
-        # The same lookup as the GitHub scripts: --token-file, then CARRYDOWN_GITHUB_TOKEN, then the stored file.
+        # The same lookup as the GitHub scripts: --token-file alone when given, else CARRYDOWN_GITHUB_TOKEN,
+        # else the stored file. A token that is not well formed is refused before anything is sent.
         token = G.read_token(a.token_file, required=False)
         if not token:
             where = f"at {short(dest)}" if a.token_file else f"in CARRYDOWN_GITHUB_TOKEN or at {short(dest)}"
@@ -194,12 +234,15 @@ def _main(argv=None):
         src = Path(os.path.expanduser(a.from_file))
         if not src.is_file():
             L.die(f"{a.from_file} is not a file")
-        raw = src.read_bytes()
+        try:
+            raw = src.read_bytes()
+        except OSError as e:
+            L.die(f"cannot read {a.from_file}: {e.strerror or e}")
         if raw[:5] == b"{\\rtf" or b"\x00" in raw[:200]:
             L.die("that file is not plain text. In TextEdit choose Format, Make Plain Text, then save again")
         token = raw.decode("utf-8-sig", "replace").strip().strip("\ufeff").strip()
     elif a.stdin:
-        token = sys.stdin.read().strip()
+        token = sys.stdin.buffer.read().decode("utf-8-sig", "replace").strip()
     else:
         walkthrough(L.say)
         L.say("")
@@ -210,6 +253,12 @@ def _main(argv=None):
         L.die("no token entered")
     if not TOKEN_RE.match(token):
         L.die(NOT_A_TOKEN)
+    if dest.is_symlink():
+        L.die(f"{short(dest)} is a symbolic link. The token is never written through a link. Nothing was sent. "
+              "Remove the link or choose another --token-file")
+    top = inside_git(dest)
+    if top is not None:
+        L.say(f"warning: {short(dest)} is inside the git repository {short(top)}. Keep the token outside every project so it is never committed.")
     try:
         G.GitHub(token).whoami()
     except G.GitHubError as e:

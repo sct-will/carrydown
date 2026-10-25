@@ -1,14 +1,26 @@
-"""A local mock of the GitHub REST endpoints that github_sync.py and github_token.py use.
+"""A local mock of the GitHub REST and GraphQL endpoints that the carrydown GitHub scripts use.
 
 It listens on 127.0.0.1 only, on a free port, and keeps everything in memory. Standard
 library only. The self test uses it through tests/mock/scenarios.py. Nothing here talks to
 GitHub.
+
+What it serves
+  REST     /user, /users/<login>, /repos/<owner>/<name> and its labels, issues, sub-issues and
+           comments. Owner and repository names may hold letters, digits, "-", "_" and ".".
+           Only repositories in S.repos exist; any other answers 404, as GitHub does.
+           A label that exists already answers 422. An issue keeps its type.
+  GraphQL  enough of Projects (v2) for github_project.py: the project lookup for a user or an
+           organization, createProjectV2, linkProjectV2ToRepository, the fields and views query,
+           createProjectV2Field, updateProjectV2Field, createProjectV2View, updateProjectV2View,
+           the items query, addProjectV2ItemById and updateProjectV2ItemFieldValue. S.gql lists
+           the operation of each GraphQL call, so a test can count the writes.
 
 Failures can be injected per (method, path regex) as a list of actions, used one per request:
   "502-after"    do the work, then answer 502 (GitHub created the issue but the answer was lost)
   "403-sso"      answer 403 with the X-GitHub-SSO header
   "403-primary"  answer 403 with X-RateLimit-Remaining: 0 (primary rate limit used up)
   "timeout"      wait longer than the client timeout, then answer
+S.redirect maps (method, path regex) to a Location, answered with 302, to test redirects.
 """
 import json
 import re
@@ -17,6 +29,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 LOGIN = "tester"
+NAME = r"[A-Za-z0-9_.-]+"
 
 
 class State:
@@ -24,15 +37,27 @@ class State:
         self.labels, self.issues, self.subs, self.comments = [], [], {}, {}
         self.next_id = 1000
         self.private = True
+        self.repos = {"o/r"}   # the repositories that exist; any other answers 404
+        self.orgs = set()       # logins that are organizations; any other login is a user
         self.fail = {}
+        self.redirect = {}
         self.log = []
         self.auth = []   # the Authorization header of each request, so a test can see which token was sent
         self.timeout = 3.0
+        self.projects = []
+        self.gql = []
+        self.seq = 0
 
-    def add_issue(self, title, body="", labels=(), state="open"):
+    def nid(self, prefix):
+        self.seq += 1
+        return f"{prefix}_{self.seq}"
+
+    def add_issue(self, title, body="", labels=(), state="open", issue_type=None):
         self.next_id += 1
         iss = {"number": len(self.issues) + 1, "id": self.next_id, "node_id": f"I_{self.next_id}", "title": title,
                "body": body, "state": state, "labels": [{"name": n} for n in labels], "html_url": "u"}
+        if issue_type:
+            iss["type"] = {"name": issue_type}
         self.issues.append(iss)
         return iss
 
@@ -72,6 +97,13 @@ class H(BaseHTTPRequestHandler):
         p, q = u.path, parse_qs(u.query)
         S.log.append((method, p))
         S.auth.append(self.headers.get("Authorization", ""))
+        for (m, rx), where in list(S.redirect.items()):
+            if m == method and re.fullmatch(rx, p):
+                self.send_response(302)
+                self.send_header("Location", where)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
         for (m, rx), acts in list(S.fail.items()):
             if m == method and re.fullmatch(rx, p) and acts:
                 act = acts.pop(0)
@@ -91,21 +123,27 @@ class H(BaseHTTPRequestHandler):
     def _do(self, method, p, q):
         if p == "/user":
             return self.send(200, {"login": LOGIN})
-        if re.fullmatch(r"/users/\w+", p):
-            return self.send(200, {"type": "User", "node_id": "U_1"})
+        m = re.fullmatch(rf"/users/({NAME})", p)
+        if m:
+            org = m.group(1) in S.orgs
+            return self.send(200, {"login": m.group(1), "type": "Organization" if org else "User", "node_id": "O_1" if org else "U_1"})
         if p == "/graphql":
-            q = self.body()["query"]
-            if "projectsV2(" in q:   # the project lookup: no projects yet
-                return self.send(200, {"data": {"user": {"projectsV2": {"nodes": []}}}})
-            return self.send(200, {"errors": [{"message": "not supported by the mock"}]})
-        if re.fullmatch(r"/repos/(\w+)/(\w+)", p):
+            b = self.body()
+            return self.send(200, graphql(b.get("query") or "", b.get("variables") or {}))
+        m = re.match(rf"/repos/({NAME})/({NAME})(/|$)", p)
+        if m and f"{m.group(1)}/{m.group(2)}" not in S.repos:
+            return self.send(404, {"message": "Not Found"})
+        if re.fullmatch(rf"/repos/{NAME}/{NAME}", p):
             return self.send(200, {"private": S.private, "permissions": {"push": True}, "node_id": "R_1"})
-        base = r"/repos/\w+/\w+"
+        base = rf"/repos/{NAME}/{NAME}"
         if re.fullmatch(base + "/labels", p):
             if method == "GET":
                 page = int(q.get("page", ["1"])[0])
                 return self.send(200, S.labels[(page - 1) * 100: page * 100])
-            S.labels.append(self.body())
+            b = self.body()
+            if any(lb["name"].lower() == str(b.get("name", "")).lower() for lb in S.labels):
+                return self.send(422, {"message": "Validation Failed", "errors": [{"resource": "Label", "code": "already_exists", "field": "name"}]})
+            S.labels.append(b)
             return self.send(201, S.labels[-1])
         if re.fullmatch(base + "/issues", p):
             if method == "GET":
@@ -116,10 +154,12 @@ class H(BaseHTTPRequestHandler):
                          if want <= {lb["name"] for lb in i["labels"]} and (state == "all" or i["state"] == state)]
                 return self.send(200, items[(page - 1) * 100: page * 100])
             b = self.body()
-            iss = S.add_issue(b["title"], b.get("body"), b.get("labels") or [])
+            iss = S.add_issue(b["title"], b.get("body"), b.get("labels") or [], issue_type=b.get("type"))
             return self.send(201, iss)
         m = re.fullmatch(base + r"/issues/(\d+)", p)
         if m:
+            if not 1 <= int(m.group(1)) <= len(S.issues):
+                return self.send(404, {"message": "Not Found"})
             iss = S.issues[int(m.group(1)) - 1]
             if method == "PATCH":
                 iss.update(self.body())
@@ -158,6 +198,115 @@ class H(BaseHTTPRequestHandler):
 
     def do_PATCH(self):
         self.handle_any("PATCH")
+
+
+# ---------------------------------------------------------------------------
+# GraphQL: Projects (v2)
+# ---------------------------------------------------------------------------
+
+MUTATIONS = ("createProjectV2Field", "updateProjectV2Field", "createProjectV2View", "updateProjectV2View",
+             "createProjectV2", "linkProjectV2ToRepository", "addProjectV2ItemById", "updateProjectV2ItemFieldValue")
+
+
+def _project(pid):
+    return next((x for x in S.projects if x["id"] == pid), None)
+
+
+def _public(pr):
+    return {"id": pr["id"], "title": pr["title"], "number": pr["number"], "url": pr["url"], "closed": pr["closed"]}
+
+
+def _view_out(v):
+    return {"id": v["id"], "name": v["name"], "number": v["number"], "layout": v["layout"], "filter": "",
+            "groupByFields": {"nodes": []}, "fields": {"nodes": [{"id": f} for f in v["visible"]]}}
+
+
+def add_project(title, owner=LOGIN, closed=False):
+    """A project with the fields and the view GitHub gives a new one."""
+    n = len(S.projects) + 1
+    pr = {"id": S.nid("PVT"), "title": title, "number": n, "url": f"https://github.com/users/{owner}/projects/{n}", "closed": closed,
+          "fields": [{"id": S.nid("F"), "name": "Title", "dataType": "TITLE"}, {"id": S.nid("F"), "name": "Assignees", "dataType": "ASSIGNEES"},
+                     {"id": S.nid("F"), "name": "Status", "dataType": "SINGLE_SELECT", "options": [{"id": S.nid("O"), "name": "Todo"}]}],
+          "views": [{"id": S.nid("V"), "name": "View 1", "number": 1, "layout": "TABLE_LAYOUT", "visible": []}],
+          "items": []}
+    pr["views"][0]["visible"] = [pr["fields"][0]["id"]]
+    S.projects.append(pr)
+    return pr
+
+
+def _iterations(cfg):
+    return [{"id": S.nid("IT"), "title": i["title"], "startDate": i["startDate"], "duration": i["duration"]} for i in cfg["iterations"]]
+
+
+def graphql(query, v):
+    def ok(data):
+        return {"data": data}
+    op = next((m for m in MUTATIONS if re.search(r"\b" + m + r"\(", query)), None)
+    S.gql.append(op or ("projects" if "projectsV2(" in query else "items" if "items(first:" in query else "fields" if "fields(first:" in query else "other"))
+    if op is None and "projectsV2(" in query:
+        root = "organization" if "organization(" in query else "user"
+        return ok({root: {"projectsV2": {"nodes": [_public(x) for x in S.projects]}}})
+    if op is None and "items(first:" in query:
+        pr = _project(v.get("p"))
+        if pr is None:
+            return {"errors": [{"message": "Could not resolve to a node"}]}
+        names = {f["id"]: f["name"] for f in pr["fields"]}
+        nodes = []
+        for it in pr["items"]:
+            vals = []
+            for fid, val in it["values"].items():
+                (k, x), = val.items()
+                vals.append({{"iterationId": "iterationId", "singleSelectOptionId": "optionId", "date": "date"}[k]: x, "field": {"name": names[fid]}})
+            nodes.append({"id": it["id"], "content": {"number": it["number"]}, "fieldValues": {"nodes": vals}})
+        return ok({"node": {"items": {"pageInfo": {"hasNextPage": False, "endCursor": None}, "nodes": nodes}}})
+    if op is None and "fields(first:" in query:
+        pr = _project(v.get("p"))
+        if pr is None:
+            return {"errors": [{"message": "Could not resolve to a node"}]}
+        return ok({"node": dict(_public(pr), fields={"nodes": pr["fields"]}, views={"nodes": [_view_out(x) for x in pr["views"]]})})
+    if op == "createProjectV2":
+        return ok({op: {"projectV2": _public(add_project(v["t"]))}})
+    if op == "linkProjectV2ToRepository":
+        return ok({op: {"repository": {"id": v.get("r")}}})
+    if op == "createProjectV2Field":
+        pr = _project(v["p"])
+        kind = re.search(r"dataType: (\w+)", query).group(1)
+        name = re.search(r'name: "([^"]+)"', query)
+        f = {"id": S.nid("F"), "name": name.group(1) if name else v["n"], "dataType": kind}
+        if kind == "ITERATION":
+            f["configuration"] = {"iterations": _iterations(v["c"]), "completedIterations": []}
+        if kind == "SINGLE_SELECT":
+            f["options"] = [{"id": S.nid("O"), "name": o["name"]} for o in v["o"]]
+        pr["fields"].append(f)
+        return ok({op: {"projectV2Field": {"id": f["id"]}}})
+    if op == "updateProjectV2Field":
+        f = next(f for pr in S.projects for f in pr["fields"] if f["id"] == v["f"])
+        f["configuration"] = {"iterations": _iterations(v["c"]), "completedIterations": []}
+        return ok({op: {"projectV2Field": {"id": f["id"]}}})
+    if op == "createProjectV2View":
+        pr = _project(v["p"])
+        view = {"id": S.nid("V"), "name": v["n"], "number": len(pr["views"]) + 1, "layout": v["l"], "visible": []}
+        pr["views"].append(view)
+        return ok({op: {"projectV2View": {"id": view["id"], "name": view["name"], "layout": view["layout"]}}})
+    if op == "updateProjectV2View":
+        view = next(x for pr in S.projects for x in pr["views"] if x["id"] == v["v"])
+        if "n" in v:
+            view["name"] = v["n"]
+        if "f" in v:
+            view["visible"] = list(v["f"])
+        return ok({op: {"projectV2View": {"id": view["id"]}}})
+    if op == "addProjectV2ItemById":
+        pr = _project(v["p"])
+        iss = next(i for i in S.issues if i["node_id"] == v["c"])
+        item = {"id": S.nid("PVTI"), "number": iss["number"], "values": {}}
+        pr["items"].append(item)
+        return ok({op: {"item": {"id": item["id"]}}})
+    if op == "updateProjectV2ItemFieldValue":
+        pr = _project(v["p"])
+        item = next(i for i in pr["items"] if i["id"] == v["i"])
+        item["values"][v["f"]] = dict(v["v"])
+        return ok({op: {"projectV2Item": {"id": item["id"]}}})
+    return {"errors": [{"message": "not supported by the mock"}]}
 
 
 class Server(ThreadingHTTPServer):

@@ -10,7 +10,8 @@ What it builds
   items    every sub-epic, work item issue and the Epic (if any) added to the project,
            with Work unit, Track, Complete by and Checkpoint filled in
 
-What the API cannot set, so you click it once (see docs/faq.md and the plan-to-github skill)
+What the API cannot set, so you click it once (see references/project-board.md in the
+carrydown-plan-to-github skill)
   group by Work unit, sort order, slice by, field sums, the Board column field,
   the Roadmap date fields, markers and zoom level, and the project workflows
   (auto-add, close sets status). The script prints this list again at the end.
@@ -54,7 +55,8 @@ query($p: ID!) { node(id: $p) { ... on ProjectV2 {
     ... on ProjectV2SingleSelectField { id name dataType options { id name } }
     ... on ProjectV2IterationField { id name dataType configuration { iterations { id title startDate duration } completedIterations { id title startDate duration } } }
   } }
-  views(first: 20) { nodes { id name number layout filter groupByFields(first: 5) { nodes { ... on ProjectV2FieldCommon { name } } } } }
+  views(first: 20) { nodes { id name number layout filter groupByFields(first: 5) { nodes { ... on ProjectV2FieldCommon { name } } }
+    fields(first: 30) { nodes { ... on ProjectV2FieldCommon { id } } } } }
 } } }
 """
 ITEMS_Q = """
@@ -166,8 +168,13 @@ def _run(argv=None):
     ap.add_argument("--reconfigure-iterations", action="store_true", help="replace the Work unit iterations if they differ from the plan")
     ap.add_argument("--offline", action="store_true", help="do not call GitHub; print the intended configuration only")
     a = ap.parse_args(argv)
+    if a.offline and (a.apply or a.verify):
+        L.die(f"--offline cannot be combined with {'--apply' if a.apply else '--verify'}: both need GitHub. "
+              "Leave out --offline to write or verify, or leave out the other flag for an offline dry run")
+    if a.project_number is not None and a.project_number < 1:
+        L.die("--project-number must be a project number, 1 or more")
 
-    root = Path(a.root).resolve()
+    root = L.project_root(a.root)
     plan_path = L.find_plan(root, a.plan)
     if not plan_path.exists():
         L.die(f"no plan at {plan_path}")
@@ -241,6 +248,9 @@ def _run(argv=None):
         return 1
 
     proj = find_project(gh, owner, owner_type, title, a.project_number)
+    if a.project_number and not proj:
+        L.die(f"project #{a.project_number} was not found for {owner}, or it is closed, so nothing was created. "
+              "Check the number in the project's address, or leave out --project-number to find or create the project by title", 1)
     if a.verify and not proj:
         L.say("project not found")
         return 1
@@ -337,6 +347,9 @@ def _run(argv=None):
             v = names.get(vname)
             if layout == "ROADMAP_LAYOUT" or not (v and visible):
                 continue   # GitHub rejects visible fields on roadmap views
+            shown = {f.get("id") for f in ((v.get("fields") or {}).get("nodes") or []) if f}
+            if set(visible) <= shown:
+                continue   # already shows the plan fields: a rerun sends nothing
             try:
                 gh.graphql("mutation($v: ID!, $f: [ID!]) { updateProjectV2View(input: {viewId: $v, configuration: {visibleFieldIds: $f}}) { projectV2View { id } } }", {"v": v["id"], "f": visible})
             except G.GitHubError as e:
@@ -414,7 +427,7 @@ def _run(argv=None):
         it_cfg = fields.get("Work unit", {}).get("configuration", {})
         L.say(f"  Work unit iterations: {len(it_cfg.get('iterations', [])) + len(it_cfg.get('completedIterations', []))}")
         L.say(f"  project: {proj['url']}")
-    L.say("\nThe API cannot set these. Click them once in the project (see docs/faq.md):")
+    L.say("\nThe API cannot set these. Click them once in the project (see references/project-board.md in the carrydown-plan-to-github skill):")
     for c in CLICK:
         L.say("  - " + c)
     if not a.apply and not a.verify:
