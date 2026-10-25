@@ -14,9 +14,15 @@ Modes
              level 1 heading, and one heading that switches numbering off (numId 0).
   doctype    a document whose main part carries a DOCTYPE declaration. The renderer must
              refuse to parse it.
+  doctype-late     the DOCTYPE after a comment longer than 4096 bytes.
+  doctype-utf16    the main part in UTF-16 with a byte order mark, carrying a DOCTYPE.
+  entity-styles    an ENTITY declaration in styles.xml, without a DOCTYPE line of its own.
+  malformed  a main part that is not well-formed XML.
+  nomedia    a figure whose image part is missing from the archive.
+  dupfigures two figures captioned "Figure 1" with different images.
 
 Usage
-  python3 tests/fixtures/make_numbered_docx.py OUT.docx [paragraph|style|doctype]
+  python3 tests/fixtures/make_numbered_docx.py OUT.docx [MODE]
 
 Based on the fixture builder written for the review of 2026-10-24.
 """
@@ -145,8 +151,18 @@ def build(out, mode):
     doc = f"{DECL}<w:document {W}><w:body>{body}</w:body></w:document>"
     if mode == "doctype":
         doc = doc.replace(DECL, DECL + '<!DOCTYPE w:document [<!ENTITY a "aaaa">]>')
+    if mode == "doctype-late":
+        doc = doc.replace(DECL, DECL + "<!--" + "x" * 5000 + '--><!DOCTYPE w:document [<!ENTITY a "aaaa">]>')
+    if mode == "malformed":
+        doc = doc.replace("</w:body>", "<w:p></w:body>")
+    if mode == "dupfigures":
+        fig = ('<w:p><w:r><w:drawing><wp:inline><a:graphic><a:graphicData><pic:pic><pic:blipFill>'
+               '<a:blip r:embed="{rid}"/></pic:blipFill></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>'
+               '<w:p><w:r><w:t>Figure 1. {cap}</w:t></w:r></w:p>')
+        doc = doc.replace("</w:body>", fig.format(rid="rIdImg", cap="First") + fig.format(rid="rIdImg2", cap="Second") + "</w:body>")
     rels = ('<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
             '<Relationship Id="rIdImg" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"/>'
+            '<Relationship Id="rIdImg2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image2.png"/>'
             '<Relationship Id="rIdN" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>'
             '</Relationships>')
     png = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")
@@ -163,7 +179,15 @@ def build(out, mode):
         ("word/numbering.xml", f"{DECL}<w:numbering {W}>{numbering}</w:numbering>"),
         ("word/_rels/document.xml.rels", rels),
         ("word/media/image1.png", png),
+        ("word/media/image2.png", png + b"2"),
     ]
+    if mode == "nomedia":
+        parts = [x for x in parts if not x[0].startswith("word/media/")]
+    if mode == "doctype-utf16":
+        parts = [(n, (b"\xff\xfe" + d.replace(DECL, DECL.replace("UTF-8", "UTF-16") + '<!DOCTYPE w:document [<!ENTITY a "aaaa">]>').encode("utf-16-le"))
+                  if n == "word/document.xml" else d) for n, d in parts]
+    if mode == "entity-styles":
+        parts = [(n, d.replace(DECL, DECL + '<!ENTITY a "aaaa">') if n == "word/styles.xml" else d) for n, d in parts]
     if footnotes:
         parts.append(("word/footnotes.xml", f"{DECL}<w:footnotes {W}>{footnotes}</w:footnotes>"))
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
