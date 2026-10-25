@@ -23,13 +23,21 @@ CARRYDOWN_GITHUB_TOKEN, so no stored token is ever read.
   9. Runs the planning review on variants of the sample: a milestone on one track without a
      reason, missing rationale, an item with no slack, theme switches, a critical path owned by
      one person and a load ratio above two to one.
+ 10. Keeps the defects of the code-path release test fixed: a self-dependency or a duplicate id
+     (with a timeout, so a hang fails the step), files that are not UTF-8, plan values of the
+     wrong type, flag combinations, the renderer's path checks and the checker's --item and
+     --json. The token rules, the redirect guard and the project board run against the mock.
+
+Every step has a time limit. A step that runs past it fails as a hang.
 
 Usage
   python3 scripts/selftest.py
-Exit status is 0 when every step passes and 1 otherwise.
+Exit status is 0 when every step passes, 1 otherwise, and 2 for an unknown argument.
 """
+import argparse
 import ast
 import atexit
+import json
 import os
 import shutil
 import subprocess
@@ -47,11 +55,24 @@ SAMPLE = "sample/expense-approvals"
 results = []
 
 
-def step(name, cmd, cwd=ROOT, expect=0, contains=(), absent=("Traceback",), env=None, files=None, order=(), stdin=""):
+class _Hung:
+    returncode = "hang"
+    stdout = ""
+
+    def __init__(self, limit):
+        self.stderr = f"no answer within {limit} seconds: the command hung and was stopped"
+
+
+def step(name, cmd, cwd=ROOT, expect=0, contains=(), absent=("Traceback",), env=None, files=None, order=(), stdin="", timeout=180, json_out=False):
     """Run cmd and check the exit status, text that must appear, text that must not appear, and,
-    with files, {path: [text, ...]} that must appear in files the command wrote."""
+    with files, {path: [text, ...]} that must appear in files the command wrote. expect="nonzero"
+    accepts any failing exit status. With json_out, standard output must be one JSON object. A
+    command that runs longer than timeout seconds is stopped and the step fails."""
     run_env = dict(ENV, **(env or {}))
-    p = subprocess.run(cmd, cwd=cwd, env=run_env, capture_output=True, text=True, encoding="utf-8", errors="replace", input=stdin)
+    try:
+        p = subprocess.run(cmd, cwd=cwd, env=run_env, capture_output=True, text=True, encoding="utf-8", errors="replace", input=stdin, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        p = _Hung(timeout)
     out = (p.stdout or "") + (p.stderr or "")
     missing = [c for c in contains if c not in out]
     present = [c for c in absent if c in out]
@@ -61,7 +82,14 @@ def step(name, cmd, cwd=ROOT, expect=0, contains=(), absent=("Traceback",), env=
     for path, wants in (files or {}).items():
         body = Path(path).read_text(encoding="utf-8") if Path(path).exists() else ""
         missing += [f"{Path(path).name}: {w}" for w in wants if w not in body]
-    ok = p.returncode == expect and not missing and not present
+    if json_out:
+        try:
+            if not isinstance(json.loads(p.stdout or ""), dict):
+                missing.append("standard output is a JSON object")
+        except ValueError:
+            missing.append("standard output is valid JSON")
+    status_ok = (p.returncode not in (0, "hang")) if expect == "nonzero" else p.returncode == expect
+    ok = status_ok and not missing and not present
     results.append((ok, name))
     print(("PASS " if ok else "FAIL ") + name)
     if not ok:
@@ -76,7 +104,7 @@ def fixtures(tmp):
     make = [PY, "tests/fixtures/make_numbered_docx.py"]
     render = [PY, "scripts/render_ground_truth.py"]
     fx = tmp / "fixtures"
-    fx.mkdir()
+    (fx / "out").mkdir(parents=True)
     for mode in ("paragraph", "style", "doctype"):
         subprocess.run(make + [str(fx / f"{mode}.docx"), mode], cwd=ROOT, env=ENV, check=True)
     out = fx / "out" / "docs/ground-truth"
@@ -135,9 +163,9 @@ def error_paths(tmp, plan_text):
     }
     for label, (text, want) in bad.items():
         v = variant(label.replace(" ", "-").replace("%", "pct"), text)
-        unreadable = label.startswith("quote")
-        step(f"plan with {label}: one line, no traceback", chk + ["--plan", v], expect=1, contains=[want])
-        step(f"plan with {label}: --report says so first", chk + ["--plan", v, "--report"], expect=1,
+        unreadable = label.startswith("quote")   # a plan that cannot be read is a plan error, exit 2
+        step(f"plan with {label}: one line, no traceback", chk + ["--plan", v], expect=2 if unreadable else 1, contains=[want])
+        step(f"plan with {label}: --report says so first", chk + ["--plan", v, "--report"], expect=2 if unreadable else 1,
              contains=[want] if unreadable else ["plan.yaml has problems:", want])
     step("plan with a byte order mark is read", chk + ["--plan", variant("bom", plan_text, bom=True)], contains=["0 with findings"])
     named = plan_text.replace('name: "Expense approvals"', 'name: "Expense approvals \u2264 \u2192 \u4e2d"')
@@ -311,6 +339,7 @@ def path_safety(tmp, plan_text):
     md.write_text("# Design\n\n## 1. Figures\n\n![ok](img/ok.png)\n\n![up](../secret.txt)\n\n"
                   f"![abs]({(d / 'secret.txt').resolve()})\n\n![text](notes.txt)\n", encoding="utf-8")
     out = d / "out"
+    out.mkdir()
     step("images outside the document folder, or not images, are not copied",
          [PY, "scripts/render_ground_truth.py", str(md), "--root", str(out)],
          contains=["not copied (outside the document folder or not an image): ../secret.txt", "not copied (outside the document folder or not an image): notes.txt", "1 figures"])
@@ -369,10 +398,168 @@ def lint_spelling(tmp):
     step("lint: US spellings and real -ise words are clean", lint + [str(good)], contains=["0 findings"])
 
 
+def regressions(tmp, plan_text):
+    """The defects found by the code-path release test stay fixed. Every step checks that no
+    traceback appears, and every step has a time limit, so a hang fails."""
+    d = tmp / "regressions"
+    d.mkdir()
+    chk, gen = [PY, "scripts/check_specs.py"], [PY, "scripts/generate_dev_skill.py"]
+    scaffold, sync, board = [PY, "scripts/scaffold_spec.py"], [PY, "scripts/github_sync.py"], [PY, "scripts/github_project.py"]
+    render = [PY, "scripts/render_ground_truth.py"]
+
+    def project(name, plan=None):
+        proj = d / name
+        shutil.copytree(ROOT / SAMPLE, proj)
+        if plan is not None:
+            (proj / "docs/spec/plan.yaml").write_text(plan, encoding="utf-8")
+        return proj
+
+    def every_script(label, proj, want, expect="nonzero"):
+        root = ["--root", str(proj)]
+        step(f"{label}: check_specs", chk + root, expect=expect, contains=[want], timeout=60)
+        step(f"{label}: check_specs --report", chk + root + ["--report"], expect=expect, contains=[want], timeout=60)
+        step(f"{label}: check_specs --json", chk + root + ["--json"], expect=expect, contains=[want], timeout=60, json_out=True)
+        step(f"{label}: scaffold_spec", scaffold + root + ["--allow-no-git"], expect="nonzero", contains=[want], timeout=60)
+        step(f"{label}: generate_dev_skill", gen + root, expect="nonzero", contains=[want], timeout=60)
+        step(f"{label}: github_sync --offline", sync + root + ["--offline"], expect="nonzero", contains=[want], timeout=60)
+        step(f"{label}: github_project --offline", board + root + ["--offline"], expect="nonzero", contains=[want], timeout=60)
+
+    # an item that depends on itself, and a duplicate id, used to loop forever in the checker
+    every_script("an item that depends on itself", project("selfdep", plan_text.replace(
+        "    depends: [1]\n    checkpoint: 2027-02-26", "    depends: [1, 3]\n    checkpoint: 2027-02-26")), "item 3: depends on itself", expect=1)
+    every_script("a duplicate item id", project("dupid", plan_text.replace("  - id: 4\n", "  - id: 3\n")), "item 3: duplicate id", expect=1)
+
+    # plan values of the wrong type stop every script with one line
+    wrong = [
+        ("a track given as a list", "    track: workflow\n    owner: tamsin\n", "    track: [workflow]\n    owner: tamsin\n", "track must be text"),
+        ("days_off given as a number", "days_off: [2027-02-22]", "days_off: 5", "days_off must be a list of dates"),
+        ("an advisor given as plain text", '  - name: "Noor Castellan"\n    note: "Finance policy advisor. Reviews the rules and the export format."\n',
+         '  - "Noor Castellan"\n', "advisors: entry 1 must be a mapping"),
+        ("an item id that is a word", "  - id: 4\n", "  - id: four\n", "id must be a whole number"),
+        ("depends given as a number", "    depends: [2, 3]\n", "    depends: 5\n", "depends must be a list of item ids"),
+        ("a label given as a mapping", 'label: "Audit log and retention"', "label: {a: b}", "label must be text"),
+        ("tracks given as text", "tracks:\n  - id: workflow", "tracks: workflow\nold_tracks:\n  - id: workflow", "tracks must be a list"),
+        ("a banned pattern that is not a pattern", "limits:\n", 'banned:\n  words: ["(sprint"]\nlimits:\n', "is not a valid pattern"),
+        ("an empty spec_dir", "  spec_dir: docs/spec\n", '  spec_dir: ""\n', "project.spec_dir is empty"),
+        ("a spec_dir outside the project", "  spec_dir: docs/spec\n", "  spec_dir: ../outside\n", "must be a path inside the project"),
+        ("a target of 99999999 weeks", "  date: 2027-04-23\n", "  weeks: 99999999\n", "weeks must be a whole number of working weeks"),
+        ("a size of 99999999 days", 'size: "Large, about 5 days"', 'size: "Large, about 99999999 days"', "Split the item"),
+        ("spec_lines given as text", "spec_lines: [80, 340]", "spec_lines: many", "limits.spec_lines must be two whole numbers"),
+    ]
+    for i, (label, old, new, want) in enumerate(wrong):
+        assert old in plan_text, label
+        every_script(f"plan with {label}", project(f"wrong{i}", plan_text.replace(old, new, 1)), want)
+
+    # files that are not UTF-8 give one line, and the checker reports them as findings
+    latin = project("latin")
+    spec = latin / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
+    spec.write_bytes(spec.read_bytes().replace(b"Service scaffold", b"Service caf\xe9 scaffold", 1))
+    root = ["--root", str(latin)]
+    step("a specification that is not UTF-8 is a finding", chk + root, expect=1, contains=["cannot read:", "is not UTF-8 text"], timeout=60)
+    step("a specification that is not UTF-8: --json stays JSON", chk + root + ["--json", "--item", "1"], expect=1, contains=["is not UTF-8 text"], json_out=True, timeout=60)
+    step("a specification that is not UTF-8: --show-body is one line", sync + root + ["--offline", "--show-body", "1"], expect=1, contains=["error:", "is not UTF-8 text"])
+    step("a specification that is not UTF-8: the skill generator is one line", gen + root, expect=1, contains=["error:", "is not UTF-8 text"])
+    step("a specification that is not UTF-8: --refresh-headers is one line", scaffold + root + ["--refresh-headers", "--allow-no-git"], expect=1, contains=["error:", "is not UTF-8 text"])
+    gt = project("latin-gt")
+    (gt / "docs/ground-truth/architecture.md").write_bytes(b"# Archi\xe9\n")
+    step("a ground truth that is not UTF-8 is reported by the checker", chk + ["--root", str(gt)], expect=1, contains=["ground truth citations not checked:", "is not UTF-8 text"])
+    step("a ground truth that is not UTF-8: the skill generator is one line", gen + ["--root", str(gt)], expect=1, contains=["error:", "is not UTF-8 text"])
+    bad_plan = project("latin-plan")
+    (bad_plan / "docs/spec/plan.yaml").write_bytes(plan_text.encode("utf-8").replace(b"Expense approvals", b"Expense approv\xe9ls", 1))
+    step("a plan that is not UTF-8: --json is JSON and exit 2", chk + ["--root", str(bad_plan), "--json"], expect=2, contains=["is not UTF-8 text"], json_out=True)
+    for name, cmd in (("scaffold_spec", scaffold + ["--allow-no-git"]), ("generate_dev_skill", gen), ("github_sync --offline", sync + ["--offline"]), ("github_project --offline", board + ["--offline"])):
+        step(f"a plan that is not UTF-8: {name} is one line", cmd + ["--root", str(bad_plan)], expect="nonzero", contains=["cannot read plan", "is not UTF-8 text"])
+    src = d / "latin.md"
+    src.write_bytes(b"# Caf\xe9\n")
+    step("a Markdown source that is not UTF-8 is one line", render + [str(src), "--root", str(d), "--dry-run"], expect=2, contains=["is not UTF-8 text"])
+
+    # check_specs: --item takes the tag, unknown and external ids are errors, --json is always JSON
+    s = ["--root", SAMPLE]
+    step("--item accepts 3, WI-03 and wi-3", chk + s + ["--item", "3", "--item", "WI-03", "--item", "wi-3"], contains=["1 files clean, 0 with findings (1 work items"])
+    step("--item for an unknown id is an error", chk + s + ["--item", "99"], expect=2, contains=["there is no item 99 in the plan"])
+    step("--item for an external item is an error", chk + s + ["--item", "WI-05", "--json"], expect=2, contains=["is an external item"], json_out=True)
+    step("--report with --json is an error, as JSON", chk + s + ["--report", "--json"], expect=2, json_out=True)
+    step("--json without a plan is JSON and exit 2", chk + ["--root", str(d), "--json"], expect=2, contains=["plan not found"], json_out=True)
+    empty = d / "empty-plan.yaml"
+    empty.write_text("", encoding="utf-8")
+    step("--json with an empty plan is JSON and exit 2", chk + s + ["--plan", str(empty), "--json"], expect=2, json_out=True)
+    cited = project("plan-cite", plan_text.replace('ground_truth: "Sections 3.1, 3.2, 5.1, 7.1"', 'ground_truth: "Sections 3.1, 9.9"'))
+    step("a plan.yaml citation of a missing section is a finding", chk + ["--root", str(cited)], expect=1,
+         contains=["plan.yaml ground_truth of this item cites section 9.9"])
+    named = project("named")
+    spec = named / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
+    spec.write_text(spec.read_text(encoding="utf-8") + "\nReviewed by Tamsin Hale.\n", encoding="utf-8")
+    code = ("import subprocess, sys; o = subprocess.run(sys.argv[1:], capture_output=True, text=True).stdout; "
+            "n = o.count('person name or handle from the plan'); print('findings', n); sys.exit(0 if n == 1 else 1)")
+    step("a full name in a specification is one finding, not one per part", [PY, "-c", code] + chk + ["--root", str(named)], contains=["findings 1"])
+
+    # flags that cannot go together
+    for script, cmd in (("github_sync", sync), ("github_project", board)):
+        for flag in ("--apply", "--verify"):
+            step(f"{script} --offline {flag} is refused", cmd + s + ["--offline", flag], expect=2, contains=["--offline cannot be combined with " + flag])
+    step("github_sync --apply --verify is refused", sync + s + ["--apply", "--verify"], expect=2, contains=["separate runs"])
+    step("an empty --name for --init is refused", scaffold + ["--root", str(d), "--init", "--name", " ", "--allow-no-git"], expect=2, contains=["--name is empty"])
+    step("a --root that does not exist is refused", scaffold + ["--root", str(d / "nowhere")], expect=2, contains=["is not a folder"])
+    ro = project("readonly")
+    (ro / "docs/spec/README.md").unlink()
+    (ro / "docs/spec").chmod(0o500)
+    step("a folder that cannot be written gives one line", scaffold + ["--root", str(ro), "--apply", "--allow-no-git"], expect=2, contains=["error: cannot write"])
+    (ro / "docs/spec").chmod(0o700)
+    step("lint_prose on a path that does not exist is an error", [PY, "scripts/lint_prose.py", str(d / "nowhere.md")], expect=2, contains=["not a file"])
+    step("the self test refuses an unknown argument", [PY, "scripts/selftest.py", "--bogus"], expect=2, contains=["unrecognized arguments"])
+
+    # the renderer checks every output path before it writes anything
+    doc = d / "render"
+    (doc / "a").mkdir(parents=True)
+    (doc / "b").mkdir()
+    (doc / "img/i").mkdir(parents=True)
+    (doc / "img/j").mkdir()
+    (doc / "img/i/x.png").write_bytes(b"\x89PNG first")
+    (doc / "img/j/x.png").write_bytes(b"\x89PNG second")
+    page = doc / "img/page.md"
+    page.write_text("# Page\n\n## 1. Figures\n\n![one](i/x.png)\n\n![two](j/x.png)\n", encoding="utf-8")
+    for x in ("a", "b"):
+        (doc / x / "notes.md").write_text("# Notes\n\n## 1. Part\n", encoding="utf-8")
+    out = d / "render-out"
+    out.mkdir()
+    r = ["--root", str(out)]
+    step("--name with a folder is refused before anything is written", render + [str(page)] + r + ["--name", "../evil"], expect=2, contains=["must be a plain file name"])
+    step("--name a/b is refused", render + [str(page)] + r + ["--name", "a/b"], expect=2, contains=["must be a plain file name"])
+    nothing = not (out / "docs").exists() and not (d / "evil").exists()
+    results.append((nothing, "a refused --name wrote nothing"))
+    print(("PASS " if nothing else "FAIL ") + "a refused --name wrote nothing")
+    step("two inputs with the same name are refused", render + [str(doc / "a/notes.md"), str(doc / "b/notes.md")] + r, expect=2, contains=["would both render to notes.md"])
+    step("two figures with the same file name are both kept", render + [str(page)] + r, contains=["2 figures"],
+         files={out / "docs/ground-truth/page.md": ["(figures/page/x.png)", "(figures/page/x-2.png)"]})
+    both = [(out / "docs/ground-truth/figures/page" / n).read_bytes() for n in ("x.png", "x-2.png") if (out / "docs/ground-truth/figures/page" / n).exists()]
+    results.append((both == [b"\x89PNG first", b"\x89PNG second"], "each figure keeps its own image"))
+    print(("PASS " if both == [b"\x89PNG first", b"\x89PNG second"] else "FAIL ") + "each figure keeps its own image")
+    step("a --root that does not exist is refused, not created", render + [str(page), "--root", str(d / "missing-root")], expect=2, contains=["does not exist"])
+    results.append((not (d / "missing-root").exists(), "the missing --root was not created"))
+    print(("PASS " if not (d / "missing-root").exists() else "FAIL ") + "the missing --root was not created")
+    step("an --out-dir that is a file is refused", render + [str(page)] + r + ["--out-dir", "docs/ground-truth/page.md"], expect=2, contains=["is a file, not a folder"])
+    step("a folder as input is refused", render + [str(doc / "a")] + r, expect=2, contains=["is a folder, not a file"])
+    step("a --date that is not a date is refused", render + [str(page)] + r + ["--date", "2026-13-45"], expect=2, contains=["is not a date"])
+    step("--version with --> cannot end the header comment", render + [str(page)] + r + ["--version=-->x", "--name", "comment"],
+         files={out / "docs/ground-truth/comment.md": ['version - ->x on']})
+    fx = d / "docx"
+    fx.mkdir()
+    make = [PY, "tests/fixtures/make_numbered_docx.py"]
+    for mode, want in (("malformed", "is not well-formed XML"), ("doctype-late", "contains a DOCTYPE declaration"),
+                       ("doctype-utf16", "contains a DOCTYPE declaration"), ("entity-styles", "contains an ENTITY declaration")):
+        subprocess.run(make + [str(fx / f"{mode}.docx"), mode], cwd=ROOT, env=ENV, check=True)
+        step(f"docx: {mode} is refused with one line", render + [str(fx / f"{mode}.docx")] + r, expect=2, contains=[want, "Nothing was written."])
+    subprocess.run(make + [str(fx / "nomedia.docx"), "nomedia"], cwd=ROOT, env=ENV, check=True)
+    step("docx: a figure whose image part is missing is a note", render + [str(fx / "nomedia.docx")] + r + ["--dry-run"],
+         contains=["figure 1 was not rendered: the document has no image part"])
+    subprocess.run(make + [str(fx / "dupfigures.docx"), "dupfigures"], cwd=ROOT, env=ENV, check=True)
+    step("docx: two figures with the same caption number keep both images", render + [str(fx / "dupfigures.docx")] + r,
+         files={out / "docs/ground-truth/dupfigures.md": ["(figures/dupfigures/figure-1.png)", "(figures/dupfigures/figure-1-2.png)"]})
+
+
 def main():
-    if "--help" in sys.argv or "-h" in sys.argv:
-        print(__doc__)
-        return 0
+    ap = argparse.ArgumentParser(description="Self test for the carrydown skills. No token and no network.")
+    ap.parse_args()
     scripts = sorted((ROOT / "scripts").glob("*.py"))
     for s in scripts + sorted((ROOT / "tests").rglob("*.py")):
         try:
@@ -486,6 +673,7 @@ def main():
         path_safety(Path(tmp), plan_text)
         names(Path(tmp), plan_text)
         lint_spelling(Path(tmp))
+        regressions(Path(tmp), plan_text)
     step("dry run without a token says nothing was checked against GitHub", [PY, "scripts/github_sync.py", "--root", SAMPLE],
          contains=["not checked against GitHub (no token)", f"python3 {ROOT / 'scripts' / 'github_token.py'}"], absent=["Already on GitHub: the rest"])
     step("board dry run without a token says nothing was checked against GitHub", [PY, "scripts/github_project.py", "--root", SAMPLE],
@@ -505,9 +693,14 @@ def main():
         ("project", "mock: renamed issues are found by their marker"),
         ("tokenfile", "mock: the token file is kept and checked before sending"),
         ("tokenenv", "mock: the token check reads CARRYDOWN_GITHUB_TOKEN like the GitHub scripts"),
+        ("tokenrules", "mock: a token file others can read, a bad token and a missing --token-file are refused"),
+        ("redirect", "mock: a redirect to another host never receives the token"),
+        ("repos", "mock: owner and repository names with - and ., a missing repository, --issue-type"),
+        ("board", "mock: the project board is built, a rerun changes nothing, iterations are reconfigured"),
+        ("projectnumber", "mock: --project-number for a missing project creates nothing"),
     ]
     for scenario, name in mock:
-        step(name, [PY, "tests/mock/scenarios.py", scenario], contains=[f"{scenario}: all checks passed"])
+        step(name, [PY, "tests/mock/scenarios.py", scenario], contains=[f"{scenario}: all checks passed"], timeout=120)
     failed = [n for ok, n in results if not ok]
     print(f"\n{len(results) - len(failed)} of {len(results)} steps passed")
     return 1 if failed else 0
