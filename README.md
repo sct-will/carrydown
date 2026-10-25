@@ -2,6 +2,8 @@
 
 # carrydown
 
+**carrydown uses two packaged AI agent skills and one generated skill to let an AI agent generate everything between your architecture document and the first commit. The agent creates the plan, every spec, every GitHub issue, the project board and a custom agent skill your engineers’ agents use to write code.**
+
 Give your AI agent a technical architecture document and any other context you have. If you know how many engineers you have and the target project duration, tell it that too.
 
 The agent drafts the project plan. It looks at people, time and dependencies. It groups related work so each milestone ends in one integrated demo by the engineers. It gives each engineer their own track, so nobody jumps between unrelated work.
