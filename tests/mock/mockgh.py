@@ -15,11 +15,23 @@ What it serves
            the items query, addProjectV2ItemById and updateProjectV2ItemFieldValue. S.gql lists
            the operation of each GraphQL call, so a test can count the writes.
 
+Lists (labels, issues, sub-issues, comments) are paged as GitHub pages them: per_page items a
+page, and a Link header that names the next and the last page while there are more. S.link_base
+sets the address written into the Link header, so a test can check that only the page number
+is taken from it.
+
 Failures can be injected per (method, path regex) as a list of actions, used one per request:
-  "502-after"    do the work, then answer 502 (GitHub created the issue but the answer was lost)
-  "403-sso"      answer 403 with the X-GitHub-SSO header
-  "403-primary"  answer 403 with X-RateLimit-Remaining: 0 (primary rate limit used up)
-  "timeout"      wait longer than the client timeout, then answer
+  "502-after"     do the work, then answer 502 (GitHub created the issue but the answer was lost)
+  "502"           answer 502 without doing the work
+  "401"           answer 401 Bad credentials
+  "403-sso"       answer 403 with the X-GitHub-SSO header
+  "403-primary"   answer 403 with X-RateLimit-Remaining: 0 (primary rate limit used up)
+  "429-primary"   answer 429 with X-RateLimit-Remaining: 0
+  "403-secondary" answer 403 "You have exceeded a secondary rate limit" with Retry-After: 1
+  "429"           answer 429 Too Many Requests with Retry-After: 1 (a secondary limit)
+  "timeout"       wait longer than the client timeout, then answer
+  "200-html"      answer 200 with an HTML page, as a captive portal or a proxy does
+None in the list lets that request through.
 S.redirect maps (method, path regex) to a Location, answered with 302, to test redirects.
 """
 import json
@@ -47,6 +59,7 @@ class State:
         self.projects = []
         self.gql = []
         self.seq = 0
+        self.link_base = None   # the address in Link headers; None means this server
 
     def nid(self, prefix):
         self.seq += 1
@@ -112,6 +125,24 @@ class H(BaseHTTPRequestHandler):
                                      {"X-GitHub-SSO": "required; url=https://github.com/orgs/o/sso?authorization_request=x"})
                 if act == "403-primary":
                     return self.send(403, {"message": "API rate limit exceeded for user ID 1."}, {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "9999999999"})
+                if act == "429-primary":
+                    return self.send(429, {"message": "API rate limit exceeded for user ID 1."}, {"X-RateLimit-Remaining": "0", "X-RateLimit-Reset": "9999999999"})
+                if act == "403-secondary":
+                    return self.send(403, {"message": "You have exceeded a secondary rate limit. Please wait a few minutes before you try again."},
+                                     {"Retry-After": "1", "X-RateLimit-Remaining": "4000"})
+                if act == "429":
+                    return self.send(429, {"message": "Too Many Requests"}, {"Retry-After": "1"})
+                if act == "401":
+                    return self.send(401, {"message": "Bad credentials"})
+                if act == "502":
+                    return self.send(502, {"message": "Server Error"})
+                if act == "200-html":
+                    page = b"<html><body>Sign in to the network</body></html>"
+                    self.send_response(200)
+                    self.send_header("Content-Type", "text/html")
+                    self.send_header("Content-Length", str(len(page)))
+                    self.end_headers()
+                    return self.wfile.write(page)
                 if act == "502-after":
                     self.force = 502
                     return self._do(method, p, q)
@@ -119,6 +150,19 @@ class H(BaseHTTPRequestHandler):
                     threading.Event().wait(S.timeout)   # not time.sleep, which a test may speed up
                     return self.send(200, {})
         self._do(method, p, q)
+
+    def page(self, items, q, path):
+        """One page of a list, with the Link header GitHub sends while more pages follow."""
+        per = max(1, min(100, int(q.get("per_page", ["30"])[0])))
+        page = max(1, int(q.get("page", ["1"])[0]))
+        last = max(1, -(-len(items) // per))
+        headers = {}
+        if page < last:
+            base = (S.link_base or f"http://{self.headers.get('Host')}") + path
+            keep = "".join(f"&{k}={v[0]}" for k, v in q.items() if k not in ("page", "per_page"))
+            headers["Link"] = (f'<{base}?per_page={per}{keep}&page={page + 1}>; rel="next", '
+                               f'<{base}?per_page={per}{keep}&page={last}>; rel="last"')
+        return self.send(200, items[(page - 1) * per: page * per], headers)
 
     def _do(self, method, p, q):
         if p == "/user":
@@ -138,8 +182,7 @@ class H(BaseHTTPRequestHandler):
         base = rf"/repos/{NAME}/{NAME}"
         if re.fullmatch(base + "/labels", p):
             if method == "GET":
-                page = int(q.get("page", ["1"])[0])
-                return self.send(200, S.labels[(page - 1) * 100: page * 100])
+                return self.page(S.labels, q, p)
             b = self.body()
             if any(lb["name"].lower() == str(b.get("name", "")).lower() for lb in S.labels):
                 return self.send(422, {"message": "Validation Failed", "errors": [{"resource": "Label", "code": "already_exists", "field": "name"}]})
@@ -147,12 +190,11 @@ class H(BaseHTTPRequestHandler):
             return self.send(201, S.labels[-1])
         if re.fullmatch(base + "/issues", p):
             if method == "GET":
-                page = int(q.get("page", ["1"])[0])
                 want = set(q["labels"][0].split(",")) if "labels" in q else set()
                 state = q.get("state", ["open"])[0]
                 items = [i for i in reversed(S.issues)
                          if want <= {lb["name"] for lb in i["labels"]} and (state == "all" or i["state"] == state)]
-                return self.send(200, items[(page - 1) * 100: page * 100])
+                return self.page(items, q, p)
             b = self.body()
             iss = S.add_issue(b["title"], b.get("body"), b.get("labels") or [], issue_type=b.get("type"))
             return self.send(201, iss)
@@ -169,7 +211,7 @@ class H(BaseHTTPRequestHandler):
             n = int(m.group(1))
             lst = S.subs.setdefault(n, [])
             if method == "GET":
-                return self.send(200, [S.issues[x - 1] for x in lst])
+                return self.page([S.issues[x - 1] for x in lst], q, p)
             cid = self.body()["sub_issue_id"]
             lst.append(next(i["number"] for i in S.issues if i["id"] == cid))
             return self.send(201, S.issues[n - 1])
@@ -177,7 +219,7 @@ class H(BaseHTTPRequestHandler):
         if m:
             n = int(m.group(1))
             if method == "GET":
-                return self.send(200, S.comments.get(n, []))
+                return self.page(S.comments.get(n, []), q, p)
             return self.send(201, S.add_comment(n, self.body()["body"]))
         m = re.fullmatch(base + r"/issues/comments/(\d+)", p)
         if m:

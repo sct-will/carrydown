@@ -27,6 +27,14 @@ Scenarios
   board         github_project.py creates the board, a rerun changes nothing, --verify passes,
                 --reconfigure-iterations replaces changed iterations
   projectnumber --project-number for a project that does not exist is an error, not a create
+  errors        401, 429 with Retry-After, a secondary rate limit, a 502 before a write and an
+                answer that is not JSON: each is retried or stopped with one line, and nothing
+                is created twice
+  paging        lists longer than one page are read to the end by the Link header, and only
+                the page number is taken from it
+  verifyskip    --verify --skip-comment passes on a board built with --skip-comment
+  titleformat   a bad project.title_format stops --apply before anything is sent
+  tokenloose    --from-file with a source others can read stores the token and warns once
 
 Each check prints PASS or FAIL. Exit status is 0 when every check passes. Nothing here
 talks to GitHub: the client is pointed at the mock on 127.0.0.1, and HOME is a temporary
@@ -454,6 +462,120 @@ def scenario_projectnumber():
           f"--project-number for a missing project is an error and creates nothing (got {rc})")
     rc, out = board("--project-number", "7")
     check(rc == 1 and "createProjectV2" not in M.gql and "Would create" not in out, f"the dry run says so too (got {rc})")
+
+
+def scenario_errors():
+    token = os.environ["CARRYDOWN_GITHUB_TOKEN"]
+    # 401: the token check and a dry run each say so in one line with the fix
+    M.fail[("GET", r"/user")] = ["401"]
+    rc, out = call(lambda a: GT.check(token), None)
+    check(rc == 1 and "GitHub rejected the token (HTTP 401)" in out and "Traceback" not in out, f"a 401 on the token check is one message (got {rc})")
+    M.fail[("GET", r"/repos/o/r")] = ["401"]
+    rc, out = sync()
+    check(rc == 1 and one_line_error(out) and "the token is wrong, expired or revoked" in out, f"a 401 on the dry run is one line with the fix (got {rc})")
+    # 429 with Retry-After on a read: waited for and retried, the run goes on
+    M.fail[("GET", r"/repos/o/r")] = ["429", "429"]
+    rc, out = sync()
+    reads = [x for x in M.log if x == ("GET", "/repos/o/r")]
+    check(rc == 0 and len(reads) >= 4, f"a 429 with Retry-After on a read is retried (got {rc}, {len(reads)} reads)")
+    # a secondary rate limit on a create: GitHub did nothing, so the create is sent again, once
+    M.fail[("POST", r"/repos/o/r/issues")] = [None] * 3 + ["403-secondary"]
+    # a 502 before a write did anything: read back, not found, created once
+    M.fail[("POST", r"/repos/o/r/issues")] += [None] * 2 + ["502"]
+    rc, out = sync("--apply", "--create-epic")
+    t = titles()
+    posts = [x for x in M.log if x == ("POST", "/repos/o/r/issues")]
+    check(rc == 0 and len(t) == 15 and len(set(t)) == 15, f"after a secondary limit and a 502 every issue exists once (got {rc}, {len(t)} issues)")
+    check(len(posts) == 17, f"the refused create and the failed create were each sent once more ({len(posts)} POSTs)")
+    check("Reading the issues back before trying again" in out, "the 502 made the run read the issues back first")
+    rc, out = sync("--verify")
+    check(rc == 0, f"--verify passes after the retries (got {rc})")
+    # a secondary limit that does not end, on a write: one line with the fix
+    n = len(M.issues)
+    M.fail[("PATCH", r"/repos/o/r/issues/\d+")] = ["429"] * 10
+    M.issues[3]["body"] += "\nA line a person added."
+    rc, out = sync("--apply", "--create-epic", "--update-bodies")
+    check(rc == 1 and one_line_error(out) and "secondary rate limit" in out and len(M.issues) == n, f"a secondary limit that does not end stops with one line (got {rc})")
+    M.fail.clear()
+    # the primary limit, as 429 and as 403: not retried, one line with the reset time
+    M.fail[("GET", r"/repos/o/r")] = ["429-primary"]
+    rc, out = sync()
+    check(rc == 1 and one_line_error(out) and "rate limit for this token is used up" in out, f"a 429 with no requests left is one line (got {rc})")
+    check(token not in out, "the token is not printed")
+    # an answer that is not JSON, as from a captive portal: one line, no traceback
+    M.fail[("GET", r"/repos/o/r")] = ["200-html"]
+    rc, out = sync()
+    check(rc == 1 and one_line_error(out) and "the answer is not JSON" in out, f"an HTML answer is one line with the fix (got {rc})")
+
+
+def scenario_paging():
+    token = os.environ["CARRYDOWN_GITHUB_TOKEN"]
+    M.labels += [{"name": f"other-{i}"} for i in range(230)]
+    rc, out = sync("--apply", "--create-epic")
+    check(rc == 0 and len(M.issues) == 15, f"apply exits 0 (got {rc}, {len(M.issues)} issues)")
+    created = [lb["name"] for lb in M.labels[230:]]
+    check(len(created) == 4 and len({c.lower() for c in created}) == 4, f"the four plan labels were created once, after reading three pages of labels ({created})")
+    # newer labeled issues push the plan's issues to the third page of the list
+    for i in range(230):
+        M.add_issue(f"Unrelated {i}", "", ["expense-approvals"])
+    n0 = len(M.log)
+    rc, out = sync("--apply", "--create-epic")
+    plan_issues = [i for i in M.issues if "<!-- carrydown:" in (i["body"] or "")]
+    check(rc == 0 and len(plan_issues) == 15 and len(M.issues) == 245, f"a rerun finds the issues on the third page and creates nothing ({len(M.issues)} issues)")
+    reads = [x for x in M.log[n0:] if x == ("GET", "/repos/o/r/issues")]
+    check(len(reads) == 3, f"the issue list was read page by page, three pages and no more ({len(reads)} reads)")
+    # only the page number is taken from the Link header: another host named there gets nothing
+    other = HTTPServer(("127.0.0.1", 0), _Catcher)
+    threading.Thread(target=other.serve_forever, daemon=True).start()
+    M.link_base = f"http://127.0.0.1:{other.server_address[1]}"
+    _Catcher.seen.clear()
+    gh = G.GitHub(token)
+    got = gh.paged("/repos/o/r/labels")
+    check(len(got) == 234 and not _Catcher.seen, f"every label is read and the host in the Link header gets no request ({len(got)}, {_Catcher.seen})")
+    M.link_base = None
+    other.shutdown()
+    rc, out = sync("--verify")
+    check(rc == 0 and "verification passed" in out, f"--verify passes with three pages of issues (got {rc})")
+
+
+def scenario_verifyskip():
+    rc, out = sync("--apply", "--create-epic", "--skip-comment")
+    epic = next(i for i in M.issues if i["title"] == EPIC_TITLE)
+    check(rc == 0 and not M.comments.get(epic["number"]), f"--skip-comment builds the board with no roll-up comment (got {rc})")
+    rc, out = sync("--verify", "--skip-comment")
+    check(rc == 0 and "not checked (--skip-comment)" in out and "verification passed" in out, f"--verify --skip-comment passes (got {rc})")
+    rc, out = sync("--verify")
+    check(rc == 1 and "Epic roll-up comment: missing" in out, f"--verify without --skip-comment still asks for the comment (got {rc})")
+
+
+def scenario_titleformat():
+    proj = Path(TMP) / "titles"
+    shutil.copytree(SAMPLE, proj)
+    plan = proj / "docs/spec/plan.yaml"
+    text = plan.read_text(encoding="utf-8")
+    for fmt, want in (('"{id} {nope}"', "{nope}"), ('"{0}{"', "not a valid title format"), ('"{id"', "not a valid title format"),
+                      ('"}{"', "not a valid title format"), ('"{id:abc}"', "{id:abc}"), ('"{id.x}"', "{id.x}"), ('"{label}"', "must hold {id} or {lower}")):
+        plan.write_text(text.replace('title_format: "{id} {label}"', "title_format: " + fmt), encoding="utf-8")
+        n = len(M.log)
+        rc, out = call(GS.run, ["--root", str(proj), "--repo", "o/r", "--skip-check", "--apply", "--create-epic"])
+        check(rc == 1 and want in out and "Traceback" not in out and "unhandled" not in str(rc) and len(M.log) == n and not M.issues,
+              f"title_format {fmt}: a plan problem, nothing sent (got {rc}: {out.strip()[:120]})")
+    plan.write_text(text.replace('title_format: "{id} {label}"', 'title_format: "[{lower}] {label} {{x}}"'), encoding="utf-8")
+    rc, out = call(GS.run, ["--root", str(proj), "--repo", "o/r", "--skip-check", "--apply", "--create-epic"])
+    check(rc == 0 and "[wi-01] Service scaffold, flag and API contract {x}" in titles(), f"a valid format with doubled braces works (got {rc})")
+
+
+def scenario_tokenloose():
+    src = Path(TMP) / "loose-token.txt"
+    dest = Path(TMP) / "store2" / "github_token"
+    src.write_text("ghp_" + "L" * 36 + "\n", encoding="utf-8")
+    src.chmod(0o644)
+    rc, out = call(GT.main, ["--from-file", str(src), "--token-file", str(dest)])
+    warn = [ln for ln in out.splitlines() if ln.startswith("warning:")]
+    check(rc == 0 and dest.exists() and len(warn) == 1 and "can be read by other users (mode 644)" in warn[0] and "Delete it" in warn[0],
+          f"a source others can read is stored with one warning line (got {rc}: {warn})")
+    check("L" * 36 not in out, "the token is not printed")
+    check(src.exists(), "the source is kept; the user deletes it")
 
 
 def main(argv):
