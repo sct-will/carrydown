@@ -63,7 +63,7 @@ query($p: ID!) { node(id: $p) { ... on ProjectV2 {
 ITEMS_Q = """
 query($p: ID!, $after: String) { node(id: $p) { ... on ProjectV2 {
   items(first: 100, after: $after) { pageInfo { hasNextPage endCursor } nodes {
-    id content { ... on Issue { number } }
+    id content { ... on Issue { number repository { nameWithOwner } } }
     fieldValues(first: 30) { nodes {
       ... on ProjectV2ItemFieldIterationValue { iterationId field { ... on ProjectV2FieldCommon { name } } }
       ... on ProjectV2ItemFieldSingleSelectValue { optionId field { ... on ProjectV2FieldCommon { name } } }
@@ -125,13 +125,15 @@ def field_map(proj):
     return {f["name"]: f for f in proj["fields"]["nodes"] if f}
 
 
-def load_items(gh, pid):
+def load_items(gh, pid, repo):
     out, after = {}, None
     while True:
         d = gh.graphql(ITEMS_Q, {"p": pid, "after": after})["node"]["items"]
         for n in d["nodes"]:
-            num = (n["content"] or {}).get("number")
-            if num is None:
+            content = n["content"] or {}
+            num = content.get("number")
+            owner_name = (content.get("repository") or {}).get("nameWithOwner", "")
+            if num is None or owner_name.casefold() != repo.casefold():
                 continue
             vals = {}
             for fv in n["fieldValues"]["nodes"]:
@@ -143,6 +145,47 @@ def load_items(gh, pid):
         if not d["pageInfo"]["hasNextPage"]:
             return out
         after = d["pageInfo"]["endCursor"]
+
+
+def verification_problems(plan, placements, missing, pdata, existing, iterations):
+    """Compare the board with the plan. Counts alone cannot detect wrong dates or tracks."""
+    problems = [f"missing issue: {title}" for title in missing]
+    fields = field_map(pdata)
+    for name, kind in (("Work unit", "ITERATION"), ("Track", "SINGLE_SELECT"),
+                       ("Complete by", "DATE"), ("Checkpoint", "DATE")):
+        if name not in fields:
+            problems.append(f"field {name} is missing")
+        elif fields[name].get("dataType") != kind:
+            problems.append(f"field {name} must have type {kind}")
+    cfg = fields.get("Work unit", {}).get("configuration", {})
+    have_iterations = cfg.get("iterations", []) + cfg.get("completedIterations", [])
+    values = lambda rows: sorted((i["title"], i["startDate"], i["duration"]) for i in rows)
+    if values(have_iterations) != values(iterations):
+        problems.append("Work unit iterations differ from the plan")
+    iter_ids = {i["title"]: i["id"] for i in have_iterations}
+    track_ids = {o["name"]: o["id"] for o in fields.get("Track", {}).get("options", [])}
+    views = {v["name"]: v["layout"] for v in pdata["views"]["nodes"]}
+    for name, layout in (("Table", "TABLE_LAYOUT"), ("Board", "BOARD_LAYOUT"), ("Roadmap", "ROADMAP_LAYOUT")):
+        if views.get(name) != layout:
+            problems.append(f"view {name} is missing or does not use {layout}")
+    for issue, kind, ms, it, title in placements:
+        num = issue["number"]
+        if num not in existing:
+            problems.append(f"issue #{num} is missing from the board: {title}")
+            continue
+        if kind == "epic":
+            continue
+        desired = {
+            "Work unit": iter_ids.get(f"Work unit {ms['number']}, {ms['name']}"),
+            "Complete by": it["complete_by"] if it else ms["end"],
+            "Checkpoint": it["checkpoint"] if it else ms["demo"],
+        }
+        if it:
+            desired["Track"] = track_ids.get(L.track_label(plan, it["track"]))
+        for name, value in desired.items():
+            if value is None or existing[num]["values"].get(name) != value:
+                problems.append(f"issue #{num} field {name} is missing or differs from the plan")
+    return problems
 
 
 def run(argv=None):
@@ -169,6 +212,8 @@ def _run(argv=None):
     ap.add_argument("--reconfigure-iterations", action="store_true", help="replace the Work unit iterations if they differ from the plan")
     ap.add_argument("--offline", action="store_true", help="do not call GitHub; print the intended configuration only")
     a = ap.parse_args(argv)
+    if a.apply and a.verify:
+        L.die("--apply and --verify are separate runs. Apply first, then verify without --apply")
     if a.offline and (a.apply or a.verify):
         L.die(f"--offline cannot be combined with {'--apply' if a.apply else '--verify'}: both need GitHub. "
               "Leave out --offline to write or verify, or leave out the other flag for an offline dry run")
@@ -282,6 +327,11 @@ def _run(argv=None):
 
     pdata = load_project(gh, proj["id"])
     fields = field_map(pdata)
+    for fname, kind in (("Work unit", "ITERATION"), ("Track", "SINGLE_SELECT"),
+                        ("Complete by", "DATE"), ("Checkpoint", "DATE")):
+        if fname in fields and fields[fname].get("dataType") != kind:
+            L.die(f"field {fname} has type {fields[fname].get('dataType')}, but needs {kind}. "
+                  "Rename the existing field in the project, then rerun", 1)
 
     # ---------------- fields ----------------
     L.say("\nFields")
@@ -372,7 +422,7 @@ def _run(argv=None):
         for i in iter_field["configuration"]["iterations"] + iter_field["configuration"].get("completedIterations", []):
             iter_ids[i["title"]] = i["id"]
     track_ids = {o["name"]: o["id"] for o in (fields.get("Track") or {}).get("options", [])}
-    existing = load_items(gh, proj["id"])
+    existing = load_items(gh, proj["id"], f"{owner_repo}/{name}")
     added = 0
     filled = 0
     for issue, kind, ms, it, ptitle in placements:
@@ -417,11 +467,11 @@ def _run(argv=None):
         L.say("\nVerification (read only)")
         pdata = load_project(gh, proj["id"])
         fields = field_map(pdata)
-        existing = load_items(gh, proj["id"])
+        existing = load_items(gh, proj["id"], f"{owner_repo}/{name}")
         wanted_nums = {p[0]["number"] for p in placements}
-        L.say(f"  project items that are plan issues: {len(wanted_nums & set(existing))} of {len(wanted_nums)}")
-        n_sub = sum(1 for p in placements if p[1] == "subepic")
-        n_item = sum(1 for p in placements if p[1] == "item")
+        L.say(f"  project items that are plan issues: {len(wanted_nums & set(existing))} of {len(wanted_nums) + len(missing)}")
+        n_sub = len(plan["milestones"])
+        n_item = len(plan["items"])
         expect = {"Work unit": n_sub + n_item, "Track": n_item, "Complete by": n_sub + n_item, "Checkpoint": n_sub + n_item}
         for fname in ("Work unit", "Track", "Complete by", "Checkpoint"):
             if fname not in fields:
@@ -435,6 +485,13 @@ def _run(argv=None):
         it_cfg = fields.get("Work unit", {}).get("configuration", {})
         L.say(f"  Work unit iterations: {len(it_cfg.get('iterations', [])) + len(it_cfg.get('completedIterations', []))}")
         L.say(f"  project: {proj['url']}")
+        if a.verify:
+            problems = verification_problems(plan, placements, missing, pdata, existing, iterations)
+            for problem in problems:
+                L.say("  - " + problem)
+            L.say("  verification FAILED" if problems else "  verification passed")
+            if problems:
+                return 1
     L.say("\nThe API cannot set these. Click them once in the project (see references/project-board.md in the carrydown-plan-to-github skill):")
     for c in CLICK:
         L.say("  - " + c)

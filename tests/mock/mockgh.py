@@ -65,10 +65,11 @@ class State:
         self.seq += 1
         return f"{prefix}_{self.seq}"
 
-    def add_issue(self, title, body="", labels=(), state="open", issue_type=None):
+    def add_issue(self, title, body="", labels=(), state="open", issue_type=None, repository="o/r"):
         self.next_id += 1
         iss = {"number": len(self.issues) + 1, "id": self.next_id, "node_id": f"I_{self.next_id}", "title": title,
-               "body": body, "state": state, "labels": [{"name": n} for n in labels], "html_url": "u"}
+               "body": body, "state": state, "labels": [{"name": n} for n in labels], "html_url": "u",
+               "repository": {"nameWithOwner": repository}}
         if issue_type:
             iss["type"] = {"name": issue_type}
         self.issues.append(iss)
@@ -196,7 +197,8 @@ class H(BaseHTTPRequestHandler):
                          if want <= {lb["name"] for lb in i["labels"]} and (state == "all" or i["state"] == state)]
                 return self.page(items, q, p)
             b = self.body()
-            iss = S.add_issue(b["title"], b.get("body"), b.get("labels") or [], issue_type=b.get("type"))
+            iss = S.add_issue(b["title"], b.get("body"), b.get("labels") or [], issue_type=b.get("type"),
+                              repository="/".join(p.split("/")[2:4]))
             return self.send(201, iss)
         m = re.fullmatch(base + r"/issues/(\d+)", p)
         if m:
@@ -299,7 +301,8 @@ def graphql(query, v):
             for fid, val in it["values"].items():
                 (k, x), = val.items()
                 vals.append({{"iterationId": "iterationId", "singleSelectOptionId": "optionId", "date": "date"}[k]: x, "field": {"name": names[fid]}})
-            nodes.append({"id": it["id"], "content": {"number": it["number"]}, "fieldValues": {"nodes": vals}})
+            nodes.append({"id": it["id"], "content": {"number": it["number"],
+                          "repository": {"nameWithOwner": it.get("repository", "o/r")}}, "fieldValues": {"nodes": vals}})
         return ok({"node": {"items": {"pageInfo": {"hasNextPage": False, "endCursor": None}, "nodes": nodes}}})
     if op is None and "fields(first:" in query:
         pr = _project(v.get("p"))
@@ -340,7 +343,7 @@ def graphql(query, v):
     if op == "addProjectV2ItemById":
         pr = _project(v["p"])
         iss = next(i for i in S.issues if i["node_id"] == v["c"])
-        item = {"id": S.nid("PVTI"), "number": iss["number"], "values": {}}
+        item = {"id": S.nid("PVTI"), "number": iss["number"], "repository": iss["repository"]["nameWithOwner"], "values": {}}
         pr["items"].append(item)
         return ok({op: {"item": {"id": item["id"]}}})
     if op == "updateProjectV2ItemFieldValue":

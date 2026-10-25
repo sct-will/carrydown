@@ -82,7 +82,7 @@ def store(path, token):
     The file is written to a new private file next to it and then moved into place, so it is never
     readable by others, not even for a moment. A symbolic link at the path is refused rather than
     followed. Folders that do not exist are created with mode 700. An existing folder keeps its
-    mode, except carrydown's own default folder, which is always made private."""
+    mode. The default folder must already be private before a token is stored there."""
     path = Path(os.path.expanduser(str(path)))
     if path.is_symlink():
         L.die(f"{short(path)} is a symbolic link. The token is never written through a link. Remove the link or choose another --token-file")
@@ -97,8 +97,11 @@ def store(path, token):
         for folder in reversed(created):
             folder.mkdir(mode=0o700)
             os.chmod(folder, 0o700)
-        if path.parent == Path(os.path.expanduser(G.DEFAULT_TOKEN_FILE)).parent:
-            os.chmod(path.parent, 0o700)
+        default_parent = Path(os.path.expanduser(G.DEFAULT_TOKEN_FILE)).parent
+        if default_parent.exists() and os.path.samefile(path.parent, default_parent):
+            if stat.S_IMODE(path.parent.stat().st_mode) & 0o077:
+                L.die(f"the token folder {short(path.parent)} can be accessed by other users, so nothing was stored. "
+                      f"Fix: chmod 700 {path.parent}, then run this again")
         fd, tmp = tempfile.mkstemp(prefix=".carrydown-token-", dir=str(path.parent))
         try:
             os.chmod(tmp, stat.S_IRUSR | stat.S_IWUSR)

@@ -507,6 +507,7 @@ def regressions(tmp, plan_text):
         for flag in ("--apply", "--verify"):
             step(f"{script} --offline {flag} is refused", cmd + s + ["--offline", flag], expect=2, contains=["--offline cannot be combined with " + flag])
     step("github_sync --apply --verify is refused", sync + s + ["--apply", "--verify"], expect=2, contains=["separate runs"])
+    step("github_project --apply --verify is refused", board + s + ["--apply", "--verify"], expect=2, contains=["separate runs"])
     step("an empty --name for --init is refused", scaffold + ["--root", str(d), "--init", "--name", " ", "--allow-no-git"], expect=2, contains=["--name is empty"])
     step("a --root that does not exist is refused", scaffold + ["--root", str(d / "nowhere")], expect=2, contains=["is not a folder"])
     ro = project("readonly")
@@ -851,6 +852,7 @@ def main():
         ("redirect", "mock: a redirect to another host never receives the token"),
         ("repos", "mock: owner and repository names with - and ., a missing repository, --issue-type"),
         ("board", "mock: the project board is built, a rerun changes nothing, iterations are reconfigured"),
+        ("boardverify", "mock: project verification rejects missing or incorrect board data"),
         ("projectnumber", "mock: --project-number for a missing project creates nothing"),
         ("errors", "mock: 401, 429, the secondary rate limit and a 502 before a write"),
         ("paging", "mock: lists longer than one page are read to the end by the Link header"),

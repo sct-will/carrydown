@@ -26,6 +26,8 @@ Scenarios
                 and --issue-type on the work items
   board         github_project.py creates the board, a rerun changes nothing, --verify passes,
                 --reconfigure-iterations replaces changed iterations
+  boardverify   --verify rejects missing issues, board items, fields and views, wrong values,
+                wrong layouts and iteration dates, without writing
   projectnumber --project-number for a project that does not exist is an error, not a create
   errors        401, 429 with Retry-After, a secondary rate limit, a 502 before a write and an
                 answer that is not JSON: each is retried or stopped with one line, and nothing
@@ -42,6 +44,7 @@ folder so no stored token is read.
 """
 import atexit
 import contextlib
+import copy
 import io
 import os
 import re
@@ -357,6 +360,29 @@ def scenario_tokenrules():
     check(rc == 0 and mode(shared / "new" / "tok") == 0o600 and mode(shared / "new") == 0o700 and mode(shared) == 0o755,
           f"the token is stored 600, the new folder is 700 and the existing folder keeps its mode (got {rc}, {oct(mode(shared))})")
     check(good not in out, "the stored token is not printed")
+    default_parent = Path(os.path.expanduser(G.DEFAULT_TOKEN_FILE)).parent
+    default_parent.mkdir(parents=True, exist_ok=True)
+    default_parent.chmod(0o755)
+    default_token = default_parent / "new-token"
+    feed(good + "\n")
+    rc, out = call(GT.main, ["--stdin", "--token-file", str(default_token)])
+    sys.stdin = sys.__stdin__
+    check(rc == 2 and "Fix: chmod 700" in out and mode(default_parent) == 0o755 and not default_token.exists() and good not in out,
+          f"an existing loose default folder is refused without chmod or a token write (got {rc})")
+    alias = Path(TMP) / "default-folder-alias"
+    alias.symlink_to(default_parent, target_is_directory=True)
+    for aliased_token in (default_parent / "../carrydown/new-token", alias / "new-token"):
+        feed(good + "\n")
+        rc, out = call(GT.main, ["--stdin", "--token-file", str(aliased_token)])
+        sys.stdin = sys.__stdin__
+        check(rc == 2 and "Fix: chmod 700" in out and mode(default_parent) == 0o755 and not default_token.exists() and good not in out,
+              f"an alias of the loose default folder cannot bypass the guard (got {rc})")
+    default_parent.chmod(0o700)
+    feed(good + "\n")
+    rc, out = call(GT.main, ["--stdin", "--token-file", str(default_token)])
+    sys.stdin = sys.__stdin__
+    check(rc == 0 and mode(default_token) == 0o600 and mode(default_parent) == 0o700,
+          f"the private default folder accepts a mode 600 token after the user fixes it (got {rc})")
     ro = d / "readonly"
     ro.mkdir()
     ro.chmod(0o500)
@@ -452,6 +478,68 @@ def scenario_board():
     check(rc == 0 and "updateProjectV2Field" in M.gql and last["duration"] == 19, f"--reconfigure-iterations replaces them (got {rc}, last {last['duration']} days)")
     rc, out = board("--apply", root=str(proj))
     check(rc == 0 and "Work unit exists with the planned iterations" in out, "the next run finds the planned iterations")
+
+
+def scenario_boardverify():
+    rc, out = sync("--apply", "--create-epic")
+    check(rc == 0, f"issues created first (got {rc})")
+    rc, out = board("--apply")
+    check(rc == 0, f"board created first (got {rc})")
+    saved = copy.deepcopy(M.projects[0])
+    issues = copy.deepcopy(M.issues)
+
+    def remove_field(pr):
+        field = next(f for f in pr["fields"] if f["name"] == "Track")
+        pr["fields"].remove(field)
+        for item in pr["items"]:
+            item["values"].pop(field["id"], None)
+
+    def wrong_value(pr, name, value):
+        fid = next(f["id"] for f in pr["fields"] if f["name"] == name)
+        item = next(i for i in pr["items"] if fid in i["values"])
+        item["values"][fid] = value
+
+    def wrong_iterations(pr):
+        next(f for f in pr["fields"] if f["name"] == "Work unit")["configuration"]["iterations"][0]["duration"] += 1
+
+    variants = [
+        ("missing items", lambda pr: pr["items"].clear()),
+        ("missing views", lambda pr: pr["views"].clear()),
+        ("wrong view layout", lambda pr: pr["views"][0].update(layout="BOARD_LAYOUT")),
+        ("missing field", remove_field),
+        ("wrong field type", lambda pr: next(f for f in pr["fields"] if f["name"] == "Work unit").update(dataType="TEXT")),
+        ("wrong date", lambda pr: wrong_value(pr, "Complete by", {"date": "2027-01-01"})),
+        ("wrong track", lambda pr: wrong_value(pr, "Track", {"singleSelectOptionId": "wrong"})),
+        ("wrong iteration", lambda pr: wrong_value(pr, "Work unit", {"iterationId": "wrong"})),
+        ("wrong iteration dates", wrong_iterations),
+        ("foreign repository issue numbers", lambda pr: [item.update(repository="other/repo") for item in pr["items"]]),
+        ("missing plan issues", lambda pr: M.issues.clear()),
+    ]
+    for name, mutate in variants:
+        M.projects[:] = [copy.deepcopy(saved)]
+        M.issues[:] = copy.deepcopy(issues)
+        mutate(M.projects[0])
+        before = len(M.gql)
+        rc, out = board("--verify")
+        writes = [op for op in M.gql[before:] if op in mockgh.MUTATIONS]
+        check(rc == 1 and not writes and "Traceback" not in out,
+              f"--verify rejects {name} without writing (got {rc}, writes {writes})")
+    M.projects[:] = [copy.deepcopy(saved)]
+    M.issues[:] = copy.deepcopy(issues)
+    rc, out = board("--verify")
+    check(rc == 0 and "verification passed" in out, f"--verify passes after restoring the complete board (got {rc})")
+    foreign = M.projects[0]["items"][1]
+    foreign["repository"] = "other/repo"
+    kept = copy.deepcopy(foreign)
+    rc, out = board("--apply")
+    check(rc == 0 and len(M.projects[0]["items"]) == len(saved["items"]) + 1 and foreign == kept,
+          f"--apply adds the correct repository's issue and leaves the foreign issue unchanged (got {rc})")
+    rc, out = board("--verify")
+    check(rc == 0, f"--verify passes with both repositories' same-number issues on the board (got {rc})")
+    before = len(M.gql)
+    rc, out = board("--apply")
+    check(rc == 0 and not [op for op in M.gql[before:] if op in mockgh.MUTATIONS],
+          f"a rerun with a foreign same-number issue sends no writes (got {rc})")
 
 
 def scenario_projectnumber():
