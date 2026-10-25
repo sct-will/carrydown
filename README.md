@@ -1,6 +1,8 @@
 # carrydown
 
-carrydown uses two packaged artificial intelligence (AI) agent skills to turn your architecture document into a project plan, specifications, GitHub issues and a project board. It then generates a project-specific skill that guides each engineer's coding agent through the work.
+carrydown is a planning and engineering handoff system for teams using artificial intelligence (AI) coding agents. Starting from your architecture document, your agent uses the carrydown skills to generate the project plan, specifications, GitHub epics and issues, project board, and a project-specific skill for your engineers' agents.
+
+The plan is built around your team's availability and target date. Scripts check the specifications against the plan. Each specification cites the architecture, and the engineers' skill directs their agents to those sections before starting work. You review and refine the artifacts with your agent and approve publication to GitHub.
 
 [![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
 
@@ -18,12 +20,12 @@ carrydown uses two packaged artificial intelligence (AI) agent skills to turn yo
 
 ## How it works
 
-![How carrydown works. Two lanes. Plan owner, an engineering or product manager: step 1 Generate, the plan owner runs carrydown-ground-truth in their agent, in: architecture document plus people and dates, out: plan.yaml and one spec per work item; step 2 Review, the plan and specs are human reviewed, with the agent making the edits; step 3 Carry down to GitHub, the plan owner runs carrydown-plan-to-github in their agent, out: epic, a sub-epic per milestone, issues with specs, board, engineers' skill, with the note dry run first, nothing is written until you say yes. One install line goes down to the Engineers lane: step 4 Work the issues, the engineer says "Work on WI-03" for work item WI-03, the agent invokes the skill, reads the spec and the cited sections, then plans the code. The ground truth document is the only amber element. A thin amber thread, labeled ground truth, cited by section, runs from it through steps 1 and 3 into step 4.](docs/images/handoff.png)
+![Your AI agent uses the carrydown skills to plan around team capacity and dependencies and draft a specification for each work item. Scripts check the specifications against the plan. You review and approve the work, then the agent creates GitHub epics, issues, a project board and the engineers' skill after dry runs. Engineers use that skill to start work from the specifications and cited architecture sections. An amber thread carries the architecture through each handoff.](docs/images/handoff.png)
 
-1. **Generate.** Give your agent the ground truth, usually an architecture document, and any other relevant context. If you know the team size and target project duration, include them. The `carrydown-ground-truth` skill interviews you, then drafts a plan and one specification per work item around your constraints. Each engineer has a track, or lane of work. Each milestone ends with an integrated demonstration.
-2. **Review.** Review the plan in `docs/spec/plan.yaml` and the specifications under `docs/spec/`. Edit them with your agent until they are right. You decide the owners, dates, scope and order.
-3. **Carry down to GitHub.** Commit and push the approved plan and specifications first. Then say "Put the plan on GitHub." The `carrydown-plan-to-github` skill shows dry runs and asks for approval before creating the issues and board. It creates a parent epic for the plan, a sub-epic for each milestone, and an issue linking to each work item's specification. Finally, it generates the engineers' skill.
-4. **Work the issues.** Each engineer installs the generated skill once, then names a work item: "Work on WI-03." Their agent reads the specification and the sections it cites, then plans the code. The generated skill is named after the project.
+1. **Plan for your team.** Give your agent the ground truth, usually an architecture document, and any other relevant context. If you know the team size and target project duration, include them. The `carrydown-ground-truth` skill interviews you, then drafts a plan and one specification per work item around your constraints. Each engineer has a track, or lane of work. Each milestone ends with an integrated demonstration.
+2. **Review and approve.** Review the plan in `docs/spec/plan.yaml` and the specifications under `docs/spec/`. Edit them with your agent until they are right. You decide the owners, dates, scope and order.
+3. **Publish to GitHub.** Commit and push the approved plan and specifications first. Then say "Put the plan on GitHub." The `carrydown-plan-to-github` skill shows dry runs and asks for approval before creating the issues and board. It creates a parent epic for the plan, a sub-epic for each milestone, and an issue linking to each work item's specification. Finally, it generates the engineers' skill.
+4. **Work from the specification.** Each engineer installs the generated skill once, then names a work item: "Work on WI-03." Their agent reads the specification and the sections it cites, then plans the code. The generated skill is named after the project.
 
 <br />
 
@@ -45,7 +47,7 @@ The sample is based on a fictional expense approvals service, so the company, th
 
 ## What you get
 
-The plan and every specification trace back to the same ground truth, with dates and capacity checked against the named team.
+Your AI agent generates these artifacts using the carrydown skills. The plan and every specification trace back to the same ground truth, with dates and capacity checked against the named team.
 
 - **A plan** in `docs/spec/plan.yaml`: milestones, tracks, owners and dates fitted to your people and time, with a load table and a critical path, and a written reason for every milestone.
 - **One specification per work item**, the smallest piece of work an engineer can finish and show, citing the sections it comes from and checked against the plan by a script that also runs in continuous integration (automatic checks on every pull request).
