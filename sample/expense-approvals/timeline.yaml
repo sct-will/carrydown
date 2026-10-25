@@ -1,7 +1,7 @@
 # Sample input: when the work happens.
 start_date: 2027-02-01
 target_date: 2027-04-23
-weeks_of_work: 11                  # 12 calendar weeks minus the pause
+weeks_of_work: 11                  # 12 calendar weeks minus the break week
 pauses:
   - name: "Offsite and planning week"
     start: 2027-03-22

@@ -106,7 +106,7 @@ Write it as a short list the user can correct.
 - Ground truth: files, winner on conflict, version.
 - People and tracks, start dates, days off, advisors.
 - Parts of the system each track touches (the themes).
-- Time frame and pauses, longest work unit, checkpoint rhythm.
+- Time frame and breaks, longest work unit, checkpoint rhythm.
 - Repository, Epic, labels, logins.
 - Agents in use.
 - Demonstration audience, what they must see, and who gives each demonstration.

@@ -2,7 +2,7 @@
 
 An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent. Two skills you install, one skill is generated for your engineers.
 
-The carrydown skills carry a ground truth document down into a governed plan. The plan has one specification per work item, a set of GitHub issues, a project board and the engineers' skill that every issue links to. This page explains the four steps and what each one produces, which parts the carrydown skills do for you and which stay with the plan owner and the engineers.
+The carrydown skills carry a ground truth document down into a governed plan. The plan has one specification per work item, a set of GitHub issues, a project board and the engineers' skill that every issue links to. This page explains the four steps and what each one produces. It also says which parts the carrydown skills do for you and which stay with the plan owner and the engineers.
 
 The idea is old in systems engineering, where it is called flow-down: a requirement at the top is traced to every part below it. The carrydown skills apply the same idea to software work done with coding agents. One document, one unbroken line through the plan, the specifications, the issues, the board and the agent.
 
@@ -35,7 +35,7 @@ The carrydown skills cannot write your document for you. They can help you revie
 
 ## Step 1 in more detail: the plan
 
-Work units are time boxes of variable length. A thin first slice may take a week and the core may take three. Pauses sit between them. There is no sprint vocabulary, no story points and no velocity. Each work unit has an exit gate, and each milestone has acceptance criteria written before the work starts.
+Work units are time boxes of variable length. A thin first slice may take a week and the core may take three. Breaks sit between them. There is no sprint vocabulary, no story points and no velocity. Each work unit has an exit gate, and each milestone has acceptance criteria written before the work starts.
 
 Items are the smallest pieces an engineer can finish, show and close, usually two to five days. Each has an owner on a track, a completion date, dependencies, a size and the sections of the ground truth it cites. The load table shows items and days per person per work unit. The critical path shows the longest dependency chain.
 

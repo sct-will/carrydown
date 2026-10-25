@@ -39,7 +39,7 @@ A milestone that fails one of these is split, merged or explained before you go 
 
 ## 3. Work units
 
-A work unit is a time box with its own length. Do not use the words sprint, story point or velocity. A work unit holds one milestone. Lengths differ: a short one for a thin first slice, a long one for the core. A rule of thumb is one to three weeks. Pauses sit between work units as breaks and are listed under `breaks` in `plan.yaml`.
+A work unit is a time box with its own length. Do not use the words sprint, story point or velocity. A work unit holds one milestone. Lengths differ: a short one for a thin first slice, a long one for the core. A rule of thumb is one to three weeks. Breaks sit between work units and are listed under `breaks` in `plan.yaml`.
 
 Check: the sum of the work units plus breaks fits the time frame, and no work unit is longer than the user's limit.
 

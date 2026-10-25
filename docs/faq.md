@@ -32,7 +32,9 @@ No. The plan is files in Git, so changing it is cheap. Work units stretch to fit
 
 Plan mode and spec-driven tools plan one task or one feature from a specification. Superpowers is a library of skills for how an agent works. CCPM is a project management workflow that turns requirement documents into GitHub issues. The carrydown skills carry one agreed ground truth across every task. They date the plan around named people with their allocation, check every specification against that plan, fill the board and generate the engineers' skill. They can sit beside any of those tools.
 
-## What does it cost in tokens?
+## What does it cost in AI usage?
+
+Here cost means your agent's model usage, the amount of text the AI model reads and writes. It is separate from the GitHub token.
 
 The planning run reads the whole document once and writes one specification per item, so the cost grows with the number of items. The generated skill loads one specification and the cited sections each time an engineer starts an item, not the whole document. The two skill descriptions are kept short so they stay in every session's listing.
 

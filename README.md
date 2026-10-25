@@ -18,7 +18,7 @@ Restart your agent after the install, so it sees the two skills. Then put your d
 
 > Set up a project plan from this document.
 
-To look before you install, open [the sample board](https://github.com/users/sct-will/projects/2). Or [open the sample in a Codespace](https://codespaces.new/sct-will/carrydown), a ready-made workspace in your browser. There you can watch the plan being checked and a dry run, a rehearsal of the issues with nothing written to GitHub.
+To look before you install, open [the sample board](https://github.com/users/sct-will/projects/2). Or [open carrydown in a Codespace](https://codespaces.new/sct-will/carrydown), a ready-made workspace in your browser. As it starts, it runs the sample. You can watch the plan being checked and a dry run, a rehearsal of the issues with nothing written to GitHub.
 
 ## How it works
 
@@ -92,7 +92,9 @@ docs/
 
 ## How the plan is composed
 
-The agent builds the plan around people and the part of the system each one owns. Each engineer owns one track and stays on one theme, one part of the system, at a time, so they switch context less. A milestone takes items from the tracks it needs. The tracks meet at a checkpoint, a dated integration check between them. There they run a joint check, the one-sentence test in the plan that proves the parts they built fit together. The milestone ends with one demonstration of integrated functionality, given by the engineers whose tracks meet. An item's size is the working days it needs at full attention. Size divided by allocation gives calendar time, and nobody passes 100 percent of their time in a work unit. Slack, the days to spare, sits before every checkpoint. The critical path is the chain of items that sets the end date. It is checked for who owns each item on it, because one absent owner there would move the end date. The reason for each milestone is written in the plan, and the checker's "Planning review" reports coverage, theme switches, slack and load so you can argue with it. [The method](docs/method.md) lists the ten rules.
+The agent builds the plan around people and the part of the system each one owns. Each engineer owns one track and stays on one theme, one part of the system, at a time, so they switch context less. A milestone takes items from the tracks it needs. The tracks meet at a checkpoint, a dated integration check between them. There they run a joint check, the one-sentence test in the plan that proves the parts they built fit together.
+
+The milestone ends with one demonstration of integrated functionality, given by the engineers whose tracks meet. An item's size is the working days it needs at full attention. Size divided by allocation, the share of a person's time given to this plan, gives calendar time. Nobody passes 100 percent of their time in a work unit. Slack, the days to spare, sits before every checkpoint. The critical path is the chain of items that sets the end date. It is checked for who owns each item on it, because one absent owner there would move the end date. The reason for each milestone is written in the plan, and the checker's "Planning review" reports coverage, theme switches, slack and load so you can argue with it. [The method](docs/method.md) lists the ten rules.
 
 ## How it compares
 
