@@ -22,7 +22,7 @@ In this skill, the user is the plan owner.
 
 Two skills you install, one skill is generated for your engineers. This is the second of the two. It reads `docs/spec/plan.yaml` and the specification folder and builds on GitHub: labels, one sub-epic per milestone, one issue per work item as a sub-issue of its sub-epic, dependency links, an Epic roll-up comment, and a GitHub Project (v2) board with its fields and views. `references/github-structure.md` describes each part. Issues are matched by a hidden marker in the body, and by title for issues made before the marker existed, so a rerun creates nothing twice.
 
-Then it generates the engineers' skill: a small folder in the Agent Skills format under `project.dev_skill_path`. Each engineer installs it once and says "Work on WI-03". Their agent reads the specification and the ground truth sections it cites, then plans the code. The specification folder stays canonical. The generated skill points at it.
+Then it generates the engineers' skill: a small folder in the Agent Skills format under `project.dev_skill_path`. Each engineer installs it once and names a work item, for example "Work on [work item ID]". Their agent reads the specification and the ground truth sections it cites, then plans the code. The specification folder stays canonical. The generated skill points at it.
 
 ## Rules that never bend
 

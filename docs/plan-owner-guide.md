@@ -131,7 +131,7 @@ You are ready to hand off when the issues link to their specifications, the boar
 
 ## Hand the work to engineers
 
-The agent supplies a complete installation command for your project's generated skill. Send that command and the board link to the engineers. They install the generated skill once in their coding agents. Each starts an item by naming it, for example "Work on WI-03". Their agent reads the specification and its cited source sections before planning code.
+The agent supplies a complete installation command for your project's generated skill. Send that command and the board link to the engineers. They install the generated skill once in their coding agents. Each starts an item by naming its identifier, for example "Work on [work item ID]". Their agent reads the specification and its cited source sections before planning code.
 
 The engineers follow three rhythms:
 
