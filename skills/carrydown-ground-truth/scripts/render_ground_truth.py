@@ -8,7 +8,7 @@ rendering for readers and agents:
   docs/ground-truth/<name>.index.txt   one line per heading, "line:## heading", for sed-based reading
   docs/ground-truth/figures/<name>/    figures extracted from a .docx, or copied from a .md
 
-Input can be a Word document (.docx) or a Markdown file (.md). Nothing needs to be
+Input can be a Word document (.docx), a Markdown file (.md) or UTF-8 text (.txt). Nothing needs to be
 installed: Word files are read with the standard library (zipfile and xml.etree). If the
 lxml package happens to be installed, the script uses it because it is faster.
 
@@ -245,6 +245,18 @@ def render_markdown(src, fig_prefix):
     elif len(h1) > 1:
         notes.append(f"{len(h1)} top-level headings. Use one # title and ## for sections so anchors stay readable.")
     return out, figs, notes
+
+
+def render_text(src):
+    """Put plain UTF-8 text in one numbered section without interpreting it as Markdown."""
+    try:
+        text = Path(src).read_text(encoding="utf-8-sig")
+    except UnicodeDecodeError as e:
+        raise DocxError(f"is not UTF-8 text (byte 0x{e.object[e.start]:02x} at offset {e.start}). Save it as UTF-8, then run this again")
+    text = text.replace("\r\n", "\n").replace("\r", "\n").replace("\t", "    ")
+    notes = [] if text.strip() else ["the document is empty."]
+    body = [f"# {Path(src).stem}", "", "## 1 Source text", "", "````text", text.rstrip(), "````"]
+    return body, Figures(), notes
 
 
 # ---------------------------------------------------------------------------
@@ -1035,13 +1047,14 @@ def valid_date(text):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(
-        description="Render .docx or .md ground-truth documents as Markdown with stable anchors, a section index and figures.",
+        description="Render .docx, .md or .txt ground-truth documents as Markdown with stable anchors, a section index and figures.",
         epilog="Nothing is written with --dry-run. Word files are read with the standard library.",
     )
-    ap.add_argument("inputs", nargs="+", help="one or more .docx or .md files")
+    ap.add_argument("inputs", nargs="+", help="one or more .docx, .md or UTF-8 .txt files")
     ap.add_argument("--root", default=".", help="project root (default: current directory)")
     ap.add_argument("--out-dir", default="docs/ground-truth", help="output folder relative to --root (default: docs/ground-truth)")
     ap.add_argument("--name", help="output name without extension. Only valid with one input. Default: the input file name")
+    ap.add_argument("--source-label", help="original source path recorded in the header when the input is an agent-reviewed Markdown extraction. Only valid with one input")
     ap.add_argument("--version", default="unversioned", help="document version to record in the header (default: unversioned)")
     ap.add_argument("--date", default=dt.date.today().isoformat(), help="generation date, YYYY-MM-DD (default: today)")
     ap.add_argument("--dry-run", action="store_true", help="render in memory and report, write nothing")
@@ -1053,6 +1066,10 @@ def main(argv=None):
 
     if a.name is not None and len(a.inputs) > 1:
         ap.error("--name works with a single input")
+    if a.source_label is not None and len(a.inputs) > 1:
+        ap.error("--source-label works with a single input")
+    if a.source_label is not None and not str(a.source_label).strip():
+        ap.error("--source-label is empty")
     if a.name is not None and not (NAME_RE.fullmatch(a.name) and a.name.strip(".")):
         return fail(f"--name {a.name!r} must be a plain file name without a folder or an extension, such as architecture")
     if not valid_date(a.date):
@@ -1094,8 +1111,8 @@ def main(argv=None):
         if why:
             return fail(why)
         ext = srcp.suffix.lower()
-        if ext not in (".docx", ".md", ".markdown"):
-            return fail(f"{src}: only .docx and .md are supported. Save the document as Word (.docx) or Markdown (.md)")
+        if ext not in (".docx", ".md", ".markdown", ".txt"):
+            return fail(f"{src}: direct rendering supports .docx, .md and UTF-8 .txt. Use the ground-truth skill's source-material procedure for PDF, image and other files")
         clash = overwrites_source(srcp, root, out_dir, a.name)
         if clash:
             print(f"error: {src} {clash}. "
@@ -1125,6 +1142,8 @@ def main(argv=None):
         try:
             if ext == ".docx":
                 body, figs, notes = render_docx(srcp, f"figures/{name}")
+            elif ext == ".txt":
+                body, figs, notes = render_text(srcp)
             else:
                 body, figs, notes = render_markdown(srcp, f"figures/{name}")
         except DocxError as e:
@@ -1141,7 +1160,7 @@ def main(argv=None):
                 return fail(f"{src}: figure {fname[:40]} cannot be written: {why}")
             if L.exists(target) and not target.is_file():
                 return fail(f"{target} is in the way: it is not a regular file where the rendering writes a figure")
-        text, index_txt, n_head = finish(body, srcp.name, a.version, a.date)
+        text, index_txt, n_head = finish(body, a.source_label or srcp.name, a.version, a.date)
         notes += unnumbered_notes(text)
         rendered.append((srcp, figs, notes, text, index_txt, n_head, fig_dir, out_md, out_idx))
 

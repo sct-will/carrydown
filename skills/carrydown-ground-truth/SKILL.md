@@ -20,7 +20,7 @@ In this skill, the user is the plan owner.
 
 ## What this skill does
 
-A ground truth is the document a project must obey: an architecture document, requirements, a business analyst note, governance rules, a development standard. This skill interviews the user, renders the documents to Markdown with stable section anchors, scaffolds `docs/spec/`, drafts the plan with the user, writes one specification per work item to a fixed template and runs the checker. A separate second pass challenges the finished set and records accepted repairs before final approval. The next skill, `carrydown-plan-to-github`, puts the plan on GitHub and generates the skill each engineer installs.
+A ground truth is the set of source files a project must obey: architecture, requirements, business notes, governance rules, company context and development standards. The files can mix documents, plain text, PDFs and images in one input folder. This skill interviews the user, creates reviewed Markdown renderings with stable section anchors, scaffolds `docs/spec/`, drafts the plan with the user, optionally uses supplied skills and work preferences to propose explainable assignments, writes one specification per work item to a fixed template and runs the checker. Missing or unclear staffing context never blocks the default assignment approach. A separate second pass challenges the finished set and records accepted repairs before final approval. The next skill, `carrydown-plan-to-github`, puts the plan on GitHub and generates the skill each engineer installs.
 
 ## Rules that never bend
 
@@ -45,7 +45,7 @@ The scripts and templates folders sit next to this SKILL.md. In the commands bel
 
 1. Check for Python 3.9 or later, for git, and that the project folder is a git repository. `references/setup.md` has the commands, the Windows differences and what to say when something is missing.
 2. If the folder is not a git repository, ask whether to run `git init`. Run it only after a clear yes, and only in the project folder.
-3. Find the documents, usually in `docs/source/`. If they are elsewhere, ask.
+3. Find the source files, usually in `docs/source/`. Inventory the folder before the interview. Word, Markdown and plain text render directly. If it contains PDF, image or another format, read `references/source-material.md` only then and follow its reviewed extraction procedure. Name every file that cannot be read reliably, record the coverage limit and continue with the readable sources. Stop only when none of the intended ground-truth files can be processed.
 
 ### 1. Interview
 
@@ -61,7 +61,7 @@ Start each later step with the same line and the next number. Do not go on befor
 python3 <skill>/scripts/render_ground_truth.py path/to/document.docx --root . --version 0.1
 ```
 
-It takes several files at once, `.docx` or `.md`. Use `--dry-run` first if the user wants to see what will be written. The output goes to `docs/ground-truth/<name>.md` with a section index, plus `<name>.index.txt` (one line per heading) and `figures/`. It refuses a source kept inside `docs/ground-truth/`, because the rendering would overwrite it; move the source to `docs/source/`. Tell the user which headings have no numbers: specifications cite sections by number. Offer to renumber the source, not the rendering.
+It takes several files at once, `.docx`, `.md` or UTF-8 `.txt`. Use `--dry-run` first if the user wants to see what will be written. The output goes to `docs/ground-truth/<name>.md` with a section index, plus `<name>.index.txt` (one line per heading) and `figures/`. It refuses a source kept inside `docs/ground-truth/`, because the rendering would overwrite it; move the source to `docs/source/`. For PDF, images and other formats, use the agent-reviewed extraction in `references/source-material.md`. Tell the user which headings have no numbers: specifications cite sections by number. Offer to renumber the source, not the rendering.
 
 ### 3. Scaffold
 
@@ -73,7 +73,7 @@ This writes a starter `docs/spec/plan.yaml` from the template. Fill it in during
 
 ### 4. Draft the plan with the user
 
-Read `references/planning.md` and follow its steps, stopping for a decision at each: what must exist, milestones and their composition, work units, work items, dates, the load table and critical path, the work outside the plan, an adversarial review of the plan, and the rationale. Start that review with this sentence, word for word: "List what is missing, wrong or improvable in this plan, reading it as each engineer would live it week by week." The plan records its rationale: why each milestone holds its items, what the engineers show together at its demonstration, and why each track's items are in their order. Run `python3 <skill>/scripts/check_specs.py --root . --report` and show the user the load table and the planning review block. Save the result in `plan.yaml` and run the report again.
+Read `references/planning.md` and follow its steps, stopping for a decision at each: what must exist, milestones and their composition, work units, work items, optional staffing matches, dates, the load table and critical path, the work outside the plan, an adversarial review of the plan, and the rationale. Start that review with this sentence, word for word: "List what is missing, wrong or improvable in this plan, reading it as each engineer would live it week by week." The plan records its rationale: why each milestone holds its items, what the engineers show together at its demonstration, and why each track's items are in their order. Run `python3 <skill>/scripts/check_specs.py --root . --report` and show the user the staffing context, load table and planning review blocks. Save the result in `plan.yaml` and run the report again.
 
 ### 5. Write milestones and specifications
 

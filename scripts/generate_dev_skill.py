@@ -104,21 +104,29 @@ def contracts_md(plan, root):
 
 
 def ground_truth_map_md(plan, root):
-    gt = Path(root) / plan["project"]["ground_truth"]
     out = ["# Ground truth map", "",
-           f"Headings of `{plan['project']['ground_truth']}` with GitHub anchors and line numbers, then the sections each work item cites. "
-           "Regenerating the rendering may move line numbers. Then ask the plan owner to run `generate_dev_skill.py --only references` again.", ""]
-    if gt.exists():
-        lines = L.read_text(gt).split("\n")
-        heads = L.collect_headings(lines)
-        anchors = L.anchors_for(heads)
-        out += ["## By heading", ""]
-        rows = [[f"{ln}", "#" * lvl, text, f"`#{anc}`"] for (ln, lvl, text), anc in zip(heads, anchors) if lvl > 1]
-        out += [md_table(["Line", "Level", "Heading", "Anchor"], rows), ""]
-    else:
-        out += [f"The rendered ground truth was not found at `{plan['project']['ground_truth']}`. Render it with `render_ground_truth.py`, then run this generator again.", ""]
+           "Rendered sources in precedence order, their headings and the sections each work item cites. "
+           "When sources conflict, the earlier source in this file wins unless the plan owner recorded another decision. "
+           "Regenerating a rendering may move line numbers. Then ask the plan owner to run `generate_dev_skill.py --only references` again.", "",
+           "## Sources and precedence", ""]
+    sources = L.ground_truth_sources(plan)
+    out += [md_table(["Precedence", "Source id", "Document", "Original file", "Rendered path", "Section index", "Version", "Status", "Coverage limit", "Use"], [
+        [str(n), s["id"], s["name"], f"`{s.get('source_path', s.get('path', ''))}`", f"`{s['path']}`" if s.get("path") else "Not rendered", f"`{s['path'][:-3] + '.index.txt' if s.get('path', '').endswith('.md') else s.get('path', '')}`" if s.get("path") else "Not available", s.get("version", ""), s.get("status", "reviewed"), s.get("limit", ""), s.get("use", "")]
+        for n, s in enumerate(sources, 1)
+    ]), ""]
+    for source in L.rendered_sources(plan):
+        gt = Path(root) / source["path"]
+        out += [f"## {source['name']}", ""]
+        if gt.exists():
+            lines = L.read_text(gt).split("\n")
+            heads = L.collect_headings(lines)
+            anchors = L.anchors_for(heads)
+            rows = [[f"{ln}", "#" * lvl, text, f"`#{anc}`"] for (ln, lvl, text), anc in zip(heads, anchors) if lvl > 1]
+            out += [md_table(["Line", "Level", "Heading", "Anchor"], rows), ""]
+        else:
+            out += [f"The rendered source was not found at `{source['path']}`. Render it with `render_ground_truth.py`, then run this generator again.", ""]
     out += ["## By work item", "",
-            md_table(["Id", "Work item", "Ground truth sections"], [[L.tag(plan, it["id"]), it["label"], it.get("ground_truth", "")] for it in plan["items"]]), ""]
+            md_table(["Id", "Work item", "Ground truth sections"], [[L.tag(plan, it["id"]), it["label"], L.ground_truth_citation(plan, it)] for it in plan["items"]]), ""]
     return "\n".join(out).rstrip() + "\n"
 
 
@@ -205,7 +213,6 @@ def main(argv=None):
     first = plan["items"][0]
     ms1 = L.milestone_by_num(plan)[first["milestone"]]
     stem = f"{L.tag(plan, first['id']).lower()}-{first['slug']}"
-    gt = proj["ground_truth"]
     description = make_description(plan)
     values = {
         # a JSON string is a valid YAML double-quoted value, so ": " or " #" in a project name cannot break the frontmatter
@@ -213,7 +220,6 @@ def main(argv=None):
         "purpose_extra": "Its conventions come from the plan folder, and its references are generated from the same files.",
         "spec_dir": proj["spec_dir"], "example_id": L.tag(plan, first["id"]), "example_stem": stem,
         "example_path": f"{proj['spec_dir']}/{ms1['folder']}/{stem}.md",
-        "ground_truth": gt, "ground_truth_index": re.sub(r"\.md$", ".index.txt", gt),
         "conventions": L.conventions_text(plan), "branch": proj["branch"],
         "definition_of_done": dod_checkboxes(plan), "tests": tests_text(plan),
         "item_count": len(plan["items"]), "skill_path": skill_path, "skill_path_win": skill_path.replace("/", "\\"),

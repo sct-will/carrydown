@@ -4,7 +4,7 @@ Run these as separate passes, each in a fresh context if you can. The aim is to 
 
 ## A. The ground truth
 
-Paste or point at the rendered document and use this prompt.
+Point at the reviewed renderings in precedence order and use this prompt.
 
 > You are a skeptical reviewer. Read the whole document. Find what is missing, what is wrong and what is contradictory. Be specific and cite section numbers.
 >
@@ -36,9 +36,10 @@ The longer prompt below supports discussion while drafting. Once the plan and sp
 > 4. Context switching. Where a person jumps between themes on consecutive days. Propose a reordering.
 > 5. Load. One person carrying much more than another. One person owning the critical path, so that one absence would move the end date.
 > 6. The engineers' experience. Is there a day when someone has nothing to do, or three things due? Does the first week let people start without waiting?
-> 7. Milestone composition. Does each milestone prove one user-visible capability end to end, with every track it crosses meeting at a named joint check before the demonstration? Is the reason given for a milestone that stays inside one track true?
-> 8. Rationale. Is each stated reason in `rationale`, `joint_demonstration` and `order_rationale` true of the dates and dependencies? Quote the reason and the date or dependency that contradicts it.
-> 9. For each finding: the item or milestone, the problem, a concrete change.
+> 7. Staffing match. When skills or work preferences were supplied, does each assignment make a credible best match? Explain tradeoffs and use the default assignment rules wherever the inputs are unclear. Missing skills or preferences are valid and are not a finding.
+> 8. Milestone composition. Does each milestone prove one user-visible capability end to end, with every track it crosses meeting at a named joint check before the demonstration? Is the reason given for a milestone that stays inside one track true?
+> 9. Rationale. Is each stated reason in `rationale`, `joint_demonstration` and `order_rationale` true of the dates and dependencies? Quote the reason and the date or dependency that contradicts it.
+> 10. For each finding: the item or milestone, the problem, a concrete change.
 >
 > Return a numbered list sorted by impact. Do not make the changes.
 

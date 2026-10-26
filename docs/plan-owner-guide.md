@@ -26,12 +26,13 @@ The interview has six steps. Replies start with `carrydown: interview, step N of
 | --- | --- |
 | Which documents must the project obey, and which wins if two disagree? | File paths, and the winner |
 | Who does the work, which part of the system does each person own, from when, and at what share of their time? | Names, a track each (a lane of work one engineer owns, such as back end or front end), allocation percentages, start dates, days off |
+| Should skills or work preferences influence the proposed assignments? | Optional skills and preferred work for any or all engineers. Leave them out when unknown. |
 | When must it ship, or how many weeks do you have? | A date, a number of weeks, or "derive the date" |
 | Which repository, and which coding agents do the engineers use? | owner/repo and the agents |
 | What must the stakeholders see at each milestone demonstration to call it done? | Their words, which become acceptance criteria |
 | How is the code built, tested and merged here? | The commands and the branch rule |
 
-Your source documents are required. Team size, allocation and target dates can be undecided. If you have a team and no date, the agent derives a date. If you have a date and no team, it proposes the capacity needed. If neither is known, it proposes a starting point and asks you to confirm it.
+Your source files are required. Put the technical document and broader context in `docs/source/`. The agent inventories Word, Markdown, plain text, PDF, image and other readable files, then creates reviewable Markdown renderings. It identifies unreadable files and continues with the rest. It stops only when no intended source can be processed. Team size, allocation and target dates can be undecided. If you have a team and no date, the agent derives a date. If you have a date and no team, it proposes the capacity needed. If neither is known, it proposes a starting point and asks you to confirm it. Skills and work preferences are always optional. If you supply them, the agent proposes a best match and explains it. If they are missing or unclear, the agent uses the default assignment approach and continues.
 
 Allocation is the share of each person's working time available for this plan. The agent assumes 100 percent and asks you to confirm. For someone available three days in five, say 60 percent. Mention start dates, days off, breaks, work owned outside the team and any existing parent epic. An epic is the parent GitHub issue for the whole plan.
 
@@ -67,7 +68,7 @@ After schedule changes, review the updated load table and critical path before a
 
 ## The second-pass agent review
 
-After the finished plan and specifications pass the ordinary checker, the agent makes a separate adversarial review. It returns to the source material and confirmed constraints, then challenges coverage, dependencies, people, allocation, tracks, milestone composition and timing. It also considers improvements and their tradeoffs. This is a distinct pass, even when a fresh agent context is unavailable.
+After the finished plan and specifications pass the ordinary checker, the agent makes a separate adversarial review. It returns to the source material and confirmed constraints, then challenges coverage, dependencies, people, allocation, tracks, supplied skill and preference matches, milestone composition and timing. It also considers improvements and their tradeoffs. Missing skills or preferences are valid and do not create a finding. This is a distinct pass, even when a fresh agent context is unavailable.
 
 Read `docs/spec/plan-review.md`, or the same file in your configured specification directory. Its coverage table shows which requirements and review areas were assessed. Its findings table gives evidence, reasoning, likelihood, impact, confidence and a proposed change. The decision table records what you accept, reject or defer and how accepted repairs were verified.
 
@@ -131,7 +132,7 @@ You are ready to hand off when the issues link to their specifications, the boar
 
 ## Hand the work to engineers
 
-The agent supplies a complete installation command for your project's generated skill. Send that command and the board link to the engineers. They install the generated skill once in their coding agents. Each starts an item by naming its identifier, for example "Work on [work item ID]". Their agent reads the specification and its cited source sections before planning code.
+The agent supplies a complete installation command for your project's generated skill. Send that command and the board link to the engineers. They install the generated skill once in their coding agents. Each starts an item by naming its identifier, for example "Work on [work item ID]". Their agent reads the specification, resolves each citation to the correct rendered source and applies the recorded source precedence before planning code.
 
 The engineers follow three rhythms:
 

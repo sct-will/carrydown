@@ -598,14 +598,19 @@ def _is_int(v):
 # so `label: 2027` works. None means the field is empty and is treated as left out.
 _TEXT_FIELDS = {
     "tracks": ("id", "label", "color"),
-    "people": ("id", "name", "github", "track", "start"),
+    "people": ("id", "name", "github", "track", "start", "assignment_rationale"),
     "advisors": ("id", "name", "github", "note"),
     "milestones": ("name", "folder", "start", "end", "demo", "gate"),
     "breaks": ("name", "start", "end"),
     "checkpoints": ("date", "name", "joint_check"),
     "items": ("slug", "label", "track", "owner", "complete_by", "size", "checkpoint", "ground_truth", "external_input", "program_input"),
     "external.items": ("label", "note"),
-    "sources": ("name", "path", "use"),
+    "sources": ("id", "name", "source_path", "path", "use", "version", "status", "limit"),
+}
+_TEXT_LIST_FIELDS = {
+    "tracks": ("skill_needs",),
+    "people": ("skills", "preferences"),
+    "items": ("skill_needs",),
 }
 _INT_FIELDS = {"milestones": ("number",), "items": ("id", "milestone"), "external.items": ("id",)}
 _PROJECT_TEXT = ("name", "slug", "id_prefix", "repo", "branch", "epic_title", "subepic_prefix", "title_format",
@@ -663,6 +668,14 @@ def type_problems(plan):
             where = f"{group} entry {n}"
             for k in _TEXT_FIELDS.get(group, ()):
                 _as_text(row, k, where, P)
+            for k in _TEXT_LIST_FIELDS.get(group, ()):
+                v = row.get(k)
+                if v is None:
+                    continue
+                if isinstance(v, str):
+                    row[k] = [v] if v.strip() else []
+                elif not isinstance(v, list) or not all(isinstance(x, str) for x in v):
+                    P.append(f"{where}.{k} must be text or a list of text, got {_kind(v)}")
             for k in _INT_FIELDS.get(group, ()):
                 if row.get(k) is not None and not _is_int(row[k]):
                     P.append(f"{where}.{k} must be a whole number, got {row[k]!r}")
@@ -676,6 +689,18 @@ def type_problems(plan):
                 v = row["days_off"]
                 if not isinstance(v, list) or not all(isinstance(d, (str, int)) and not isinstance(d, bool) for d in v):
                     P.append(f"{where}.days_off must be a list of dates, such as [2027-02-22], got {v!r}")
+            if group == "items" and row.get("source_refs") is not None:
+                refs = row["source_refs"]
+                if not isinstance(refs, list):
+                    P.append(f"{where}.source_refs must be a list of source and sections entries")
+                else:
+                    for rnum, ref in enumerate(refs, 1):
+                        rwhere = f"{where}.source_refs entry {rnum}"
+                        if not isinstance(ref, dict):
+                            P.append(f"{rwhere} must be a mapping such as `- source: architecture`, got {_kind(ref)}")
+                            continue
+                        _as_text(ref, "source", rwhere, P)
+                        _as_text(ref, "sections", rwhere, P)
     conv = plan.get("conventions") or {}
     for k in ("test_command", "lint_command", "feature_flag"):
         _as_text(conv, k, "conventions", P)
@@ -745,6 +770,9 @@ def load_plan(path, root=None):
     for person in plan["people"]:
         if person.get("allocation") is None:
             person["allocation"] = 100
+        person["skills"] = list(person.get("skills") or [])
+        person["preferences"] = list(person.get("preferences") or [])
+        person["assignment_rationale"] = _text(person.get("assignment_rationale"))
     plan["target"] = plan.get("target") or None
     plan["conventions"] = plan.get("conventions") or {}
     plan["limits"] = plan.get("limits") or {}
@@ -774,8 +802,10 @@ def load_plan(path, root=None):
         it["external_input"] = it.get("external_input") or ""
         it.setdefault("size", "")
         it.setdefault("ground_truth", "")
+        it["source_refs"] = it.get("source_refs") or []
         it.setdefault("owner", "")
         it["theme"] = _text(it.get("theme"))
+        it["skill_needs"] = list(it.get("skill_needs") or [])
     # the planning rationale: why each milestone holds its items, what the joint demonstration
     # shows, and why each track's items are in their order. Text, folded to one line.
     for m in plan["milestones"]:
@@ -785,6 +815,7 @@ def load_plan(path, root=None):
     for t in plan["tracks"]:
         if isinstance(t, dict):
             t["order_rationale"] = _text(t.get("order_rationale"))
+            t["skill_needs"] = list(t.get("skill_needs") or [])
     # derived unblocks: inverse of depends
     derived = {it["id"]: [] for it in plan["items"] if isinstance(it.get("id"), int)}
     for it in plan["items"]:
@@ -932,6 +963,14 @@ def path_problems(plan):
     gt = proj.get("ground_truth")
     if isinstance(gt, str) and gt.strip():
         cands.append(("project.ground_truth", re.sub(r"\.md$", ".index.txt", gt) if gt.endswith(".md") else gt))
+    for num, source in enumerate(plan.get("sources") or [], 1):
+        if not isinstance(source, dict):
+            continue
+        for field in ("source_path", "path"):
+            sp = source.get(field)
+            if isinstance(sp, str) and sp.strip():
+                rendered = re.sub(r"\.md$", ".index.txt", sp) if field == "path" and sp.endswith(".md") else sp
+                cands.append((f"sources entry {num}.{field}", rendered))
     dsp = proj.get("dev_skill_path")
     if isinstance(dsp, str) and dsp.strip():
         cands.append(("project.dev_skill_path", f"{dsp}/references/ground-truth-map.md"))
@@ -974,6 +1013,52 @@ def validate_plan(plan):
             P.append(f"project.{k} is empty. Leave the line out for the default {example}, or give a path")
         elif not relative_inside(v):
             P.append(f"project.{k} must be a path inside the project, such as {example}, got {v!r}")
+    source_ids = set()
+    for num, source in enumerate(plan.get("sources") or [], 1):
+        sid, path, source_path = source.get("id", ""), source.get("path", ""), source.get("source_path", "")
+        if not sid:
+            P.append(f"sources entry {num}: id is required, such as architecture or governance")
+        elif not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", sid):
+            P.append(f"sources entry {num}: id must be lowercase words joined by hyphens, got {sid!r}")
+        elif sid in source_ids:
+            P.append(f"sources entry {num}: duplicate id {sid!r}")
+        source_ids.add(sid)
+        if not source.get("name"):
+            P.append(f"sources entry {num}: name is required")
+        status = source.get("status") or "reviewed"
+        if status not in ("reviewed", "unreadable"):
+            P.append(f"sources entry {num}: status must be reviewed or unreadable, got {status!r}")
+        if status == "reviewed" and not path:
+            P.append(f"sources entry {num}: path is required when status is reviewed")
+        elif path and not relative_inside(path):
+            P.append(f"sources entry {num}.path must be inside the project, got {path!r}")
+        if status == "unreadable" and not source.get("limit"):
+            P.append(f"sources entry {num}: limit is required when status is unreadable")
+        if source_path and not relative_inside(source_path):
+            P.append(f"sources entry {num}.source_path must be inside the project, got {source_path!r}")
+    reviewed_paths = {s.get("path") for s in plan.get("sources") or [] if (s.get("status") or "reviewed") == "reviewed"}
+    if plan.get("sources") and not reviewed_paths:
+        P.append("sources must include at least one reviewed entry. Continue with every readable source, but stop when none can be processed")
+    elif plan.get("sources") and proj.get("ground_truth") not in reviewed_paths:
+        P.append("project.ground_truth must match the path of one reviewed sources entry")
+    for it in plan["items"]:
+        refs = it.get("source_refs") or []
+        seen_refs = set()
+        for ref in refs:
+            if not isinstance(ref, dict):
+                continue
+            sid = ref.get("source", "")
+            if not sid:
+                P.append(f"item {it.get('id')}: each source_refs entry needs source")
+            elif sid not in source_ids:
+                P.append(f"item {it.get('id')}: source_refs names unknown source {sid!r}")
+            elif next((s for s in plan.get("sources") or [] if s.get("id") == sid and (s.get("status") or "reviewed") == "unreadable"), None):
+                P.append(f"item {it.get('id')}: source_refs cannot cite unreadable source {sid!r}")
+            elif sid in seen_refs:
+                P.append(f"item {it.get('id')}: source_refs repeats source {sid!r}")
+            seen_refs.add(sid)
+            if not ref.get("sections"):
+                P.append(f"item {it.get('id')}: source_refs for {sid or 'an unnamed source'} needs sections")
     tracks = {t.get("id"): t for t in plan["tracks"]}
     if not tracks:
         P.append("tracks: at least one track is required")
@@ -1286,6 +1371,61 @@ def checkpoint_of(plan, it):
     return None
 
 
+def ground_truth_sources(plan):
+    """The rendered source documents in precedence order, highest first.
+
+    Plans written before multiple sources were supported keep using project.ground_truth.
+    """
+    sources = plan.get("sources") or []
+    if sources:
+        return sources
+    return [{
+        "id": "ground-truth",
+        "name": "Ground truth",
+        "source_path": plan["project"]["ground_truth"],
+        "path": plan["project"]["ground_truth"],
+        "use": "Full specification. Section numbers in the work item files refer to it.",
+        "status": "reviewed",
+    }]
+
+
+def rendered_sources(plan):
+    return [source for source in ground_truth_sources(plan) if (source.get("status") or "reviewed") == "reviewed"]
+
+
+def source_by_id(plan):
+    return {source["id"]: source for source in ground_truth_sources(plan)}
+
+
+def item_source_refs(plan, it):
+    """Structured source references, with a legacy reference to project.ground_truth as fallback."""
+    if it.get("source_refs"):
+        return it["source_refs"]
+    cite = it.get("ground_truth") or ""
+    if not cite:
+        return []
+    reviewed = rendered_sources(plan)
+    if not reviewed:
+        return []
+    primary = next((s for s in reviewed if s.get("path") == plan["project"]["ground_truth"]), reviewed[0])
+    return [{"source": primary["id"], "sections": cite}]
+
+
+def ground_truth_citation(plan, it):
+    """Human-readable source citations for specification headers and GitHub issues."""
+    refs = item_source_refs(plan, it)
+    if not refs:
+        return ""
+    if not it.get("source_refs"):
+        return it.get("ground_truth") or ""
+    sources = source_by_id(plan)
+    parts = []
+    for ref in refs:
+        source = sources.get(ref.get("source"), {})
+        parts.append(f"{source.get('name', ref.get('source', 'Source'))}: Sections {ref.get('sections', '')}")
+    return "; ".join(parts)
+
+
 def expected_header(plan, it):
     """Ordered (name, value) pairs for the header table of a work item specification."""
     ms = milestone_by_num(plan)[it["milestone"]]
@@ -1304,7 +1444,7 @@ def expected_header(plan, it):
         ("Size", it.get("size") or "To be sized"),
         ("Depends on", tags),
         ("Unblocks", unb),
-        ("Ground truth", it.get("ground_truth") or "To be cited"),
+        ("Ground truth", ground_truth_citation(plan, it) or "To be cited"),
     ]
     return rows
 

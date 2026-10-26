@@ -15,7 +15,7 @@ After any mode, run the checker. Its summary line says what is derived, for exam
 
 ## 1. Read the ground truth
 
-Read the rendered document, using its section index. Make a plain list of what must exist when the project is done, in the document's words, with section numbers. Note every contract, rule and standard. Note every statement that is unverified or contradicted. Show the list to the user and correct it.
+Read every reviewed rendering, using its section index. Follow the source precedence the user confirmed. Make a plain list of what must exist when the project is done, in the sources' words, with the source id and section numbers. Note every contract, governance rule, company rule and standard. Note every statement that is unverified, unreadable or contradicted. Show the list to the user and correct it.
 
 ## 2. Milestones
 
@@ -52,10 +52,24 @@ A work item is the smallest piece of work that an engineer can finish, show and 
 - a milestone, a track and an owner on that track,
 - a theme, a short label for the part of the system it touches, such as "web client" or "export job",
 - a size such as "Medium, about 3 days" (the load table reads "about N days"),
-- the ground truth sections it cites,
+- `source_refs`, with every source id and section this item must obey,
 - dependencies by id.
 
 Split an item if it spans two tracks or runs past five days. Merge items that cannot be shown separately.
+
+### Match people to the work
+
+Skills and work preferences are optional. Never stop, fail the plan or ask the project lead to invent them when they were not supplied. In that case, assign people with the existing rules for track ownership, capacity, dependencies, theme continuity and reduced handoffs.
+
+When the project lead supplies skills or preferences:
+
+1. Describe the capabilities each track needs in `skill_needs`. Add item-level `skill_needs` only when an item needs something more specific than its track.
+2. Match fixed assignments first, then required skills, stated work preferences, schedule and dependency fit, reduced context switching and balanced load. Preferences are soft guidance. They do not override a fixed assignment, missing capability or schedule constraint.
+3. Record the result in each person's `track` and `assignment_rationale`. Keep `skills` and `preferences` in the project lead's words.
+4. Show the proposed match, skill gaps, preference tradeoffs and any critical-path concentration to the project lead. The project lead decides.
+5. If a skill, preference or match is incomplete, contradictory or unclear, do not stall. Use the default assignment rules, record the uncertainty in the rationale and continue.
+
+Do not turn the matching into a numeric score. Similar skills can have different names, and project leads may value development opportunities as well as prior experience. The checker reports the supplied context but never passes or fails a plan based on the match.
 
 ## 5. Dates and order
 
@@ -95,7 +109,7 @@ Read the plan with the user, adversarially and week by week, before anything is 
 Write down why the plan is composed the way it is, where anyone can argue with it. Each reason must be true of the dates.
 
 - For each milestone, `rationale`: why these items form it, in two to four sentences. `joint_demonstration`: what the engineers whose tracks meet show together, in one or two sentences. `single_track_reason`, only when all its items are on one track.
-- For each track, `order_rationale`: why its items are in this order. Name each theme switch you keep, and the critical path risk with its alternative when it falls on this track.
+- For each track, `order_rationale`: why its items are in this order. Name each theme switch you keep, and the critical path risk with its alternative when it falls on this track. When skills or preferences were supplied, keep each person's match explanation in `people.assignment_rationale`; do not copy names into the specification prose.
 - No names of people. The scaffold copies the text into `milestone.md` and the README, where the checker rejects names.
 
 The checker fails while any of these is missing. Show the user the planning review block of `check_specs.py --report` and go through each line with them.

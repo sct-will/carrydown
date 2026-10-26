@@ -220,7 +220,7 @@ The checker found problems. Run check_specs.py to see them, fix them, or pass --
 
 ## 5. Check
 
-The checker finds the worked sample clean. The report shows the schedule, the load table, the critical path, the external items, the checkpoints and the planning review.
+The checker finds the worked sample clean. The report shows the sources, advisory staffing context, schedule, load table, critical path, external items, checkpoints and planning review.
 
 ```text
 $ python3 scripts/check_specs.py --root sample/expense-approvals
@@ -231,6 +231,18 @@ $ python3 scripts/check_specs.py --root sample/expense-approvals
 ```text
 $ python3 scripts/check_specs.py --root sample/expense-approvals --report
 Plan: Expense approvals
+
+Sources (highest precedence first)
+  1. Architecture document: reviewed; ground-truth/architecture.md -> docs/ground-truth/architecture.md
+
+Staffing context (advisory)
+  Track workflow needs: Service APIs, Workflow rules, Relational data
+  Track experience needs: Accessible web interfaces, Client integration, Notifications
+  tamsin on workflow: skills Python services, PostgreSQL, Workflow design; preferences Service contracts, Policy enforcement
+    Assignment rationale: The workflow track best matches the supplied service, data and workflow skills and the preference for policy work.
+  idris on experience: skills TypeScript, Accessible web interfaces, Notification flows; preferences User-facing workflows, Integration demonstrations
+    Assignment rationale: The experience track best matches the supplied interface and notification skills and the preference for user-facing work.
+  Skills and preferences guide the agent's proposed match. They do not make the checker pass or fail; uncertain matches use the default assignment rules.
 
 Schedule
   Work unit 1, Submit an expense report: 2027-02-01 to 2027-02-12 (demonstration 2027-02-12)
