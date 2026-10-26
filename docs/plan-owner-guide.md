@@ -102,6 +102,13 @@ The second skill checks the files and prerequisites before proceeding with publi
 
 Use a GitHub personal access token to authorize issue and project creation. Open the token creation link supplied by the agent.
 
+| Board owner | Token | Required access |
+| --- | --- | --- |
+| Organization | Fine-grained token limited to the repository | Repository permissions **Issues: read and write** and **Metadata: read**; organization permission **Projects: read and write** |
+| Your user account | Classic token | `repo` and `project` scopes |
+
+These are GitHub permissions. The token can act only within the access your GitHub account already has. An organization may also require administrator approval for a fine-grained token. GitHub recommends fine-grained tokens when they support the task, but [fine-grained tokens cannot access projects owned by a user account](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#fine-grained-personal-access-tokens-limitations).
+
 1. **Pick the kind.** If an organization owns the board, create a fine-grained token on [GitHub's new fine-grained token page](https://github.com/settings/personal-access-tokens/new) for the one repository, with Issues read and write, Metadata read, and the organization permission Projects read and write. Only if your own user account owns the board, use a classic token from [the pre-filled classic token page](https://github.com/settings/tokens/new?scopes=repo,project&description=carrydown). It ticks `repo` and `project` for you.
 2. **Set the expiry to 7 days.** Click Generate token. Copy the token. GitHub shows it once.
 3. **Save it in a plain text file outside your project**, for example `Downloads/token.txt`. In TextEdit, choose Format, then Make Plain Text, before you save.

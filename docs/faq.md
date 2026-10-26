@@ -20,6 +20,17 @@ Use a coding agent that supports Agent Skills and can read and edit project file
 
 A coding agent, Node.js for the installer, Python for the scripts and Git. The [computer preparation steps](setup.md#prepare-your-computer) list versions and checks. Manual installation is available on the same page if you cannot use Node.js.
 
+## What GitHub token permissions are required?
+
+No token is needed to plan locally. Publishing issues and a project board requires a GitHub personal access token. The permissions depend on who owns the board:
+
+| Board owner | Token | Required access |
+| --- | --- | --- |
+| Organization | Fine-grained token limited to the repository | Repository permissions **Issues: read and write** and **Metadata: read**; organization permission **Projects: read and write** |
+| Your user account | Classic token | `repo` and `project` scopes |
+
+GitHub does not currently let fine-grained tokens access user-owned projects. The token cannot give you access that your GitHub account does not already have, and an organization may require administrator approval. Follow [the token walkthrough](plan-owner-guide.md#the-token) to create, check, store and revoke it without putting it in the repository or chat.
+
 ## Isn't this just prompts?
 
 No. The checker is code, and it fails continuous integration when a specification breaks the rules. The board is built through the GitHub application programming interface (API) by scripts. The specifications and the plan are files in Git that you can read, diff and review. The prompts are the smallest part.

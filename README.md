@@ -120,6 +120,13 @@ The plan owner does. The agent drafts the plan, checks it, performs the second-p
 
 </details>
 
+<details>
+<summary>What GitHub token permissions are required?</summary>
+
+You do not need a token to plan locally. Publishing issues and a project board requires a GitHub personal access token. For an organization-owned board, use a fine-grained token limited to the repository, with repository permissions **Issues: read and write** and **Metadata: read**, plus the organization permission **Projects: read and write**. For a board owned by your user account, use a classic token with the `repo` and `project` scopes because fine-grained tokens cannot access user-owned projects. The [publishing guide](docs/plan-owner-guide.md#the-token) walks through creation, checking, storage and revocation.
+
+</details>
+
 [Read the full FAQ](docs/faq.md) for setup, source formats, planning, GitHub permissions and ongoing changes.
 
 <br />
