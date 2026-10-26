@@ -13,13 +13,15 @@ The idea is old in systems engineering, where it is called flow-down: a requirem
 | 1. Generate, with `carrydown-ground-truth` | The agent interviews the plan owner about people, time and dates. It drafts the plan and one specification per work item. | The plan owner decides, the agent drafts | The rendered ground truth, `plan.yaml` with its load table and critical path, and one specification per work item. |
 | 2. Review | After the ordinary checks, the agent makes a separate adversarial pass over the completed set. It records coverage, evidence, reasoning and risk. The plan owner decides the repairs, and the agent applies and verifies accepted changes. | Plan owner | A review report, accepted repairs and a plan the owner approves, with 0 findings from the checker. |
 | 3. Carry down to GitHub, with `carrydown-plan-to-github` | After a dry run and the plan owner's yes, the agent creates the issues and the board. Last, it generates the engineers' skill. | Plan owner, after each dry run | Issues, the board, and the engineers' skill with the install line to send each engineer. |
-| 4. Work the issues | Each engineer installs the engineers' skill once and says "Work on WI-03". The agent reads the specification, the cited sections and the conventions, then plans the code. | Engineers show, the stakeholders decide | Code, closing comments with evidence, checkpoint comments and a demonstration note on each sub-epic. |
+| 4. Start a work item | Each engineer installs the engineers' skill once and names the work item identifier, for example, "Work on [work item ID]". The agent reads the specification, the cited sections and the conventions, then plans the code. | Engineers show, the stakeholders decide | Code, closing comments with evidence, checkpoint comments and a demonstration note on each sub-epic. |
 
 Planning decisions stay with the plan owner. The agent drafts, validates and populates. It does not decide who does what, when, or in which order.
 
 ## Second-pass agent review
 
 The ground-truth skill runs this pass after the completed specifications pass the checker and before final owner approval. Its prompt lives in `templates/plan-review-prompt.md`, with a report template beside it. Each installed skill carries its own copies. Detailed review instructions are loaded only when that stage starts.
+
+![The completed plan and specifications are reviewed against the ground truth and confirmed constraints. The agent challenges scope, people, dates, tracks, milestones, dependencies and handoffs, then presents coverage and findings tables without changing the plan. The plan owner accepts, rejects or defers findings. The agent applies accepted repairs, reruns checks and records remaining risk.](images/second-pass-review.png)
 
 The review uses the actual ground truth, confirmed constraints and completed artifacts. It checks requirement coverage, people and allocation, engineer tracks, dependencies, milestones, integration, demonstrations and schedule risk. It reads each engineer's work week by week. The checker's earliest-finish calculation does not serialize an owner's items, so the agent also considers competing demands within the available time. Uncertain inputs and inferred daily sequences are recorded as limits.
 

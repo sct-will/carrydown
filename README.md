@@ -24,12 +24,12 @@ The plan is built around your team's availability and target date. Scripts check
 
 ## How it works
 
-![Your AI agent uses the carrydown skills to plan around team capacity and dependencies and draft a specification for each work item. Scripts check the specifications against the plan. You review and approve the work, then the agent creates GitHub epics, issues, a project board and the engineers' skill after dry runs. Engineers use that skill to start work from the specifications and cited architecture sections. An amber thread carries the architecture through each handoff.](docs/images/handoff.png)
+![Your AI agent uses the carrydown skills to plan around team capacity and dependencies and draft a specification for each work item. After script checks, a second-pass agent review challenges scope, people, dates, tracks, milestones and dependencies. It produces coverage and risk tables. You decide which findings the agent repairs and approve the result. The agent then creates GitHub epics, issues, a project board and the engineers' skill after dry runs. Engineers name a work item by its identifier, and that skill directs their agent to the specification and cited architecture sections. An amber thread carries the architecture through each handoff.](docs/images/handoff.png)
 
 1. **Plan for your team.** Give your agent the ground truth, usually an architecture document, and any other relevant context. If you know the team size and target project duration, include them. The `carrydown-ground-truth` skill interviews you, then drafts a plan and one specification per work item around your constraints. Each engineer has a track, or lane of work. Each milestone ends with an integrated demonstration.
 2. **Challenge, repair and approve.** After the normal checks, the agent makes a separate adversarial pass over the completed plan and specifications. It looks for missing scope, resource conflicts, dependency errors and better sequencing. Review its coverage and risk tables in `docs/spec/plan-review.md`, then let the agent apply the repairs you accept. You decide the owners, dates, scope and order.
 3. **Publish to GitHub.** Commit and push the approved plan and specifications first. Then say "Put the plan on GitHub." The `carrydown-plan-to-github` skill shows dry runs and asks for approval before creating the issues and board. It creates a parent epic for the plan, a sub-epic for each milestone, and an issue linking to each work item's specification. Finally, it generates the engineers' skill.
-4. **Work from the specification.** Each engineer installs the generated skill once, then names a work item: "Work on WI-03." The skill directs their agent to read the specification, its cited source sections and the project conventions before planning the code. The generated skill is named after the project.
+4. **Start a work item.** Each engineer installs the generated skill once, then names the work item identifier, for example, "Work on [work item ID]". The skill directs their agent to read the specification, its cited source sections and the project conventions before planning the code. The generated skill is named after the project.
 
 <br />
 
@@ -58,7 +58,7 @@ Your AI agent generates these artifacts using the carrydown skills. The plan and
 - **A second-pass review report**, with source coverage, evidence, reasoning and risk, plus your decisions and the checks on accepted repairs. The agent challenges how the plan will work for each engineer, beyond the script's consistency checks.
 - **GitHub issues**, one per work item under a sub-epic per milestone, each telling the engineer's agent what to read.
 - **A GitHub Project board** with work units, tracks, dates and checkpoints filled in.
-- **The engineers' skill**, generated from your specifications and committed in your repository, so "Work on WI-03" tells the coding agent to read the specification and its sections before touching code.
+- **The engineers' skill**, generated from your specifications and committed in your repository, so "Work on [work item ID]" tells the coding agent to read that item's specification and its sections before touching code.
 
 The plan and specifications stay in version control, with source citations, recorded planning decisions and automated consistency checks. Your team reviews the generated work and approves publication. These provide a practical foundation for governing AI-generated planning and engineering handoffs.
 
