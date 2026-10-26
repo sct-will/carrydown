@@ -21,8 +21,13 @@ project:
   dev_skill_path: docs/dev/skills/expense-approvals-dev
 
 sources:
-  - name: "Architecture document, version 0.3"
-    path: "ground-truth/architecture.md (source), docs/ground-truth/architecture.md (rendering)"
+  - id: architecture
+    name: "Architecture document"
+    source_path: ground-truth/architecture.md
+    path: docs/ground-truth/architecture.md
+    version: "0.3"
+    status: reviewed
+    limit: ""
     use: "Full specification. Section numbers in the work item files refer to it."
 
 conventions:

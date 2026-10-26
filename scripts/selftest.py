@@ -126,6 +126,14 @@ def fixtures(tmp):
     md.write_text("# Plain\n\n## Purpose\n\nText.\n\n## 1. Scope\n\nText.\n", encoding="utf-8")
     step("markdown: unnumbered headings are reported", render + [str(md), "--root", str(fx / "out"), "--dry-run"], contains=["1 of 2 headings have no number; specifications cite sections by number ('Purpose')"])
     step("markdown: the sample renders with every heading numbered", [PY, "scripts/render_ground_truth.py", f"{SAMPLE}/ground-truth/architecture.md", "--root", SAMPLE, "--version", "0.3", "--dry-run"], absent=("Traceback", "have no number"))
+    plain = fx / "company-rules.txt"
+    plain.write_text("Never log a secret.\nRetain audit records for seven years.\n", encoding="utf-8")
+    step("plain text: content is rendered as one numbered source section", render + [str(plain), "--root", str(fx / "out"), "--version", "1"],
+         files={out / "company-rules.md": ["## 1 Source text", "Never log a secret.", "Retain audit records for seven years."]})
+    extracted = fx / "extracted.md"
+    extracted.write_text("# Policy image\n\n## 1 Rule\n\nUse the approved control.\n", encoding="utf-8")
+    step("reviewed extraction: generated header records the original source", render + [str(extracted), "--root", str(fx / "out"), "--name", "policy-image", "--source-label", "docs/source/policy.png", "--version", "2"],
+         files={out / "policy-image.md": ['Generated from "docs/source/policy.png" version 2']})
 
 
 def citations(tmp):
@@ -142,6 +150,55 @@ def citations(tmp):
     step("an unnumbered ground truth is reported, not passed", chk, expect=1, contains=["ground truth citations not checked: the rendered document has no numbered headings"])
     gt.unlink()
     step("a missing ground truth is reported, not passed", chk, expect=1, contains=["ground truth citations not checked: the rendered document docs/ground-truth/architecture.md was not found"])
+
+    multi = tmp / "multiple-sources"
+    shutil.copytree(ROOT / SAMPLE, multi)
+    gov = multi / "docs/ground-truth/governance.md"
+    gov.write_text("# Company governance\n\n## 1 Security\n\nNever log secrets.\n\n## 2 Accessibility\n\nMeet the company standard.\n", encoding="utf-8")
+    (multi / "docs/source").mkdir()
+    (multi / "docs/source/governance.pdf").write_bytes(b"reviewed fixture")
+    (gov.parent / "governance.index.txt").write_text("3:## 1 Security\n7:## 2 Accessibility\n", encoding="utf-8")
+    plan = multi / "docs/spec/plan.yaml"
+    body = plan.read_text(encoding="utf-8")
+    body = body.replace('    use: "Full specification. Section numbers in the work item files refer to it."',
+                        '    use: "Full specification. Section numbers in the work item files refer to it."\n'
+                        '  - id: governance\n    name: "Company governance"\n    source_path: docs/source/governance.pdf\n'
+                        '    path: docs/ground-truth/governance.md\n    version: "1"\n    status: reviewed\n    limit: ""\n'
+                        '    use: "Company rules."')
+    body = body.replace('    ground_truth: "Sections 3.1, 3.2, 5.1, 7.1"',
+                        '    source_refs:\n      - source: architecture\n        sections: "3.1, 3.2, 5.1, 7.1"\n'
+                        '      - source: governance\n        sections: "1, 2"')
+    plan.write_text(body, encoding="utf-8")
+    step("multiple sources: refresh writes source-specific citations", [PY, "scripts/scaffold_spec.py", "--root", str(multi), "--refresh-headers", "--apply", "--allow-no-git"],
+         files={multi / "docs/spec/m1-submit-report/wi-01-service-scaffold.md": ["Architecture document: Sections 3.1, 3.2, 5.1, 7.1; Company governance: Sections 1, 2"]})
+    step("multiple sources: citations validate against their named rendering", [PY, "scripts/check_specs.py", "--root", str(multi)], contains=["15 files clean, 0 with findings"])
+    bad = plan.read_text(encoding="utf-8").replace('        sections: "1, 2"', '        sections: "1, 9.9"')
+    plan.write_text(bad, encoding="utf-8")
+    spec = multi / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
+    spec.write_text(spec.read_text(encoding="utf-8").replace("Company governance: Sections 1, 2", "Company governance: Sections 1, 9.9"), encoding="utf-8")
+    step("multiple sources: a citation is checked only against its named source", [PY, "scripts/check_specs.py", "--root", str(multi)], expect=1,
+         contains=["Ground truth cites Company governance section 9.9, which is not a heading in docs/ground-truth/governance.md"])
+
+    partial = tmp / "partial-sources"
+    shutil.copytree(ROOT / SAMPLE, partial)
+    pplan = partial / "docs/spec/plan.yaml"
+    (partial / "docs/source").mkdir()
+    (partial / "docs/source/regional.png").write_bytes(b"unreadable fixture")
+    pbody = pplan.read_text(encoding="utf-8").replace('    use: "Full specification. Section numbers in the work item files refer to it."',
+        '    use: "Full specification. Section numbers in the work item files refer to it."\n'
+        '  - id: regional-addendum\n    name: "Regional addendum"\n    source_path: docs/source/regional.png\n'
+        '    version: "unknown"\n    status: unreadable\n    limit: "Image text could not be read reliably."\n    use: "Regional exceptions."')
+    pplan.write_text(pbody, encoding="utf-8")
+    step("an unreadable source is recorded while readable sources continue", [PY, "scripts/check_specs.py", "--root", str(partial)], contains=["15 files clean, 0 with findings"])
+
+    none = tmp / "no-readable-sources"
+    shutil.copytree(partial, none)
+    nplan = none / "docs/spec/plan.yaml"
+    nbody = nplan.read_text(encoding="utf-8").replace("    status: reviewed", "    status: unreadable", 1)
+    nbody = nbody.replace('    limit: ""', '    limit: "The source could not be processed."', 1)
+    nplan.write_text(nbody, encoding="utf-8")
+    step("processing stops when no ground-truth source is readable", [PY, "scripts/check_specs.py", "--root", str(none)], expect=1,
+         contains=["sources must include at least one reviewed entry. Continue with every readable source, but stop when none can be processed"])
 
 
 def error_paths(tmp, plan_text):
@@ -579,9 +636,9 @@ def round_two(tmp, plan_text):
 
     # the plan reader: a flow value cut short is a plan error with its line, an item with no id a plan problem
     for i, (label, old, new, want) in enumerate([
-        ("a list cut short at the end of a line", "    depends: [1]\n    checkpoint: 2027-02-12", "    depends: [\n    checkpoint: 2027-02-12", ("cannot read plan", "line 171: unterminated list")),
-        ("a map cut short at the end of a line", '    label: "Report form and receipt upload"', "    label: {", ("cannot read plan", "line 164: unterminated map")),
-        ("a list cut short after a comma", "    depends: [1]\n    checkpoint: 2027-02-12", "    depends: [1,\n    checkpoint: 2027-02-12", ("cannot read plan", "line 171: bad flow collection")),
+        ("a list cut short at the end of a line", "    depends: [1]\n    checkpoint: 2027-02-12", "    depends: [\n    checkpoint: 2027-02-12", ("cannot read plan", "unterminated list")),
+        ("a map cut short at the end of a line", '    label: "Report form and receipt upload"', "    label: {", ("cannot read plan", "unterminated map")),
+        ("a list cut short after a comma", "    depends: [1]\n    checkpoint: 2027-02-12", "    depends: [1,\n    checkpoint: 2027-02-12", ("cannot read plan", "bad flow collection")),
         ("an item with no id", "  - id: 2\n    slug: report-form", "  - slug: report-form", "items: id must be an integer"),
         ("a title format with an unknown field", 'title_format: "{id} {label}"', 'title_format: "{id} {nope}"', "project.title_format '{id} {nope}' uses {nope}"),
         ("a title format with a lone brace", 'title_format: "{id} {label}"', 'title_format: "{id"', "is not a valid title format"),

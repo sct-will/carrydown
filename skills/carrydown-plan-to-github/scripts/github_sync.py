@@ -184,7 +184,7 @@ def build_item_body(plan, root, it, numbers=None, mark=True):
         "description": first_paragraph(L.section_text(spec, "Why this work item exists")) or first_paragraph(L.section_text(spec, "Outcome")),
         "spec_url": L.github_blob_url(plan, rel),
         "skill_line": skill,
-        "ground_truth": it.get("ground_truth") or spec["rows"].get("Ground truth", ""),
+        "ground_truth": L.ground_truth_citation(plan, it) or spec["rows"].get("Ground truth", ""),
         "depends": "\n".join(deps) if deps else "None.",
         "acceptance": L.section_text(spec, "Acceptance criteria"),
         "evidence": L.section_text(spec, "Evidence of completion"),

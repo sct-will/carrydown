@@ -10,7 +10,7 @@ You are completing work item specification files for <project name>. Each file o
 
 1. `<spec folder>/README.md`, the conventions, schedule and comment templates.
 2. `<spec folder>/plan.yaml`, the plan. Do not change it.
-3. `<rendered ground truth path>`, the ground truth. Use its section index. For a long document read only the sections your items cite, with `sed -n 'START,ENDp'` and the line numbers in `<index file path>`.
+3. `<rendered source paths in precedence order>`, the ground truth. Use each section index. For a long document read only the sections your items cite, with `sed -n 'START,ENDp'` and the line numbers in its index file.
 4. Your assigned stub files. Each has the correct title and header table and a skeleton with TODO lines. Do not edit the title or the header table.
 5. The code your item touches, if the project has code today: <list the key files and folders>. Read it before you cite it.
 

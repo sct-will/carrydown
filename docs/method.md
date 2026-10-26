@@ -2,9 +2,9 @@
 
 An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent. Two skills you install, one skill is generated for your engineers.
 
-The carrydown skills carry a ground truth document down into a governed plan. The plan has one specification per work item, a set of GitHub issues, a project board and the engineers' skill that every issue links to. This optional reference explains the planning rules and why they matter. The plan owner and engineers make the decisions; the skills draft and check the files.
+The carrydown skills carry an agreed set of ground-truth sources down into a governed plan. The set can combine technical documents, requirements, governance rules, standards and company context in several file formats. The plan has one specification per work item, a set of GitHub issues, a project board and the engineers' skill that every issue links to. This optional reference explains the planning rules and why they matter. The plan owner and engineers make the decisions; the skills draft and check the files.
 
-The idea is old in systems engineering, where it is called flow-down: a requirement at the top is traced to every part below it. The carrydown skills apply the same idea to software work done with coding agents. One document, one unbroken line through the plan, the specifications, the issues, the board and the agent.
+The idea is old in systems engineering, where it is called flow-down: a requirement at the top is traced to every part below it. The carrydown skills apply the same idea to software work done with coding agents. Agreed context follows one traceable line through the plan, the specifications, the issues, the board and the agent.
 
 ## The four steps
 
@@ -37,7 +37,11 @@ A ground truth is any mix of:
 - requirements,
 - business analyst notes,
 - enterprise governance rules,
-- development standards.
+- development standards,
+- company-specific context such as security, privacy and accessibility rules,
+- diagrams, screenshots and other visual sources whose meaning affects the work.
+
+Put the files together in `docs/source/`. Word, Markdown and plain text render directly. The agent can extract readable PDF, image and other formats into reviewed Markdown renderings. It records unreadable files as coverage limits and continues with readable sources. It stops only when none of the intended ground truth can be processed.
 
 While you write it, verify claims about the existing world. Read the code. Run the test suite. Probe the live service. Measure. Anything you cannot prove, mark "verify at implementation" instead of asserting it. Then run adversarial passes: ask the agent, in a fresh context, to find what is missing, wrong or contradictory, and fold the findings back in with a changelog entry and, for architecture choices, a decision record.
 

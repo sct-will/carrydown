@@ -13,7 +13,7 @@ Checks, per work item
   "open questions", "non-goals"; the lists are in plan.yaml under banned)
   no reference to the id of an external item, no reference to an unknown id
   no broken relative link
-  ground truth sections cited in the header exist in the rendered document
+  ground truth sections cited in the header exist in the named rendered sources
 Per milestone: milestone.md exists with the required parts and lists every item.
 Per project: README.md in the spec folder lists every item.
 
@@ -114,38 +114,50 @@ def cited_missing(numbered, cite):
 
 
 def ground_truth_headings(plan, root):
-    """Headings of the rendered ground truth, or None when it is missing. A file that cannot be
-    read raises L.TextError."""
-    p = Path(root) / plan["project"].get("ground_truth", "")
-    if not L.exists(p):
-        return None
-    heads = []
-    fence = False
-    for line in L.read_text(p).split("\n"):
-        if line.strip().startswith("```"):
-            fence = not fence
-        if fence:
+    """Headings by source id. None marks a rendered source that is missing."""
+    found = {}
+    for source in L.rendered_sources(plan):
+        p = Path(root) / source["path"]
+        if not L.exists(p):
+            found[source["id"]] = None
             continue
-        m = re.match(r"^(#{1,6})\s+(.*)$", line)
-        if m:
-            heads.append(m.group(2).strip())
-    return heads
+        heads = []
+        fence = False
+        for line in L.read_text(p).split("\n"):
+            if line.strip().startswith("```"):
+                fence = not fence
+            if fence:
+                continue
+            m = re.match(r"^(#{1,6})\s+(.*)$", line)
+            if m:
+                heads.append(m.group(2).strip())
+        found[source["id"]] = heads
+    return found
 
 
 def numbered_headings(gt_heads):
     return [h for h in (gt_heads or []) if re.match(r"^\d+(\.\d+)*\.?\s", h)]
 
 
-def citation_findings(plan, gt_heads):
+def citation_findings(plan, root, gt_heads):
     """Say when the section citations could not be checked, instead of passing silently."""
     if not plan["items"]:
         return []
-    if gt_heads is None:
-        return [f"ground truth citations not checked: the rendered document {plan['project'].get('ground_truth')} was not found. Render it with {_script_hint('render_ground_truth.py', '')}"]
-    if not numbered_headings(gt_heads):
-        return ["ground truth citations not checked: the rendered document has no numbered headings. "
-                "Specifications cite sections by number, so number the headings in the source document and render it again"]
-    return []
+    findings = []
+    for source in L.ground_truth_sources(plan):
+        original = source.get("source_path")
+        if original and not L.exists(Path(root) / original):
+            findings.append(f"ground truth source not found: {original} ({source['name']})")
+    sources = L.rendered_sources(plan)
+    for source in sources:
+        heads = gt_heads.get(source["id"])
+        label = "the rendered document" if len(sources) == 1 else f"the rendered source {source['name']}"
+        if heads is None:
+            findings.append(f"ground truth citations not checked: {label} {source['path']} was not found. Render it with {_script_hint('render_ground_truth.py', '')}")
+        elif not numbered_headings(heads):
+            findings.append(f"ground truth citations not checked: {label} has no numbered headings. "
+                            "Specifications cite sections by number, so number the headings in the source document and render it again")
+    return findings
 
 
 def check_item(plan, root, it, banned, gt_heads):
@@ -254,15 +266,26 @@ def check_item(plan, root, it, banned, gt_heads):
             issues.append(f"broken relative link {m.group(1)}")
     # ground truth citations
     cite = rows.get("Ground truth", "")
-    numbered = numbered_headings(gt_heads)
-    if numbered and cite and "to be " not in cite.lower():
-        for num in cited_missing(numbered, cite):
-            issues.append(f"Ground truth cites section {num}, which is not a heading in the rendered document")
-    # the citation in plan.yaml goes into the issue body, so it is checked the same way
-    plan_cite = it.get("ground_truth") or ""
-    if numbered and plan_cite and "to be " not in plan_cite.lower():
-        for num in cited_missing(numbered, plan_cite):
-            issues.append(f"plan.yaml ground_truth of this item cites section {num}, which is not a heading in the rendered document")
+    refs = L.item_source_refs(plan, it)
+    sources = L.source_by_id(plan)
+    expected_cite = L.ground_truth_citation(plan, it)
+    if cite and expected_cite and cite != expected_cite:
+        issues.append(f"Ground truth row is {cite!r}, expected {expected_cite!r}")
+    if not it.get("source_refs") and refs:
+        primary_heads = numbered_headings(gt_heads.get(refs[0].get("source")))
+        if primary_heads and cite and "to be " not in cite.lower():
+            for num in cited_missing(primary_heads, cite):
+                issues.append(f"Ground truth cites section {num}, which is not a heading in the rendered document")
+    for ref in refs:
+        sid, sections = ref.get("source"), ref.get("sections", "")
+        source = sources.get(sid, {})
+        numbered = numbered_headings(gt_heads.get(sid))
+        if numbered and sections and "to be " not in sections.lower():
+            for num in cited_missing(numbered, sections):
+                if it.get("source_refs"):
+                    issues.append(f"Ground truth cites {source.get('name', sid)} section {num}, which is not a heading in {source.get('path', 'the rendered source')}")
+                else:
+                    issues.append(f"plan.yaml ground_truth of this item cites section {num}, which is not a heading in the rendered document")
     return issues, rel
 
 
@@ -480,6 +503,13 @@ def report(plan):
     ds = L.derived_summary(plan)
     if ds:
         print(f"Derived inputs: {ds}. Replace the placeholders when you know the real values.")
+    print("\nSources (highest precedence first)")
+    for n, source in enumerate(L.ground_truth_sources(plan), 1):
+        status = source.get("status", "reviewed")
+        rendered = source.get("path") or "not rendered"
+        print(f"  {n}. {source['name']}: {status}; {source.get('source_path', rendered)} -> {rendered}")
+        if source.get("limit"):
+            print(f"     Coverage limit: {source['limit']}")
     print("\nSchedule")
     for m in plan["milestones"]:
         print(f"  Work unit {m['number']}, {m['name']}: {m['start']} to {m['end']} (demonstration {m['demo']})")
@@ -623,13 +653,13 @@ def run_checks(plan, root, a):
     try:
         gt_heads, gt_error = ground_truth_headings(plan, root), None
     except L.TextError as e:
-        gt_heads, gt_error = [], f"ground truth citations not checked: {e.msg}"
+        gt_heads, gt_error = {}, f"ground truth citations not checked: {e.msg}"
     if load_issues:
         results["load and target"] = load_issues
     review, _ = planning_review(plan) if not a.item else ([], [])
     if review:
         results["planning review"] = review
-    cites = [gt_error] if gt_error else citation_findings(plan, gt_heads)
+    cites = [gt_error] if gt_error else citation_findings(plan, root, gt_heads)
     if cites and not a.item:
         results["ground truth"] = cites
     items = [it for it in plan["items"] if not a.item or it["id"] in a.item]

@@ -15,7 +15,7 @@ After any mode, run the checker. Its summary line says what is derived, for exam
 
 ## 1. Read the ground truth
 
-Read the rendered document, using its section index. Make a plain list of what must exist when the project is done, in the document's words, with section numbers. Note every contract, rule and standard. Note every statement that is unverified or contradicted. Show the list to the user and correct it.
+Read every reviewed rendering, using its section index. Follow the source precedence the user confirmed. Make a plain list of what must exist when the project is done, in the sources' words, with the source id and section numbers. Note every contract, governance rule, company rule and standard. Note every statement that is unverified, unreadable or contradicted. Show the list to the user and correct it.
 
 ## 2. Milestones
 
@@ -52,7 +52,7 @@ A work item is the smallest piece of work that an engineer can finish, show and 
 - a milestone, a track and an owner on that track,
 - a theme, a short label for the part of the system it touches, such as "web client" or "export job",
 - a size such as "Medium, about 3 days" (the load table reads "about N days"),
-- the ground truth sections it cites,
+- `source_refs`, with every source id and section this item must obey,
 - dependencies by id.
 
 Split an item if it spans two tracks or runs past five days. Merge items that cannot be shown separately.

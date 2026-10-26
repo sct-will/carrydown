@@ -21,7 +21,7 @@ Begin your reply with `carrydown: interview, step 1 of 6`. Before the questions 
 
 Ask.
 
-1. Which documents hold the truth for this project? Any mix of architecture, requirements, business analyst notes, governance rules and development standards. Word files and Markdown files both work. Ask: "Give me the paths."
+1. Which files hold the truth for this project? Any mix of architecture, requirements, business analyst notes, governance rules, company context and development standards. Inventory `docs/source/` with the user. Word, Markdown and plain text render directly. PDF, images and other readable formats use the reviewed extraction procedure in `source-material.md`. Ask: "Which of these files should the project obey?"
 2. If two documents disagree, which one wins? A good default: governance rules, then the development standard, then the architecture, then requirements, then notes.
 3. Is each document final enough to plan from? Which version is it?
 4. Are the sections numbered? Specifications cite sections by number. If not, ask whether you may propose numbering for the source document.
@@ -103,7 +103,7 @@ These answers become the definition of done in every issue and in the engineers'
 
 Write it as a short list the user can correct.
 
-- Ground truth: files, winner on conflict, version.
+- Ground truth: every original file and rendering, winner on conflict, version, extraction limits and owner approval.
 - People and tracks, start dates, days off, advisors.
 - Parts of the system each track touches (the themes).
 - Time frame and breaks, longest work unit, checkpoint day and length.

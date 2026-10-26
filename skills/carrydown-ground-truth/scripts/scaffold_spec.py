@@ -161,9 +161,9 @@ def external_section(plan):
 
 
 def source_table(plan):
-    sources = plan.get("sources") or [{"name": "Ground truth", "path": plan["project"]["ground_truth"], "use": "Full specification. Section numbers in the work item files refer to it."}]
-    rows = [[s.get("name", ""), f"`{s.get('path', '')}`", s.get("use", "")] for s in sources]
-    return md_table(["Document", "Path", "Use"], rows)
+    rows = [[str(n), s.get("name", ""), f"`{s.get('source_path', s.get('path', ''))}`", f"`{s.get('path', '')}`" if s.get("path") else "Not rendered", s.get("version", ""), s.get("status", "reviewed"), s.get("limit", ""), s.get("use", "")]
+            for n, s in enumerate(L.ground_truth_sources(plan), 1)]
+    return md_table(["Precedence", "Document", "Original file", "Rendered path", "Version", "Status", "Coverage limit", "Use"], rows)
 
 
 def build_readme(plan):
@@ -198,7 +198,8 @@ def build_milestone(plan, ms):
         "joint_demonstration": joint_demonstration_text(plan, ms),
         "references": "\n".join(
             [f"- `{L.tag(plan, it['id']).lower()}-{it['slug']}.md`" for it in plan["items"] if it["milestone"] == ms["number"]]
-            + [f"- The ground truth, `{plan['project']['ground_truth']}`", "- The schedule and checkpoint tables in `../README.md`"]
+            + [f"- {source['name']}, `{source['path']}`" for source in L.rendered_sources(plan)]
+            + ["- The schedule and checkpoint tables in `../README.md`"]
         ),
     }
     return L.fill(L.read_template("milestone.md"), vals)
@@ -516,7 +517,8 @@ def main(argv=None):
             except OSError as e:
                 L.die(f"cannot create {folder}: {e.strerror or e}")
     if a.ci:
-        gt_dir = str(Path(plan["project"]["ground_truth"]).parent)
+        gt_dirs = {str(Path(source["path"]).parent) for source in L.rendered_sources(plan)}
+        gt_dir = sorted(gt_dirs)[0]
         wf = L.fill(L.read_template("check-specs-workflow.yml"), {"spec_dir": plan["project"]["spec_dir"], "ground_truth_dir": gt_dir, "branch": plan["project"]["branch"]})
         plan_write(root / ".github/workflows/check-specs.yml", wf, "ci workflow")
         for name in ("check_specs.py", "carrydown_lib.py"):

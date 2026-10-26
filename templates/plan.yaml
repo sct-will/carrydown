@@ -24,10 +24,22 @@ project:
   subepic_prefix: "Milestone"            # sub-epic titles read "Milestone 1, name"
   title_format: "{id} {label}"           # work item issue titles. Fields: {id}, {label}, {lower}
   spec_dir: docs/spec                    # where the specification folder lives
-  ground_truth: docs/ground-truth/architecture.md   # the rendered ground truth the specs cite
+  ground_truth: docs/ground-truth/architecture.md   # primary rendered source. Keep for older tools.
   project_title: "Your project plan"     # name of the GitHub Project (v2) board
   dev_skill: your-project-dev            # name of the generated engineers' skill
   dev_skill_path: docs/dev/skills/your-project-dev
+
+sources:                                 # rendered documents, highest precedence first
+  - id: architecture                     # stable id used by work item source_refs
+    name: "Architecture, version 1.0"
+    source_path: docs/source/architecture.docx
+    path: docs/ground-truth/architecture.md
+    version: "1.0"
+    status: reviewed                      # reviewed or unreadable
+    limit: ""                            # explain missing context when status is unreadable
+    use: "Architecture and system requirements."
+  # Add requirements, governance rules, development standards and company context here.
+  # When sources disagree, the earlier source wins unless the plan owner records another decision.
 
 conventions:                             # feeds the definition of done in every issue
   test_command: "npm test"
@@ -121,7 +133,9 @@ items:                                   # the work items
     unblocks: []                         # optional. Derived from depends when empty.
     checkpoint: 2027-01-08               # one of the checkpoint dates above
     external_input: ""                   # text of an input from outside the team, or empty
-    ground_truth: "Sections 1.1"         # the sections of the ground truth this item cites
+    source_refs:                         # every source obligation this item carries into its spec and issue
+      - source: architecture
+        sections: "1.1"                 # section numbers only. The source name is added to the rendered citation.
   - id: 2
     slug: second-item
     label: "Second item"
@@ -134,7 +148,9 @@ items:                                   # the work items
     depends: [1]
     checkpoint: 2027-01-15
     external_input: ""
-    ground_truth: "Sections 1.2"
+    source_refs:
+      - source: architecture
+        sections: "1.2"
 
 external:                                # work outside the plan, owned outside the team, kept as id gaps
   items: []

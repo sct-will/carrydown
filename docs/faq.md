@@ -50,6 +50,10 @@ No. The document must exist and be worth trusting. The carrydown skills render i
 
 The agent can render it. Numbered sections make citations easier to maintain. Ask the agent to propose numbering in the source document and review it before planning.
 
+## Can the ground truth include PDF, images or plain text?
+
+Yes. Put the files together in `docs/source/`. Word, Markdown and UTF-8 plain text render directly. The agent can inspect readable PDF, image and other files and create a Markdown rendering with numbered sections and provenance. Review extracted rules, tables and diagram meaning before planning. If one file cannot be read reliably, the agent records the coverage limit and continues with the readable sources. It stops only when none of the intended ground truth can be processed.
+
 ## What if my ground truth changes?
 
 Update the source document, then review the affected plan and specifications with your agent. Follow [change the source document](plan-owner-guide.md#change-the-source-document) for the steps and publishing guidance.

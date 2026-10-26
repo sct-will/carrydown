@@ -4,7 +4,7 @@ Run these as separate passes, each in a fresh context if you can. The aim is to 
 
 ## A. The ground truth
 
-Paste or point at the rendered document and use this prompt.
+Point at the reviewed renderings in precedence order and use this prompt.
 
 > You are a skeptical reviewer. Read the whole document. Find what is missing, what is wrong and what is contradictory. Be specific and cite section numbers.
 >

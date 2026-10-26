@@ -6,7 +6,7 @@ Use this prompt after the plan and specifications exist and the ordinary checker
 
 Give the reviewer these inputs, with their paths and versions:
 
-- All agreed ground truth, its section indexes and the source precedence rule.
+- All agreed ground truth, including every original file, reviewed rendering, section index, version, extraction limit and the source precedence rule. An unread or unreviewed source is a review limit, not covered context. Continue the review with readable sources. Report that no plan can be assessed only when none of the intended ground truth was processed.
 - The plan owner's confirmed constraints and decisions, including the planning mode. Include people, skills when known, tracks, allocation, start dates, days off, target dates or duration, breaks and work owned outside the team. Distinguish confirmed constraints from defaults and derived values. If the original confirmation is unavailable, record that limit; the generated plan alone cannot prove what the owner agreed.
 - The completed `plan.yaml`, specification README, every milestone and every work item specification.
 - Output from the ordinary checker and its separate `--report` run. Include the load table, critical path, earliest finish and planning review.
@@ -24,7 +24,7 @@ Read the source material itself. A valid citation or a clean checker result does
 
 Review each of these areas:
 
-1. Source coverage. Map every actionable requirement, required capability, governance rule and engineering standard to work items and acceptance evidence. Distinguish missing work, partial coverage, duplicate work, unsupported scope and explicitly excluded or externally owned work. Do not turn every explanatory source paragraph into a new requirement.
+1. Source coverage. Confirm that every agreed source file has a reviewed rendering or a recorded review limit. Map every actionable requirement, required capability, governance rule, company rule and engineering standard to work items and acceptance evidence. Distinguish missing work, partial coverage, duplicate work, unsupported scope and explicitly excluded or externally owned work. Do not turn every explanatory source paragraph into a new requirement.
 2. Constraints. Compare the plan with confirmed people, allocation, availability, target and breaks. Check the planning mode actually used, including whether missing people or a missing target were derived and confirmed. Mark unused modes not applicable. Expose assumptions, stale derived values and a target achieved only by assuming extra people, overtime, reduced scope or unavailable skills.
 3. Engineer tracks. Check ownership, skills where known, context switching, concentrated critical work, idle time caused by dependencies and concurrent demands on one person. A balanced load is not automatically better when it creates handoffs or ignores skills.
 4. Work items. Check that each item is a finishable and demonstrable piece of work with credible effort, a clear boundary and sufficient acceptance criteria. Look for hidden implementation, testing, integration, operational, accessibility, security or migration work where the sources require it.

@@ -45,7 +45,7 @@ Technical items 90 to 260 lines. Run, pilot and documentation items 80 to 160 li
 
 1. Make sure `plan.yaml` is approved and the stubs exist.
 2. Split the items into batches of two or three. Keep related items in one batch.
-3. Fill in `spec-writer-brief.md` once: the project folder, the ground truth path, the layout of code the project will have, one paragraph per item. Use the same brief for every batch.
+3. Fill in `spec-writer-brief.md` once: the project folder, the rendered source paths and precedence, the layout of code the project will have, one paragraph per item. Use the same brief for every batch.
 4. In each batch, edit only that batch's stubs. Leave the title and header table alone. Run `check_specs.py --item N` for each item until it is clean.
 5. When every batch is done, read every file again. Check contract excerpts against the ground truth. Check that dependency items agree on names and shapes. Run the whole checker.
 
@@ -53,7 +53,7 @@ Technical items 90 to 260 lines. Run, pilot and documentation items 80 to 160 li
 
 You will find contradictions while writing. Do not paper over them.
 
-- Choose the winner by the rule the user gave in the interview.
+- Choose the winner by the source precedence the user gave in the interview.
 - State the conflict and the winner in "Watch out for".
 - Keep a list for the next version of the ground truth.
 - Do not edit the ground truth silently.

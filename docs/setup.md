@@ -196,13 +196,13 @@ The list confirms the installed files. To make the agent load them, close and re
 ## Start your plan
 
 1. In the project folder, create a folder named `docs`, then a folder named `source` inside it. Use your file manager or ask the agent to create them.
-2. Copy your architecture or requirements document into `docs/source/`. Use a Word file ending in `.docx` or a Markdown file ending in `.md`. Export older Word files to `.docx` first. You can include more than one document.
+2. Copy the files the project must obey into `docs/source/`. Include architecture, requirements, governance rules, development standards and company context as needed. Word, Markdown and plain UTF-8 text render directly. The agent can inspect readable PDF, PNG and other files and create reviewed Markdown renderings. Export older Word files to `.docx` first. You can include more than one file.
 3. In the agent's chat, say:
 
    > Set up a project plan from this document.
 
    For multiple documents, specify which files to use. The agent can list the files in `docs/source/`.
-4. The agent checks the setup and requests approval if Git needs to be initialized. Initialization is local and does not upload the project.
+4. The agent inventories the folder and reports how each file will be processed. It identifies unreadable files and continues with readable sources. It stops only when none of the intended ground truth can be processed. It also checks the setup and requests approval if Git needs to be initialized. Initialization is local and does not upload the project.
 5. The interview begins. Replies identify the current step as `carrydown: interview, step N of 6`. Dates, team size and other constraints can remain undecided; the agent proposes assumptions for review.
 
 **You are ready when the agent begins the interview.**

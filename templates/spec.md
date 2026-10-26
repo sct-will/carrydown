@@ -57,7 +57,7 @@ TODO: The traps. Contradictions found in the ground truth, ordering risks, secur
 
 ## References
 
-- TODO: The ground truth sections cited in the header, as links into the rendered document.
+- TODO: The ground truth sections cited in the header, as links into the correct rendered sources.
 - TODO: The specifications of the items in Depends on and Unblocks.
 
 ## Decisions recorded
