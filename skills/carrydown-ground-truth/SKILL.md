@@ -20,7 +20,7 @@ In this skill, the user is the plan owner.
 
 ## What this skill does
 
-A ground truth is the set of source files a project must obey: architecture, requirements, business notes, governance rules, company context and development standards. The files can mix documents, plain text, PDFs and images in one input folder. This skill interviews the user, creates reviewed Markdown renderings with stable section anchors, scaffolds `docs/spec/`, drafts the plan with the user, writes one specification per work item to a fixed template and runs the checker. A separate second pass challenges the finished set and records accepted repairs before final approval. The next skill, `carrydown-plan-to-github`, puts the plan on GitHub and generates the skill each engineer installs.
+A ground truth is the set of source files a project must obey: architecture, requirements, business notes, governance rules, company context and development standards. The files can mix documents, plain text, PDFs and images in one input folder. This skill interviews the user, creates reviewed Markdown renderings with stable section anchors, scaffolds `docs/spec/`, drafts the plan with the user, optionally uses supplied skills and work preferences to propose explainable assignments, writes one specification per work item to a fixed template and runs the checker. Missing or unclear staffing context never blocks the default assignment approach. A separate second pass challenges the finished set and records accepted repairs before final approval. The next skill, `carrydown-plan-to-github`, puts the plan on GitHub and generates the skill each engineer installs.
 
 ## Rules that never bend
 
@@ -73,7 +73,7 @@ This writes a starter `docs/spec/plan.yaml` from the template. Fill it in during
 
 ### 4. Draft the plan with the user
 
-Read `references/planning.md` and follow its steps, stopping for a decision at each: what must exist, milestones and their composition, work units, work items, dates, the load table and critical path, the work outside the plan, an adversarial review of the plan, and the rationale. Start that review with this sentence, word for word: "List what is missing, wrong or improvable in this plan, reading it as each engineer would live it week by week." The plan records its rationale: why each milestone holds its items, what the engineers show together at its demonstration, and why each track's items are in their order. Run `python3 <skill>/scripts/check_specs.py --root . --report` and show the user the load table and the planning review block. Save the result in `plan.yaml` and run the report again.
+Read `references/planning.md` and follow its steps, stopping for a decision at each: what must exist, milestones and their composition, work units, work items, optional staffing matches, dates, the load table and critical path, the work outside the plan, an adversarial review of the plan, and the rationale. Start that review with this sentence, word for word: "List what is missing, wrong or improvable in this plan, reading it as each engineer would live it week by week." The plan records its rationale: why each milestone holds its items, what the engineers show together at its demonstration, and why each track's items are in their order. Run `python3 <skill>/scripts/check_specs.py --root . --report` and show the user the staffing context, load table and planning review blocks. Save the result in `plan.yaml` and run the report again.
 
 ### 5. Write milestones and specifications
 

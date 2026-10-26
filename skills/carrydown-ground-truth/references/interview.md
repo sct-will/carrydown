@@ -35,11 +35,12 @@ Begin with `carrydown: interview, step 2 of 6`.
 Ask.
 
 1. Who will do the work? A name or handle for each person.
-2. Which track does each person own? A track is a lane of work, for example back end, front end, data, platform. Each person owns one track.
+2. Does the project lead already know which track each person should own? A track is a lane of work, for example back end, front end, data or platform. If the assignments are not fixed, the agent proposes them.
    Then ask which parts of the system each track touches, a few words each, such as "web client", "notification worker" or "export job". These become the themes. The plan keeps each person on one theme at a time, so they switch context less.
-3. When does each person start, and which days are they off?
+3. Optional: should engineers' skills or work preferences influence the proposed tracks and assignments? If yes, collect each person's skills and preferences in the project lead's words. If no, unknown or incomplete, move on without a warning or finding. Do not infer either from a title or name. These inputs guide a best match; they never block planning. If their meaning or application is unclear, use the default assignment rules based on track ownership, capacity, dependencies and reduced context switching.
+4. When does each person start, and which days are they off?
    Then, in one line, confirm the percent allocation: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" Do not ask for a figure per person unless the answer is no. If the answer is no, ask for the figure for each person who is lower. A person at 60 percent has three working days in five for this plan.
-4. Is there anyone who advises and owns no items, such as someone from security or the author of a policy?
+5. Is there anyone who advises and owns no items, such as someone from security or the author of a policy?
 
 Explain: names stay in `plan.yaml`. The checker keeps them out of the specifications so the files stay valid when people change.
 
@@ -104,7 +105,7 @@ These answers become the definition of done in every issue and in the engineers'
 Write it as a short list the user can correct.
 
 - Ground truth: every original file and rendering, winner on conflict, version, extraction limits and owner approval.
-- People and tracks, start dates, days off, advisors.
+- People and tracks, start dates, days off and advisors. Include supplied skills, work preferences and the proposed match. Say plainly when skills or preferences were not supplied and the default assignment rules apply.
 - Parts of the system each track touches (the themes).
 - Time frame and breaks, longest work unit, checkpoint day and length.
 - Repository, Epic, labels, logins.

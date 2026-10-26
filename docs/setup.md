@@ -204,6 +204,7 @@ The list confirms the installed files. To make the agent load them, close and re
    For multiple documents, specify which files to use. The agent can list the files in `docs/source/`.
 4. The agent inventories the folder and reports how each file will be processed. It identifies unreadable files and continues with readable sources. It stops only when none of the intended ground truth can be processed. It also checks the setup and requests approval if Git needs to be initialized. Initialization is local and does not upload the project.
 5. The interview begins. Replies identify the current step as `carrydown: interview, step N of 6`. Dates, team size and other constraints can remain undecided; the agent proposes assumptions for review.
+   Skills and work preferences are optional. Supply them only when you want them to influence the proposed tracks and assignments. Missing or unclear staffing context does not stop planning.
 
 **You are ready when the agent begins the interview.**
 

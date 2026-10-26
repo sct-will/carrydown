@@ -6,10 +6,18 @@
 | --- | --- | --- |
 | Ground truth and precedence | Record paths, versions and source sections. | Record missing or conflicting inputs. |
 | Confirmed constraints and decisions | Record the owner's confirmation and planning mode. | Distinguish defaults and derived values. |
+| Staffing context | Record supplied skills and work preferences, or state that default assignment was used. | Missing optional staffing context is not a limit or finding. |
 | Plan and specification set | Record revision and paths. | Record incomplete artifacts. |
 | Checker and schedule reports | Record commands, results and date. | A clean check does not prove source coverage. |
 | Published artifacts and engineers' skill | Record actual identifiers and versions, or not yet published. | Record unavailable artifacts. |
 | Review context | Record fresh context or a separate pass in the current context. | Record the limits of independence. |
+
+## Staffing match
+
+When skills or preferences were supplied, use this table. Otherwise state that default assignment was used and omit the table. Missing optional staffing context is valid. Remove these instructions when writing the report.
+
+| Engineer | Supplied skills | Work preferences | Proposed track and work | Match reasoning | Risk or tradeoff |
+| --- | --- | --- | --- | --- | --- |
 
 ## Scope coverage
 

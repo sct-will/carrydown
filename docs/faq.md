@@ -54,6 +54,12 @@ The agent can render it. Numbered sections make citations easier to maintain. As
 
 Yes. Put the files together in `docs/source/`. Word, Markdown and UTF-8 plain text render directly. The agent can inspect readable PDF, image and other files and create a Markdown rendering with numbered sections and provenance. Review extracted rules, tables and diagram meaning before planning. If one file cannot be read reliably, the agent records the coverage limit and continues with the readable sources. It stops only when none of the intended ground truth can be processed.
 
+## Can skills and work preferences influence assignments?
+
+Yes. The project lead can optionally supply each engineer's skills and preferred work. The agent compares them with the needs of the tracks and work items, proposes a best match and records its reasoning and tradeoffs. Required capabilities, fixed staffing decisions, availability, dependencies and delivery constraints take priority over preferences. The project lead approves the assignments.
+
+Skills and preferences are never required. Missing, partial or ambiguous information does not fail or stop planning. The agent uses the default assignment approach based on tracks, capacity, dependencies and reduced context switching. The checker reports supplied staffing context but does not score or reject a match.
+
 ## What if my ground truth changes?
 
 Update the source document, then review the affected plan and specifications with your agent. Follow [change the source document](plan-owner-guide.md#change-the-source-document) for the steps and publishing guidance.

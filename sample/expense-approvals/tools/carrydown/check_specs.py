@@ -510,6 +510,26 @@ def report(plan):
         print(f"  {n}. {source['name']}: {status}; {source.get('source_path', rendered)} -> {rendered}")
         if source.get("limit"):
             print(f"     Coverage limit: {source['limit']}")
+    print("\nStaffing context (advisory)")
+    has_staffing_context = any(t.get("skill_needs") for t in plan["tracks"]) or any(
+        p.get("skills") or p.get("preferences") or p.get("assignment_rationale") for p in plan["people"]
+    ) or any(it.get("skill_needs") for it in plan["items"])
+    if not has_staffing_context:
+        print("  No skills or work preferences were supplied. The plan uses the default track, capacity, dependency and context-switching rules.")
+    else:
+        for track in plan["tracks"]:
+            if track.get("skill_needs"):
+                print(f"  Track {track['id']} needs: {', '.join(track['skill_needs'])}")
+        for person in plan["people"]:
+            skills = ", ".join(person.get("skills") or []) or "not supplied"
+            preferences = ", ".join(person.get("preferences") or []) or "not supplied"
+            print(f"  {person['id']} on {person.get('track', 'unassigned')}: skills {skills}; preferences {preferences}")
+            if person.get("assignment_rationale"):
+                print(f"    Assignment rationale: {person['assignment_rationale']}")
+        for item in plan["items"]:
+            if item.get("skill_needs"):
+                print(f"  {L.tag(plan, item['id'])} needs: {', '.join(item['skill_needs'])}")
+        print("  Skills and preferences guide the agent's proposed match. They do not make the checker pass or fail; uncertain matches use the default assignment rules.")
     print("\nSchedule")
     for m in plan["milestones"]:
         print(f"  Work unit {m['number']}, {m['name']}: {m['start']} to {m['end']} (demonstration {m['demo']})")

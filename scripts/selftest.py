@@ -809,6 +809,18 @@ def main():
             return str(path)
         chk = [PY, "scripts/check_specs.py", "--root", SAMPLE]
         step("report shows allocation, capacity and the target", chk + ["--report"], contains=["Alloc", "60%", "of 6d", "meets the target"])
+        step("supplied skills and preferences are advisory and reported", chk + ["--report"],
+             contains=["Staffing context (advisory)", "Track workflow needs: Service APIs, Workflow rules, Relational data",
+                       "tamsin on workflow: skills Python services, PostgreSQL, Workflow design; preferences Service contracts, Policy enforcement",
+                       "They do not make the checker pass or fail"])
+        optional_staffing = ("skill_needs:", "skills:", "preferences:", "assignment_rationale:")
+        no_staffing = "\n".join(line for line in plan_text.splitlines() if not line.strip().startswith(optional_staffing)) + "\n"
+        step("missing skills and preferences use default assignment and never fail", chk + ["--report", "--plan", variant("nostaffing", no_staffing)],
+             contains=["No skills or work preferences were supplied. The plan uses the default track, capacity, dependency and context-switching rules.",
+                       "0 finding(s)."])
+        scalar_staffing = plan_text.replace('skills: ["Python services", "PostgreSQL", "Workflow design"]', 'skills: "Python services and PostgreSQL"', 1)
+        step("staffing context can be plain text without failing", chk + ["--report", "--plan", variant("scalarstaffing", scalar_staffing)],
+             contains=["tamsin on workflow: skills Python services and PostgreSQL;"])
         step("allocation is optional and defaults to 100", chk + ["--report", "--plan", variant("noalloc", plan_text.replace("    allocation: 100\n", "").replace("    allocation: 60\n", ""))], contains=["100%"])
         step("allocation 0 is rejected", chk + ["--plan", variant("alloc0", plan_text.replace("allocation: 60", "allocation: 0"))], expect=1, contains=["allocation must be a whole percent from 1 to 100"])
         step("allocation 101 is rejected", chk + ["--plan", variant("alloc101", plan_text.replace("allocation: 100", "allocation: 101"))], expect=1, contains=["allocation must be a whole percent"])

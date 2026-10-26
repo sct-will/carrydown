@@ -598,7 +598,7 @@ def _is_int(v):
 # so `label: 2027` works. None means the field is empty and is treated as left out.
 _TEXT_FIELDS = {
     "tracks": ("id", "label", "color"),
-    "people": ("id", "name", "github", "track", "start"),
+    "people": ("id", "name", "github", "track", "start", "assignment_rationale"),
     "advisors": ("id", "name", "github", "note"),
     "milestones": ("name", "folder", "start", "end", "demo", "gate"),
     "breaks": ("name", "start", "end"),
@@ -606,6 +606,11 @@ _TEXT_FIELDS = {
     "items": ("slug", "label", "track", "owner", "complete_by", "size", "checkpoint", "ground_truth", "external_input", "program_input"),
     "external.items": ("label", "note"),
     "sources": ("id", "name", "source_path", "path", "use", "version", "status", "limit"),
+}
+_TEXT_LIST_FIELDS = {
+    "tracks": ("skill_needs",),
+    "people": ("skills", "preferences"),
+    "items": ("skill_needs",),
 }
 _INT_FIELDS = {"milestones": ("number",), "items": ("id", "milestone"), "external.items": ("id",)}
 _PROJECT_TEXT = ("name", "slug", "id_prefix", "repo", "branch", "epic_title", "subepic_prefix", "title_format",
@@ -663,6 +668,14 @@ def type_problems(plan):
             where = f"{group} entry {n}"
             for k in _TEXT_FIELDS.get(group, ()):
                 _as_text(row, k, where, P)
+            for k in _TEXT_LIST_FIELDS.get(group, ()):
+                v = row.get(k)
+                if v is None:
+                    continue
+                if isinstance(v, str):
+                    row[k] = [v] if v.strip() else []
+                elif not isinstance(v, list) or not all(isinstance(x, str) for x in v):
+                    P.append(f"{where}.{k} must be text or a list of text, got {_kind(v)}")
             for k in _INT_FIELDS.get(group, ()):
                 if row.get(k) is not None and not _is_int(row[k]):
                     P.append(f"{where}.{k} must be a whole number, got {row[k]!r}")
@@ -757,6 +770,9 @@ def load_plan(path, root=None):
     for person in plan["people"]:
         if person.get("allocation") is None:
             person["allocation"] = 100
+        person["skills"] = list(person.get("skills") or [])
+        person["preferences"] = list(person.get("preferences") or [])
+        person["assignment_rationale"] = _text(person.get("assignment_rationale"))
     plan["target"] = plan.get("target") or None
     plan["conventions"] = plan.get("conventions") or {}
     plan["limits"] = plan.get("limits") or {}
@@ -789,6 +805,7 @@ def load_plan(path, root=None):
         it["source_refs"] = it.get("source_refs") or []
         it.setdefault("owner", "")
         it["theme"] = _text(it.get("theme"))
+        it["skill_needs"] = list(it.get("skill_needs") or [])
     # the planning rationale: why each milestone holds its items, what the joint demonstration
     # shows, and why each track's items are in their order. Text, folded to one line.
     for m in plan["milestones"]:
@@ -798,6 +815,7 @@ def load_plan(path, root=None):
     for t in plan["tracks"]:
         if isinstance(t, dict):
             t["order_rationale"] = _text(t.get("order_rationale"))
+            t["skill_needs"] = list(t.get("skill_needs") or [])
     # derived unblocks: inverse of depends
     derived = {it["id"]: [] for it in plan["items"] if isinstance(it.get("id"), int)}
     for it in plan["items"]:

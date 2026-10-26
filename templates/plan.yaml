@@ -52,12 +52,14 @@ tracks:                                  # parallel lanes of work, usually one p
   - id: backend
     label: Backend
     color: BLUE                          # GRAY BLUE GREEN YELLOW ORANGE RED PINK PURPLE
+    skill_needs: ["Service APIs", "Database design"]  # OPTIONAL. Used for best-match staffing, never a gate.
     order_rationale: "The contract comes first so the Frontend track can start from it. Later items follow their dependencies."
                                          # why this track's items are in this order, one to three sentences.
                                          # Say where a theme changes and why, and name a critical path risk here.
   - id: frontend
     label: Frontend
     color: GREEN
+    skill_needs: ["Accessible web interfaces"]
     order_rationale: "The screen starts the day after the contract lands and closes before the demonstration, so there is slack before it."
 
 people:                                  # OPTIONAL. People who own items. Names stay out of specs.
@@ -67,6 +69,9 @@ people:                                  # OPTIONAL. People who own items. Names
     name: "Alex Quill"
     github: ""                           # GitHub login for assignment, or empty
     track: backend
+    skills: ["Python", "Service APIs", "PostgreSQL"]  # OPTIONAL. Text or a list of text.
+    preferences: ["Contract and integration work"]      # OPTIONAL. Soft guidance, never a prerequisite.
+    assignment_rationale: "Best available match for the backend track."
     allocation: 100                      # percent of working time on this plan, 1 to 100. 100 if omitted
     start: 2027-01-04
     days_off: []                         # list of dates
@@ -74,6 +79,9 @@ people:                                  # OPTIONAL. People who own items. Names
     name: "Sam Marlow"
     github: ""
     track: frontend
+    skills: ["TypeScript", "Accessible web interfaces"]
+    preferences: ["User-facing workflow work"]
+    assignment_rationale: "Best available match for the frontend track."
     allocation: 100
     start: 2027-01-04
     days_off: []
@@ -136,6 +144,7 @@ items:                                   # the work items
     source_refs:                         # every source obligation this item carries into its spec and issue
       - source: architecture
         sections: "1.1"                 # section numbers only. The source name is added to the rendered citation.
+    skill_needs: ["Service APIs"]       # OPTIONAL. Add only when the item needs more detail than its track.
   - id: 2
     slug: second-item
     label: "Second item"

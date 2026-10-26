@@ -42,10 +42,12 @@ tracks:
   - id: workflow
     label: Workflow
     color: BLUE
+    skill_needs: ["Service APIs", "Workflow rules", "Relational data"]
     order_rationale: "The scaffold and the API contract come first because both tracks build against contracts/openapi.yaml (DS-1.4). Routing closes on 2027-02-19, before the day off on 2027-02-22, so the inbox can start the next Monday. The limits close on 2027-03-08 so the delegates item has the GOV-1 rules from the start of work unit 3, and the audit log follows in the same service code because it shares the transaction of each state change (D1). The one theme change, to the export job, falls across the offsite week."
   - id: experience
     label: Experience
     color: GREEN
+    skill_needs: ["Accessible web interfaces", "Client integration", "Notifications"]
     order_rationale: "In the first three days the Experience engineer reviews the draft contract with the Workflow engineer, so nobody is idle in the first week. The report form starts the day after the contract lands and closes on 2027-02-10, two days before the first demonstration. The inbox needs the form and the routing steps, and closes on 2027-03-03. Notifications and delegates need the inbox decisions and the GOV-1.4 delegate rule, so they come third, and release readiness comes last because it rehearses everything. The theme changes twice, to the notification worker and then to the release, each at a milestone boundary and never between adjacent days. Four of the five items on the critical path sit on this track at 60 percent allocation: if this engineer is away, the Workflow engineer takes the delegate screen of WI-08, whose rules are already theirs."
 
 people:
@@ -53,6 +55,9 @@ people:
     name: "Tamsin Hale"
     github: ""
     track: workflow
+    skills: ["Python services", "PostgreSQL", "Workflow design"]
+    preferences: ["Service contracts", "Policy enforcement"]
+    assignment_rationale: "The workflow track best matches the supplied service, data and workflow skills and the preference for policy work."
     allocation: 100
     start: 2027-02-01
     days_off: [2027-02-22]
@@ -60,6 +65,9 @@ people:
     name: "Idris Okoye"
     github: ""
     track: experience
+    skills: ["TypeScript", "Accessible web interfaces", "Notification flows"]
+    preferences: ["User-facing workflows", "Integration demonstrations"]
+    assignment_rationale: "The experience track best matches the supplied interface and notification skills and the preference for user-facing work."
     allocation: 60
     start: 2027-02-01
     days_off: [2027-03-08]

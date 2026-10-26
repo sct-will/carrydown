@@ -5,7 +5,7 @@ This optional checklist helps you prepare for the planning interview. The ground
 ## Two inputs
 
 1. **The ground truth.** Required. Put one or more source files in `docs/source/`. Word, Markdown and plain text render directly. The agent can inspect readable PDF, image and other files and create reviewed Markdown renderings. It reports unreadable files and continues when at least one intended source can be processed.
-2. **Your project constraints.** Optional, in any combination: the people, each with a track, a percent allocation, a start date and days off, and the target, a date or a number of working weeks, plus breaks as date ranges. The agent asks one question: "What constraints do you have? The people, the target date or weeks, both, or neither for now."
+2. **Your project constraints.** Optional, in any combination: the people, each with a track, a percent allocation, a start date and days off, and the target, a date or a number of working weeks, plus breaks as date ranges. You may also give engineers' skills and work preferences. The agent asks one question: "What constraints do you have? The people, the target date or weeks, both, or neither for now."
 
 Percent allocation is the share of a person's working time that goes to this plan. The agent assumes 100 percent for everyone and asks you once to confirm: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" If someone works on the plan three days in five, say 60.
 
@@ -20,7 +20,9 @@ A worked example of Derive the date, produced by running the checker on the samp
 
 Each work item gets a size, written as a word and a number of days, for example "Small, about 2 days" or "Medium, about 3 days". The agent proposes the sizes. The checker reads the number after "about" for the load table, so keep that form if you edit `plan.yaml` yourself.
 
-In `plan.yaml` the inputs appear under `sources`, in precedence order. Each entry records the original file, rendered path, version, status, coverage limit and use. `project.ground_truth` keeps the primary rendered source for compatibility. Work items use `source_refs` to cite sections from one or more sources. The optional `people` list holds `allocation` (a whole number from 1 to 100, 100 if omitted). The optional `target` block holds `date` or `weeks`, next to the `breaks` list.
+In `plan.yaml` the inputs appear under `sources`, in precedence order. Each entry records the original file, rendered path, version, status, coverage limit and use. `project.ground_truth` keeps the primary rendered source for compatibility. Work items use `source_refs` to cite sections from one or more sources. The optional `people` list holds `allocation` (a whole number from 1 to 100, 100 if omitted), plus optional `skills`, `preferences` and `assignment_rationale`. Tracks and specialized items can record `skill_needs`. The optional `target` block holds `date` or `weeks`, next to the `breaks` list.
+
+Skills and preferences are advisory. Leave them out when they are unknown or irrelevant. The agent still assigns work with the existing rules for tracks, capacity, dependencies, theme continuity and reduced handoffs. When supplied, they guide a proposed best match. Unclear or incomplete staffing context never stops or fails the plan.
 
 Two more things come out of the planning conversation, and it helps to think about them. Themes: the parts of the system each track touches, in a few words each, such as "web client" or "export job". Each item gets one, so the plan can keep a person on one part at a time. Rationale: why each milestone holds its items, what the engineers show together at its demonstration, and why each track's items are in their order. The agent drafts these with you and writes them into `plan.yaml` as `theme`, `rationale`, `joint_demonstration` and `order_rationale`. The checker fails a plan without the rationale.
 
@@ -44,6 +46,8 @@ Put the files in `docs/source/` and give their paths. Direct rendering accepts `
 | --- | --- | --- |
 | Who does the work? | Two engineers. | One to four people. |
 | Which track does each own? | Workflow and Experience. | One track each. |
+| Skills that should influence the match? | Python services, accessible interfaces, database design. | Optional. Use the default assignment approach when absent. |
+| Work preferences that should influence the match? | Contract design, user-facing workflows. | Optional soft guidance. |
 | Which parts of the system does each track touch? | Web client, notification worker, expense service, export job. | Ask. They become the themes. |
 | Percent allocation? | 100, or 60 for three days in five. | 100 for everyone. The agent asks once to confirm. |
 | Start dates and days off? | Start 2027-02-01. Off 2027-02-22. | Same start date, no days off. |
@@ -104,7 +108,8 @@ Which agentic editors do the engineers use? Any editor or command line agent tha
 Ground truth files:
 Wins on conflict:
 Version:
-People (name, track, percent allocation, start date, days off, GitHub login):
+People (name, track if fixed, percent allocation, start date, days off, GitHub login):
+Optional skills and work preferences:
 Parts of the system each track touches (themes):
 Advisors:
 Target date or weeks:
