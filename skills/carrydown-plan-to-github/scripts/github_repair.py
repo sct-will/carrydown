@@ -79,27 +79,20 @@ def fingerprint(issue):
             sorted(x["login"].casefold() for x in issue.get("assignees", [])))
 
 
-def repair(gh, before, plan, root, owner, repo, apply=False, verify=False):
-    sync = S.Sync(plan, root, gh, owner, repo, False)
+def repair(gh, before, plan, root, owner, repo, apply=False, verify=False, selections=None):
+    sync = S.Sync(plan, root, gh, owner, repo, False, selections)
     base = sync.base
     expected = entries(plan)
     known = entries(before)
     conflicts, actions = [], []
-    # Reject ambiguous markers instead of selecting one of two issues with the same identity.
-    raw = gh.paged(f"{base}/issues?state=all&labels={plan['project']['slug']}")
-    counts = {}
-    for issue in raw:
-        if issue.get("pull_request"):
-            continue
-        marker = S.MARKER_RE.search(issue.get("body") or "")
-        if marker:
-            counts[marker.group(1)] = counts.get(marker.group(1), 0) + 1
-    for key, count in counts.items():
-        if count > 1 and key in expected:
-            conflicts.append(f"{key}: more than one issue carries its marker")
+    # Use the same complete candidate comparison and persisted mapping as synchronization.
     objects = {}
     for key, (title, _, _) in expected.items():
-        issue = sync.find(key, title)
+        try:
+            issue = sync.find(key, title)
+        except G.GitHubError as e:
+            conflicts.append(e.line())
+            continue
         mark = S.MARKER_RE.search(issue.get("body") or "") if issue else None
         if not mark or mark.group(1) != key:
             conflicts.append(f"{key}: marked issue missing; create or identify it through reviewed staged creation first")
@@ -158,8 +151,14 @@ def repair(gh, before, plan, root, owner, repo, apply=False, verify=False):
             gh.rest("POST", f"{base}/issues/{move['number']}/sub_issues",
                     {"sub_issue_id": issue["id"], "replace_parent": True})
         L.say(f"  repaired {key} #{issue['number']}")
-    L.say("Run this command again with --verify. Each later publication step needs its own preview.")
-    return 0
+    # Persist only after the entire approved metadata preview has passed its guards.
+    sync.apply = True
+    sync.issues = None
+    for key, (title, _, _) in expected.items():
+        sync.find(key, title)
+    sync.save_mapping()
+    L.say("Verify repaired metadata automatically.")
+    return repair(gh, before, plan, root, owner, repo, verify=True, selections=selections)
 
 
 def run(argv=None):
@@ -180,6 +179,7 @@ def main(argv=None):
     ap.add_argument("--apply", action="store_true", help="apply the previewed repairs")
     ap.add_argument("--allow-public", action="store_true", help="allow approved repairs in a public repository")
     ap.add_argument("--verify", action="store_true", help="read and compare metadata; never write")
+    ap.add_argument("--select-issue", action="append", default=[], metavar="KEY=NUMBER", help="choose a canonical issue after the ambiguity preview")
     a = ap.parse_args(argv)
     if sum((a.offline, a.apply, a.verify)) > 1:
         L.die("--offline, --apply and --verify are separate modes")
@@ -221,7 +221,13 @@ def main(argv=None):
         L.die("repository not found or inaccessible", 1)
     if a.apply and not repository.get("private") and not a.allow_public:
         L.die("public repository: explicit publication approval and --allow-public are required", 1)
-    return repair(gh, before, plan, root, owner, repo, a.apply, a.verify)
+    selections = {}
+    for selection in a.select_issue:
+        key, sep, number = selection.partition("=")
+        if not sep or not key or not number.isascii() or not number.isdigit() or int(number) < 1:
+            L.die("--select-issue must be KEY=NUMBER")
+        selections[key] = int(number)
+    return repair(gh, before, plan, root, owner, repo, a.apply, a.verify, selections)
 
 
 if __name__ == "__main__":

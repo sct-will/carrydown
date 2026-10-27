@@ -37,6 +37,7 @@ Usage
   python3 scripts/github_sync.py --root . --offline --show-body M2     print one sub-epic body, no network
 """
 import argparse
+import json
 import re
 import sys
 import time
@@ -121,7 +122,33 @@ def marker(key):
 
 
 def with_marker(body, key):
-    return body.rstrip("\n") + "\n\n" + marker(key) + "\n"
+    return "<!-- carrydown-managed:start -->\n" + body.rstrip("\n") + "\n<!-- carrydown-managed:end -->\n\n" + marker(key) + "\n"
+
+
+MANAGED_RE = re.compile(r"<!-- carrydown-managed:start -->\n?(.*?)\n?<!-- carrydown-managed:end -->", re.S)
+
+
+def managed_content(body):
+    text = (body or "").replace("\r\n", "\n")
+    match = MANAGED_RE.search(text)
+    return match.group(1).strip() if match else MARKER_RE.sub("", text).strip()
+
+
+def merge_managed(have, want, key):
+    """Replace only the bounded generated region, retaining every unbounded human byte."""
+    text = (have or "").replace("\r\n", "\n")
+    match = MANAGED_RE.search(text)
+    desired = MANAGED_RE.search(want)
+    if match and desired:
+        merged = text[:match.start()] + desired.group(0) + text[match.end():]
+        merged = MARKER_RE.sub(lambda m: "" if m.group(1) == key else m.group(0), merged)
+        return merged.rstrip() + "\n\n" + marker(key) + "\n"
+    if managed_content(text) == managed_content(want):
+        return want
+    # Legacy bodies have no ownership boundary. Keep all old text while installing a
+    # bounded authoritative region. No comment or human-authored text is discarded.
+    retained = MARKER_RE.sub("", text).strip()
+    return want.rstrip() + ("\n\n### Preserved existing issue text\n\n" + retained if retained else "") + "\n"
 
 
 def unlinked_ids(plan, text, numbers):
@@ -268,7 +295,7 @@ def build_rollup(plan, numbers, epic_number):
 
 
 class Sync:
-    def __init__(self, plan, root, gh, owner, repo, apply):
+    def __init__(self, plan, root, gh, owner, repo, apply, selections=None):
         self.plan, self.root, self.gh, self.owner, self.repo, self.apply = plan, Path(root), gh, owner, repo, apply
         self.base = f"/repos/{owner}/{repo}"
         self.issues = None  # title -> issue, only issues with the project label
@@ -279,6 +306,14 @@ class Sync:
         self.created = set()
         self.planned = set()
         self.counts = {"labels": 0, "subepics": 0, "items": 0, "links": 0, "bodies": 0}
+        self.selections = selections or {}
+        self.mapping_path = L.inside(self.root, self.root / plan["project"]["spec_dir"] / "github-issues.json", "issue mapping")
+        self.mapping = {}
+        if self.mapping_path.exists():
+            saved = json.loads(L.read_text(self.mapping_path))
+            if saved.get("repository", "").casefold() != f"{owner}/{repo}".casefold():
+                raise G.GitHubError("persisted issue mapping names a different repository; review github-issues.json before continuing")
+            self.mapping = saved.get("issues", {})
 
     def load_issues(self):
         """Read the issues that carry the project label, open first, and index them by title and
@@ -286,21 +321,106 @@ class Sync:
         if self.issues is None:
             self.issues, self.by_key = {}, {}
             slug = self.plan["project"]["slug"]
-            found = self.gh.paged(f"{self.base}/issues?state=all&labels={urllib.parse.quote(slug)}")
+            found = self.gh.paged(f"{self.base}/issues?state=all")
             found = [i for i in found if "pull_request" not in i
-                     and slug.lower() in {str(lb.get("name", "")).lower() for lb in (i.get("labels") or []) if isinstance(lb, dict)}]
-            found.sort(key=lambda i: i.get("state") != "open")
+                     and (not i.get("repository_url") or i["repository_url"].rstrip("/").casefold().endswith(self.base.casefold()))
+                     and (not (i.get("repository") or {}).get("nameWithOwner") or i["repository"]["nameWithOwner"].casefold() == f"{self.owner}/{self.repo}".casefold())]
             for i in found:
-                self.issues.setdefault(i["title"], i)
-                m = MARKER_RE.search(i.get("body") or "")
-                if m:
-                    self.by_key.setdefault(m.group(1), i)
+                marks = MARKER_RE.findall(i.get("body") or "")
+                # Markerless legacy issues require the project label as identity evidence.
+                labeled = slug.casefold() in {lb.get("name", "").casefold() for lb in i.get("labels", [])}
+                if labeled or marks or any(v.get("number") == i["number"] for v in self.mapping.values()):
+                    self.issues.setdefault(i["title"], []).append(i)
+                    for key in set(marks):
+                        self.by_key.setdefault(key, []).append(i)
         return self.issues
 
     def find(self, key, title):
         """The labeled issue for a plan key: by its marker first, then by exact title."""
         issues = self.load_issues() if self.gh else {}
-        return self.by_key.get(key) or issues.get(title)
+        candidates = list(self.by_key.get(key, []))
+        for issue in issues.get(title, []):
+            marks = MARKER_RE.findall(issue.get("body") or "")
+            if marks and key not in marks:
+                continue
+            if issue not in candidates:
+                candidates.append(issue)
+        mapped = self.mapping.get(key)
+        if mapped and self.gh:
+            matches = [i for rows in issues.values() for i in rows if i["number"] == mapped["number"] and (not mapped.get("id") or i["id"] == mapped["id"])]
+            if not matches:
+                current = self.gh.rest("GET", f"{self.base}/issues/{mapped['number']}")
+                matches = [current] if current.get("id") == mapped.get("id") else []
+            if len(matches) != 1 or (key not in MARKER_RE.findall(matches[0].get("body") or "") and matches[0].get("title") != title):
+                raise G.GitHubError(f"{key}: persisted issue mapping failed identity verification; review its issue number before proceeding")
+            chosen = matches[0]
+            if chosen not in candidates:
+                candidates.append(chosen)
+        elif key in self.selections:
+            matches = [i for i in candidates if i["number"] == self.selections[key]]
+            if len(matches) != 1:
+                raise G.GitHubError(f"{key}: selected issue #{self.selections[key]} is not a verified repository candidate")
+            chosen = matches[0]
+        elif len(candidates) == 1:
+            chosen = candidates[0]
+        elif len(candidates) > 1:
+            # Exact managed content, title and metadata together can prove a unique canonical issue.
+            expected = None
+            item = next((it for it in self.plan["items"] if L.tag(self.plan, it["id"]) == key), None)
+            ms = next((m for m in self.plan["milestones"] if f"M{m['number']}" == key), None)
+            if item:
+                expected = build_item_body(self.plan, self.root, item)
+            elif ms:
+                expected = build_subepic_body(self.plan, self.root, ms)
+            def norm(body):
+                return re.sub(r" \(#\d+\)", "", body.replace("\r\n", "\n")).strip()
+            required = {self.plan["project"]["slug"]}
+            assigned = None
+            state = None
+            if item:
+                required.add(item["track"])
+                assigned = next((p.get("github") for p in self.plan["people"] if p["id"] == item.get("owner")), None)
+                state = item.get("state")
+            elif ms:
+                required.add("sub-epic")
+            exact = [i for i in candidates if expected and i["title"] == title and norm(i.get("body") or "") == norm(expected)
+                     and required <= {x["name"] for x in i.get("labels", [])}
+                     and (not assigned or assigned.casefold() in {x["login"].casefold() for x in i.get("assignees", [])})
+                     and (not state or state == i.get("state"))]
+            if len(exact) == 1:
+                chosen = exact[0]
+            else:
+                L.say("key | issue | state | marker | title | labels | assignees")
+                for issue in candidates:
+                    L.say(f"{key} | #{issue['number']} | {issue.get('state')} | {key in MARKER_RE.findall(issue.get('body') or '')} | {issue['title']} | {[x['name'] for x in issue.get('labels', [])]} | {[x['login'] for x in issue.get('assignees', [])]}")
+                raise G.GitHubError(f"{key}: ambiguous issue identity. Which issue is canonical? Preview with --select-issue {key}=NUMBER; duplicate markers will be neutralized only with --apply")
+        else:
+            return None
+        expected_keys = {"EPIC"} | {f"M{m['number']}" for m in self.plan["milestones"]} | {L.tag(self.plan, it["id"]) for it in self.plan["items"]}
+        extra_keys = (set(MARKER_RE.findall(chosen.get("body") or "")) & expected_keys) - {key}
+        if extra_keys:
+            L.say(f"key | issue | conflicting managed markers\n{key} | #{chosen['number']} | {sorted(extra_keys)}")
+            if self.selections.get(key) != chosen["number"]:
+                raise G.GitHubError(f"{key}: issue #{chosen['number']} carries several plan identities. Which identity should it retain? Preview --select-issue {key}={chosen['number']} to retain {key} and neutralize {sorted(extra_keys)}")
+            L.say(f"  #{chosen['number']}: neutralize conflicting managed markers {sorted(extra_keys)}; retain {key}")
+            if self.apply:
+                body = MARKER_RE.sub(lambda match: f"<!-- carrydown-duplicate:{match.group(1)}:retained-{key} -->" if match.group(1) in extra_keys else match.group(0), chosen.get("body") or "")
+                self.gh.rest("PATCH", f"{self.base}/issues/{chosen['number']}", {"body": body})
+                chosen["body"] = body
+        self.mapping[key] = {"number": chosen["number"], "id": chosen["id"]}
+        for other in candidates:
+            if other["number"] == chosen["number"] or key not in MARKER_RE.findall(other.get("body") or ""):
+                continue
+            L.say(f"  {key}: neutralize duplicate managed marker on #{other['number']}; canonical #{chosen['number']}; comments, state and human text preserved")
+            if self.apply:
+                body = (other.get("body") or "").replace(marker(key), f"<!-- carrydown-duplicate:{key}:canonical-{chosen['number']} -->")
+                self.gh.rest("PATCH", f"{self.base}/issues/{other['number']}", {"body": body})
+                other["body"] = body
+        return chosen
+
+    def save_mapping(self):
+        if self.apply:
+            L.write_text(self.mapping_path, json.dumps({"repository": f"{self.owner}/{self.repo}", "issues": self.mapping}, indent=2, sort_keys=True) + "\n")
 
     def desired_labels(self):
         proj = self.plan["project"]
@@ -323,6 +443,8 @@ class Sync:
     def remember(self, key, iss):
         self.objs[key] = iss
         self.numbers[key], self.ids[key] = iss["number"], iss["id"]
+        self.mapping[key] = {"number": iss["number"], "id": iss["id"]}
+        self.save_mapping()
 
     def create_or_find(self, title, body, labels, assignees, key, issue_type=""):
         """Find the issue for key, or create it. Titles printed are the plan's, never GitHub's."""
@@ -356,8 +478,10 @@ class Sync:
                     break
                 if attempt == 2:
                     raise
-        self.issues[title] = iss
-        self.by_key[key] = iss
+        for index, lookup in ((self.issues, title), (self.by_key, key)):
+            rows = index.setdefault(lookup, [])
+            if not any(row["id"] == iss["id"] for row in rows):
+                rows.append(iss)
         self.remember(key, iss)
         self.created.add(key)
         time.sleep(0.8)
@@ -403,6 +527,8 @@ def _run(argv=None):
     ap.add_argument("--skip-check", action="store_true", help="do not run the specification checker first")
     ap.add_argument("--issue-type", default=None, help="GitHub issue type for work items, for example Task (organizations only)")
     ap.add_argument("--show-body", metavar="ID", help="print the issue body for one work item or sub-epic and exit (no network). Accepts WI-07, 7 or M2")
+    ap.add_argument("--select-issue", action="append", default=[], metavar="KEY=NUMBER", help="select a canonical issue from the ambiguity table; preview first")
+    ap.add_argument("--reconcile", action="store_true", help="preview managed issue drift; add --apply to repair it and verify")
     a = ap.parse_args(argv)
     if a.offline and (a.apply or a.verify):
         L.die(f"--offline cannot be combined with {'--apply' if a.apply else '--verify'}: both need GitHub. "
@@ -474,7 +600,13 @@ def _run(argv=None):
         L.say(f"not checked against GitHub ({unchecked}): showing the plan only, nothing is read from GitHub")
         if unchecked == "no token":
             L.say(f"To compare with what is on GitHub, set up a token: python3 {G.TOKEN_SCRIPT}")
-    s = Sync(plan, root, gh, owner, repo, a.apply)
+    selections = {}
+    for selection in a.select_issue:
+        match = re.fullmatch(r"([A-Za-z0-9_-]+)=([1-9][0-9]*)", selection)
+        if not match:
+            L.die("--select-issue must be KEY=NUMBER")
+        selections[match[1]] = int(match[2])
+    s = Sync(plan, root, gh, owner, repo, a.apply, selections)
     if gh:
         status, js = gh.rest_status("GET", s.base)
         if status == 404:
@@ -493,6 +625,10 @@ def _run(argv=None):
                 L.say(f"note: {owner}/{repo} is public, and issue bodies carry text from your ground truth. --apply will need --allow-public.")
     if a.verify:
         return verify(s, plan, root, a.skip_comment)
+    if a.reconcile:
+        if not gh:
+            L.die("--reconcile requires GitHub read access; use --offline for the creation preview")
+        return reconcile(s, plan, root, a.skip_comment)
 
     L.say("\nLabels")
     if gh:
@@ -557,8 +693,9 @@ def _run(argv=None):
         pristine = [build_subepic_body(plan, root, ms), build_subepic_body(plan, root, ms, mark=False),
                     build_subepic_body(plan, root, ms, s.numbers, mark=False)]
         if want != have and (key in s.created or a.update_bodies or safe_to_rewrite(have, pristine)):
-            gh.rest("PATCH", f"{s.base}/issues/{cur['number']}", {"body": want})
-            cur["body"] = want
+            merged = merge_managed(have, want, key)
+            gh.rest("PATCH", f"{s.base}/issues/{cur['number']}", {"body": merged})
+            cur["body"] = merged
             s.counts["bodies"] += 1
             L.say(f"  updated work item list in #{cur['number']}")
             time.sleep(0.4)
@@ -571,8 +708,9 @@ def _run(argv=None):
         pristine = [build_item_body(plan, root, it), build_item_body(plan, root, it, mark=False),
                     build_item_body(plan, root, it, s.numbers, mark=False)]
         if want != have and (is_new or a.update_bodies or safe_to_rewrite(have, pristine)):
-            gh.rest("PATCH", f"{s.base}/issues/{cur['number']}", {"body": want})
-            cur["body"] = want
+            merged = merge_managed(have, want, t)
+            gh.rest("PATCH", f"{s.base}/issues/{cur['number']}", {"body": merged})
+            cur["body"] = merged
             s.counts["bodies"] += 1
             L.say(f"  linked dependencies in #{cur['number']} {t}")
             time.sleep(0.4)
@@ -599,7 +737,117 @@ def _run(argv=None):
     L.say(f"  work items: {len(plan['items'])} ({s.numbers[L.tag(plan, plan['items'][0]['id'])]} to {max(s.numbers[L.tag(plan, i['id'])] for i in plan['items'])})")
     L.say(f"  new sub-issue links: {s.counts['links']}, bodies rewritten: {s.counts['bodies']}")
     L.say(f"Next: python3 {Path(__file__).resolve().parent / 'github_project.py'} to build the board. Then run this script with --verify.")
-    return 0
+    # Creation also reconciles managed metadata and verifies before claiming success.
+    return reconcile(s, plan, root, a.skip_comment)
+
+
+def expected_issues(s, plan, root):
+    """Resolve every expected identity before generating issue links."""
+    expected = []
+    epic = plan["project"].get("epic")
+    if epic:
+        s.remember("EPIC", s.gh.rest("GET", f"{s.base}/issues/{epic}"))
+    else:
+        found = s.find("EPIC", plan["project"]["epic_title"])
+        if found:
+            s.remember("EPIC", found)
+    if "EPIC" in s.objs and "EPIC" in MARKER_RE.findall(s.objs["EPIC"].get("body") or ""):
+        expected.append(("EPIC", s.objs["EPIC"], None, None))
+    for ms in plan["milestones"]:
+        key = f"M{ms['number']}"
+        issue = s.find(key, subepic_title(plan, ms))
+        if issue:
+            s.remember(key, issue)
+        expected.append((key, issue, ms, None))
+    for item in plan["items"]:
+        key = L.tag(plan, item["id"])
+        issue = s.find(key, item_title(plan, item))
+        if issue:
+            s.remember(key, issue)
+        expected.append((key, issue, None, item))
+    return expected
+
+
+def issue_drift(s, plan, root):
+    rows, problems = [], []
+    expected = expected_issues(s, plan, root)
+    people = {p["id"]: p for p in plan["people"]}
+    for key, issue, ms, item in expected:
+        if not issue:
+            problems.append(f"{key}: issue missing; run the creation dry run")
+            continue
+        if key == "EPIC":
+            title = plan["project"]["epic_title"]
+            body = with_marker(f"Parent Epic for {plan['project']['name']}. The sub-epics and work items are linked below as sub-issues.\n", key)
+        else:
+            title = item_title(plan, item) if item else subepic_title(plan, ms)
+            body = build_item_body(plan, root, item, s.numbers) if item else build_subepic_body(plan, root, ms, s.numbers)
+        patch = {}
+        differences = []
+        if issue["title"] != title:
+            patch["title"] = title
+            differences.append(("title", title, issue["title"]))
+        if managed_content(issue.get("body")) != managed_content(body) or MARKER_RE.findall(issue.get("body") or "").count(key) != 1:
+            patch["body"] = merge_managed(issue.get("body"), body, key)
+            differences.append(("managed body and marker", body, issue.get("body")))
+        required = {plan["project"]["slug"]}
+        if key != "EPIC":
+            required.add(item["track"] if item else "sub-epic")
+        actual = {x["name"] for x in issue.get("labels", [])}
+        if not {x.casefold() for x in required} <= {x.casefold() for x in actual}:
+            patch["labels"] = sorted(required | actual)
+            differences.append(("required labels", sorted(required), sorted(actual)))
+        wanted_login = people.get(item.get("owner"), {}).get("github") if item else None
+        assigned = {x["login"] for x in issue.get("assignees", [])}
+        if wanted_login and wanted_login.casefold() not in {x.casefold() for x in assigned}:
+            patch["assignees"] = sorted(assigned | {wanted_login})
+            differences.append(("assignee", wanted_login, sorted(assigned)))
+        wanted_state = item.get("state") if item else None
+        if wanted_state and issue.get("state") != wanted_state:
+            patch["state"] = wanted_state
+            differences.append(("state", wanted_state, issue.get("state")))
+        elif issue.get("state") not in ("open", "closed"):
+            problems.append(f"{key} #{issue['number']}: unexpected issue state {issue.get('state')!r}")
+        parent_key = f"M{item['milestone']}" if item else "EPIC" if key != "EPIC" else None
+        parent = s.objs.get(parent_key)
+        status, actual_parent = s.gh.rest_status("GET", f"{s.base}/issues/{issue['number']}/parent")
+        if status not in (200, 404):
+            problems.append(f"{key} #{issue['number']}: cannot verify parent (HTTP {status})")
+        move = parent if parent and (status != 200 or actual_parent.get("id") != parent["id"]) else None
+        if move:
+            differences.append(("parent", parent["number"], actual_parent.get("number") if status == 200 else None))
+        for field, want, actual_value in differences:
+            line = f"  {key} #{issue['number']} {field}: expected {want!r}, actual {actual_value!r}"
+            line = G.redact(line, getattr(s.gh, "_token", None))
+            line = re.sub(r"ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,255}", "<redacted>", line)
+            L.say(line)
+        if patch or move:
+            rows.append((key, issue, patch, move))
+    return rows, problems
+
+
+def reconcile(s, plan, root, skip_comment=False):
+    actions, problems = issue_drift(s, plan, root)
+    for problem in problems:
+        L.say("  blocked: " + problem)
+    L.say(f"reconciliation: {len(actions)} issue(s) with managed drift")
+    if problems:
+        return 1
+    if not s.apply:
+        return 0
+    for key, issue, patch, parent in actions:
+        if patch:
+            s.gh.rest("PATCH", f"{s.base}/issues/{issue['number']}", patch)
+        if parent:
+            s.gh.rest("POST", f"{s.base}/issues/{parent['number']}/sub_issues", {"sub_issue_id": issue["id"], "replace_parent": True})
+    s.save_mapping()
+    s.issues = None
+    # Re-read rather than trusting mutation responses, including partial failures.
+    remaining, problems = issue_drift(s, plan, root)
+    if remaining or problems:
+        L.say("reconciliation verification FAILED; rerun the dry run to resume")
+        return 1
+    return verify(s, plan, root, skip_comment)
 
 
 def own_rollups(gh, base, num):
@@ -614,6 +862,10 @@ def verify(s, plan, root, skip_comment=False):
     gh = s.gh
     L.say("\nVerification (read only)")
     ok = True
+    drift, problems = issue_drift(s, plan, root)
+    for problem in problems:
+        L.say("  - " + problem)
+    ok &= not drift and not problems
     labels = {l["name"].lower() for l in gh.paged(f"{s.base}/labels")}
     want_labels = [n for n, _, _ in s.desired_labels()]
     miss = [n for n in want_labels if n.lower() not in labels]
@@ -654,7 +906,7 @@ def verify(s, plan, root, skip_comment=False):
         if subs != want:
             L.say(f"  sub-issues of #{s.numbers[key]}: expected {sorted(want)}, found {sorted(subs)}")
             ok = False
-        body = (s.objs[key].get("body") or "").replace("\r\n", "\n")
+        body = managed_content(s.objs[key].get("body"))
         unlisted = [t for t in mine if f"#{s.numbers[t]} {t}" not in body]
         if unlisted:
             lists_bad += 1
@@ -668,7 +920,7 @@ def verify(s, plan, root, skip_comment=False):
         key = L.tag(plan, it["id"])
         if key not in s.objs:
             continue
-        body = (s.objs[key].get("body") or "").replace("\r\n", "\n")
+        body = managed_content(s.objs[key].get("body"))
         heads = [l[4:] for l in body.split("\n") if l.startswith("### ")]
         if not all(h in heads for h in SEVEN):
             bad += 1

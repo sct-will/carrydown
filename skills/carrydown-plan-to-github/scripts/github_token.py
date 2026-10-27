@@ -98,7 +98,7 @@ def store(path, token):
             folder.mkdir(mode=0o700)
             os.chmod(folder, 0o700)
         default_parent = Path(os.path.expanduser(G.DEFAULT_TOKEN_FILE)).parent
-        if default_parent.exists() and os.path.samefile(path.parent, default_parent):
+        if os.name == "posix" and default_parent.exists() and os.path.samefile(path.parent, default_parent):
             if stat.S_IMODE(path.parent.stat().st_mode) & 0o077:
                 L.die(f"the token folder {short(path.parent)} can be accessed by other users, so nothing was stored. "
                       f"Fix: chmod 700 {path.parent}, then run this again")
@@ -128,7 +128,7 @@ def inside_git(path):
     return None
 
 
-def check(token, repo=None):
+def check(token, repo=None, require_permissions=False):
     gh = G.GitHub(token)
     try:
         me = gh.whoami()
@@ -153,6 +153,9 @@ def check(token, repo=None):
     else:
         L.say("This looks like a fine-grained token (GitHub shows no scope list for those).")
         L.say("It needs Issues (read and write) and Metadata (read) on the repository, and Projects (read and write) for an organization-owned project.")
+        if require_permissions:
+            ok = False
+            L.say("The read-only API cannot prove every fine-grained write permission. Token source retained. Check permissions with the plan owner and delete the source manually after publication succeeds.")
     if repo:
         org = repo.split("/")[0]
         sso = False
@@ -166,7 +169,7 @@ def check(token, repo=None):
         if status == 200:
             perms = js.get("permissions") or {}
             L.say(f"Repository {repo}: found (private: {js.get('private')}), push access: {perms.get('push')}.")
-            if not perms.get("push", True):
+            if not perms.get("push", not require_permissions):
                 ok = False
                 L.say(f"  Fix: ask an organization admin of {org} for permission to create issues and Projects in it. The token cannot push to this repository.")
         elif sso:
@@ -187,7 +190,13 @@ def main(argv=None):
     try:
         return _main(argv)
     except G.GitHubError as e:
+        if "--from-file" in (argv if argv is not None else sys.argv[1:]):
+            L.say("Token source retained after the failed check.")
         return G.report(e)
+    except SystemExit:
+        if "--from-file" in (argv if argv is not None else sys.argv[1:]):
+            L.say("Token source retained; setup did not complete.")
+        raise
 
 
 def _main(argv=None):
@@ -212,6 +221,8 @@ def _main(argv=None):
             L.die(f"{flag} is empty. Give a value, or leave out {flag}")
     if a.repo is not None and not L.repo_ok(a.repo):
         L.die(f"the repository must look like owner/name, such as my-org/my-repo, got {a.repo!r}")
+    if a.delete_after and (not a.from_file or not a.repo or a.check):
+        L.die("--delete-after requires --from-file and --repo, with a complete storage and permission check")
     dest = Path(os.path.expanduser(a.token_file if a.token_file is not None else G.DEFAULT_TOKEN_FILE))
     # checked before the token is read or sent anywhere
     try:
@@ -250,11 +261,12 @@ def _main(argv=None):
     if a.from_file is not None:
         src = Path(os.path.expanduser(a.from_file))
         try:
-            regular = src.is_file()
+            regular = stat.S_ISREG(src.lstat().st_mode) and not src.is_symlink()
         except (OSError, ValueError):
             regular = False
         if not regular:
             L.die(f"{a.from_file} is not a regular file. Give the path of the plain text file that holds the token")
+        source_identity = src.lstat()
         try:
             if src.stat().st_size > G.MAX_TOKEN_FILE:
                 L.die(f"{a.from_file} is larger than a token file can be. Save only the token in it")
@@ -294,6 +306,8 @@ def _main(argv=None):
     try:
         G.GitHub(token).whoami()
     except G.GitHubError as e:
+        if a.from_file:
+            L.say("Token source retained because authentication failed.")
         if e.kind == "auth":
             L.say(f"GitHub rejected the token, so it was not stored. Fix: check that you copied the whole token and that it has not expired, or {NEW_TOKEN}.")
         else:
@@ -301,16 +315,25 @@ def _main(argv=None):
         return 1
     path = store(dest, token)
     L.say(f"Stored at {short(path)} with mode 600.")
-    rc = check(token, a.repo)
+    rc = check(token, a.repo, require_permissions=a.delete_after)
     L.say("")
     if a.from_file:
         src = Path(os.path.expanduser(a.from_file))
-        if a.delete_after and src.resolve() != path.resolve():
+        if rc:
+            L.say("Token source retained because authentication, repository access or permission checks failed.")
+        elif a.delete_after and src.resolve() != path.resolve():
             try:
+                current = src.lstat()
+                if (not stat.S_ISREG(current.st_mode) or src.is_symlink() or
+                        (current.st_dev, current.st_ino, current.st_size, current.st_mtime_ns) !=
+                        (source_identity.st_dev, source_identity.st_ino, source_identity.st_size, source_identity.st_mtime_ns)):
+                    L.say("Token source retained because its file identity changed. Preview and retry with a regular file.")
+                    return 1
                 src.unlink()
                 L.say(f"Deleted {a.from_file}, as --delete-after asked. The token now lives only at {short(path)}.")
             except OSError as e:
                 L.say(f"Could not delete {a.from_file} ({e.strerror}). Delete it yourself. It still holds the token in plain text.")
+                return 1
         elif src.resolve() != path.resolve():
             L.say(f"The token is stored at {short(path)}. Now delete {a.from_file} yourself: it still holds the token in plain text.")
     L.say("Never paste the token into a chat, a commit or an issue. If you do, revoke it at the same address and make a new one.")

@@ -1,0 +1,177 @@
+# plan.yaml, the single source of truth for the schedule.
+#
+# The scripts read this file. The checker compares every specification to it.
+# The GitHub scripts build labels, sub-epics, issues and the project board from it.
+#
+# This is a small subset of YAML. Indent with spaces. Write a value that contains
+# a colon followed by a space in quotes. Dates are written YYYY-MM-DD.
+#
+# Fill it in with your agent. The interview in the ground-truth skill asks for
+# every value. Planning decisions (who owns what, which dates, which order) are yours.
+#
+# The plan records why it is composed the way it is: a rationale and a joint demonstration
+# per milestone, and an order rationale per track. The scaffold copies them into milestone.md
+# and the README, so anyone can argue with them. Write no names of people in them.
+
+project:
+  name: "Your project name"              # shown in titles and the README
+  slug: your-project                     # lowercase words joined by hyphens
+  id_prefix: WI                         # work item ids read WI-01, WI-02 ...
+  repo: your-org/your-repo               # the GitHub repository for issues
+  branch: main                           # branch that holds the specification folder
+  epic: null                             # issue number of an existing parent Epic, or null
+  epic_title: "Your project, development plan"   # used only if you ask the script to create an Epic
+  subepic_prefix: "Milestone"            # sub-epic titles read "Milestone 1, name"
+  title_format: "{id} {label}"           # work item issue titles. Fields: {id}, {label}, {lower}
+  spec_dir: docs/spec                    # where the specification folder lives
+  ground_truth: docs/ground-truth/architecture.md   # primary rendered source. Keep for older tools.
+  project_title: "Your project plan"     # name of the GitHub Project (v2) board
+  dev_skill: your-project-dev            # name of the generated engineers' skill
+  dev_skill_path: docs/dev/skills/your-project-dev
+
+sources:                                 # rendered documents, highest precedence first
+  - id: architecture                     # stable id used by work item source_refs
+    name: "Architecture, version 1.0"
+    source_path: docs/source/architecture.docx
+    path: docs/ground-truth/architecture.md
+    version: "1.0"
+    status: reviewed                      # reviewed or unreadable
+    limit: ""                            # explain missing context when status is unreadable
+    use: "Architecture and system requirements."
+  # Add requirements, governance rules, development standards and company context here.
+  # When sources disagree, the earlier source wins unless the plan owner records another decision.
+
+conventions:                             # feeds the definition of done in every issue
+  test_command: "npm test"
+  lint_command: "npm run lint"
+  feature_flag: ""                       # empty if you do not use one
+  extra:                                 # more lines for the definition of done, optional
+    - "No secrets or personal data in logs."
+
+tracks:                                  # parallel lanes of work, usually one per person
+  - id: backend
+    label: Backend
+    color: BLUE                          # GRAY BLUE GREEN YELLOW ORANGE RED PINK PURPLE
+    skill_needs: ["Service APIs", "Database design"]  # OPTIONAL. Used for best-match staffing, never a gate.
+    order_rationale: "The contract comes first so the Frontend track can start from it. Later items follow their dependencies."
+                                         # why this track's items are in this order, one to three sentences.
+                                         # Say where a theme changes and why, and name a critical path risk here.
+  - id: frontend
+    label: Frontend
+    color: GREEN
+    skill_needs: ["Accessible web interfaces"]
+    order_rationale: "The screen starts the day after the contract lands and closes before the demonstration, so there is slack before it."
+
+people:                                  # OPTIONAL. People who own items. Names stay out of specs.
+                                         # Add `derived: true` to a placeholder such as "Engineer 1" that the planning
+                                         # step proposed because you gave no people. Replace it when you know who.
+  - id: alex                             # short handle used in this file
+    name: "Alex Quill"
+    github: ""                           # GitHub login for assignment, or empty
+    track: backend
+    skills: ["Python", "Service APIs", "PostgreSQL"]  # OPTIONAL. Text or a list of text.
+    preferences: ["Contract and integration work"]      # OPTIONAL. Soft guidance, never a prerequisite.
+    assignment_rationale: "Best available match for the backend track."
+    allocation: 100                      # percent of working time on this plan, 1 to 100. 100 if omitted
+    start: 2027-01-04
+    days_off: []                         # list of dates
+  - id: sam
+    name: "Sam Marlow"
+    github: ""
+    track: frontend
+    skills: ["TypeScript", "Accessible web interfaces"]
+    preferences: ["User-facing workflow work"]
+    assignment_rationale: "Best available match for the frontend track."
+    allocation: 100
+    start: 2027-01-04
+    days_off: []
+
+advisors:                                # people who advise and own no items
+  - name: "Jordan Pike"
+    note: "Reviews contracts and security."
+
+milestones:                              # one per work unit. A work unit has a custom length.
+  - number: 1
+    name: "First milestone"
+    folder: m1-first-milestone
+    start: 2027-01-04
+    end: 2027-01-15
+    demo: 2027-01-15
+    gate: "One sentence the stakeholders can check at the demonstration."
+    rationale: "These two items are the thinnest slice that proves the whole path: the contract on one side and the screen that uses it on the other. Nothing else is needed to show the gate."
+                                         # why these items form this milestone, two to four sentences
+    joint_demonstration: "The Backend and Frontend engineers run one example from the screen through the contract, together, in one session."
+                                         # what the engineers whose tracks meet show together, one or two sentences
+    # single_track_reason: ""            # only when every item of the milestone is on one track: say why
+
+target:                                  # OPTIONAL. When the plan must be delivered. Give a date or a number of weeks.
+  date: 2027-01-29                       # the target date, or instead:
+  # weeks: 4                             # working weeks from the start of the first work unit. Breaks add to it:
+                                         # target = start + 7 * (weeks + break weeks) - 3 days, a Friday.
+  # derived: true                        # add this when the date was worked out from the people and the
+                                         # critical path. Leave the whole block out if there is no target yet.
+
+breaks:                                  # breaks between work units, optional. Each one a date range.
+  - name: "Offsite week"
+    start: 2027-01-18
+    end: 2027-01-22
+
+checkpoints:                             # short integration checks between the tracks, each on its own date
+  - date: 2027-01-08
+    name: "Contract freeze"
+    joint_check: "Backend and Frontend run the same example against the shared contract."
+  - date: 2027-01-15                     # the demonstration date is a checkpoint too. Its joint check
+    name: "Milestone 1 demonstration"    # names every track the milestone covers, by label or id
+    joint_check: "Backend and Frontend run the example end to end, from the screen to the stored record."
+
+items:                                   # the work items
+  - id: 1
+    slug: first-item                     # file name: wi-01-first-item.md
+    label: "First item"
+    milestone: 1
+    track: backend
+    owner: alex
+    theme: "service contract"            # optional. A short label for the part of the system. The checker
+                                         # counts where one person's consecutive items change theme
+    complete_by: 2027-01-06              # leave slack before the checkpoint: an item that completes on its
+                                         # checkpoint date has none
+    size: "Small, about 2 days"          # "about N days" is required. N days at the owner's allocation must fit
+                                         # between the last dependency's complete_by and this one (2 days at 50% = 4 working days)
+    depends: []                          # ids of items this one needs first
+    unblocks: []                         # optional. Derived from depends when empty.
+    checkpoint: 2027-01-08               # one of the checkpoint dates above
+    external_input: ""                   # text of an input from outside the team, or empty
+    source_refs:                         # every source obligation this item carries into its spec and issue
+      - source: architecture
+        sections: "1.1"                 # section numbers only. The source name is added to the rendered citation.
+    skill_needs: ["Service APIs"]       # OPTIONAL. Add only when the item needs more detail than its track.
+  - id: 2
+    slug: second-item
+    label: "Second item"
+    milestone: 1
+    track: frontend
+    owner: sam
+    theme: "web client"
+    complete_by: 2027-01-13
+    size: "Medium, about 3 days"
+    depends: [1]
+    checkpoint: 2027-01-15
+    external_input: ""
+    source_refs:
+      - source: architecture
+        sections: "1.2"
+
+external:                                # work outside the plan, owned outside the team, kept as id gaps
+  items: []
+  # - id: 5
+  #   label: "Pilot team recruitment"
+
+limits:
+  spec_lines: [80, 340]                  # allowed length of a specification file
+
+banned:                                  # vocabulary the checker rejects in specs
+  # words: ["sprints?", "story points?", "velocity"]      # replaces the default list
+  # phrases: ["open questions?", "non-goals?"]            # replaces the default list
+  # vendors: []                                            # extra names, added to the built-in list
+  # names: []                                              # extra names. People in this file are always banned.
+  dashes: true                           # reject em and en dashes

@@ -89,6 +89,8 @@ python3 <skill>/scripts/check_specs.py --root .
 
 Fix every finding. `references/checker.md` explains each check and how to add the checker to continuous integration. Offer that to the user. Re-run `scaffold_spec.py --refresh-headers --apply` after any change to dates, owners or dependencies.
 
+When identity or provenance validation fails, run `python3 <skill>/scripts/plan_repair.py --root .` for a concrete recovery preview. Resolve its choices with the plan owner, preview again with `--decisions PATH`, then add `--apply` after approval. Whole-document source coverage requires confirmation. Apply refreshes generated material and reruns validation. The skill carries the scaffold and skill generator for these local refreshes. Never invent sections to clear a finding.
+
 ### 7. Second-pass agent review
 
 After the finished set passes step 6, load `templates/plan-review-prompt.md` and run its separate review and accepted-repair procedure. Load `templates/plan-review-report.md` when writing the report. This pass is automatic for newly completed plans and can be requested for an existing local plan. The user decides changes to owners, dates, scope and order. Keep this pass local; it needs no GitHub access.

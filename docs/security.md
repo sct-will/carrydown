@@ -7,7 +7,7 @@ The GitHub scripts require a personal access token with permission to write issu
 - Use a 7-day expiry. For a board owned by an organization, create a fine-grained token limited to the one repository, with Issues (read and write), Metadata (read) and the organization permission Projects (read and write). For a board on your own account, create a classic token with the scopes `repo` and `project`, because GitHub does not let fine-grained tokens use those boards. See [the token walkthrough](../skills/carrydown-plan-to-github/references/token-walkthrough.md) in the plan-to-github skill.
 - Store it with `python3 scripts/github_token.py`. The script reads it from a hidden prompt, a plain text file you name (`--from-file`), or standard input. It writes `~/.config/carrydown/github_token` in a folder with mode 700 and a file with mode 600.
 - Before anything is sent, the script checks that the text looks like a GitHub personal access token (it starts with `ghp_` or `github_pat_`). If it does not, nothing is sent.
-- With `--from-file`, the script keeps your file and tells you to delete it. It deletes the file only when you pass `--delete-after`.
+- With `--from-file`, the script keeps your file and tells you to delete it. `--delete-after` also requires `--repo` and successful authentication, repository access and permission checks. Failures retain the source. Symlinks, directories and changed file identities are refused. Fine-grained write permissions cannot all be proven by read-only checks, so those sources are retained for manual deletion after publication succeeds.
 - The scripts never print the token. They remove it from every error message before showing it. They never put it in a URL or a command line argument.
 - The scripts never write the token into the project. The token lives outside the repository.
 - Do not paste the token into a chat with an agent. Do not commit it. If you did either, revoke it on [your GitHub tokens page](https://github.com/settings/tokens) and make a new one.
@@ -23,8 +23,9 @@ Every script that writes to GitHub is a dry run until you pass `--apply`. The sc
 | `render_ground_truth.py` | The documents you name. | `docs/ground-truth/` in your project, unless you pass `--dry-run`. |
 | `scaffold_spec.py` | `plan.yaml`. | With `--init`, `docs/spec/plan.yaml`. With `--apply`, the specification folder: README, milestone files, stubs. With `--ci --apply`, `.github/workflows/check-specs.yml` and `tools/carrydown/`. Never overwrites without `--force`. |
 | `check_specs.py` | `plan.yaml` and the folder. | Nothing. |
+| `plan_repair.py` | The plan, specifications and reviewed sources. | With `--apply`, the canonical plan and refreshed local generated material. A preview and unresolved decisions write nothing. |
 | `github_token.py` | The token you give it. | The token file, mode 600, outside your project. It writes without `--apply`, after you give it a token. |
-| `github_sync.py` | The folder, and GitHub (read only) in a dry run. | With `--apply`, GitHub: labels, issues, sub-issue links, one comment. |
+| `github_sync.py` | The folder, and GitHub (read only) in a dry run. | With `--apply`, GitHub: labels, issues, sub-issue links, one comment. Also saves verified local issue mappings. |
 | `github_project.py` | The folder, and GitHub (read only) in a dry run. | With `--apply`, GitHub: a project, fields, views, items, field values. |
 | `generate_dev_skill.py` | The folder. | With `--apply`, the engineers' skill folder. |
 
@@ -44,11 +45,11 @@ carrydown-plan-to-github is the only skill with network or token code. That code
 
 To avoid creating anything twice, carrydown-plan-to-github reads back from your repository:
 
-- the issues that carry the project label, and no others;
+- repository issues matched through a verified persisted mapping, managed marker or labeled legacy title;
 - the hidden marker at the end of each body, such as `<!-- carrydown:WI-07 -->`;
 - on the Epic, only the roll-up comment written by the token's own account.
 
-It treats that text as data. It compares it with the plan and never follows it. It prints issue titles from the plan, not from GitHub. It rewrites a body only while the body is exactly as the script wrote it, unless you pass `--update-bodies`.
+It treats that text as data. It compares it with the plan and never follows it. Drift reports show expected and actual values. Reconciliation changes bounded managed regions and preserves human text outside them. Legacy unbounded text is retained when a new managed region is installed. Comments and unrelated labels remain.
 
 When GitHub fails while an issue is being created, the script reads the issues back before it tries again, so a lost answer does not make a duplicate. A server error or a lost connection is retried on its own only for reads, which are safe to repeat. A secondary rate limit is retried for every request, writes included, up to four times, because GitHub refuses that request before acting on it. A rerun after a crash repairs missing links and lists, and `--verify` fails while any are missing.
 

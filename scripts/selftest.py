@@ -567,11 +567,12 @@ def regressions(tmp, plan_text):
     step("github_project --apply --verify is refused", board + s + ["--apply", "--verify"], expect=2, contains=["separate runs"])
     step("an empty --name for --init is refused", scaffold + ["--root", str(d), "--init", "--name", " ", "--allow-no-git"], expect=2, contains=["--name is empty"])
     step("a --root that does not exist is refused", scaffold + ["--root", str(d / "nowhere")], expect=2, contains=["is not a folder"])
-    ro = project("readonly")
-    (ro / "docs/spec/README.md").unlink()
-    (ro / "docs/spec").chmod(0o500)
-    step("a folder that cannot be written gives one line", scaffold + ["--root", str(ro), "--apply", "--allow-no-git"], expect=2, contains=["error: cannot write"])
-    (ro / "docs/spec").chmod(0o700)
+    if os.name == "posix":
+        ro = project("readonly")
+        (ro / "docs/spec/README.md").unlink()
+        (ro / "docs/spec").chmod(0o500)
+        step("a folder that cannot be written gives one line", scaffold + ["--root", str(ro), "--apply", "--allow-no-git"], expect=2, contains=["error: cannot write"])
+        (ro / "docs/spec").chmod(0o700)
     step("lint_prose on a path that does not exist is an error", [PY, "scripts/lint_prose.py", str(d / "nowhere.md")], expect=2, contains=["not a file"])
     step("the self test refuses an unknown argument", [PY, "scripts/selftest.py", "--bogus"], expect=2, contains=["unrecognized arguments"])
 
@@ -800,6 +801,7 @@ def main():
     step("dry run: github_repair (offline)", [PY, "scripts/github_repair.py", "--root", SAMPLE, "--offline"],
          contains=["offline: nothing read from GitHub; no files written"])
     step("dry run: generate_dev_skill", [PY, "scripts/generate_dev_skill.py", "--root", SAMPLE])
+    step("dry run: plan_repair", [PY, "scripts/plan_repair.py", "--root", SAMPLE], contains=["repair action(s)", "Dry run"])
     step("dry run: github_token", [PY, "scripts/github_token.py", "--dry-run"])
     plan_text = (ROOT / SAMPLE / "docs/spec/plan.yaml").read_text(encoding="utf-8")
     with tempfile.TemporaryDirectory() as tmp:
@@ -848,7 +850,7 @@ def main():
                 "plan, _ = L.load_plan(sys.argv[1]); "
                 "b = S.build_subepic_body(plan, sys.argv[2], [m for m in plan['milestones'] if m['number'] == 2][0]); print(b); "
                 "i = [b.index(h) for h in ('Target delivery for the plan:', '### Why these items form this milestone', '### Joint demonstration', '### Acceptance criteria')]; "
-                "sys.exit(0 if i == sorted(i) and '<!--' not in b.rstrip().rsplit(chr(10), 1)[0] and b.rstrip().rsplit(chr(10), 1)[1].startswith('<!-- carrydown:') else 1)")
+                "sys.exit(0 if i == sorted(i) and b.count('<!-- carrydown-managed:start -->') == 1 and b.count('<!-- carrydown-managed:end -->') == 1 and b.rstrip().rsplit(chr(10), 1)[1].startswith('<!-- carrydown:') else 1)")
         step("the sub-epic body carries the milestone rationale and joint demonstration", [PY, "-c", code, str(ROOT / SAMPLE / "docs/spec/plan.yaml"), str(ROOT / SAMPLE)],
              contains=["### Why these items form this milestone", "Routing and the inbox are the two halves of one capability",
                        "### Joint demonstration", "The Experience engineer approves one report as two approvers in turn from the inbox",
@@ -885,7 +887,7 @@ def main():
              contains=["engineers' skill: expense-approvals-dev"])
         step("installed copy of carrydown-plan-to-github refreshes only the references", [PY, str(gh / "scripts/generate_dev_skill.py"), "--root", str(ROOT / SAMPLE), "--only", "references"],
              contains=["would write: references/work-items.md", "would write: references/ground-truth-map.md"], absent=("Traceback", "SKILL.md"))
-        ships = ("generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_repair.py", "github_sync.py", "github_token.py")
+        ships = ("generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_repair.py", "github_sync.py", "github_token.py", "plan_repair.py", "scaffold_spec.py")
         extra = sorted(x.name for x in (gh / "scripts").glob("*.py") if x.name not in ships)
         results.append((not extra, "carrydown-plan-to-github ships only the scripts it runs"))
         print(("PASS " if not extra else "FAIL ") + "carrydown-plan-to-github ships only the scripts it runs" + (f" (remove {', '.join(extra)})" if extra else ""))

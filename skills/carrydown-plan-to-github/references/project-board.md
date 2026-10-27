@@ -44,6 +44,10 @@ The script prints this list at the end of every run.
 
 The script is safe to rerun. It finds the project by title (or by `--project-number`), keeps fields and views that exist, adds missing items and fills missing values.
 
+All project connections are paginated, including fields, views and nested field values. Missing Track options are listed in the dry run and added only with `--apply`. Other options retain their names, colors and descriptions. Matching ignores case; duplicate options differing only by case require an explicit rename. The field is re-read to verify option IDs.
+
+Transient field assignments retry with a bounded delay. A permanent failure reports the issue, field, intended value and API error. Successful updates remain. Reruns read current values and repair only remaining drift. Apply verifies exact values, membership and visible fields before success. Any required difference returns nonzero. Iteration drift requires the plan owner's explicit `--reconfigure-iterations` choice.
+
 ## Verify
 
 ```bash

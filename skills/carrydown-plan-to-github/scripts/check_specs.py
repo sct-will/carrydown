@@ -280,6 +280,8 @@ def check_item(plan, root, it, banned, gt_heads):
         sid, sections = ref.get("source"), ref.get("sections", "")
         source = sources.get(sid, {})
         numbered = numbered_headings(gt_heads.get(sid))
+        if sections and str(sections).strip().casefold() != "whole document" and not citation_numbers(sections):
+            issues.append(f"plan.yaml source_refs for {sid}: give numbered sections or plan-owner-confirmed whole document coverage. Preview plan_repair.py")
         if numbered and sections and "to be " not in sections.lower():
             for num in cited_missing(numbered, sections):
                 if it.get("source_refs"):

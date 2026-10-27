@@ -1,0 +1,263 @@
+#!/usr/bin/env python3
+"""Generate the per-project engineers' skill from the specification folder.
+
+Output, under project.dev_skill_path in plan.yaml
+  SKILL.md                         when to use it, how to orient on an item, conventions, definition of done
+  README.md                        what it is and how to install it for each agent
+  references/work-items.md         the index of work items with dates, dependencies and file paths
+  references/contracts.md          the headings of every Contract or Protocol section, by item
+  references/ground-truth-map.md   ground truth headings with anchors and line numbers, and sections by item
+
+The files are generated from plan.yaml, the specs and the rendered ground truth. Read them
+after generating: add the topics and contracts only a person knows to be important.
+
+Dry run unless --apply. Existing files are replaced only with --force.
+
+Usage
+  python3 scripts/generate_dev_skill.py --root .                              dry run
+  python3 scripts/generate_dev_skill.py --root . --apply                      write
+  python3 scripts/generate_dev_skill.py --root . --only references --apply    refresh only the references
+"""
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent))
+import carrydown_lib as L  # noqa: E402
+
+md_table = L.md_table
+
+
+def work_items_md(plan, root):
+    out = ["# Work item index", "",
+           "Generated from `plan.yaml`. The GitHub issues hold the owners, status and dates of record.", "",
+           "## Work units and milestones", "",
+           L.schedule_table(plan), ""]
+    tdate, ttext = L.target_date(plan)
+    by_track = {}
+    for person in plan["people"]:
+        by_track[person["track"]] = by_track.get(person["track"], 0) + person.get("allocation", 100)
+    alloc = ", ".join(f"{L.track_label(plan, t)} {pct} percent" for t, pct in by_track.items())
+    last = max((L.parse_date(it["complete_by"]) for it in plan["items"]), default=None)
+    if tdate and L.target_is_constraint(plan):
+        out += [f"Target. {ttext}. The plan was fitted to it.", ""]
+    else:
+        out += [f"Target. Derived from the critical path: {L.fmt_date(last) if last else 'not known yet'}. It is the plan's end date, not a constraint.", ""]
+    if plan["people"]:
+        derived_note = " Some people are placeholders marked derived in plan.yaml." if any(p.get("derived") for p in plan["people"]) else ""
+        out += [f"Allocation. People are allocated as a percentage of their working time to this plan. By track, the allocation adds up to {alloc}. The dates in this plan already account for it, so a track at less than 100 percent has fewer working days in each work unit.{derived_note}", ""]
+    else:
+        out += ["Allocation. The plan names no people yet, so the dates are not fitted to anyone's capacity.", ""]
+    spec_dir = plan["project"]["spec_dir"]
+    for m in plan["milestones"]:
+        out += [f"## Milestone {m['number']}, {m['name']} (`{m['folder']}`)", "",
+                f"Exit gate. {m['gate']}", ""]
+        rows = []
+        for it in plan["items"]:
+            if it["milestone"] != m["number"]:
+                continue
+            deps = ", ".join(L.tag(plan, d) for d in it["depends"]) or "None"
+            if it["external_input"]:
+                deps += f"; external input: {it['external_input']}"
+            rows.append([L.tag(plan, it["id"]), it["label"], L.track_label(plan, it["track"]), it["complete_by"], deps,
+                         f"`{spec_dir}/{m['folder']}/{L.tag(plan, it['id']).lower()}-{it['slug']}.md`"])
+        out += [md_table(["Id", "Work item", "Track", "Complete by", "Depends on", "File"], rows), ""]
+    if plan["external"]["items"]:
+        out += ["## External items and external inputs", "",
+                "These are owned outside the team, not by the engineers. They have no work item file. An item that needs one says \"external input\" in its Depends on row. If the input is missing, say so in the pull request and do not invent it.", "",
+                md_table(["Id", "External item", "Note"], [[L.tag(plan, p["id"]), p["label"], p.get("note", "")] for p in plan["external"]["items"]]), ""]
+    return "\n".join(out).rstrip() + "\n"
+
+
+def contracts_md(plan, root):
+    spec_dir = plan["project"]["spec_dir"]
+    out = ["# Contracts quick reference", "",
+           "Where each contract is defined. The owning work item file holds the contract text. When a contract changes, the work item file changes first and this page follows.", "",
+           "## Where each contract is defined", ""]
+    rows = []
+    blocks = []
+    for it in plan["items"]:
+        sp = L.spec_path(plan, root, it)
+        if not sp.exists():
+            continue
+        spec = L.read_spec(sp)
+        name = "Contract" if "Contract" in spec["sections"] else "Protocol" if "Protocol" in spec["sections"] else None
+        if not name:
+            continue
+        body = spec["sections"][name]
+        subs = [m.group(1).strip() for m in re.finditer(r"(?m)^### (.+)$", body)]
+        tables = len(re.findall(r"(?m)^\| --- ", body))
+        fences = len(re.findall(r"(?m)^```", body)) // 2
+        ms = L.milestone_by_num(plan)[it["milestone"]]
+        rel = f"{spec_dir}/{ms['folder']}/{sp.name}"
+        rows.append([L.tag(plan, it["id"]), it["label"], name, f"`{rel}`"])
+        blocks.append((it, name, subs, tables, fences, rel))
+    out += [md_table(["Id", "Work item", "Section", "File"], rows), ""]
+    for it, name, subs, tables, fences, rel in blocks:
+        out += [f"## {L.tag(plan, it['id'])} {it['label']}", "", f"Section `## {name}` in `{rel}`. {tables} table(s), {fences} code block(s)."]
+        if subs:
+            out += ["", "Parts:"] + [f"- {s}" for s in subs]
+        out.append("")
+    return "\n".join(out).rstrip() + "\n"
+
+
+def ground_truth_map_md(plan, root):
+    out = ["# Ground truth map", "",
+           "Rendered sources in precedence order, their headings and the sections each work item cites. "
+           "When sources conflict, the earlier source in this file wins unless the plan owner recorded another decision. "
+           "Regenerating a rendering may move line numbers. Then ask the plan owner to run `generate_dev_skill.py --only references` again.", "",
+           "## Sources and precedence", ""]
+    sources = L.ground_truth_sources(plan)
+    out += [md_table(["Precedence", "Source id", "Document", "Original file", "Rendered path", "Section index", "Version", "Status", "Coverage limit", "Use"], [
+        [str(n), s["id"], s["name"], f"`{s.get('source_path', s.get('path', ''))}`", f"`{s['path']}`" if s.get("path") else "Not rendered", f"`{s['path'][:-3] + '.index.txt' if s.get('path', '').endswith('.md') else s.get('path', '')}`" if s.get("path") else "Not available", s.get("version", ""), s.get("status", "reviewed"), s.get("limit", ""), s.get("use", "")]
+        for n, s in enumerate(sources, 1)
+    ]), ""]
+    for source in L.rendered_sources(plan):
+        gt = Path(root) / source["path"]
+        out += [f"## {source['name']}", ""]
+        if gt.exists():
+            lines = L.read_text(gt).split("\n")
+            heads = L.collect_headings(lines)
+            anchors = L.anchors_for(heads)
+            rows = [[f"{ln}", "#" * lvl, text, f"`#{anc}`"] for (ln, lvl, text), anc in zip(heads, anchors) if lvl > 1]
+            out += [md_table(["Line", "Level", "Heading", "Anchor"], rows), ""]
+        else:
+            out += [f"The rendered source was not found at `{source['path']}`. Render it with `render_ground_truth.py`, then run this generator again.", ""]
+    out += ["## By work item", "",
+            md_table(["Id", "Work item", "Ground truth sections"], [[L.tag(plan, it["id"]), it["label"], L.ground_truth_citation(plan, it)] for it in plan["items"]]), ""]
+    return "\n".join(out).rstrip() + "\n"
+
+
+DESCRIPTION_TARGET = 250
+DESCRIPTION_WARN = 300
+
+
+def make_description(plan):
+    """The description agents read to decide when to load the skill: what it does, then the words
+    that should trigger it (one work item id as an example, one file name, the specification folder).
+    The example is the first planned item, never a range, because a range would include the ids of
+    external items, which have no specification. Short, because every description of every
+    installed skill shares one listing budget."""
+    proj = plan["project"]
+    first = plan["items"][0]
+    tag = L.tag(plan, first["id"])
+    stem = f"{tag.lower()}-{first['slug']}"
+    d = (f"Orients on one {proj['name']} work item before any code change, reading its spec, the ground truth sections it cites "
+         f"and the conventions. Use when the user names a work item id such as {tag}, a file such as {stem}, or {proj['spec_dir']}/.")
+    d = d.replace("<", "").replace(">", "")      # angle brackets are not allowed in a skill description
+    if len(d) >= 1024:
+        d = d[:1020].rsplit(" ", 1)[0] + "."
+    return d
+
+
+def tests_text(plan):
+    """Only what the conventions do not already say. The commands, the flag and the extra rules
+    are printed once, by conventions_text, which is the single source for them."""
+    c = plan["conventions"]
+    lines = []
+    if c.get("test_command") or c.get("lint_command"):
+        lines.append("- Run the test and lint commands above before every commit. New work gets new tests. Fix findings instead of silencing them.")
+    lines.append("- Commit messages are in the imperative. The pull request description lists the acceptance criteria and the proof for each.")
+    lines.append("- Raw outputs, run records and screenshots go on the GitHub issue, not into the repository, unless the work item file says otherwise.")
+    return "\n".join(lines)
+
+
+def dod_checkboxes(plan):
+    c = plan["conventions"]
+    items = ["Every acceptance criterion in the work item file is proven by a named test or a recorded check, and the pull request lists each one with its proof."]
+    if c.get("test_command") or c.get("lint_command") or c.get("feature_flag") or c.get("extra"):
+        items.append("The project conventions above hold, the test and lint commands pass, and the continuous integration run is green.")
+    items.append("Departures from the file are recorded under \"Decisions recorded\" with the pull request number. A conflict with the ground truth is fixed in the work item file in the same pull request.")
+    items.append("The closing comment on the issue follows the template in the specification folder README (Demo, Evidence, Decisions, Handoff) and carries every artifact named under \"Evidence of completion\". The agent assembles it, the engineer checks and posts it.")
+    items.append("The joint check named under \"Integration points\" has run at the item's checkpoint with both tracks present, or the Handoff line says what still needs to run.")
+    return "\n".join(f"- [ ] {i}" for i in items)
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(
+        description="Generate the engineers' skill folder (SKILL.md, README.md, references/) from plan.yaml, the specs and the rendered ground truth. Dry run unless --apply.",
+    )
+    ap.add_argument("--root", default=".", help="project root (default: current directory)")
+    ap.add_argument("--plan", help="path to plan.yaml (default: <root>/docs/spec/plan.yaml)")
+    ap.add_argument("--apply", action="store_true", help="write the files. Without it this is a dry run")
+    ap.add_argument("--force", action="store_true", help="replace files that already exist")
+    ap.add_argument("--only", choices=["references"], help="write only references/ (always replaced: they are generated). "
+                    "Use it after plan.yaml or a specification changes; SKILL.md and README.md keep their hand edits")
+    a = ap.parse_args(argv)
+    root = L.project_root(a.root)
+    plan_path = L.find_plan(root, a.plan)
+    if not L.exists(plan_path):
+        L.die(f"no plan at {plan_path}")
+    plan, problems = L.load_plan(plan_path, root)
+    if problems:
+        L.say("plan.yaml has problems:")
+        for p in problems:
+            L.say("  - " + p)
+        return 1
+    proj = plan["project"]
+    skill_path = proj.get("dev_skill_path")
+    skill_name = proj.get("dev_skill")
+    if not skill_path or not skill_name:
+        L.die("project.dev_skill and project.dev_skill_path are required in plan.yaml")
+    if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", skill_name):
+        L.die("project.dev_skill must be lowercase words joined by hyphens")
+    if len(skill_name) > 64:
+        L.die(f"project.dev_skill is {len(skill_name)} characters. A skill name has at most 64")
+    if Path(skill_path).name != skill_name:
+        L.die(f"the last folder of project.dev_skill_path ({Path(skill_path).name}) must equal project.dev_skill ({skill_name}). "
+              "Agents load a skill only when its folder and its name match")
+    if not plan["items"]:
+        L.die("plan.yaml has no items yet, so there is nothing for the engineers' skill to describe")
+    first = plan["items"][0]
+    ms1 = L.milestone_by_num(plan)[first["milestone"]]
+    stem = f"{L.tag(plan, first['id']).lower()}-{first['slug']}"
+    description = make_description(plan)
+    values = {
+        # a JSON string is a valid YAML double-quoted value, so ": " or " #" in a project name cannot break the frontmatter
+        "skill_name": skill_name, "project_name": proj["name"], "description": json.dumps(description, ensure_ascii=False),
+        "purpose_extra": "Its conventions come from the plan folder, and its references are generated from the same files.",
+        "spec_dir": proj["spec_dir"], "example_id": L.tag(plan, first["id"]), "example_stem": stem,
+        "example_path": f"{proj['spec_dir']}/{ms1['folder']}/{stem}.md",
+        "conventions": L.conventions_text(plan), "branch": proj["branch"],
+        "definition_of_done": dod_checkboxes(plan), "tests": tests_text(plan),
+        "item_count": len(plan["items"]), "skill_path": skill_path, "skill_path_win": skill_path.replace("/", "\\"),
+        "tree_url": L.github_tree_url(plan, skill_path) if proj.get("repo") else "<repository tree url for this folder>",
+    }
+    outputs = {
+        "SKILL.md": lambda: L.fill(L.read_template("dev-skill", "SKILL.md.tmpl"), values),
+        "README.md": lambda: L.fill(L.read_template("dev-skill", "README.md.tmpl"), values),
+        "references/work-items.md": lambda: work_items_md(plan, root),
+        "references/contracts.md": lambda: contracts_md(plan, root),
+        "references/ground-truth-map.md": lambda: ground_truth_map_md(plan, root),
+    }
+    if a.only == "references":
+        # the references follow plan.yaml and the specs; SKILL.md and README.md may hold hand edits
+        outputs = {k: v for k, v in outputs.items() if k.startswith("references/")}
+    dest = L.inside(root, root / skill_path, "project.dev_skill_path")
+    if a.only == "references" and not L.exists(dest / "SKILL.md"):
+        # references alone would leave a folder no agent loads: SKILL.md is what makes it a skill
+        L.die(f"{skill_path}/SKILL.md does not exist yet, so there is no engineers' skill to refresh. "
+              "Run this script without --only first: it writes SKILL.md, README.md and the references")
+    L.say(f"engineers' skill: {skill_name}  ->  {skill_path}")
+    L.say(f"description length: {len(description)} characters (target under {DESCRIPTION_TARGET}, limit 1024)")
+    if len(description) > DESCRIPTION_WARN:
+        L.say(f"warning: the description is over {DESCRIPTION_WARN} characters. Shorten project.name: long descriptions are the first to be dropped when an agent lists many skills")
+    n = 0
+    for rel, make in outputs.items():
+        content = make()
+        p = L.inside(dest, dest / rel, "output")
+        if p.exists() and not (a.force or a.only == "references"):
+            L.say(f"  skip (exists): {rel}")
+            continue
+        L.say(f"  {'write' if a.apply else 'would write'}: {rel} ({len(content.splitlines())} lines)")
+        if a.apply:
+            L.write_text(p, content)
+        n += 1
+    L.say(f"{n} file(s) {'written' if a.apply else 'would be written'}." + ("" if a.apply else " Dry run. Add --apply to write."))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

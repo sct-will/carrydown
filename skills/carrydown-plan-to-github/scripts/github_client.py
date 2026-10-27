@@ -328,7 +328,10 @@ class GitHub:
         if js is None:
             raise GitHubError("GraphQL returned no body")
         if js.get("errors"):
-            raise GitHubError("GraphQL: " + redact(json.dumps(js["errors"])[:600], self._token))
+            codes = {str(e.get("type") or (e.get("extensions") or {}).get("code") or "").upper()
+                     for e in js["errors"] if isinstance(e, dict)}
+            kind = "server" if codes & {"INTERNAL", "INTERNAL_SERVER_ERROR", "SERVICE_UNAVAILABLE"} else "secondary" if "RATE_LIMITED" in codes else "http"
+            raise GitHubError("GraphQL: " + redact(json.dumps(js["errors"])[:600], self._token), kind=kind)
         return js["data"]
 
     def whoami(self):

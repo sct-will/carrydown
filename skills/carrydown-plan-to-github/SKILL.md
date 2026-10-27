@@ -134,4 +134,10 @@ The line works once the folder is on `project.branch` on GitHub, so ask the user
 
 ## When something fails
 
+For local identity or provenance failures, preview `python3 <skill>/scripts/plan_repair.py --root .`. Resolve its concrete choices with the owner before applying. This skill carries the scaffold and generator to refresh existing local generated material after recovery.
+
+Issue identity uses a verified persisted mapping in `docs/spec/github-issues.json`, then compares every managed-marker or legacy-title candidate. If a tie remains, show the candidate table and ask the owner which issue is canonical. Preview again with `--select-issue KEY=NUMBER`. Apply persists the choice and neutralizes duplicate markers while preserving human content and issue state.
+
+For managed issue drift, run `github_sync.py --root . --reconcile` as a preview. After approval, add `--apply`. It preserves unrelated metadata and human text. Board apply repairs missing membership, Track options and field values. Run both publication verification commands. Each apply verifies its own surface and returns nonzero for unresolved drift.
+
 Read `references/troubleshooting.md`. Do not retry blindly. Report the HTTP status and the message the script printed (the scripts redact the token) and propose the fix.

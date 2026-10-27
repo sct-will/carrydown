@@ -49,22 +49,22 @@ CLICK = [
 ]
 
 FIELD_Q = """
-query($p: ID!) { node(id: $p) { ... on ProjectV2 {
+query($p: ID!, $fa: String, $va: String) { node(id: $p) { ... on ProjectV2 {
   id title number url
-  fields(first: 50) { nodes {
+  fields(first: 50, after: $fa) { pageInfo { hasNextPage endCursor } nodes {
     ... on ProjectV2Field { id name dataType }
-    ... on ProjectV2SingleSelectField { id name dataType options { id name } }
+    ... on ProjectV2SingleSelectField { id name dataType options { id name color description } }
     ... on ProjectV2IterationField { id name dataType configuration { iterations { id title startDate duration } completedIterations { id title startDate duration } } }
   } }
-  views(first: 20) { nodes { id name number layout filter groupByFields(first: 5) { nodes { ... on ProjectV2FieldCommon { name } } }
-    fields(first: 30) { nodes { ... on ProjectV2FieldCommon { id } } } } }
+  views(first: 20, after: $va) { pageInfo { hasNextPage endCursor } nodes { id name number layout filter groupByFields(first: 5) { pageInfo { hasNextPage endCursor } nodes { ... on ProjectV2FieldCommon { name } } }
+    fields(first: 30) { pageInfo { hasNextPage endCursor } nodes { ... on ProjectV2FieldCommon { id } } } } }
 } } }
 """
 ITEMS_Q = """
 query($p: ID!, $after: String) { node(id: $p) { ... on ProjectV2 {
   items(first: 100, after: $after) { pageInfo { hasNextPage endCursor } nodes {
     id content { ... on Issue { number repository { nameWithOwner } } }
-    fieldValues(first: 30) { nodes {
+    fieldValues(first: 30) { pageInfo { hasNextPage endCursor } nodes {
       ... on ProjectV2ItemFieldIterationValue { iterationId field { ... on ProjectV2FieldCommon { name } } }
       ... on ProjectV2ItemFieldSingleSelectValue { optionId field { ... on ProjectV2FieldCommon { name } } }
       ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } }
@@ -105,20 +105,66 @@ def break_ranges(plan):
     return out
 
 
+def retry_graphql(gh, query, variables, context="project lookup"):
+    """Retry reads and idempotent value assignments with a bounded delay."""
+    for attempt in range(3):
+        try:
+            return gh.graphql(query, variables)
+        except G.GitHubError as e:
+            if e.kind in ("server", "network", "secondary") and attempt < 2:
+                time.sleep(0.1 * (2 ** attempt))
+                continue
+            raise G.GitHubError(f"{context}: {e.line()}; successful updates were preserved. Rerun to resume", e.status, e.kind) from e
+
+
+def connection_pages(gh, query, variables, path, continuation="after", first=None):
+    """Read all nodes; reject missing or repeated continuation cursors."""
+    out, after, seen = [], None, set()
+    connection = first
+    for _ in range(10000):
+        if connection is None:
+            data = retry_graphql(gh, query, {**variables, continuation: after}, f"connection {'.'.join(path)} after {after!r}")
+            connection = data
+            try:
+                for key in path:
+                    connection = connection[key]
+            except (KeyError, TypeError):
+                raise G.GitHubError(f"connection {'.'.join(path)} after {after!r} is inaccessible or incomplete. Check project read permission and rerun to resume") from None
+        if not isinstance(connection, dict) or not isinstance(connection.get("nodes"), list):
+            raise G.GitHubError(f"connection {'.'.join(path)} after {after!r} returned no readable nodes. Check project access and rerun to resume")
+        out.extend(n for n in connection.get("nodes", []) if n)
+        info = connection.get("pageInfo") or {}
+        if not info.get("hasNextPage"):
+            return out
+        after = info.get("endCursor")
+        if not after or after in seen:
+            raise G.GitHubError(f"connection {'.'.join(path)} has an invalid continuation token; rerun after checking API response")
+        seen.add(after)
+        connection = None
+    raise G.GitHubError("project connection exceeded 10000 pages; rerun with a narrower project")
+
+
 def find_project(gh, owner, owner_type, title, number=None):
     root = "organization" if owner_type == "Organization" else "user"
-    q = f"""query($l: String!) {{ {root}(login: $l) {{ projectsV2(first: 100) {{ nodes {{ id title number url closed }} }} }} }}"""
-    nodes = gh.graphql(q, {"l": owner})[root]["projectsV2"]["nodes"]
-    for n in nodes:
-        if n["closed"]:
-            continue
-        if (number and n["number"] == number) or (not number and n["title"] == title):
-            return n
-    return None
+    q = f"""query($l: String!, $after: String) {{ {root}(login: $l) {{ projectsV2(first: 100, after: $after) {{ pageInfo {{ hasNextPage endCursor }} nodes {{ id title number url closed }} }} }} }}"""
+    nodes = connection_pages(gh, q, {"l": owner}, (root, "projectsV2"))
+    matches = [n for n in nodes if not n["closed"] and ((number and n["number"] == number) or (not number and n["title"] == title))]
+    if len(matches) > 1:
+        raise G.GitHubError(f"multiple projects named {title!r}; choose --project-number from {[n['number'] for n in matches]}")
+    return matches[0] if matches else None
 
 
 def load_project(gh, pid):
-    return gh.graphql(FIELD_Q, {"p": pid})["node"]
+    data = retry_graphql(gh, FIELD_Q, {"p": pid, "fa": None, "va": None})["node"]
+    for name, continuation in (("fields", "fa"), ("views", "va")):
+        data[name]["nodes"] = connection_pages(gh, FIELD_Q, {"p": pid, "fa": None, "va": None}, ("node", name), continuation, data[name])
+    for view in data["views"]["nodes"]:
+        for name, selection in (("fields", "id"), ("groupByFields", "name")):
+            first = view.get(name) or {"nodes": []}
+            if (first.get("pageInfo") or {}).get("hasNextPage"):
+                query = f"query($p: ID!, $after: String) {{ node(id: $p) {{ ... on ProjectV2View {{ {name}(first: 100, after: $after) {{ pageInfo {{ hasNextPage endCursor }} nodes {{ ... on ProjectV2FieldCommon {{ {selection} }} }} }} }} }} }}"
+                view[name]["nodes"] = connection_pages(gh, query, {"p": view["id"]}, ("node", name), first=first)
+    return data
 
 
 def field_map(proj):
@@ -126,25 +172,54 @@ def field_map(proj):
 
 
 def load_items(gh, pid, repo):
-    out, after = {}, None
-    while True:
-        d = gh.graphql(ITEMS_Q, {"p": pid, "after": after})["node"]["items"]
-        for n in d["nodes"]:
+    out = {}
+    nodes = connection_pages(gh, ITEMS_Q, {"p": pid}, ("node", "items"))
+    for n in nodes:
             content = n["content"] or {}
             num = content.get("number")
             owner_name = (content.get("repository") or {}).get("nameWithOwner", "")
             if num is None or owner_name.casefold() != repo.casefold():
                 continue
             vals = {}
-            for fv in n["fieldValues"]["nodes"]:
+            query = "query($p: ID!, $after: String) { node(id: $p) { ... on ProjectV2Item { fieldValues(first: 100, after: $after) { pageInfo { hasNextPage endCursor } nodes { ... on ProjectV2ItemFieldIterationValue { iterationId field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldSingleSelectValue { optionId field { ... on ProjectV2FieldCommon { name } } } ... on ProjectV2ItemFieldDateValue { date field { ... on ProjectV2FieldCommon { name } } } } } } } }"
+            for fv in connection_pages(gh, query, {"p": n["id"]}, ("node", "fieldValues"), first=n["fieldValues"]):
                 if not fv or "field" not in fv or not fv["field"]:
                     continue
                 name = fv["field"].get("name")
                 vals[name] = fv.get("iterationId") or fv.get("optionId") or fv.get("date")
             out[num] = {"id": n["id"], "values": vals}
-        if not d["pageInfo"]["hasNextPage"]:
-            return out
-        after = d["pageInfo"]["endCursor"]
+    return out
+
+
+def ensure_track_options(gh, pid, fields, tracks, apply=False):
+    field = fields.get("Track")
+    if not field:
+        return
+    options = field.get("options", [])
+    folded = {}
+    for option in options:
+        folded.setdefault(option["name"].casefold(), []).append(option)
+    for key, rows in folded.items():
+        if len(rows) > 1:
+            raise G.GitHubError(f"Track options differ only in case: {[r['name'] for r in rows]}. Rename these options explicitly, then rerun")
+    missing = [t for t in tracks if t["label"].casefold() not in folded]
+    if not missing:
+        return
+    L.say("  Track options to add: " + ", ".join(repr(t["label"]) for t in missing))
+    if not apply:
+        return
+    preserved = [{k: o[k] for k in ("id", "name", "color", "description") if k in o} for o in options]
+    for opt in preserved:
+        opt.setdefault("color", "GRAY")
+        opt.setdefault("description", "")
+    wanted = preserved + [{"name": t["label"], "color": str(t.get("color", "GRAY")).upper(), "description": f"{t['label']} track"} for t in missing]
+    retry_graphql(gh, "mutation($f: ID!, $o: [ProjectV2SingleSelectFieldOptionInput!]) { updateProjectV2Field(input: {fieldId: $f, singleSelectOptions: $o}) { projectV2Field { ... on ProjectV2SingleSelectField { id options { id name } } } } }", {"f": field["id"], "o": wanted}, "Track options update; check Projects write permission")
+    refreshed = field_map(load_project(gh, pid)).get("Track", {})
+    actual = {o["name"].casefold(): o.get("id") for o in refreshed.get("options", [])}
+    if any(not actual.get(t["label"].casefold()) for t in tracks):
+        raise G.GitHubError("Track option IDs could not be verified. Check Projects write permission and rerun to resume")
+    if any(o.get("id") and actual.get(o["name"].casefold()) != o["id"] for o in options):
+        raise G.GitHubError("Existing Track option identity changed unexpectedly. Review project item values before resuming; successful updates were preserved")
 
 
 def verification_problems(plan, placements, missing, pdata, existing, iterations):
@@ -163,7 +238,10 @@ def verification_problems(plan, placements, missing, pdata, existing, iterations
     if values(have_iterations) != values(iterations):
         problems.append("Work unit iterations differ from the plan")
     iter_ids = {i["title"]: i["id"] for i in have_iterations}
-    track_ids = {o["name"]: o["id"] for o in fields.get("Track", {}).get("options", [])}
+    track_ids = {o["name"].casefold(): o["id"] for o in fields.get("Track", {}).get("options", [])}
+    for track in plan["tracks"]:
+        if not track_ids.get(track["label"].casefold()):
+            problems.append(f"Track option: expected {track['label']!r}, actual missing; preview and apply the missing option")
     views = {v["name"]: v["layout"] for v in pdata["views"]["nodes"]}
     for name, layout in (("Table", "TABLE_LAYOUT"), ("Board", "BOARD_LAYOUT"), ("Roadmap", "ROADMAP_LAYOUT")):
         if views.get(name) != layout:
@@ -181,10 +259,10 @@ def verification_problems(plan, placements, missing, pdata, existing, iterations
             "Checkpoint": it["checkpoint"] if it else ms["demo"],
         }
         if it:
-            desired["Track"] = track_ids.get(L.track_label(plan, it["track"]))
+            desired["Track"] = track_ids.get(L.track_label(plan, it["track"]).casefold())
         for name, value in desired.items():
             if value is None or existing[num]["values"].get(name) != value:
-                problems.append(f"issue #{num} field {name} is missing or differs from the plan")
+                problems.append(f"{L.tag(plan, it['id']) if it else 'M' + str(ms['number'])} issue #{num} field {name}: expected {value!r}, actual {existing[num]['values'].get(name)!r}")
     return problems
 
 
@@ -208,6 +286,7 @@ def _run(argv=None):
     ap.add_argument("--project-number", type=int, help="configure this existing project instead of finding or creating one by title")
     ap.add_argument("--token-file", help="file that holds the GitHub token")
     ap.add_argument("--apply", action="store_true", help="write to GitHub. Without it nothing is written")
+    ap.add_argument("--allow-public", action="store_true", help="allow approved publication of a public repository's project")
     ap.add_argument("--verify", action="store_true", help="read the project and report fields, views and filled values, then exit")
     ap.add_argument("--reconfigure-iterations", action="store_true", help="replace the Work unit iterations if they differ from the plan")
     ap.add_argument("--offline", action="store_true", help="do not call GitHub; print the intended configuration only")
@@ -270,6 +349,8 @@ def _run(argv=None):
         L.say(f"repository {owner_repo}/{name} not found, or the token cannot see it")
         return 1
     repo_node = rjs["node_id"]
+    if a.apply and rjs.get("private") is False and not a.allow_public:
+        L.die("public repository: confirm publication and preview again with --allow-public", 1)
     base = f"/repos/{owner_repo}/{name}"
 
     # issues to place: only issues with the project label, matched by marker, then by title.
@@ -364,9 +445,7 @@ def _run(argv=None):
               createProjectV2Field(input: {projectId: $p, dataType: SINGLE_SELECT, name: "Track", singleSelectOptions: $o}) { projectV2Field { ... on ProjectV2SingleSelectField { id } } } }""",
                        {"p": proj["id"], "o": opts})
     else:
-        have = {o["name"] for o in fields["Track"]["options"]}
-        want = {t["label"] for t in plan["tracks"]}
-        L.say("  Track exists" + (f" but lacks options {sorted(want - have)}" if want - have else " with the planned options"))
+        ensure_track_options(gh, proj["id"], fields, plan["tracks"], a.apply)
     for fname in ("Complete by", "Checkpoint"):
         if fname not in fields:
             L.say(f"  {'create' if a.apply else 'would create'} {fname} (date)")
@@ -412,7 +491,7 @@ def _run(argv=None):
                 gh.graphql("mutation($v: ID!, $f: [ID!]) { updateProjectV2View(input: {viewId: $v, configuration: {visibleFieldIds: $f}}) { projectV2View { id } } }", {"v": v["id"], "f": visible})
             except G.GitHubError as e:
                 L.say(f"  could not set visible fields on {vname}: {str(e)[:160]}")
-        L.say("  visible fields set on the Table and Board views (the Roadmap view takes its fields from its settings)")
+        L.say("  visible field configuration checked on Table and Board; verification follows")
 
     # ---------------- items ----------------
     L.say("\nItems")
@@ -421,10 +500,11 @@ def _run(argv=None):
     if iter_field and iter_field.get("configuration"):
         for i in iter_field["configuration"]["iterations"] + iter_field["configuration"].get("completedIterations", []):
             iter_ids[i["title"]] = i["id"]
-    track_ids = {o["name"]: o["id"] for o in (fields.get("Track") or {}).get("options", [])}
+    track_ids = {o["name"].casefold(): o["id"] for o in (fields.get("Track") or {}).get("options", [])}
     existing = load_items(gh, proj["id"], f"{owner_repo}/{name}")
     added = 0
     filled = 0
+    failures = []
     for issue, kind, ms, it, ptitle in placements:
         num = issue["number"]
         if num not in existing:
@@ -435,7 +515,7 @@ def _run(argv=None):
             existing[num] = {"id": r["addProjectV2ItemById"]["item"]["id"], "values": {}}
             added += 1
             L.say(f"  added #{num} {ptitle}")
-        if not a.apply or kind == "epic":
+        if kind == "epic":
             continue
         desired = {}
         wu_title = f"Work unit {ms['number']}, {ms['name']}"
@@ -443,7 +523,7 @@ def _run(argv=None):
             desired["Work unit"] = ("iterationId", iter_ids[wu_title])
         if kind == "item":
             if "Track" in fields:
-                tl = L.track_label(plan, it["track"])
+                tl = L.track_label(plan, it["track"]).casefold()
                 if tl in track_ids:
                     desired["Track"] = ("singleSelectOptionId", track_ids[tl])
             desired["Complete by"] = ("date", it["complete_by"])
@@ -456,9 +536,17 @@ def _run(argv=None):
                 continue
             if existing[num]["values"].get(fname) == val:
                 continue
-            gh.graphql("mutation($p: ID!, $i: ID!, $f: ID!, $v: ProjectV2FieldValue!) { updateProjectV2ItemFieldValue(input: {projectId: $p, itemId: $i, fieldId: $f, value: $v}) { projectV2Item { id } } }",
-                       {"p": proj["id"], "i": existing[num]["id"], "f": fields[fname]["id"], "v": {key: val}})
-            filled += 1
+            if not a.apply:
+                L.say(f"  would set #{num} {L.tag(plan, it['id']) if it else 'M' + str(ms['number'])} field {fname}: expected {val!r}, actual {existing[num]['values'].get(fname)!r}")
+                continue
+            try:
+                retry_graphql(gh, "mutation($p: ID!, $i: ID!, $f: ID!, $v: ProjectV2FieldValue!) { updateProjectV2ItemFieldValue(input: {projectId: $p, itemId: $i, fieldId: $f, value: $v}) { projectV2Item { id } } }",
+                              {"p": proj["id"], "i": existing[num]["id"], "f": fields[fname]["id"], "v": {key: val}},
+                              f"issue #{num} {L.tag(plan, it['id']) if it else 'M' + str(ms['number'])}, field {fname}, intended {val!r}")
+                filled += 1
+            except G.GitHubError as e:
+                failures.append(e.line())
+                L.say("  failed: " + e.line())
             time.sleep(0.1)
     L.say(f"  items added: {added}; field values set: {filled}")
 
@@ -485,8 +573,14 @@ def _run(argv=None):
         it_cfg = fields.get("Work unit", {}).get("configuration", {})
         L.say(f"  Work unit iterations: {len(it_cfg.get('iterations', [])) + len(it_cfg.get('completedIterations', []))}")
         L.say(f"  project: {proj['url']}")
-        if a.verify:
+        if a.verify or a.apply:
             problems = verification_problems(plan, placements, missing, pdata, existing, iterations)
+            problems.extend(failures)
+            for view in pdata["views"]["nodes"]:
+                if view["name"] in ("Table", "Board"):
+                    actual = {f.get("id") for f in (view.get("fields") or {}).get("nodes", []) if f}
+                    if not set(visible) <= actual:
+                        problems.append(f"view {view['name']} visible fields: expected {visible!r}, actual {sorted(actual)!r}; check Projects write permission and rerun")
             for problem in problems:
                 L.say("  - " + problem)
             L.say("  verification FAILED" if problems else "  verification passed")

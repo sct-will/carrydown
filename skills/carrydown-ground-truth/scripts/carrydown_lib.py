@@ -990,6 +990,23 @@ def path_problems(plan):
 
 def validate_plan(plan):
     P = []
+    # Detect collisions before any dictionary below can hide a record.
+    for group, rows, key in (("tracks", plan["tracks"], "id"),
+                              ("track labels", plan["tracks"], "label"),
+                              ("people", plan["people"], "id"),
+                              ("external.items", plan["external"]["items"], "id"),
+                              ("checkpoints", plan["checkpoints"], "date")):
+        seen = set()
+        for row in rows:
+            value = row.get(key)
+            identity = value.casefold() if group == "track labels" and isinstance(value, str) else value
+            if identity in seen:
+                P.append(f"{group}: duplicate {key} {value!r}. Preview recovery with plan_repair.py --root .")
+            seen.add(identity)
+    work_ids = {it.get("id") for it in plan["items"]}
+    for row in plan["external"]["items"]:
+        if row.get("id") in work_ids:
+            P.append(f"external.items: id {row.get('id')} conflicts with a work item. Preview plan_repair.py")
     proj = plan["project"]
     for k in ("name", "slug", "id_prefix"):
         if not proj.get(k):
@@ -1043,6 +1060,10 @@ def validate_plan(plan):
         P.append("project.ground_truth must match the path of one reviewed sources entry")
     for it in plan["items"]:
         refs = it.get("source_refs") or []
+        if it.get("state") is not None and it["state"] not in ("open", "closed"):
+            P.append(f"item {it.get('id')}: state must be open or closed when explicitly planned")
+        if not refs and not item_source_refs(plan, it):
+            P.append(f"item {it.get('id')}: plan-level source_refs is required. Preview plan_repair.py; select a reviewed source and explicit sections")
         seen_refs = set()
         for ref in refs:
             if not isinstance(ref, dict):
@@ -1057,7 +1078,7 @@ def validate_plan(plan):
             elif sid in seen_refs:
                 P.append(f"item {it.get('id')}: source_refs repeats source {sid!r}")
             seen_refs.add(sid)
-            if not ref.get("sections"):
+            if not str(ref.get("sections") or "").strip():
                 P.append(f"item {it.get('id')}: source_refs for {sid or 'an unnamed source'} needs sections")
     tracks = {t.get("id"): t for t in plan["tracks"]}
     if not tracks:
@@ -1397,6 +1418,15 @@ def source_by_id(plan):
     return {source["id"]: source for source in ground_truth_sources(plan)}
 
 
+def explicit_sections(citation):
+    """Section numbers only after an explicit section label, never a file version or item ID."""
+    found = []
+    pattern = r"(?i)\bsections?\s+([0-9]+(?:\.[0-9]+)*(?:(?:\s*,\s*|\s+and\s+|\s*&\s*)[0-9]+(?:\.[0-9]+)*)*)"
+    for match in re.finditer(pattern, citation or ""):
+        found.extend(re.findall(r"\d+(?:\.\d+)*", match.group(1)))
+    return list(dict.fromkeys(found))
+
+
 def item_source_refs(plan, it):
     """Structured source references, with a legacy reference to project.ground_truth as fallback."""
     if it.get("source_refs"):
@@ -1407,8 +1437,14 @@ def item_source_refs(plan, it):
     reviewed = rendered_sources(plan)
     if not reviewed:
         return []
-    primary = next((s for s in reviewed if s.get("path") == plan["project"]["ground_truth"]), reviewed[0])
-    return [{"source": primary["id"], "sections": cite}]
+    matches = [s for s in reviewed if any(str(v).casefold() in cite.casefold()
+               for v in (s.get("id"), s.get("name"), s.get("path")) if v)]
+    if len(matches) != 1:
+        matches = [s for s in reviewed if s.get("path") == plan["project"].get("ground_truth")] if not matches else []
+    if len(matches) != 1 or not explicit_sections(cite):
+        return []
+    primary = matches[0]
+    return [{"source": primary["id"], "sections": ", ".join(explicit_sections(cite))}]
 
 
 def ground_truth_citation(plan, it):

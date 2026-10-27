@@ -344,7 +344,11 @@ def graphql(query, v):
         return ok({op: {"projectV2Field": {"id": f["id"]}}})
     if op == "updateProjectV2Field":
         f = next(f for pr in S.projects for f in pr["fields"] if f["id"] == v["f"])
-        f["configuration"] = {"iterations": _iterations(v["c"]), "completedIterations": []}
+        if "c" in v:
+            f["configuration"] = {"iterations": _iterations(v["c"]), "completedIterations": []}
+        if "o" in v:
+            existing = {option["name"]: option["id"] for option in f["options"]}
+            f["options"] = [{"id": existing.get(o["name"]) or S.nid("O"), **o} for o in v["o"]]
         return ok({op: {"projectV2Field": {"id": f["id"]}}})
     if op == "createProjectV2View":
         pr = _project(v["p"])

@@ -129,6 +129,8 @@ You do not need a token to plan locally. Publishing issues and a project board r
 
 [Read the full FAQ](docs/faq.md) for setup, source formats, planning, GitHub permissions and ongoing changes.
 
+[Recover a plan or publication](docs/recovery.md) for identity choices, source references, issue reconciliation and resumable board updates.
+
 <br />
 
 ## Contributing and license

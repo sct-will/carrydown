@@ -59,10 +59,12 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
-SAMPLE = str(ROOT / "sample" / "expense-approvals")
 TMP = tempfile.mkdtemp(prefix="carrydown-mock-")
+SAMPLE = str(Path(TMP) / "sample")
+shutil.copytree(ROOT / "sample" / "expense-approvals", SAMPLE)
 atexit.register(shutil.rmtree, TMP, True)
 os.environ["HOME"] = TMP
+os.environ["USERPROFILE"] = TMP
 os.environ["CARRYDOWN_GITHUB_TOKEN"] = "ghp_" + "Z" * 36
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -230,7 +232,8 @@ def scenario_ownership():
           "the unlabeled issue got no links")
     check("not ours" not in out, "no text fetched from GitHub is printed")
     ours = [i for i in M.issues if "<!-- carrydown:EPIC -->" in (i["body"] or "")]
-    check(len(ours) == 1 and epic_title == "An Epic renamed by hand", "the renamed Epic was found by its marker, not created again")
+    check(len(ours) == 1 and epic_title == EPIC_TITLE and "Body edited by hand." in ours[0]["body"],
+          "the renamed Epic is reused and reconciled while its human body text remains")
     M.add_comment(ours[0]["number"], "<!-- carrydown:rollup -->\nplanted", login="someone-else")
     before = len(M.comments[ours[0]["number"]])
     rc, out = sync("--apply", "--create-epic")
@@ -249,7 +252,9 @@ def scenario_project():
     check(rc == 0 and "issues found in the repository: 15; missing: 0" in out, f"the board script finds all 15 issues by marker (got {rc})")
     check("renamed by hand" not in out, "no title fetched from GitHub is printed")
     rc, out = sync("--apply", "--create-epic")
-    check(rc == 0 and len(M.issues) == 15 and "renamed by hand" not in out, "a rerun after renames creates nothing and prints plan titles")
+    check(rc == 0 and len(M.issues) == 15 and "expected" in out and "actual" in out and
+          all(i["title"] != "renamed by hand " + str(i["number"]) for i in M.issues if i["title"] != EPIC_TITLE),
+          "a rerun after renames creates nothing and reconciles titles with expected and actual values")
     check("new sub-issue links: 0, bodies rewritten: 0" in out, "the rerun changes nothing on a complete board")
 
 
@@ -261,7 +266,7 @@ def scenario_tokenfile():
     check(rc == 0, f"a token file saved with a byte order mark is accepted (got {rc})")
     check(src.exists() and "Now delete" in out, "the file is kept and the user is told to delete it")
     check(dest.read_text(encoding="utf-8") == "ghp_" + "Z" * 36 + "\n", "the stored token has no byte order mark")
-    rc, out = call(GT.main, ["--from-file", str(src), "--token-file", str(dest), "--delete-after"])
+    rc, out = call(GT.main, ["--from-file", str(src), "--token-file", str(dest), "--delete-after", "--repo", "o/r"])
     check(rc == 0 and not src.exists(), "--delete-after deletes the file")
     n = len(M.log)
     src.write_text("password123456789012345\n", encoding="utf-8")
@@ -326,7 +331,8 @@ def scenario_tokenrules():
     loose = d / "loose"
     loose.write_text(good + "\n", encoding="utf-8")
     loose.chmod(0o644)
-    out = refused(["--check", "--token-file", str(loose)], f"Fix: chmod 600 {loose}", "a token file others can read is refused")
+    if os.name == "posix":
+        out = refused(["--check", "--token-file", str(loose)], f"Fix: chmod 600 {loose}", "a token file others can read is refused")
     # the stored token must not be used when --token-file names a file that does not exist
     store = Path(TMP) / ".config/carrydown"
     store.mkdir(parents=True, exist_ok=True)
@@ -341,6 +347,13 @@ def scenario_tokenrules():
     check(len(M.log) == n, f"nothing was sent for any refused token ({len(M.log) - n} requests)")
     rc, out = call(GS.run, SYNC + ["--token-file", str(d / "missing")])
     check(rc == 1 and "token file not found" in out and len(M.log) == n, f"github_sync does not fall back to the stored token either (got {rc})")
+    if os.name != "posix":
+        feed(good + "\n")
+        dest = d / "windows-store" / "token"
+        rc, out = call(GT.main, ["--stdin", "--token-file", str(dest)])
+        sys.stdin = sys.__stdin__
+        check(rc == 0 and dest.is_file() and good not in out, "Windows stores a token in the private user folder without POSIX mode assumptions")
+        return
     # storing: never through a symbolic link, only new folders are made private, no traceback on a folder that cannot be written
     target = d / "elsewhere"
     target.write_text("keep\n", encoding="utf-8")
@@ -471,7 +484,7 @@ def scenario_board():
     plan = proj / "docs/spec/plan.yaml"
     plan.write_text(plan.read_text(encoding="utf-8").replace("    end: 2027-04-23\n", "    end: 2027-04-30\n"), encoding="utf-8")
     rc, out = board("--apply", root=str(proj))
-    check(rc == 0 and "iterations differ from the plan" in out and "updateProjectV2Field" not in M.gql, "changed dates are reported, not applied, without --reconfigure-iterations")
+    check(rc == 1 and "iterations differ from the plan" in out and "updateProjectV2Field" not in M.gql, "changed dates fail verification until --reconfigure-iterations is approved")
     rc, out = board("--apply", "--reconfigure-iterations", root=str(proj))
     wu = next(f for f in M.projects[0]["fields"] if f["name"] == "Work unit")
     last = wu["configuration"]["iterations"][-1]
@@ -611,7 +624,7 @@ def scenario_paging():
     plan_issues = [i for i in M.issues if "<!-- carrydown:" in (i["body"] or "")]
     check(rc == 0 and len(plan_issues) == 15 and len(M.issues) == 245, f"a rerun finds the issues on the third page and creates nothing ({len(M.issues)} issues)")
     reads = [x for x in M.log[n0:] if x == ("GET", "/repos/o/r/issues")]
-    check(len(reads) == 3, f"the issue list was read page by page, three pages and no more ({len(reads)} reads)")
+    check(len(reads) == 6, f"the issue list was read through all three pages before apply and again for verification ({len(reads)} reads)")
     # only the page number is taken from the Link header: another host named there gets nothing
     other = HTTPServer(("127.0.0.1", 0), _Catcher)
     threading.Thread(target=other.serve_forever, daemon=True).start()
@@ -660,7 +673,8 @@ def scenario_tokenloose():
     src.chmod(0o644)
     rc, out = call(GT.main, ["--from-file", str(src), "--token-file", str(dest)])
     warn = [ln for ln in out.splitlines() if ln.startswith("warning:")]
-    check(rc == 0 and dest.exists() and len(warn) == 1 and "can be read by other users (mode 644)" in warn[0] and "Delete it" in warn[0],
+    expected_warning = (len(warn) == 1 and "can be read by other users (mode 644)" in warn[0] and "Delete it" in warn[0]) if os.name == "posix" else not warn
+    check(rc == 0 and dest.exists() and expected_warning,
           f"a source others can read is stored with one warning line (got {rc}: {warn})")
     check("L" * 36 not in out, "the token is not printed")
     check(src.exists(), "the source is kept; the user deletes it")

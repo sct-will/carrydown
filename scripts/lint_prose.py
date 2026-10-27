@@ -26,11 +26,12 @@ import fnmatch
 import os
 import re
 import sys
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 EXTENSIONS = {".md", ".yml", ".yaml", ".py", ".txt", ".json", ".tmpl"}
-SKIP_DIRS = {".git", "__pycache__", "node_modules"}
+SKIP_DIRS = {".git", "__pycache__", "node_modules", ".venv", "venv", "build", "dist", ".tox"}
 SKIP_FILES = {"LICENSE"}
 
 ALWAYS = [
@@ -93,14 +94,27 @@ def _brit(text):
             yield m.start(), m.group(0)
 
 
-def files(args):
+def files(args, broad=False):
     if args:
         for a in args:
             yield Path(a).resolve()
         return
+    if not broad:
+        try:
+            result = subprocess.run(["git", "-C", str(ROOT), "ls-files", "--cached", "--others",
+                                     "--exclude-standard", "-z"], capture_output=True, check=True)
+        except (OSError, subprocess.CalledProcessError):
+            pass  # Outside git, use the deterministic directory walk below.
+        else:
+            for name in sorted(set(os.fsdecode(result.stdout).split("\0")) - {""}):
+                p = ROOT / name
+                if p.is_file() and p.suffix in EXTENSIONS and p.name not in SKIP_FILES:
+                    yield p
+            return
     for r, d, fs in os.walk(ROOT):
         d[:] = [x for x in d if x not in SKIP_DIRS]
-        for f in fs:
+        d.sort()
+        for f in sorted(fs):
             p = Path(r) / f
             if p.suffix in EXTENSIONS and p.name not in SKIP_FILES:
                 yield p
@@ -109,6 +123,7 @@ def files(args):
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Lint the prose of the repository: dashes, credit lines, vendor names outside the install list.")
     ap.add_argument("paths", nargs="*", help="files to lint (default: the whole repository)")
+    ap.add_argument("--all", action="store_true", help="also scan ignored candidate files, excluding build and environment folders")
     a = ap.parse_args(argv)
     missing = [x for x in a.paths if not Path(x).is_file()]
     if missing:
@@ -116,7 +131,7 @@ def main(argv=None):
         return 2
     findings = []
     n = 0
-    for p in files(a.paths):
+    for p in files(a.paths, a.all):
         try:
             text = p.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
