@@ -13,7 +13,7 @@ python3 <skill>/scripts/plan_repair.py --root . --apply
 
 The preview lists changed records, affected references and a plan diff. Exactly identical people, tracks, external items and checkpoints collapse. Duplicate display labels include their existing track IDs. External item IDs become distinct without changing work-item IDs. Different people get IDs from their names. Different tracks get IDs from their labels. Ownership changes only when one candidate matches the item's track. Ambiguous track references remain decisions.
 
-Different checkpoints on one date require confirmation of a combined checkpoint. Its proposed name and joint check retain both records. Its date stays the same. No source is selected just because it is first in a list.
+Different checkpoints on one date require confirmation of a combined checkpoint. Its proposed name and joint check retain both records. Its date stays the same. The question and confirmed action name every affected item checkpoint and milestone demonstration reference. No source is selected just because it is first in a list.
 
 When choices remain, the command returns 1 without writing. It prints JSON records with `path`, `question` and `options`, then asks for one combined decision. Save a JSON mapping from each path to the selected concrete option:
 
@@ -56,13 +56,13 @@ python3 <skill>/scripts/github_project.py --root . --apply
 python3 <skill>/scripts/github_project.py --root . --verify
 ```
 
-Each apply needs its own preview and approval. Public repositories also need `--allow-public`. Issue verification compares each issue's title, managed body and links, marker, required labels, planned assignee, parent and relevant state. Reports include work-item ID, issue number, expected value and actual value. Open and closed are valid unless an item explicitly declares `state`. Unrelated labels and assignees remain.
+Each apply needs its own preview and approval. Public repositories also need `--allow-public`. Issue verification compares each issue's title, managed body and links, marker, required labels, planned assignee, parent and relevant state. Reports include work-item ID, issue number, expected value and actual value. Open and closed are valid unless an item explicitly declares `state`. Unrelated labels and assignees remain. Unrelated child issues under a milestone remain and do not block verification. Each expected work item's parent must still match its planned milestone.
 
 New issue bodies have managed start and end comments. Reconciliation changes that region and keeps text outside it. Legacy bodies have no reliable ownership boundary. If their content differs, reconciliation retains the entire previous body under `Preserved existing issue text` while installing the authoritative managed region. Human comments are never rewritten.
 
 Board apply restores missing membership and managed fields. It adds missing Track options while retaining unrelated identifiers, names, colors and descriptions. Existing option identifiers are included in the update as required by the [GitHub input reference](https://docs.github.com/en/graphql/reference/projects#projectv2singleselectfieldoptioninput), so existing item values remain attached. Option names match without case sensitivity. Options differing only by case need an explicit rename before retrying. The field is re-read after mutation to verify new and existing option identifiers. Work unit iteration changes still need `--reconfigure-iterations`.
 
-Project, field, view, item, item-value and nested view-field connections follow continuation tokens to the last page. A later-page failure names its connection and continuation token. Transient reads and idempotent field assignments retry a bounded number of times. Permanent errors identify the issue, field and intended value. Successful partial updates remain. Reruns repair only remaining drift.
+Project, field, view, item, item-value and nested view-field connections follow continuation tokens to the last page. A later-page failure names its connection and continuation token. Transient reads and idempotent field assignments retry a bounded number of times. This includes Work unit iteration replacement, repository links and view name or visible field assignments. Work unit errors identify the project, field and intended iteration configuration. Item field errors identify the issue, field and intended value. Creates are never retried blindly. Successful partial updates remain. Reruns repair only remaining drift.
 
 Both apply paths verify after writing and return nonzero for required drift. Run both verification commands: each covers its own publication surface. View grouping, sorting and workflows still need the manual clicks printed by the board command.
 

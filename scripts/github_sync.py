@@ -903,7 +903,8 @@ def verify(s, plan, root, skip_comment=False):
         subs = {x["number"] for x in gh.paged(f"{s.base}/issues/{s.numbers[key]}/sub_issues")}
         want = {s.numbers[t] for t in mine}
         link_total += len(subs & want)
-        if subs != want:
+        # Each expected issue's parent is checked above. Other children belong to people.
+        if not subs >= want:
             L.say(f"  sub-issues of #{s.numbers[key]}: expected {sorted(want)}, found {sorted(subs)}")
             ok = False
         body = managed_content(s.objs[key].get("body"))

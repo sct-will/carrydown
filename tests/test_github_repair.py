@@ -276,6 +276,63 @@ class PublicationRecoveryTests(unittest.TestCase):
         self.assertIn("expected", output.getvalue())
         self.assertIn("actual", output.getvalue())
 
+    def test_unrelated_sub_issue_does_not_block_reconciliation(self):
+        parent = self.objects["M1"]["number"]
+        unrelated = self.m.add_issue("Unrelated work", "Human content.", ["unrelated"])
+        self.m.subs[parent].append(unrelated["number"])
+        before = copy.deepcopy(unrelated)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(S.verify(self.sync(), self.plan, self.root, True), 0)
+            self.assertEqual(S.reconcile(self.sync(True), self.plan, self.root, True), 0)
+        self.assertEqual(unrelated, before)
+        self.assertIn(unrelated["number"], self.m.subs[parent])
+        self.assertFalse([method for method, _ in self.m.log if method != "GET"])
+
+    def test_managed_sub_issue_in_wrong_milestone_still_fails_and_repairs(self):
+        child = self.objects["WI-03"]["number"]
+        self.m.subs[self.objects["M2"]["number"]].remove(child)
+        self.m.subs[self.objects["M1"]["number"]].append(child)
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(S.verify(self.sync(), self.plan, self.root, True), 1)
+            self.assertEqual(S.reconcile(self.sync(True), self.plan, self.root, True), 0)
+            self.assertEqual(S.verify(self.sync(), self.plan, self.root, True), 0)
+        self.assertNotIn(child, self.m.subs[self.objects["M1"]["number"]])
+        self.assertIn(child, self.m.subs[self.objects["M2"]["number"]])
+
+    def test_board_iteration_configuration_retries_and_reports_intended_value(self):
+        args = ["--root", str(self.root), "--repo", "o/r", "--apply"]
+        with patch.object(G, "read_token", return_value="test-credential"), patch.object(G, "GitHub", return_value=self.gh), patch.object(P.time, "sleep"), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(P.run(args), 0)
+        field = next(f for f in self.m.projects[0]["fields"] if f["name"] == "Work unit")
+        original = self.gh.graphql
+        for kind, status, limit, expected, calls_expected in (("server", 503, 1, 0, 2),
+                                                             ("server", 503, 3, 1, 3),
+                                                             ("forbidden", 403, 1, 1, 1)):
+            with self.subTest(kind=kind, limit=limit):
+                field["configuration"]["iterations"][0]["duration"] += 1
+                calls = []
+                def fail(query, variables=None):
+                    if "updateProjectV2Field(" in query:
+                        calls.append(copy.deepcopy(variables))
+                        if len(calls) <= limit:
+                            raise G.GitHubError("injected configuration failure", status, kind)
+                    return original(query, variables)
+                out = io.StringIO()
+                with patch.object(G, "read_token", return_value="test-credential"), patch.object(G, "GitHub", return_value=self.gh), patch.object(self.gh, "graphql", side_effect=fail), patch.object(P.time, "sleep"), contextlib.redirect_stdout(out), contextlib.redirect_stderr(out):
+                    self.assertEqual(P.run(args + ["--reconfigure-iterations"]), expected)
+                self.assertEqual(len(calls), calls_expected)
+                if expected:
+                    self.assertIn("Work unit", out.getvalue())
+                    self.assertIn("intended", out.getvalue())
+                    self.assertIn("duration", out.getvalue())
+                    self.assertIn("injected configuration failure", out.getvalue())
+                    self.assertIn("Rerun to resume", out.getvalue())
+                with patch.object(G, "read_token", return_value="test-credential"), patch.object(G, "GitHub", return_value=self.gh), patch.object(P.time, "sleep"), contextlib.redirect_stdout(io.StringIO()):
+                    self.assertEqual(P.run(args + ["--reconfigure-iterations"]), 0)
+                    before = len(self.m.gql)
+                    self.assertEqual(P.run(args + ["--reconfigure-iterations"]), 0)
+                self.assertFalse([op for op in self.m.gql[before:] if op in mockgh.MUTATIONS])
+
     def test_board_partial_field_failure_and_resume_only_remaining_drift(self):
         original = self.gh.graphql
         failed = []
@@ -323,6 +380,34 @@ class PublicationRecoveryTests(unittest.TestCase):
             self.assertEqual(P.run(args), 1)
         self.assertIn("visible fields", out.getvalue())
         self.assertIn("verification FAILED", out.getvalue())
+
+    def test_board_retries_transient_visible_field_assignment(self):
+        original = self.gh.graphql
+        calls = []
+        def fail_once(query, variables=None):
+            if "updateProjectV2View(" in query and "configuration" in query:
+                calls.append(copy.deepcopy(variables))
+                if len(calls) == 1:
+                    raise G.GitHubError("temporary server failure", 503, "server")
+            return original(query, variables)
+        args = ["--root", str(self.root), "--repo", "o/r", "--apply"]
+        with patch.object(G, "read_token", return_value="test-credential"), patch.object(G, "GitHub", return_value=self.gh), patch.object(self.gh, "graphql", side_effect=fail_once), patch.object(P.time, "sleep"), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(P.run(args), 0)
+        self.assertEqual(len(calls), 3)  # First view retries, second view succeeds once.
+        self.assertEqual(calls[0], calls[1])
+
+    def test_board_does_not_blindly_retry_field_creation(self):
+        original = self.gh.graphql
+        calls = []
+        def fail(query, variables=None):
+            if "createProjectV2Field(" in query:
+                calls.append(variables)
+                raise G.GitHubError("temporary server failure", 503, "server")
+            return original(query, variables)
+        args = ["--root", str(self.root), "--repo", "o/r", "--apply"]
+        with patch.object(G, "read_token", return_value="test-credential"), patch.object(G, "GitHub", return_value=self.gh), patch.object(self.gh, "graphql", side_effect=fail), patch.object(P.time, "sleep"), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(P.run(args), 1)
+        self.assertEqual(len(calls), 1)
 
     def test_board_dry_run_previews_exact_field_drift_without_writes(self):
         args = ["--root", str(self.root), "--repo", "o/r"]

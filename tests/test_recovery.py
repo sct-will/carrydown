@@ -108,6 +108,25 @@ class PlanRecoveryTests(unittest.TestCase):
         self.assertIn(cp["joint_check"], combined["joint_check"])
         self.assertEqual(len([c for c in result["checkpoints"] if c["date"] == cp["date"]]), 1)
 
+    def test_checkpoint_preview_names_every_item_and_demo_reference(self):
+        for date, paths in (("2027-02-05", ["items.1.checkpoint"]),
+                            ("2027-02-12", ["items.2.checkpoint", "milestones.1.demo"])):
+            with self.subTest(date=date):
+                raw = copy.deepcopy(self.raw)
+                cp = copy.deepcopy(next(c for c in raw["checkpoints"] if c["date"] == date))
+                cp.update(name="Second check", joint_check="An additional joint check.")
+                raw["checkpoints"].append(cp)
+                _, _, questions = self.recover(raw)
+                question = next(q for q in questions if q["path"] == f"checkpoints.{date}")
+                for path in paths:
+                    self.assertIn(path, question["question"])
+                result, actions, remaining = self.recover(raw, {question["path"]: question["options"][0]})
+                self.assertFalse(remaining)
+                for path in paths:
+                    self.assertTrue(any(path in action for action in actions), actions)
+                self.assertEqual(result["items"], R.recover(self.raw, self.root)[0]["items"])
+                self.assertEqual(result["milestones"], self.raw["milestones"])
+
     def test_legacy_refs_convert_and_prose_numbers_are_not_sections(self):
         result, actions, questions = self.recover()
         self.assertFalse(questions)

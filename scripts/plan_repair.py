@@ -146,10 +146,13 @@ def recover(raw, root, decisions=None):
         if len(rows) > 1:
             combined = {"date": date, "name": "; ".join(r["name"] for r in rows),
                         "joint_check": "\n".join(r.get("joint_check", "") for r in rows)}
+            refs = [f"items.{it.get('id')}.checkpoint" for it in plan.get("items", []) if it.get("checkpoint") == date]
+            refs += [f"milestones.{ms.get('number')}.demo" for ms in plan.get("milestones", []) if ms.get("demo") == date]
+            affected = f"affected references: {', '.join(refs) or 'none'}; references keep date {date}"
             # Extra properties cannot be discarded by a merge.
             if any(set(r) - set(combined) for r in rows):
-                choose(f"checkpoints.{date}", [rows], "Combine these checkpoints manually while preserving all properties")
-            elif choose(f"checkpoints.{date}", [combined], "Confirm the combined checkpoint on the same date"):
+                choose(f"checkpoints.{date}", [rows], "Combine these checkpoints manually while preserving all properties; " + affected)
+            elif choose(f"checkpoints.{date}", [combined], "Confirm the combined checkpoint on the same date; " + affected):
                 merged = []
                 for row in plan["checkpoints"]:
                     if row not in rows:
@@ -157,7 +160,7 @@ def recover(raw, root, decisions=None):
                     elif not any(r.get("date") == date for r in merged):
                         merged.append(combined)
                 plan["checkpoints"] = merged
-                actions.append(f"checkpoints.{date}: {rows!r} -> {combined!r}; affected item checkpoint references keep the same date")
+                actions.append(f"checkpoints.{date}: {rows!r} -> {combined!r}; {affected}")
 
     sources = plan.get("sources") or L.ground_truth_sources(plan)
     reviewed = [s for s in sources if s.get("status", "reviewed") == "reviewed"]

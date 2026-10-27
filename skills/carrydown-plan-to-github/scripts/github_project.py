@@ -398,7 +398,8 @@ def _run(argv=None):
             proj = r["createProjectV2"]["projectV2"]
             L.say(f"  created #{proj['number']} {proj['url']}")
             try:
-                gh.graphql("mutation($p: ID!, $r: ID!) { linkProjectV2ToRepository(input: {projectId: $p, repositoryId: $r}) { repository { id } } }", {"p": proj["id"], "r": repo_node})
+                retry_graphql(gh, "mutation($p: ID!, $r: ID!) { linkProjectV2ToRepository(input: {projectId: $p, repositoryId: $r}) { repository { id } } }", {"p": proj["id"], "r": repo_node},
+                              f"project {proj['id']}, repository link, intended {owner_repo}/{name}")
                 L.say("  linked the project to the repository")
             except G.GitHubError as e:
                 L.say(f"  could not link to the repository: {e}")
@@ -431,9 +432,10 @@ def _run(argv=None):
             L.say("  Work unit exists with the planned iterations")
         elif a.reconfigure_iterations and a.apply:
             first = iterations[0]
-            gh.graphql("""mutation($f: ID!, $c: ProjectV2IterationFieldConfigurationInput!) {
+            retry_graphql(gh, """mutation($f: ID!, $c: ProjectV2IterationFieldConfigurationInput!) {
               updateProjectV2Field(input: {fieldId: $f, iterationConfiguration: $c}) { projectV2Field { ... on ProjectV2IterationField { id } } } }""",
-                       {"f": fields["Work unit"]["id"], "c": {"startDate": first["startDate"], "duration": first["duration"], "iterations": iterations}})
+                          {"f": fields["Work unit"]["id"], "c": {"startDate": first["startDate"], "duration": first["duration"], "iterations": iterations}},
+                          f"project {proj['id']}, field Work unit {fields['Work unit']['id']}, intended iterations {iterations!r}")
             L.say("  Work unit iterations replaced to match the plan")
         else:
             L.say("  Work unit exists but its iterations differ from the plan. Rerun with --reconfigure-iterations to replace them.")
@@ -471,7 +473,8 @@ def _run(argv=None):
         if default:
             L.say(f"  {'rename' if a.apply else 'would rename'} the default view to {vname}")
             if a.apply:
-                gh.graphql("mutation($v: ID!, $n: String!) { updateProjectV2View(input: {viewId: $v, name: $n}) { projectV2View { id } } }", {"v": default["id"], "n": vname})
+                retry_graphql(gh, "mutation($v: ID!, $n: String!) { updateProjectV2View(input: {viewId: $v, name: $n}) { projectV2View { id } } }", {"v": default["id"], "n": vname},
+                              f"project {proj['id']}, view {default['id']}, intended name {vname!r}")
                 names[vname] = default
             continue
         L.say(f"  {'create' if a.apply else 'would create'} {vname} view ({layout})")
@@ -488,9 +491,10 @@ def _run(argv=None):
             if set(visible) <= shown:
                 continue   # already shows the plan fields: a rerun sends nothing
             try:
-                gh.graphql("mutation($v: ID!, $f: [ID!]) { updateProjectV2View(input: {viewId: $v, configuration: {visibleFieldIds: $f}}) { projectV2View { id } } }", {"v": v["id"], "f": visible})
+                retry_graphql(gh, "mutation($v: ID!, $f: [ID!]) { updateProjectV2View(input: {viewId: $v, configuration: {visibleFieldIds: $f}}) { projectV2View { id } } }", {"v": v["id"], "f": visible},
+                              f"project {proj['id']}, view {vname!r}, intended visible fields {visible!r}")
             except G.GitHubError as e:
-                L.say(f"  could not set visible fields on {vname}: {str(e)[:160]}")
+                L.say(f"  could not set visible fields on {vname}: {e.line()}")
         L.say("  visible field configuration checked on Table and Board; verification follows")
 
     # ---------------- items ----------------
