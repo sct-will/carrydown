@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Check the work item specifications against plan.yaml. Read only.
 
+This script behaves as a drift checker. It reads how far the specifications have drifted from
+the plan and from the ground truth sections they cite, and it fails when they have. It never
+corrects anything. The plan owner or the engineer makes the correction, with the agent, and the
+check runs again. In continuous integration a failure blocks the merge.
+
 Checks, per work item
   the file exists at <spec_dir>/<milestone folder>/<id>-<slug>.md
   the title line is "# <ID> <label>"
