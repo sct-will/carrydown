@@ -11,8 +11,9 @@ Everything is derived from plan.yaml and the specification folder.
                  Integration points, Definition of done
   sub-issues     each work item under its sub-epic, each sub-epic under the Epic if there is one
   dependencies   ids in issue bodies rewritten to issue links, for example "WI-01 (#12)"
-  Epic comment   one roll-up comment with a Constraints block (target delivery, people by track)
-                 and nested checkboxes, created once and updated on reruns
+  Epic comment   one roll-up comment with a Constraints block (target delivery, and people by
+                 track when the plan allows the capacity summary) and nested checkboxes, created
+                 once and updated on reruns
 
 Safety
   This is a dry run unless you pass --apply. The dry run reads from GitHub when a token is
@@ -28,6 +29,10 @@ Safety
   Text fetched from GitHub is treated as data: it is compared, never followed, and issue
   titles are printed from the plan, not from GitHub.
   The token is read from a file and is never printed.
+  A migrated plan holds no logins, names or allocation. The capacity summary of the Epic comment is
+  published only when project.handling.downstream.capacity_summary is true (legacy plans: true), and
+  --people names the private people.yaml that supplies the allocation percent for it. No login is
+  read from any file by this script for a migrated plan.
 
 Usage
   python3 scripts/github_sync.py --root . --repo owner/name            dry run
@@ -97,22 +102,32 @@ def target_phrase(plan):
     return (L.fmt_date(end) if end else "not known yet"), "derived"
 
 
-def constraints_lines(plan):
-    """The project constraints as they appear on GitHub: target delivery, then people by track."""
+def constraints_lines(plan, staffed=None):
+    """The project constraints as they appear on GitHub: target delivery, then people by track.
+
+    The people by track are the capacity summary. They appear only when the plan's downstream
+    capacity_summary flag allows (L.downstream_flags: true for a legacy plan, false for a migrated
+    one unless the owner set it). Percent allocated comes from staffed, the plan with people.yaml
+    merged in; a migrated plan on its own holds no allocation, so the percent is left out."""
     date, how = target_phrase(plan)
     lines = [f"Target delivery: {date} (" + ("given" if how == "given" else "derived from the critical path") + ")"]
+    if not L.downstream_flags(plan)["capacity_summary"]:
+        return lines
     people = plan["people"]
     if not people:
         lines.append(f"People: to be assigned (derived capacity: {len(plan['tracks'])})")
         return lines
+    known = staffed if staffed is not None else plan
+    percent = L.staffing_loaded(known)
+    allocation = {p.get("id"): p.get("allocation", 100) for p in known["people"]}
     for t in plan["tracks"]:
         mine = [p for p in people if p.get("track") == t["id"]]
         if not mine:
             continue
         n = len(mine)
-        total = sum(p.get("allocation", 100) for p in mine)
+        total = sum(allocation.get(p.get("id"), 100) for p in mine)
         holder = " (placeholder)" if any(p.get("derived") for p in mine) else ""
-        lines.append(f"Track {t['label']}: {n} {'person' if n == 1 else 'people'}{holder}, {total} percent allocated")
+        lines.append(f"Track {t['label']}: {n} {'person' if n == 1 else 'people'}{holder}" + (f", {total} percent allocated" if percent else ""))
     return lines
 
 
@@ -247,12 +262,11 @@ def build_subepic_body(plan, root, ms, numbers=None, mark=True):
     lines += ["### Acceptance criteria", "", L.section_text(spec, "Acceptance criteria"), "",
              "### Demonstration expectations", "", L.section_text(spec, "Demonstration expectations"), "",
              "### Work items", ""]
-    people = {pp["id"]: pp for pp in plan["people"]}
     for it in plan["items"]:
         if it["milestone"] != ms["number"]:
             continue
         t = L.tag(plan, it["id"])
-        who = people.get(it["owner"], {}).get("github")
+        who = L.assignee_login(plan, it)
         ref = f"#{numbers[t]} " if t in numbers else ""
         lines.append(f"- [ ] {ref}{t} {it['label']}" + (f", @{who}" if who else "") + f", by {it['complete_by']}")
     lines += ["", f"Milestone file: {L.github_blob_url(plan, rel)}"]
@@ -267,15 +281,14 @@ def safe_to_rewrite(have, pristine):
     return any(norm == p.rstrip() for p in pristine)
 
 
-def build_rollup(plan, numbers, epic_number):
+def build_rollup(plan, numbers, epic_number, staffed=None):
     proj = plan["project"]
     readme = L.github_blob_url(plan, f"{proj['spec_dir']}/README.md")
     intro = (f"{len(plan['milestones'])} sub-epics, one per milestone, each holding its work item issues as sub-issues. A box is checked when its issue closes. "
              f"Conventions, the checkpoint schedule and the comment templates are in [{proj['spec_dir']}/README.md]({readme}).")
     if plan["external"]["items"]:
         intro += " External items are owned outside the team and tracked outside these issues."
-    out = [MARKER, f"## Development plan, {proj['name']}", "", "**Constraints**", ""] + [f"- {l}" for l in constraints_lines(plan)] + ["", intro, ""]
-    people = {pp["id"]: pp for pp in plan["people"]}
+    out = [MARKER, f"## Development plan, {proj['name']}", "", "**Constraints**", ""] + [f"- {l}" for l in constraints_lines(plan, staffed)] + ["", intro, ""]
     for ms in plan["milestones"]:
         sk = f"M{ms['number']}"
         ref = f"#{numbers[sk]} " if sk in numbers else ""
@@ -283,7 +296,7 @@ def build_rollup(plan, numbers, epic_number):
         for it in plan["items"]:
             if it["milestone"] == ms["number"]:
                 t = L.tag(plan, it["id"])
-                who = people.get(it["owner"], {}).get("github")
+                who = L.assignee_login(plan, it)
                 r = f"#{numbers[t]} " if t in numbers else ""
                 out.append(f"  - [ ] {r}{t} {it['label']}" + (f", @{who}" if who else "") + f", by {it['complete_by']}")
     out += ["", "### How progress is shown", "",
@@ -297,6 +310,7 @@ def build_rollup(plan, numbers, epic_number):
 class Sync:
     def __init__(self, plan, root, gh, owner, repo, apply, selections=None):
         self.plan, self.root, self.gh, self.owner, self.repo, self.apply = plan, Path(root), gh, owner, repo, apply
+        self.staffed = None   # the plan with people.yaml merged in, used only for the allocation percent in the roll-up
         self.base = f"/repos/{owner}/{repo}"
         self.issues = None  # title -> issue, only issues with the project label
         self.by_key = {}    # marker key -> issue, only issues with the project label
@@ -379,7 +393,7 @@ class Sync:
             state = None
             if item:
                 required.add(item["track"])
-                assigned = next((p.get("github") for p in self.plan["people"] if p["id"] == item.get("owner")), None)
+                assigned = L.assignee_login(self.plan, item) or None
                 state = item.get("state")
             elif ms:
                 required.add("sub-epic")
@@ -525,6 +539,9 @@ def _run(argv=None):
     ap.add_argument("--update-bodies", action="store_true", help="also rewrite the bodies of issues that already exist")
     ap.add_argument("--skip-comment", action="store_true", help="do not post or update the Epic roll-up comment")
     ap.add_argument("--skip-check", action="store_true", help="do not run the specification checker first")
+    ap.add_argument("--people", help="path to people.yaml. Only the capacity summary in the Epic comment uses it, to say how many percent each track "
+                                     "is allocated, and only when the plan allows the capacity summary. Logins are never read from it. "
+                                     "Default: people.yaml in the private workspace named by .carrydown/local.yaml, when there is one")
     ap.add_argument("--issue-type", default=None, help="GitHub issue type for work items, for example Task (organizations only)")
     ap.add_argument("--show-body", metavar="ID", help="print the issue body for one work item or sub-epic and exit (no network). Accepts WI-07, 7 or M2")
     ap.add_argument("--select-issue", action="append", default=[], metavar="KEY=NUMBER", help="select a canonical issue from the ambiguity table; preview first")
@@ -572,8 +589,12 @@ def _run(argv=None):
             L.die(f"no item with id {a.show_body}. Use the tag ({example}) or the number, or M and a milestone number")
         L.say(build_item_body(plan, root, it))
         return 0
+    staffed = None
+    if plan["_modern"] and L.downstream_flags(plan)["capacity_summary"]:
+        merged, _ = L.load_plan_with_people(plan_path, root, people_path=a.people)
+        staffed = merged if merged.get("_people_overlay") else None
     if not a.skip_check:
-        rc = check_specs.main(["--root", str(root), "--plan", str(plan_path), "--quiet"])
+        rc = check_specs.main(["--root", str(root), "--plan", str(plan_path), "--quiet"] + (["--people", a.people] if a.people else []))
         if rc != 0:
             L.say("The checker found problems, so nothing was sent to GitHub. Run check_specs.py to see them and fix them, then run this again.")
             return 1
@@ -594,7 +615,7 @@ def _run(argv=None):
     L.say(f"repository: {owner}/{repo}    plan: {plan_shown}")
     L.say(f"{len(plan['milestones'])} milestones, {len(plan['items'])} work items, {len(plan['tracks'])} tracks, {len(plan['external']['items'])} external items kept outside the plan")
     L.say("Constraints (they go into the Epic comment, and the target into every sub-epic):")
-    for line in constraints_lines(plan):
+    for line in constraints_lines(plan, staffed):
         L.say("  " + line)
     if gh is None:
         L.say(f"not checked against GitHub ({unchecked}): showing the plan only, nothing is read from GitHub")
@@ -607,6 +628,7 @@ def _run(argv=None):
             L.die("--select-issue must be KEY=NUMBER")
         selections[match[1]] = int(match[2])
     s = Sync(plan, root, gh, owner, repo, a.apply, selections)
+    s.staffed = staffed
     if gh:
         status, js = gh.rest_status("GET", s.base)
         if status == 404:
@@ -649,14 +671,13 @@ def _run(argv=None):
     elif not epic:
         L.say("\nEpic: none. Sub-epics will be created without a parent. Use --create-epic to create one.")
 
-    people = {p["id"]: p for p in plan["people"]}
     L.say("\nSub-epics")
     for ms in plan["milestones"]:
         s.create_or_find(subepic_title(plan, ms), build_subepic_body(plan, root, ms), [proj["slug"], "sub-epic"], [], f"M{ms['number']}")
     L.say("\nWork items")
     for it in plan["items"]:
         t = L.tag(plan, it["id"])
-        assignee = people.get(it["owner"], {}).get("github")
+        assignee = L.assignee_login(plan, it)
         s.create_or_find(item_title(plan, it), build_item_body(plan, root, it), [proj["slug"], it["track"]], [assignee] if assignee else [], t, a.issue_type)
     if not a.apply:
         n_epic = 1 if "EPIC" in s.planned else 0
@@ -717,7 +738,7 @@ def _run(argv=None):
     if not a.skip_comment and epic_key:
         L.say("\nEpic roll-up comment")
         num = s.numbers["EPIC"]
-        text = build_rollup(plan, s.numbers, num)
+        text = build_rollup(plan, s.numbers, num, s.staffed)
         existing = own_rollups(gh, s.base, num)
         if existing:
             if existing[0]["body"].replace("\r\n", "\n") != text:
@@ -771,7 +792,6 @@ def expected_issues(s, plan, root):
 def issue_drift(s, plan, root):
     rows, problems = [], []
     expected = expected_issues(s, plan, root)
-    people = {p["id"]: p for p in plan["people"]}
     for key, issue, ms, item in expected:
         if not issue:
             problems.append(f"{key}: issue missing; run the creation dry run")
@@ -797,7 +817,7 @@ def issue_drift(s, plan, root):
         if not {x.casefold() for x in required} <= {x.casefold() for x in actual}:
             patch["labels"] = sorted(required | actual)
             differences.append(("required labels", sorted(required), sorted(actual)))
-        wanted_login = people.get(item.get("owner"), {}).get("github") if item else None
+        wanted_login = L.assignee_login(plan, item) or None
         assigned = {x["login"] for x in issue.get("assignees", [])}
         if wanted_login and wanted_login.casefold() not in {x.casefold() for x in assigned}:
             patch["assignees"] = sorted(assigned | {wanted_login})

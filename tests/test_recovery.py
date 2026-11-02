@@ -71,6 +71,9 @@ class PlanRecoveryTests(unittest.TestCase):
         for item in result["items"]:
             self.assertEqual(item["owner"], people[item["track"]])
         self.raw["people"][1]["track"] = self.raw["people"][0]["track"]
+        # a migrated plan holds ids and tracks only, so two records with one id and one track would be
+        # identical and collapse. A placeholder flag keeps them two different people.
+        self.raw["people"][1]["derived"] = True
         _, _, questions = self.recover()
         self.assertTrue(questions)
         self.assertTrue(all(len(q["options"]) == 2 for q in questions))

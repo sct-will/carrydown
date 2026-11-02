@@ -1,6 +1,6 @@
 # Interview guide
 
-Contents: [The two inputs](#the-two-inputs) · [Step 1, the ground truth](#step-1-of-6-the-ground-truth) · [Step 2, the people](#step-2-of-6-the-people-optional) · [Step 3, the target and the breaks](#step-3-of-6-the-target-and-the-breaks-optional) · [Step 4, GitHub](#step-4-of-6-github) · [Step 5, agents, demonstrations and work outside the plan](#step-5-of-6-agents-demonstrations-and-work-outside-the-plan) · [Step 6, engineering conventions](#step-6-of-6-engineering-conventions) · [The summary to read back](#the-summary-to-read-back)
+Contents: [The two inputs](#the-two-inputs) · [Step 0, who may see the documents](#step-0-of-6-who-may-see-the-documents) · [Step 1, the ground truth](#step-1-of-6-the-ground-truth) · [Step 2, the people](#step-2-of-6-the-people-optional) · [Step 3, the target and the breaks](#step-3-of-6-the-target-and-the-breaks-optional) · [Step 4, GitHub](#step-4-of-6-github) · [Step 5, agents, demonstrations and work outside the plan](#step-5-of-6-agents-demonstrations-and-work-outside-the-plan) · [Step 6, engineering conventions](#step-6-of-6-engineering-conventions) · [The summary to read back](#the-summary-to-read-back)
 
 Run this interview before you write anything. The user may be a product manager, so use plain words, ask a few questions at a time, and explain why you ask. Offer a default for every question. Read the answers back as one summary and wait for a yes.
 
@@ -15,13 +15,48 @@ The user does not type the allocation. Ask once, in one line: "I will assume eve
 
 Never ask the user to paste a secret. A GitHub token is handled later by `carrydown-plan-to-github`, through a file the user names or a hidden prompt.
 
+## Step 0 of 6. Who may see the documents
+
+Begin your reply with `carrydown: interview, step 0 of 6`. Ask this before you render a source, before you copy a document into the project and before you ask about staffing.
+
+First, inventory the files where the user keeps them. Do not copy them into `docs/source/` yet. Name each file you can read, and each one you cannot (`source-material.md` covers those). A file already inside the project is reported by the inventory. Do not call it safe, and do not delete it.
+
+Then ask exactly this, as one question:
+
+> Can everyone who can read this repository see all of these documents and your staffing notes?
+
+Why you ask: the answer decides where the drafting happens. The user never types a label, an audience or a destination. You derive them from the answer.
+
+- **Yes.** Every source is classified `repo-readers`. Drafting happens in the project, as before. Staffing notes still go to the private workspace, because people's names, skills and days off are not for every reader of the repository.
+- **No.** Ask three follow-ups, one at a time, each with its default.
+  1. Which of these documents are restricted? Default: all of them. A document the user names as shareable is classified `repo-readers`.
+  2. Who may approve that a document is shared with the repository's readers? Default: the owner's GitHub login. Collect GitHub logins, never email addresses.
+  3. Keep the raw inputs after the release? Default: kept in the private workspace, never in the repository.
+
+Record the answer once. Step 3 writes it into `plan.yaml` as `project.handling` and a `classification` on every source (`templates/plan.yaml` shows the lines). On the no path, draft in the private workspace and keep the plan there until a release. On the yes path the plan can be in the project.
+
+Create the workspace now, with the user's yes to a short folder name for the project:
+
+```bash
+python3 <skill>/scripts/workspace.py init --root . --slug <slug> --answer yes --apply
+```
+
+Use `--answer no` for the no path, and add `--retain delete-after-release` if the user wants the raw inputs deleted after the release. Run it without `--apply` first if the user wants to see what it does. On no, it also prints the commands that create the private staging repository. Show them to the user. Do not run them: creating a repository on GitHub needs the user's own say-so.
+
+Finish with two lines for the user:
+
+- Sources: each source id with its classification, for example `architecture (repo-readers), company-governance (restricted)`.
+- Drafting happens in: `the repository` or `the private workspace`.
+
+Wait for a yes. Then go to step 1.
+
 ## Step 1 of 6. The ground truth
 
 Begin your reply with `carrydown: interview, step 1 of 6`. Before the questions below, ask this: "Can you create a Project in your GitHub organization? If you are not sure, we carry on. It only matters at the GitHub step, and an organization admin can grant it later."
 
 Ask.
 
-1. Which files hold the truth for this project? Any mix of architecture, requirements, business analyst notes, governance rules, company context and development standards. Inventory `docs/source/` with the user. Word, Markdown and plain text render directly. PDF, images and other readable formats use the reviewed extraction procedure in `source-material.md`. Ask: "Which of these files should the project obey?"
+1. Which files hold the truth for this project? Any mix of architecture, requirements, business analyst notes, governance rules, company context and development standards. Use the inventory from step 0, in the places the user keeps them. Word, Markdown and plain text render directly. PDF, images and other readable formats use the reviewed extraction procedure in `source-material.md`. Ask: "Which of these files should the project obey?"
 2. If two documents disagree, which one wins? A good default: governance rules, then the development standard, then the architecture, then requirements, then notes.
 3. Is each document final enough to plan from? Which version is it?
 4. Are the sections numbered? Specifications cite sections by number. If not, ask whether you may propose numbering for the source document.
@@ -42,7 +77,9 @@ Ask.
    Then, in one line, confirm the percent allocation: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" Do not ask for a figure per person unless the answer is no. If the answer is no, ask for the figure for each person who is lower. A person at 60 percent has three working days in five for this plan.
 5. Is there anyone who advises and owns no items, such as someone from security or the author of a policy?
 
-Explain: names stay in `plan.yaml`. The checker keeps them out of the specifications so the files stay valid when people change.
+Explain: staffing details are personal, so they are not written to `plan.yaml`. They go to `people.yaml` in the private workspace that step 0 created, one entry per person with the same id as in the plan. `plan.yaml` holds the ids and tracks only. The checker merges the two when the owner runs it, and keeps names out of the specifications so the files stay valid when people change. Show the user the path where you save the file; that is the one visible change.
+
+Collect these only after the workspace exists. Write them to `people.yaml` in the workspace, never to `plan.yaml`, and never into a file in the project. The sample file in the repository shows the fields: id, name, github, track, skills, preferences, assignment_rationale, allocation, start and days_off, and an `advisors` list.
 
 ## Step 3 of 6. The target and the breaks (optional)
 
@@ -64,7 +101,7 @@ Ask. Do not touch GitHub in this skill.
 1. Which organization or user, and which repository, will hold the issues?
 2. Does a parent Epic issue already exist? If yes, its number. If no, may the plan script create one later?
 3. Which labels already exist that the plan should reuse or avoid?
-4. Do the people have GitHub logins for assignment? If yes, collect them.
+4. Do the people have GitHub logins for assignment? If yes, collect them and write them to `people.yaml` in the workspace. A login is published only if the owner approves it for the release.
 
 ## Step 5 of 6. Agents, demonstrations and work outside the plan
 
@@ -105,7 +142,8 @@ These answers become the definition of done in every issue and in the engineers'
 Write it as a short list the user can correct.
 
 - Ground truth: every original file and rendering, winner on conflict, version, extraction limits and owner approval.
-- People and tracks, start dates, days off and advisors. Include supplied skills, work preferences and the proposed match. Say plainly when skills or preferences were not supplied and the default assignment rules apply.
+- The answer to the one question, and for each source its classification. Where the drafting happens, and the workspace folder.
+- People and tracks, start dates, days off and advisors, as saved in the workspace `people.yaml`. Include supplied skills, work preferences and the proposed match. Say plainly when skills or preferences were not supplied and the default assignment rules apply.
 - Parts of the system each track touches (the themes).
 - Time frame and breaks, longest work unit, checkpoint day and length.
 - Repository, Epic, labels, logins.

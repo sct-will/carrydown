@@ -40,12 +40,17 @@ def work_items_md(plan, root):
     for person in plan["people"]:
         by_track[person["track"]] = by_track.get(person["track"], 0) + person.get("allocation", 100)
     alloc = ", ".join(f"{L.track_label(plan, t)} {pct} percent" for t, pct in by_track.items())
+    # A migrated plan holds no allocation (it is in the private people file), and a capacity summary
+    # is published only when the owner allowed it. Without both, the paragraph says nothing about numbers.
+    show_alloc = L.staffing_loaded(plan) and L.downstream_flags(plan)["capacity_summary"]
     last = max((L.parse_date(it["complete_by"]) for it in plan["items"]), default=None)
     if tdate and L.target_is_constraint(plan):
         out += [f"Target. {ttext}. The plan was fitted to it.", ""]
     else:
         out += [f"Target. Derived from the critical path: {L.fmt_date(last) if last else 'not known yet'}. It is the plan's end date, not a constraint.", ""]
-    if plan["people"]:
+    if plan["people"] and not show_alloc:
+        out += ["Allocation. The plan owner keeps each person's allocation, start date and days off in a private record. The dates in this plan already account for them.", ""]
+    elif plan["people"]:
         derived_note = " Some people are placeholders marked derived in plan.yaml." if any(p.get("derived") for p in plan["people"]) else ""
         out += [f"Allocation. People are allocated as a percentage of their working time to this plan. By track, the allocation adds up to {alloc}. The dates in this plan already account for it, so a track at less than 100 percent has fewer working days in each work unit.{derived_note}", ""]
     else:

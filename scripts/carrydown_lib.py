@@ -525,6 +525,17 @@ def _repository_top(root):
     return base
 
 
+def path_inside_repository(root, candidate):
+    """True when candidate lies inside the project folder root or inside the engineering repository
+    that holds root. Symbolic links are resolved first, so a link cannot hide the location."""
+    base = Path(root).expanduser().resolve()
+    target = Path(os.path.realpath(str(candidate)))
+    for repo in {base, _repository_top(base)}:
+        if target == repo or repo in target.parents:
+            return True
+    return False
+
+
 def workspace_root(root):
     """The owner's private workspace for the project at root, as (path, None), or (None, reason).
 
@@ -549,9 +560,8 @@ def workspace_root(root):
         candidate = Path(os.path.realpath(str((base / Path(value.strip()).expanduser()))))
     except (OSError, ValueError, RuntimeError):
         return None, "workspace-unavailable"
-    for repo in {base, _repository_top(base)}:
-        if candidate == repo or repo in candidate.parents:
-            return None, "workspace-inside-repository"
+    if path_inside_repository(base, candidate):
+        return None, "workspace-inside-repository"
     if root_problem(candidate):
         return None, "workspace-unavailable"
     return candidate, None
@@ -682,6 +692,67 @@ def _is_int(v):
     return isinstance(v, int) and not isinstance(v, bool)
 
 
+# The plan layouts. A plan written before the confidential ground truth work has no plan_format and
+# no project.handling block: it is legacy and keeps its old rules. A plan with plan_format 2 is
+# validated in one of two views. The workspace view is the owner's working plan. The released view
+# is the exported plan that the engineering repository holds and the independent verifier checks.
+PLAN_FORMAT = 2
+PLAN_VIEWS = ("workspace", "released")
+CLASSIFICATIONS = ("repo-readers", "restricted", "public")
+RETAIN_VALUES = ("keep", "delete-after-release")
+HANDLING_STATES = ("legacy", "migrated")
+ENGINEER_EDITS = ("allowed", "request-only")
+HANDLING_KEYS = ("policy_version", "repo_audience_approved", "approvers", "retain_raw_inputs", "state",
+                 "downstream", "offline_grace_days", "engineer_edits")
+RELEASED_HANDLING_KEYS = ("policy_version", "repo_audience_approved", "state", "offline_grace_days", "engineer_edits")
+DOWNSTREAM_FLAGS = ("assignees", "capacity_summary", "evidence")
+# Personal facts. They live in people.yaml in the private workspace and never in a plan.yaml of a
+# migrated project (E1 of the specification). Schema locations are reported as people:<id>:<field>.
+STAFFING_KEYS = ("name", "github", "skills", "preferences", "assignment_rationale", "days_off", "allocation", "start")
+PRIVATE_SOURCE_KEYS = ("path", "source_path", "classification", "content_sha256", "rendering_sha256")
+_LOGIN_RE = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})\Z")
+_HEX64_RE = re.compile(r"[0-9a-f]{64}\Z")
+
+
+class PlanViewError(ValueError):
+    """A plan was given to a function that needs another view, or a merged staffing view was given
+    where only the stored plan may go. The fixed reason code is schema-view-mismatch."""
+
+    code = "schema-view-mismatch"
+
+
+def is_modern(plan):
+    """True for a plan in the plan_format 2 layout: it declares plan_format or plan_view, or its
+    project.handling block says state: migrated. Everything else is a legacy plan."""
+    if not isinstance(plan, dict):
+        return False
+    if plan.get("plan_format") is not None or plan.get("plan_view") is not None:
+        return True
+    proj = plan.get("project")
+    handling = proj.get("handling") if isinstance(proj, dict) else None
+    return isinstance(handling, dict) and handling.get("state") == "migrated"
+
+
+def plan_mode(plan, view=None):
+    """legacy, workspace or released: the rules validate_plan applies. view is the view the caller
+    requires (None to accept the one the plan declares). A legacy plan is checked by the legacy
+    rules unless a view is required."""
+    if view is not None and view not in PLAN_VIEWS:
+        raise ValueError(f"unknown plan view {view!r}. Use one of: {', '.join(PLAN_VIEWS)}")
+    if view is not None:
+        return view
+    if not is_modern(plan):
+        return "legacy"
+    declared = plan.get("plan_view")
+    return declared if declared in PLAN_VIEWS else "workspace"
+
+
+def staffing_loaded(plan):
+    """True when the people facts that capacity, dates and names checks need are in the plan: a
+    legacy plan holds them itself, and a migrated plan holds them only after people.yaml is merged."""
+    return not plan.get("_modern") or plan.get("_people_overlay") is not None
+
+
 # Fields read as text, per list of the plan. A number given for one of them is taken as text,
 # so `label: 2027` works. None means the field is empty and is treated as left out.
 _TEXT_FIELDS = {
@@ -693,7 +764,8 @@ _TEXT_FIELDS = {
     "checkpoints": ("date", "name", "joint_check"),
     "items": ("slug", "label", "track", "owner", "complete_by", "size", "checkpoint", "ground_truth", "external_input", "program_input"),
     "external.items": ("label", "note"),
-    "sources": ("id", "name", "source_path", "path", "use", "version", "status", "limit"),
+    "sources": ("id", "name", "source_path", "path", "use", "version", "status", "limit", "classification",
+                "content_sha256", "rendering_sha256"),
 }
 _TEXT_LIST_FIELDS = {
     "tracks": ("skill_needs",),
@@ -729,11 +801,20 @@ def type_problems(plan):
                       ("breaks", list), ("checkpoints", list), ("items", list), ("sources", list)):
         if plan.get(key) is not None and not isinstance(plan[key], want):
             P.append(f"{key} must be {'a mapping of keys' if want is dict else 'a list of entries starting with -'}, got {_kind(plan[key])}")
+    reserved = sorted(k for k in plan if isinstance(k, str) and k.startswith("_"))
+    if reserved:
+        P.append(f"plan keys that start with an underscore are reserved for the scripts: {', '.join(reserved[:5])}")
     if P:
         return P
+    modern = is_modern(plan)   # a migrated plan's staffing keys are reported by validate_plan, so they are left as written
     proj = plan.get("project") or {}
     for k in _PROJECT_TEXT:
         _as_text(proj, k, "project", P)
+    handling = proj.get("handling")
+    if handling is not None and not isinstance(handling, dict):
+        P.append(f"project.handling must be a mapping of keys, got {_kind(handling)}")
+    elif isinstance(handling, dict) and handling.get("downstream") is not None and not isinstance(handling["downstream"], dict):
+        P.append(f"project.handling.downstream must be a mapping of keys, got {_kind(handling['downstream'])}")
     ep = proj.get("epic")
     if ep is not None and not _is_int(ep) and not (isinstance(ep, str) and re.fullmatch(r"[0-9]{1,18}", ep.strip())):
         P.append(f"project.epic must be an issue number or null, got {ep!r}")
@@ -754,9 +835,14 @@ def type_problems(plan):
                 P.append(f"{group}: entry {n} must be a mapping such as `- id: ...`, got {_kind(row)} {row!r}"[:200])
                 continue
             where = f"{group} entry {n}"
+            kept = modern and group in ("people", "advisors")   # reported by key, never converted or echoed
             for k in _TEXT_FIELDS.get(group, ()):
+                if kept and (group == "advisors" or k in STAFFING_KEYS):
+                    continue
                 _as_text(row, k, where, P)
             for k in _TEXT_LIST_FIELDS.get(group, ()):
+                if kept:
+                    continue
                 v = row.get(k)
                 if v is None:
                     continue
@@ -773,7 +859,7 @@ def type_problems(plan):
                     continue
                 if not isinstance(v, list) or not all(_is_int(d) for d in v):
                     P.append(f"{where}.{k} must be a list of item ids, such as [1, 3], got {v!r}")
-            if group == "people" and row.get("days_off") is not None:
+            if group == "people" and not kept and row.get("days_off") is not None:
                 v = row["days_off"]
                 if not isinstance(v, list) or not all(isinstance(d, (str, int)) and not isinstance(d, bool) for d in v):
                     P.append(f"{where}.days_off must be a list of dates, such as [2027-02-22], got {v!r}")
@@ -821,12 +907,17 @@ def type_problems(plan):
     return P
 
 
-def load_plan(path, root=None):
+def load_plan(path, root=None, view=None):
     """Read plan.yaml and fill defaults. Returns (plan, problems).
 
     A plan that cannot be read, or whose values have the wrong shape, raises PlanError: no script
     can work from it. Other problems are returned, so the checker can list them all. root is the
-    project folder the paths in the plan are relative to; it is used to check their length."""
+    project folder the paths in the plan are relative to; it is used to check their length.
+
+    view is the layout the caller requires: workspace, released, or None to accept the one the plan
+    declares (a plan with no plan_format is legacy). The stored plan is validated in that view. The
+    returned plan holds no staffing facts when it is migrated: it names people by id only. Use
+    load_plan_with_people for the owner-side calculations that need names, allocation and days off."""
     path = Path(path)
     try:
         raw = load_file(path)
@@ -837,11 +928,20 @@ def load_plan(path, root=None):
         raise PlanError(f"cannot read plan {path}: {e}")
     if not isinstance(raw, dict):
         raise PlanError(f"plan {path} must be a mapping at the top level, such as `project:` followed by its keys")
+    return plan_from_data(raw, path, root, view)
+
+
+def plan_from_data(raw, path="plan.yaml", root=None, view=None):
+    """The part of load_plan that follows reading the file: check the shape, fill the defaults and
+    validate in the view. raw is changed in place, so pass a copy to keep the original. Returns
+    (plan, problems). Used on a projected plan before it is written, so the same rules apply."""
     shape = type_problems(raw)
     if shape:
         shown = "; ".join(shape[:3]) + (f"; and {len(shape) - 3} more" if len(shape) > 3 else "")
         raise PlanError(f"plan {path} cannot be used: {shown}")
     plan = raw
+    modern = is_modern(plan)
+    mode = plan_mode(plan, view)
     proj = plan.get("project") or {}
     plan["project"] = proj
     proj.setdefault("branch", "main")
@@ -849,13 +949,17 @@ def load_plan(path, root=None):
     proj.setdefault("subepic_prefix", "Milestone")
     proj.setdefault("title_format", "{id} {label}")
     proj.setdefault("epic", None)
-    proj.setdefault("ground_truth", "docs/ground-truth/architecture.md")
+    if mode != "released":
+        proj.setdefault("ground_truth", "docs/ground-truth/architecture.md")   # a released plan invents no path
     proj.setdefault("project_title", f"{proj.get('name', 'Plan')} plan")
     proj.setdefault("epic_title", f"{proj.get('name', 'Plan')}, development plan")
-    for k in ("people", "advisors", "tracks", "milestones", "breaks", "checkpoints", "items"):
+    # A migrated plan has no advisors list. A key that is there is reported by validate_plan.
+    for k in ("people", "tracks", "milestones", "breaks", "checkpoints", "items") + (() if modern else ("advisors",)):
         if plan.get(k) is None:
             plan[k] = []
     for person in plan["people"]:
+        if modern:
+            continue   # no staffing defaults: allocation, skills and the rest come from people.yaml
         if person.get("allocation") is None:
             person["allocation"] = 100
         person["skills"] = list(person.get("skills") or [])
@@ -914,14 +1018,32 @@ def load_plan(path, root=None):
         it["_derived_unblocks"] = sorted(derived.get(it.get("id"), []))
         if not it["unblocks"]:
             it["unblocks"] = it["_derived_unblocks"]
-    # banned names come only from the plan: the people and advisors in it, and banned.names.
-    # Full names match in any case. A single part of a name ("Will", "Long") matches only as a
-    # capitalized word, and handles and ids only as written, so the words "will" and "long" in
-    # ordinary prose are not findings. A capitalized name part at the start of a sentence still is.
-    names = [str(n) for n in b["names"] if n]
+    _banned_names(plan)
+    plan["_path"] = str(path)
+    plan["_root"] = str(root) if root is not None else None
+    plan["_modern"] = modern
+    plan["_view"] = mode
+    plan["_people_overlay"] = None   # set by load_plan_with_people on the merged copy only
+    problems = validate_plan(plan, view)
+    if root is not None and not modern and (Path(root) / ".carrydown" / "release-policy.yaml").is_file():
+        # An enrolled repository can never be legacy: deleting project.handling cannot downgrade it.
+        problems.append("project.handling is missing, but this repository has .carrydown/release-policy.yaml "
+                        "(enrolled-project-missing-handling). Restore the handling block")
+    return plan, problems
+
+
+def _banned_names(plan):
+    """Fill plan["_banned_names"] and plan["_banned_exact"], the names the specifications must not hold.
+
+    They come only from the plan: banned.names, and the people and advisors in it. Full names match in
+    any case. A single part of a name ("Will", "Long") matches only as a capitalized word, and handles
+    and ids only as written, so the words "will" and "long" in ordinary prose are not findings. A
+    capitalized name part at the start of a sentence still is. A migrated plan holds ids only, so
+    before people.yaml is merged the check is built from the ids and says so (staffing_loaded)."""
+    names = [str(n) for n in plan["banned"]["names"] if n]
     exact = []
-    for p in list(plan["people"]) + list(plan["advisors"]):
-        if p.get("derived"):
+    for p in list(plan.get("people") or []) + list(plan.get("advisors") or []):
+        if not isinstance(p, dict) or p.get("derived"):
             continue   # placeholder people such as "Engineer 1" are not real names
         parts = []
         if p.get("name"):
@@ -934,12 +1056,327 @@ def load_plan(path, root=None):
                 exact.append(str(handle))
     plan["_banned_names"] = sorted(set(n for n in names if n))
     plan["_banned_exact"] = sorted(set(exact))
-    plan["_path"] = str(path)
-    plan["_root"] = str(root) if root is not None else None
-    return plan, validate_plan(plan)
 
 
-MAX_WEEKS = 520           # ten years of working weeks: a larger target is a typing error
+# ---------------------------------------------------------------------------
+# Staffing: people.yaml in the private workspace, merged for the owner's calculations only
+# ---------------------------------------------------------------------------
+
+def _yaml_error_text(error):
+    """A YAML error as the line it names and nothing else: the reader's own messages quote the text
+    of the line, and in people.yaml that text is a personal fact."""
+    m = re.match(r"line (\d+):", str(error))
+    return f"syntax error near line {m.group(1)}" if m else "syntax error"
+
+
+def people_file_problem(path):
+    """Why path cannot be the people file, or None. The message holds no content of the file."""
+    why = regular_file_problem(path)
+    if why:
+        return why
+    if not exists(path):
+        return f"people file {path} does not exist"
+    return None
+
+
+def load_people_file(path):
+    """Read people.yaml. Returns (doc, problems): doc is {"people": [...], "advisors": [...]} with
+    the text fields as text and the lists as lists. A file that cannot be read raises PlanError with
+    a message that quotes none of its text. Problems name a person by id and a field by key, and
+    never print a value."""
+    why = people_file_problem(path)
+    if why:
+        raise PlanError(why)
+    try:
+        raw = load_file(path)
+    except TextError as e:
+        raise PlanError(f"cannot read people file {path}: {e.msg[len(str(path)) + 1:] if e.msg.startswith(str(path) + ' ') else 'it is not UTF-8 text'}")
+    except YamlError as e:
+        raise PlanError(f"cannot read people file {path}: {_yaml_error_text(e)}")
+    except (OSError, ValueError, RecursionError):
+        raise PlanError(f"cannot read people file {path}")
+    P = []
+    if not isinstance(raw, dict):
+        raise PlanError(f"people file {path} must be a mapping at the top level, such as `people:` followed by its entries")
+    for k in raw:
+        if k not in ("people", "advisors"):
+            P.append(f"people.yaml: unknown key {str(k)[:40]!r}. Use people and advisors")
+    out = {"people": [], "advisors": []}
+    for group in ("people", "advisors"):
+        rows = raw.get(group)
+        if rows is None:
+            continue
+        if not isinstance(rows, list):
+            P.append(f"people.yaml: {group} must be a list of entries starting with -")
+            continue
+        for n, row in enumerate(rows, 1):
+            if not isinstance(row, dict):
+                P.append(f"people.yaml: {group} entry {n} must be a mapping such as `- id: ...`")
+                continue
+            who = row.get("id") if isinstance(row.get("id"), str) and row.get("id") else f"#{n}"
+            clean = {}
+            for k, v in row.items():
+                if v is None:
+                    continue
+                if k in ("id", "name", "github", "track", "assignment_rationale", "start", "role", "note"):
+                    if isinstance(v, (int, float)) and not isinstance(v, bool):
+                        v = str(v)
+                    if not isinstance(v, str):
+                        P.append(f"people.yaml {'person' if group == 'people' else 'advisor'} {who}: {k} has the wrong type")
+                        continue
+                elif k in ("skills", "preferences"):
+                    if isinstance(v, str):
+                        v = [v] if v.strip() else []
+                    elif not isinstance(v, list) or not all(isinstance(x, str) for x in v):
+                        P.append(f"people.yaml person {who}: {k} has the wrong type")
+                        continue
+                elif k == "days_off":
+                    if not isinstance(v, list) or not all(isinstance(x, (str, int)) and not isinstance(x, bool) for x in v):
+                        P.append(f"people.yaml person {who}: days_off has the wrong type")
+                        continue
+                    v = [str(x) for x in v]
+                # allocation stays as written: staffing_problems checks it
+                clean[k] = v
+            if group == "people" and not clean.get("id"):
+                P.append(f"people.yaml: people entry {n} has no id. Each person needs the id used in plan.yaml")
+            out[group].append(clean)
+    return out, P
+
+
+def resolve_people_path(root, people_path=None):
+    """Where the staffing overlay is, as (path, reason). An explicit people_path is used as given. Without
+    one the file is people.yaml in the private workspace of the project at root. There is no other
+    place to look, and never a tracked file of the project: reason is then workspace-unavailable or
+    workspace-inside-repository, and path is None."""
+    if people_path is not None:
+        if not str(people_path).strip():
+            raise PlanError("--people is empty. Give the path of people.yaml, or leave it out to use the private workspace")
+        return Path(people_path).expanduser(), None
+    if root is None:
+        return None, "workspace-unavailable"
+    ws, why = workspace_root(root)
+    if ws is None:
+        return None, why
+    candidate = ws / "people.yaml"
+    if candidate.is_file():
+        return candidate, None
+    return None, "workspace-unavailable"
+
+
+def merge_people(plan, people_path):
+    """Merge people.yaml into a copy of a stored plan, by person id. Returns (merged, problems).
+
+    The merged copy is the calculation view: names, allocation, start dates, days off, skills and the
+    rest, for capacity, dates and names checks on the owner's machine. The stored plan is not
+    changed. The copy is marked with _staffing_merged, and project_released_plan refuses it, so it
+    can never be projected or dumped into a release. merged["_people_overlay"] is the path of the file."""
+    import copy
+    doc, problems = load_people_file(people_path)
+    merged = copy.deepcopy(plan)
+    by_id = {}
+    for entry in doc["people"]:
+        pid = entry.get("id")
+        if pid in by_id:
+            problems.append(f"people.yaml: person {pid} appears more than once")
+        by_id[pid] = entry
+    plan_ids = {p.get("id") for p in merged["people"]}
+    for pid in by_id:
+        if pid and pid not in plan_ids:
+            problems.append(f"people.yaml: person {pid} is not a person in plan.yaml")
+    tracks = {t.get("id"): t for t in merged["tracks"]}
+    for p in merged["people"]:
+        entry = by_id.get(p.get("id"))
+        if entry is None:
+            if not p.get("derived"):
+                problems.append(f"people.yaml has no entry for person {p.get('id')}")
+        else:
+            for k in STAFFING_KEYS:
+                if k in entry:
+                    p[k] = entry[k]
+            track = entry.get("track")
+            wanted = tracks.get(p.get("track")) or {}
+            if track and str(track).casefold() not in {str(p.get("track")).casefold(), str(wanted.get("label") or "").casefold()}:
+                problems.append(f"people.yaml: the track of person {p.get('id')} does not match plan.yaml")
+        if p.get("allocation") is None:
+            p["allocation"] = 100
+        p["skills"] = list(p.get("skills") or [])
+        p["preferences"] = list(p.get("preferences") or [])
+        p["assignment_rationale"] = _text(p.get("assignment_rationale"))
+    merged["advisors"] = doc["advisors"]
+    merged["_people_overlay"] = str(people_path)
+    merged["_staffing_merged"] = True
+    _banned_names(merged)
+    problems += staffing_problems(merged, show_values=False)
+    return merged, problems
+
+
+def load_plan_with_people(path, root=None, people_path=None, view=None):
+    """load_plan, then the staffing overlay merged in for the owner's calculations. Returns
+    (plan, problems). The stored plan is validated first, in its view. When there is no overlay, or
+    the plan is a legacy plan that holds its own staffing, the stored plan comes back unmerged:
+    check plan["_people_overlay"] and staffing_loaded(plan) to know whether capacity, dates and
+    names can be checked. The overlay is people_path when given, else people.yaml in the private
+    workspace of the project at root. A tracked people.yaml is never a fallback."""
+    plan, problems = load_plan(path, root, view)
+    if not plan["_modern"] and people_path is None:
+        return plan, problems
+    found, _ = resolve_people_path(root, people_path)
+    if found is None:
+        return plan, problems
+    merged, more = merge_people(plan, found)
+    return merged, problems + more
+
+
+def downstream_flags(plan):
+    """What may flow downstream from this plan, as {"assignees": bool, "capacity_summary": bool}.
+
+    They are read from project.handling.downstream until the release request carries them (the
+    release work package moves them there). A legacy plan keeps today's behavior: both are true. A
+    migrated plan defaults to false for both, so a number of people or a login reaches GitHub only
+    when the owner said so."""
+    handling = (plan.get("project") or {}).get("handling")
+    down = handling.get("downstream") if isinstance(handling, dict) else None
+    legacy = not plan.get("_modern", is_modern(plan))
+    out = {}
+    for k in ("assignees", "capacity_summary"):
+        v = down.get(k) if isinstance(down, dict) else None
+        out[k] = v if isinstance(v, bool) else legacy
+    return out
+
+
+def assignee_login(plan, item):
+    """The GitHub login of the owner of item, or "". It is read from the plan's own people only: a
+    legacy plan holds the login, and a migrated plan never does, so the GitHub scripts resolve no
+    login for it. Logins for a migrated project are approved values in the release payloads, which
+    the release work package builds from people.yaml."""
+    if not item:
+        return ""
+    for p in plan.get("people") or []:
+        if p.get("id") == item.get("owner"):
+            return str(p.get("github") or "")
+    return ""
+
+
+def payload_assignees(staffed_plan, item):
+    """Logins that may go into an issue payload for item: [] unless the plan's downstream.assignees is
+    true and the staffing overlay is merged. The release work package calls this at prepare."""
+    if not staffed_plan.get("_people_overlay") and staffed_plan.get("_modern"):
+        return []
+    if not downstream_flags(staffed_plan)["assignees"]:
+        return []
+    login = assignee_login(staffed_plan, item)
+    return [login] if login else []
+
+
+# ---------------------------------------------------------------------------
+# The released plan: an allowlist projection of the workspace plan
+# ---------------------------------------------------------------------------
+
+RELEASED_PROJECT_KEYS = ("name", "slug", "id_prefix", "repo", "branch", "epic", "epic_title", "subepic_prefix",
+                         "title_format", "spec_dir", "project_title", "dev_skill", "dev_skill_path")
+RELEASED_SOURCE_KEYS = ("id", "name", "version")
+RELEASED_PERSON_KEYS = ("id", "track", "derived")
+RELEASED_ITEM_KEYS = ("id", "slug", "label", "milestone", "track", "owner", "theme", "complete_by", "size", "depends",
+                      "unblocks", "checkpoint", "external_input", "source_refs", "skill_needs", "state", "ground_truth")
+
+
+def restricted_item(item):
+    """True for a work item the owner marked restricted. It is left out of the released plan."""
+    return isinstance(item, dict) and item.get("restricted") is True
+
+
+def _restricted_hook(workspace_plan, projected, omitted):
+    """The extension point for restricted items. omitted holds the ids of the items left out of
+    projected. A later work package replaces each omitted item that another item depends on with an
+    external item whose only text is the owner's restricted_summary. Today an item that depends on
+    an omitted one makes the released validation report it, which is the safe failure."""
+    return projected
+
+
+def _released_item(plan, item, omitted=()):
+    """One work item of the released plan. A citation written as text (the older ground_truth line) is
+    resolved here, against the workspace plan's sources, into structured source_refs, because the
+    released plan is checked against the approved bundle of each item and has no source paths to read."""
+    import copy
+    out = {k: copy.deepcopy(item[k]) for k in RELEASED_ITEM_KEYS if k in item}
+    if out.get("unblocks"):
+        out["unblocks"] = [u for u in out["unblocks"] if u not in omitted]   # no trace of an omitted item
+    refs = item_source_refs(plan, item)
+    if refs and not item.get("source_refs"):
+        out["source_refs"] = copy.deepcopy(refs)
+        out.pop("ground_truth", None)
+    return out
+
+
+def project_released_plan(workspace_plan):
+    """The released plan for a validated workspace plan: a new object built from an allowlist.
+
+    Only the keys named in the RELEASED_ tuples, and the milestones, tracks, checkpoints and the
+    like, are copied (deeply), so a key added to the workspace plan later is private until someone
+    adds it here. People are reduced to id, track and derived; there is no advisors list; sources
+    to id, name and version; the handling block to the answer to the one question and the policy
+    version; banned.names is left out. Items marked restricted are omitted (restricted_item).
+
+    The input is not changed. The staffing-merged view (load_plan_with_people) is refused: it holds
+    personal facts and must never be serialized for a release. Validate the result with
+    released_plan_problems before writing it into a snapshot."""
+    import copy
+    plan = workspace_plan
+    if plan.get("_staffing_merged") or plan.get("_people_overlay"):
+        raise PlanViewError("the staffing-merged plan cannot be projected. Project the stored workspace plan (schema-view-mismatch)")
+    if not is_modern(plan):
+        raise PlanViewError("only a migrated workspace plan can be projected. Run step 0 of the ground-truth skill first (schema-view-mismatch)")
+    declared = plan.get("_view") or plan.get("plan_view")
+    if declared != "workspace":
+        raise PlanViewError("only a workspace plan can be projected (schema-view-mismatch)")
+    proj = plan["project"]
+    out_project = {k: copy.deepcopy(proj[k]) for k in RELEASED_PROJECT_KEYS if k in proj}
+    handling = proj.get("handling") or {}
+    out_project["handling"] = {k: copy.deepcopy(handling[k]) for k in RELEASED_HANDLING_KEYS if k in handling}
+    banned = plan.get("banned") or {}
+    out_banned = {}
+    if banned.get("words") is not None and list(banned["words"]) != DEFAULT_BANNED_WORDS:
+        out_banned["words"] = list(banned["words"])
+    if banned.get("phrases") is not None and list(banned["phrases"]) != DEFAULT_BANNED_PHRASES:
+        out_banned["phrases"] = list(banned["phrases"])
+    custom = [v for v in (banned.get("vendors") or []) if v not in DEFAULT_BANNED_VENDORS]
+    if custom:
+        out_banned["vendors"] = custom
+    for k in ("dashes", "skip_code_blocks"):
+        if k in banned:
+            out_banned[k] = banned[k]
+    omitted = [it.get("id") for it in plan.get("items") or [] if restricted_item(it)]
+    out = {
+        "plan_format": PLAN_FORMAT,
+        "plan_view": "released",
+        "project": out_project,
+        "sources": [{k: copy.deepcopy(s[k]) for k in RELEASED_SOURCE_KEYS if k in s} for s in plan.get("sources") or []],
+        "conventions": copy.deepcopy(plan.get("conventions") or {}),
+        "tracks": copy.deepcopy(plan.get("tracks") or []),
+        "people": [{k: copy.deepcopy(p[k]) for k in RELEASED_PERSON_KEYS if k in p} for p in plan.get("people") or []],
+        "milestones": copy.deepcopy(plan.get("milestones") or []),
+        "breaks": copy.deepcopy(plan.get("breaks") or []),
+        "checkpoints": copy.deepcopy(plan.get("checkpoints") or []),
+        "items": [_released_item(plan, it, omitted) for it in plan.get("items") or [] if not restricted_item(it)],
+        "external": copy.deepcopy(plan.get("external") or {"items": []}),
+        "limits": copy.deepcopy(plan.get("limits") or {}),
+    }
+    if plan.get("target"):
+        out["target"] = copy.deepcopy(plan["target"])
+    if out_banned:
+        out["banned"] = out_banned
+    return _restricted_hook(plan, out, omitted)
+
+
+def released_plan_problems(projected):
+    """Problems with a projected plan, checked in the released view as the verifier checks it. The
+    projection is copied first. Returns a list of one-line messages, empty when it is valid."""
+    import copy
+    _, problems = plan_from_data(copy.deepcopy(projected), "released plan", None, "released")
+    return problems
+
+
+MAX_WEEKS = 520          # ten years of working weeks: a larger target is a typing error
 MAX_SIZE_DAYS = 260       # a year of working days for one item
 
 
@@ -1076,8 +1513,163 @@ def path_problems(plan):
     return out
 
 
-def validate_plan(plan):
+def _view_problems(plan, view):
+    """Problems with the declared layout: plan_format, plan_view and the handling block's state,
+    against the view the caller requires. A mismatch carries the reason code schema-view-mismatch."""
     P = []
+    modern = is_modern(plan)
+    if not modern:
+        if view is not None:
+            P.append(f"plan_format: {PLAN_FORMAT} and plan_view: {view} are required for the {view} view, and project.handling "
+                     "must say state: migrated (schema-view-mismatch). Run step 0 of the ground-truth skill to migrate the plan")
+        return P
+    fmt = plan.get("plan_format")
+    if fmt is None:
+        P.append(f"plan_format: {PLAN_FORMAT} is required (a migrated plan declares its layout)")
+    elif not _is_int(fmt) or fmt != PLAN_FORMAT:
+        P.append(f"plan_format must be {PLAN_FORMAT}, got {fmt!r}. This script does not know that layout")
+    declared = plan.get("plan_view")
+    if declared is None:
+        P.append("plan_view is required: workspace or released")
+    elif declared not in PLAN_VIEWS:
+        P.append(f"plan_view must be workspace or released, got {declared!r}")
+    elif view is not None and declared != view:
+        P.append(f"plan_view is {declared}, but this check needs the {view} view (schema-view-mismatch)")
+    return P
+
+
+def _handling_problems(plan, mode):
+    """Problems with project.handling, the owner's answer to the one question. Values are never
+    echoed except the fixed vocabulary words."""
+    P = []
+    proj = plan["project"]
+    h = proj.get("handling")
+    modern = is_modern(plan)
+    if h is None:
+        if modern:
+            P.append("project.handling is required in a migrated plan: policy_version, repo_audience_approved and state")
+        return P
+    if not isinstance(h, dict):
+        return P   # reported by type_problems
+    allowed = RELEASED_HANDLING_KEYS if mode == "released" else HANDLING_KEYS
+    for k in h:
+        if k in HANDLING_KEYS and k not in allowed:
+            P.append(f"project.handling.{k} is not allowed in a released plan. It stays in the private workspace plan")
+        elif k not in HANDLING_KEYS:
+            P.append(f"project.handling: unknown key {str(k)[:40]!r}")
+    if "policy_version" not in h:
+        P.append("project.handling.policy_version is required")
+    elif not _is_int(h["policy_version"]) or h["policy_version"] != 1:
+        P.append("project.handling.policy_version must be 1")
+    approved = h.get("repo_audience_approved")
+    if "repo_audience_approved" not in h:
+        P.append("project.handling.repo_audience_approved is required: true when everyone who can read the repository may see all the documents and staffing notes, else false")
+    elif not isinstance(approved, bool):
+        P.append("project.handling.repo_audience_approved must be true or false")
+    state = h.get("state")
+    if state is None:
+        P.append("project.handling.state is required: migrated")
+    elif state not in HANDLING_STATES:
+        P.append("project.handling.state must be legacy or migrated")
+    elif modern and state != "migrated":
+        P.append("project.handling.state must be migrated in a plan_format 2 plan")
+    elif not modern and state == "migrated":
+        P.append(f"plan_format: {PLAN_FORMAT} and plan_view are required when project.handling.state is migrated")
+    if mode != "released":
+        approvers = h.get("approvers")
+        if approvers is not None:
+            if not isinstance(approvers, list) or not all(isinstance(x, str) and _LOGIN_RE.match(x) for x in approvers):
+                P.append("project.handling.approvers must be a list of GitHub logins")
+        if approved is False and not approvers:
+            P.append("project.handling.approvers needs at least one GitHub login when repo_audience_approved is false")
+        retain = h.get("retain_raw_inputs")
+        if retain is not None and retain not in RETAIN_VALUES:
+            P.append("project.handling.retain_raw_inputs must be keep or delete-after-release")
+        down = h.get("downstream")
+        if isinstance(down, dict):
+            for k, v in down.items():
+                if k not in DOWNSTREAM_FLAGS:
+                    P.append(f"project.handling.downstream: unknown key {str(k)[:40]!r}")
+                elif k == "evidence":
+                    if v not in ("synthetic-only", "approved"):
+                        P.append("project.handling.downstream.evidence must be synthetic-only or approved")
+                elif not isinstance(v, bool):
+                    P.append(f"project.handling.downstream.{k} must be true or false")
+    grace = h.get("offline_grace_days")
+    if grace is not None and (not _is_int(grace) or not 0 <= grace <= 365):
+        P.append("project.handling.offline_grace_days must be a whole number of days from 0 to 365")
+    edits = h.get("engineer_edits")
+    if edits is not None and edits not in ENGINEER_EDITS:
+        P.append("project.handling.engineer_edits must be allowed or request-only")
+    return P
+
+
+def _people_key_problems(plan):
+    """Staffing keys that a migrated plan must not hold: people[] fields and a top-level advisors
+    list. Locations are people:<id>:<field>, never a value."""
+    P = []
+    for n, p in enumerate(plan.get("people") or [], 1):
+        if not isinstance(p, dict):
+            continue
+        who = p.get("id") if isinstance(p.get("id"), str) and p.get("id") else f"#{n}"
+        for k in STAFFING_KEYS:
+            if k in p:
+                P.append(f"people:{who}:{k} is a staffing field. Keep it in people.yaml in the private workspace, not in plan.yaml")
+    if "advisors" in plan:
+        P.append("advisors is a staffing field. Keep advisors in people.yaml in the private workspace, not in plan.yaml")
+    return P
+
+
+def staffing_problems(plan, show_values=True):
+    """Problems with the facts that describe availability: start dates, days off and allocation, and
+    an item due on its owner's day off. A legacy plan holds them itself. A migrated plan holds them
+    in people.yaml, so this runs on the merged view. show_values False keeps the values out of the
+    messages, for people.yaml."""
+    P = []
+
+    def got(v):
+        return f", got {v!r}" if show_values else ""
+
+    for p in plan["people"]:
+        if p.get("start") is not None:
+            if not _is_date(p["start"]):
+                P.append(f"people: {p.get('id')} start is not a date (use YYYY-MM-DD)" + (f": {p['start']!r}" if show_values else ""))
+            elif _is_weekend(p["start"]):
+                P.append(f"people: {p.get('id')} start " + (f"{p['start']} " if show_values else "") + "is a weekend")
+        if p.get("days_off") is not None and not isinstance(p.get("days_off"), list):
+            P.append(f"people: {p.get('id')} days_off must be a list of dates, such as [2027-02-22]")
+        for d in (p.get("days_off") if isinstance(p.get("days_off"), list) else []):
+            if not _is_date(d):
+                P.append(f"people: {p.get('id')} days_off has a bad date" + (f" {d!r}" if show_values else ""))
+            elif _is_weekend(d):
+                P.append(f"people: {p.get('id')} day off " + (f"{d} " if show_values else "") + "is a weekend")
+    for p in plan["people"]:
+        al = p.get("allocation")
+        if not isinstance(al, int) or isinstance(al, bool) or not (1 <= al <= 100):
+            P.append(f"people: {p.get('id')} allocation must be a whole percent from 1 to 100" + got(al))
+    people = {p.get("id"): p for p in plan["people"]}
+    for it in plan["items"]:
+        own = people.get(it.get("owner"))
+        if own and it.get("complete_by") and _is_date(it["complete_by"]) and it["complete_by"] in [str(x) for x in (own.get("days_off") or [])]:
+            P.append(f"item {it.get('id')}: complete_by " + (f"{it['complete_by']} " if show_values else "") + f"is a day off for {own['id']}")
+    return P
+
+
+def validate_plan(plan, view=None):
+    """Problems with a loaded plan, as a list of one-line messages.
+
+    view selects the rules. workspace is the owner's working plan. released is the exported plan: it
+    rejects personal staffing, private source metadata and original or rendering paths, and it needs
+    none of them. None keeps the legacy rules for a plan that has not been migrated, and follows the
+    plan's own plan_view for a migrated one. A migrated plan never carries staffing facts, so
+    capacity and day-off checks run on the merged view, through staffing_problems."""
+    P = []
+    mode = plan_mode(plan, view)
+    modern = is_modern(plan)
+    released = mode == "released"
+    P += _view_problems(plan, view)
+    if modern:
+        P += _people_key_problems(plan)
     # Detect collisions before any dictionary below can hide a record.
     for group, rows, key in (("tracks", plan["tracks"], "id"),
                               ("track labels", plan["tracks"], "label"),
@@ -1110,14 +1702,20 @@ def validate_plan(plan):
     if tf:
         P.append(tf)
     P += path_problems(plan)
+    P += _handling_problems(plan, mode)
     if proj.get("repo") and not repo_ok(proj["repo"]):
         P.append(f"project.repo must look like owner/name, got {proj['repo']!r}")
+    # A released plan needs no original and no rendering: project.ground_truth is optional there and
+    # is never an input to citation checks, so no default path is invented for it.
     for k, example in (("spec_dir", "docs/spec"), ("ground_truth", "docs/ground-truth/architecture.md")):
         v = str(proj.get(k) or "")
+        if released and k == "ground_truth" and k not in proj:
+            continue
         if not v.strip():
             P.append(f"project.{k} is empty. Leave the line out for the default {example}, or give a path")
         elif not relative_inside(v):
             P.append(f"project.{k} must be a path inside the project, such as {example}, got {v!r}")
+    handling = proj.get("handling") if isinstance(proj.get("handling"), dict) else {}
     source_ids = set()
     for num, source in enumerate(plan.get("sources") or [], 1):
         sid, path, source_path = source.get("id", ""), source.get("path", ""), source.get("source_path", "")
@@ -1130,6 +1728,16 @@ def validate_plan(plan):
         source_ids.add(sid)
         if not source.get("name"):
             P.append(f"sources entry {num}: name is required")
+        label = sid if isinstance(sid, str) and sid else f"#{num}"
+        if released:
+            # Only the id, the owner's display name and the version are exported. Where the original
+            # or the rendering lives, how the owner classified it and its digests stay private.
+            for k in PRIVATE_SOURCE_KEYS:
+                if k in source:
+                    P.append(f"sources:{label}:{k} is not allowed in a released plan. It stays in the private workspace plan")
+            if not str(source.get("version") or "").strip():
+                P.append(f"sources:{label}:version is required in a released plan")
+            continue
         status = source.get("status") or "reviewed"
         if status not in ("reviewed", "unreadable"):
             P.append(f"sources entry {num}: status must be reviewed or unreadable, got {status!r}")
@@ -1141,8 +1749,22 @@ def validate_plan(plan):
             P.append(f"sources entry {num}: limit is required when status is unreadable")
         if source_path and not relative_inside(source_path):
             P.append(f"sources entry {num}.source_path must be inside the project, got {source_path!r}")
+        if modern:
+            cls = source.get("classification")
+            if cls is None:
+                P.append(f"sources:{label}:classification is required: repo-readers, restricted or public")
+            elif cls not in CLASSIFICATIONS:
+                P.append(f"sources:{label}:classification must be repo-readers, restricted or public, got {str(cls)[:40]!r}")
+            elif cls == "restricted" and handling.get("repo_audience_approved") is True:
+                P.append(f"sources:{label}: classification is restricted, but project.handling.repo_audience_approved is true. "
+                         "Change the answer to the one question, or classify the source repo-readers")
+            for k in ("content_sha256", "rendering_sha256"):
+                if source.get(k) is not None and not (isinstance(source[k], str) and _HEX64_RE.match(source[k])):
+                    P.append(f"sources:{label}:{k} must be 64 lowercase hexadecimal characters")
     reviewed_paths = {s.get("path") for s in plan.get("sources") or [] if (s.get("status") or "reviewed") == "reviewed"}
-    if plan.get("sources") and not reviewed_paths:
+    if released:
+        pass   # source paths are not exported, so there is nothing to match project.ground_truth against
+    elif plan.get("sources") and not reviewed_paths:
         P.append("sources must include at least one reviewed entry. Continue with every readable source, but stop when none can be processed")
     elif plan.get("sources") and proj.get("ground_truth") not in reviewed_paths:
         P.append("project.ground_truth must match the path of one reviewed sources entry")
@@ -1172,23 +1794,14 @@ def validate_plan(plan):
     if not tracks:
         P.append("tracks: at least one track is required")
     people = {p.get("id"): p for p in plan["people"]}
-    for p in plan["people"]:
-        if not p.get("id") or not p.get("name"):
-            P.append(f"people: each person needs id and name ({p})")
+    for n, p in enumerate(plan["people"], 1):
+        # A migrated plan names a person by id only: the name is a staffing field kept in people.yaml.
+        if not p.get("id") or (not modern and not p.get("name")):
+            P.append(f"people: each person needs id{'' if modern else ' and name'} (entry {n})")
         if p.get("track") not in tracks:
             P.append(f"people: {p.get('id')} has unknown track {p.get('track')!r}")
-        if p.get("start") is not None:
-            if not _is_date(p["start"]):
-                P.append(f"people: {p.get('id')} start is not a date (use YYYY-MM-DD): {p['start']!r}")
-            elif _is_weekend(p["start"]):
-                P.append(f"people: {p.get('id')} start {p['start']} is a weekend")
-        if p.get("days_off") is not None and not isinstance(p.get("days_off"), list):
-            P.append(f"people: {p.get('id')} days_off must be a list of dates, such as [2027-02-22]")
-        for d in (p.get("days_off") if isinstance(p.get("days_off"), list) else []):
-            if not _is_date(d):
-                P.append(f"people: {p.get('id')} days_off has a bad date {d!r}")
-            elif _is_weekend(d):
-                P.append(f"people: {p.get('id')} day off {d} is a weekend")
+    if not modern:
+        P += staffing_problems(plan)
     for t in plan["tracks"]:
         if not t.get("id") or not t.get("label"):
             P.append(f"tracks: each track needs id and label ({t})"[:300])
@@ -1197,12 +1810,10 @@ def validate_plan(plan):
         if not _one_line(t.get("label")):
             P.append(f"tracks: {t.get('id')} label must be one line")
     for p in plan["people"]:
-        al = p.get("allocation")
-        if not isinstance(al, int) or isinstance(al, bool) or not (1 <= al <= 100):
-            P.append(f"people: {p.get('id')} allocation must be a whole percent from 1 to 100, got {al!r}")
-    for p in plan["people"]:
         if "derived" in p and not isinstance(p["derived"], bool):
             P.append(f"people: {p.get('id')} derived must be true or false")
+    if released and plan["banned"].get("names"):
+        P.append("banned:names is not allowed in a released plan. Names to keep out of the specifications stay in people.yaml in the private workspace")
     if isinstance(proj.get("epic_title"), str) and len(proj["epic_title"]) > MAX_TITLE:
         P.append(f"project.epic_title is {len(proj['epic_title'])} characters. GitHub takes at most {MAX_TITLE}")
     tg = plan.get("target")
@@ -1339,9 +1950,17 @@ def validate_plan(plan):
                 P.append(f"item {iid}: complete_by {it['complete_by']} is outside milestone {it['milestone']} ({ms['start']} to {ms['end']})")
             if d.weekday() >= 5:
                 P.append(f"item {iid}: complete_by {it['complete_by']} is a weekend")
-            own = people.get(it.get("owner"))
-            if own and it["complete_by"] in [str(x) for x in (own.get("days_off") or [])]:
-                P.append(f"item {iid}: complete_by {it['complete_by']} is a day off for {own['id']}")
+        if modern and "restricted" in it:
+            # Restricted items (a later work package) are omitted from the exported plan, so the flag
+            # and the owner's summary are never exported. The summary is the owner's text for a placeholder.
+            if released:
+                P.append(f"items:{iid}:restricted is not allowed in a released plan. Restricted items are omitted from it")
+            elif not isinstance(it["restricted"], bool):
+                P.append(f"items:{iid}:restricted must be true or false")
+            elif it["restricted"] and not str(it.get("restricted_summary") or "").strip():
+                P.append(f"items:{iid}:restricted_summary is required when the item is restricted")
+        if released and "restricted_summary" in it:
+            P.append(f"items:{iid}:restricted_summary is not allowed in a released plan")
         if it.get("size") and not re.search(r"about \d+(?:\.\d+)?", str(it["size"])):
             P.append(f"item {iid}: size must say how many days, as in \"Medium, about 4 days\", got {it['size']!r}")
         elif sized_days(it) > MAX_SIZE_DAYS:
@@ -1491,8 +2110,8 @@ def ground_truth_sources(plan):
     return [{
         "id": "ground-truth",
         "name": "Ground truth",
-        "source_path": plan["project"]["ground_truth"],
-        "path": plan["project"]["ground_truth"],
+        "source_path": plan["project"].get("ground_truth", ""),
+        "path": plan["project"].get("ground_truth", ""),
         "use": "Full specification. Section numbers in the work item files refer to it.",
         "status": "reviewed",
     }]

@@ -3,6 +3,12 @@
 # GitHub scripts read it. See templates/plan.yaml in the repository for the annotated version.
 # The rationale, joint_demonstration and order_rationale lines say why the plan is composed the
 # way it is. The scaffold copies them into milestone.md and the README, where anyone can argue.
+# Staffing (names, logins, skills, preferences, allocation, start dates and days off) is not kept
+# here. The people list holds ids and tracks only. The sample keeps its fictional staffing in
+# people.yaml; a real project keeps that file in its private workspace.
+
+plan_format: 2
+plan_view: workspace
 
 project:
   name: "Expense approvals"
@@ -19,6 +25,15 @@ project:
   project_title: "Expense approvals plan"
   dev_skill: expense-approvals-dev
   dev_skill_path: docs/dev/skills/expense-approvals-dev
+  handling:                                  # the owner's answer to the one question, asked in step 0
+    policy_version: 1
+    repo_audience_approved: true             # everyone who can read this repository may see all the documents
+    approvers: []                            # empty means the owner
+    retain_raw_inputs: keep
+    state: migrated
+    downstream:                              # moves into the release request in a later change
+      capacity_summary: true                 # the Epic comment says how many people each track has
+      assignees: false
 
 sources:
   - id: architecture
@@ -29,6 +44,7 @@ sources:
     status: reviewed
     limit: ""
     use: "Full specification. Section numbers in the work item files refer to it."
+    classification: repo-readers
 
 conventions:
   test_command: "npm test"
@@ -50,31 +66,11 @@ tracks:
     skill_needs: ["Accessible web interfaces", "Client integration", "Notifications"]
     order_rationale: "In the first three days the Experience engineer reviews the draft contract with the Workflow engineer, so nobody is idle in the first week. The report form starts the day after the contract lands and closes on 2027-02-10, two days before the first demonstration. The inbox needs the form and the routing steps, and closes on 2027-03-03. Notifications and delegates need the inbox decisions and the GOV-1.4 delegate rule, so they come third, and release readiness comes last because it rehearses everything. The theme changes twice, to the notification worker and then to the release, each at a milestone boundary and never between adjacent days. Four of the five items on the critical path sit on this track at 60 percent allocation: if this engineer is away, the Workflow engineer takes the delegate screen of WI-08, whose rules are already theirs."
 
-people:
+people:                                  # ids and tracks only. Names and personal facts are in people.yaml
   - id: tamsin
-    name: "Tamsin Hale"
-    github: ""
     track: workflow
-    skills: ["Python services", "PostgreSQL", "Workflow design"]
-    preferences: ["Service contracts", "Policy enforcement"]
-    assignment_rationale: "The workflow track best matches the supplied service, data and workflow skills and the preference for policy work."
-    allocation: 100
-    start: 2027-02-01
-    days_off: [2027-02-22]
   - id: idris
-    name: "Idris Okoye"
-    github: ""
     track: experience
-    skills: ["TypeScript", "Accessible web interfaces", "Notification flows"]
-    preferences: ["User-facing workflows", "Integration demonstrations"]
-    assignment_rationale: "The experience track best matches the supplied interface and notification skills and the preference for user-facing work."
-    allocation: 60
-    start: 2027-02-01
-    days_off: [2027-03-08]
-
-advisors:
-  - name: "Noor Castellan"
-    note: "Finance policy advisor. Reviews the rules and the export format."
 
 milestones:
   - number: 1

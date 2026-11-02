@@ -1,11 +1,15 @@
 # Test fixture input: who does the work. All names are fictional.
 # The ids match the ids in docs/spec/plan.yaml. The shape follows sample/expense-approvals/people.yaml.
 # In a migrated project this file lives in the private workspace and never in the repository.
+# The plan holds ids and tracks only. Load this file with check_specs.py --people to check capacity.
 people:
   - id: tamsin
     name: "Tamsin Hale"
     github: ""                     # GitHub login for issue assignment. Empty in the fixture.
     track: Workflow                # the lane this person owns
+    skills: ["Python services", "PostgreSQL", "Workflow design"]
+    preferences: ["Service contracts", "Policy enforcement"]
+    assignment_rationale: "The workflow track best matches the supplied service, data and workflow skills and the preference for policy work."
     allocation: 100                # percent of working time on this plan
     start: 2027-02-01
     days_off: [2027-02-22]
@@ -13,9 +17,12 @@ people:
     name: "Idris Okoye"
     github: ""
     track: Experience
+    skills: ["TypeScript", "Accessible web interfaces", "Notification flows"]
+    preferences: ["User-facing workflows", "Integration demonstrations"]
+    assignment_rationale: "The experience track best matches the supplied interface and notification skills and the preference for user-facing work."
     allocation: 60                 # works on this plan three days in five
     start: 2027-02-01
     days_off: [2027-03-08]
 advisors:                          # advise and review. Own no work items.
   - name: "Noor Castellan"
-    role: "Finance policy advisor. Reviews the rules and the export format."
+    note: "Finance policy advisor. Reviews the rules and the export format."

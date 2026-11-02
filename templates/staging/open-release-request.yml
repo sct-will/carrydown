@@ -1,0 +1,74 @@
+# Opens a pull request for each release request branch that has none. Copy this file to
+# .github/workflows/open-release-request.yml in the private staging repository, on its default
+# branch. Carrydown pushes a candidate to a branch named request/<id> (a release request) or
+# state/<id> (a withdrawal or a replacement), where <id> is 64 lowercase hexadecimal characters.
+# This workflow opens the pull request, so the plan owner is not its author and can approve it.
+#
+# What this workflow never does
+#   It never checks out the repository, never reads a file of a candidate branch and never runs
+#   anything from one. Branch names are listed as data and are matched against a fixed pattern
+#   before they are used. Only the default branch runs it (scheduled workflows do), so a
+#   candidate cannot change what runs. The token can read contents and write pull requests, and
+#   nothing else.
+#
+# Install it once, have an administrator review it, and do not edit it afterward: the
+# organization pins this file by its digest. Under Settings, Actions, General, allow GitHub
+# Actions to create pull requests.
+#
+# The schedule is a requested interval of five minutes, not a promise. GitHub can delay or drop
+# scheduled runs. Run the workflow by hand with "Run workflow" to open a pending request sooner.
+name: Open release requests
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: open-release-requests
+  cancel-in-progress: false
+
+jobs:
+  open:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Open a pull request for each request branch that has none
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          base=$(gh api "repos/${REPO}" --jq '.default_branch')
+          refs=$( { gh api --paginate "repos/${REPO}/git/matching-refs/heads/request/" --jq '.[].ref';
+                    gh api --paginate "repos/${REPO}/git/matching-refs/heads/state/" --jq '.[].ref'; } )
+          opened=0
+          for ref in ${refs}; do
+            branch="${ref#refs/heads/}"
+            if [[ ! "${branch}" =~ ^(request|state)/[0-9a-f]{64}$ ]]; then
+              echo "::notice::skipped a branch whose name is not a release request id"
+              continue
+            fi
+            kind="${branch%%/*}"
+            id="${branch#*/}"
+            existing=$(gh api --method GET "repos/${REPO}/pulls" -f state=all -f head="${OWNER}:${branch}" --jq 'length')
+            if [[ "${existing}" != "0" ]]; then
+              continue
+            fi
+            if [[ "${kind}" == "request" ]]; then
+              title="Release request ${id}"
+            else
+              title="State change ${id}"
+            fi
+            gh api --method POST "repos/${REPO}/pulls" \
+              -f title="${title}" -f head="${branch}" -f base="${base}" \
+              -f body="Review the final revision of this candidate. Approve it only if you mean to approve exactly this content for exactly this audience. This pull request was opened by the staging workflow, so the plan owner is not its author." \
+              --jq '.number' > /dev/null
+            opened=$((opened + 1))
+          done
+          echo "opened ${opened} pull request(s)"
