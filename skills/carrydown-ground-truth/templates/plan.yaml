@@ -12,6 +12,14 @@
 # The plan records why it is composed the way it is: a rationale and a joint demonstration
 # per milestone, and an order rationale per track. The scaffold copies them into milestone.md
 # and the README, so anyone can argue with them. Write no names of people in them.
+#
+# Staffing stays out of this file. A name, a GitHub login, skills, preferences, an assignment
+# rationale, days off, a percent allocation and a start date are personal facts. The interview
+# writes them to people.yaml in your private workspace (workspace.py init creates it), and the
+# checker merges that file by id when you run it. The people list below holds ids and tracks only.
+
+plan_format: 2                           # the layout of this file. 2 is the migrated layout
+plan_view: workspace                     # workspace is your working plan. The exported plan is released
 
 project:
   name: "Your project name"              # shown in titles and the README
@@ -28,6 +36,13 @@ project:
   project_title: "Your project plan"     # name of the GitHub Project (v2) board
   dev_skill: your-project-dev            # name of the generated engineers' skill
   dev_skill_path: docs/dev/skills/your-project-dev
+  handling:                              # your answer to the one question in step 0 of the interview
+    policy_version: 1
+    repo_audience_approved: true         # true: everyone who can read the repository may see all the documents
+                                         # and your staffing notes. false: some documents are restricted
+    approvers: []                        # GitHub logins that may approve disclosure. Empty means you. Needed when false
+    retain_raw_inputs: keep              # keep, or delete-after-release
+    state: migrated
 
 sources:                                 # rendered documents, highest precedence first
   - id: architecture                     # stable id used by work item source_refs
@@ -38,6 +53,8 @@ sources:                                 # rendered documents, highest precedenc
     status: reviewed                      # reviewed or unreadable
     limit: ""                            # explain missing context when status is unreadable
     use: "Architecture and system requirements."
+    classification: repo-readers          # repo-readers: everyone who can read the repository may see it.
+                                         # restricted: not approved for them. public: may be published anywhere
   # Add requirements, governance rules, development standards and company context here.
   # When sources disagree, the earlier source wins unless the plan owner records another decision.
 
@@ -62,33 +79,15 @@ tracks:                                  # parallel lanes of work, usually one p
     skill_needs: ["Accessible web interfaces"]
     order_rationale: "The screen starts the day after the contract lands and closes before the demonstration, so there is slack before it."
 
-people:                                  # OPTIONAL. People who own items. Names stay out of specs.
+people:                                  # OPTIONAL. People who own items, by id and track only.
                                          # Add `derived: true` to a placeholder such as "Engineer 1" that the planning
                                          # step proposed because you gave no people. Replace it when you know who.
-  - id: alex                             # short handle used in this file
-    name: "Alex Quill"
-    github: ""                           # GitHub login for assignment, or empty
+                                         # Names, logins, skills, preferences, allocation, start dates and days off
+                                         # go in people.yaml in your private workspace, with the same ids.
+  - id: alex                             # short handle used in this file and in people.yaml
     track: backend
-    skills: ["Python", "Service APIs", "PostgreSQL"]  # OPTIONAL. Text or a list of text.
-    preferences: ["Contract and integration work"]      # OPTIONAL. Soft guidance, never a prerequisite.
-    assignment_rationale: "Best available match for the backend track."
-    allocation: 100                      # percent of working time on this plan, 1 to 100. 100 if omitted
-    start: 2027-01-04
-    days_off: []                         # list of dates
   - id: sam
-    name: "Sam Marlow"
-    github: ""
     track: frontend
-    skills: ["TypeScript", "Accessible web interfaces"]
-    preferences: ["User-facing workflow work"]
-    assignment_rationale: "Best available match for the frontend track."
-    allocation: 100
-    start: 2027-01-04
-    days_off: []
-
-advisors:                                # people who advise and own no items
-  - name: "Jordan Pike"
-    note: "Reviews contracts and security."
 
 milestones:                              # one per work unit. A work unit has a custom length.
   - number: 1

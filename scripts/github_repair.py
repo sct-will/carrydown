@@ -35,8 +35,9 @@ def entries(plan):
 
 
 def login(plan, item):
-    people = {p["id"]: p for p in plan["people"]}
-    return str(people.get(item.get("owner"), {}).get("github") or "") if item else ""
+    """The login a repair would assign. It comes from L.assignee_login: a migrated plan holds no
+    login, so a repair never resolves one. The release work package supplies approved logins."""
+    return L.assignee_login(plan, item)
 
 
 def issue_patch(before, plan, key, live):

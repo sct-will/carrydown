@@ -101,8 +101,10 @@ def recover(raw, root, decisions=None):
             if len(candidates) < 2:
                 continue
             for row in candidates:
-                row["id"] = unique(row.get(name, group), used)
-                actions.append(f"{group}: {old!r} -> {row['id']!r} for {row.get(name)!r}")
+                # a migrated plan holds no names: the old id is the only text there is to build the new one from
+                basis = row.get(name) or old or group
+                row["id"] = unique(basis, used)
+                actions.append(f"{group}: {old!r} -> {row['id']!r} for {basis!r}")
             refs = [(f"items.{it.get('id')}.{ 'track' if group == 'tracks' else 'owner'}", it,
                      "track" if group == "tracks" else "owner") for it in plan.get("items", [])]
             if group == "tracks":

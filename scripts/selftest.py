@@ -160,11 +160,11 @@ def citations(tmp):
     (gov.parent / "governance.index.txt").write_text("3:## 1 Security\n7:## 2 Accessibility\n", encoding="utf-8")
     plan = multi / "docs/spec/plan.yaml"
     body = plan.read_text(encoding="utf-8")
-    body = body.replace('    use: "Full specification. Section numbers in the work item files refer to it."',
-                        '    use: "Full specification. Section numbers in the work item files refer to it."\n'
+    body = body.replace('    use: "Full specification. Section numbers in the work item files refer to it."\n    classification: repo-readers',
+                        '    use: "Full specification. Section numbers in the work item files refer to it."\n    classification: repo-readers\n'
                         '  - id: governance\n    name: "Company governance"\n    source_path: docs/source/governance.pdf\n'
                         '    path: docs/ground-truth/governance.md\n    version: "1"\n    status: reviewed\n    limit: ""\n'
-                        '    use: "Company rules."')
+                        '    use: "Company rules."\n    classification: repo-readers')
     body = body.replace('    ground_truth: "Sections 3.1, 3.2, 5.1, 7.1"',
                         '    source_refs:\n      - source: architecture\n        sections: "3.1, 3.2, 5.1, 7.1"\n'
                         '      - source: governance\n        sections: "1, 2"')
@@ -184,10 +184,10 @@ def citations(tmp):
     pplan = partial / "docs/spec/plan.yaml"
     (partial / "docs/source").mkdir()
     (partial / "docs/source/regional.png").write_bytes(b"unreadable fixture")
-    pbody = pplan.read_text(encoding="utf-8").replace('    use: "Full specification. Section numbers in the work item files refer to it."',
-        '    use: "Full specification. Section numbers in the work item files refer to it."\n'
+    pbody = pplan.read_text(encoding="utf-8").replace('    use: "Full specification. Section numbers in the work item files refer to it."\n    classification: repo-readers',
+        '    use: "Full specification. Section numbers in the work item files refer to it."\n    classification: repo-readers\n'
         '  - id: regional-addendum\n    name: "Regional addendum"\n    source_path: docs/source/regional.png\n'
-        '    version: "unknown"\n    status: unreadable\n    limit: "Image text could not be read reliably."\n    use: "Regional exceptions."')
+        '    version: "unknown"\n    status: unreadable\n    limit: "Image text could not be read reliably."\n    use: "Regional exceptions."\n    classification: repo-readers')
     pplan.write_text(pbody, encoding="utf-8")
     step("an unreadable source is recorded while readable sources continue", [PY, "scripts/check_specs.py", "--root", str(partial)], contains=["15 files clean, 0 with findings"])
 
@@ -211,15 +211,12 @@ def error_paths(tmp, plan_text):
         path.write_bytes((b"\xef\xbb\xbf" if bom else b"") + text.encode("utf-8"))
         return str(path)
     chk = [PY, "scripts/check_specs.py", "--root", SAMPLE]
+    people_text = (ROOT / SAMPLE / "people.yaml").read_text(encoding="utf-8")
     bad = {
         "unknown milestone": (plan_text.replace("    milestone: 5\n", "    milestone: 7\n"), "item 11: unknown milestone 7"),
         "non-ISO date": (plan_text.replace("complete_by: 2027-02-19", "complete_by: 24 Feb 2027"), "complete_by is not a date: '24 Feb 2027'"),
         "short date": (plan_text.replace("complete_by: 2027-02-19", "complete_by: 2027-2-24"), "complete_by is not a date: '2027-2-24'"),
         "impossible date": (plan_text.replace("complete_by: 2027-02-19", "complete_by: 2027-02-30"), "complete_by is not a date: '2027-02-30'"),
-        "allocation 60%": (plan_text.replace("allocation: 60", 'allocation: "60%"'), "idris allocation must be a whole percent from 1 to 100, got '60%'"),
-        "allocation full": (plan_text.replace("allocation: 60", "allocation: full"), "idris allocation must be a whole percent from 1 to 100, got 'full'"),
-        "weekend start": (plan_text.replace("    start: 2027-02-01\n    days_off: [2027-02-22]", "    start: 2027-01-31\n    days_off: [2027-02-22]"), "tamsin start 2027-01-31 is a weekend"),
-        "weekend day off": (plan_text.replace("days_off: [2027-03-08]", "days_off: [2027-03-06]"), "idris day off 2027-03-06 is a weekend"),
         "quote inside a quoted value": (plan_text.replace('name: "Expense approvals"', 'name: "Expense "approvals""'), "bad double-quoted value"),
     }
     for label, (text, want) in bad.items():
@@ -228,6 +225,17 @@ def error_paths(tmp, plan_text):
         step(f"plan with {label}: one line, no traceback", chk + ["--plan", v], expect=2 if unreadable else 1, contains=[want])
         step(f"plan with {label}: --report says so first", chk + ["--plan", v, "--report"], expect=2 if unreadable else 1,
              contains=[want] if unreadable else ["plan.yaml has problems:", want])
+    # staffing is in people.yaml, so these mistakes are found when the owner loads it. The message names the person and the field, not the value.
+    badpeople = {
+        "allocation 60%": (people_text.replace("allocation: 60", 'allocation: "60%"'), "idris allocation must be a whole percent from 1 to 100", "60%"),
+        "allocation full": (people_text.replace("allocation: 60", "allocation: full"), "idris allocation must be a whole percent from 1 to 100", "full"),
+        "weekend start": (people_text.replace("    start: 2027-02-01\n    days_off: [2027-02-22]", "    start: 2027-01-31\n    days_off: [2027-02-22]"), "tamsin start is a weekend", "2027-01-31"),
+        "weekend day off": (people_text.replace("days_off: [2027-03-08]", "days_off: [2027-03-06]"), "idris day off is a weekend", "2027-03-06"),
+    }
+    for label, (text, want, value) in badpeople.items():
+        pv = variant("people-" + label.replace(" ", "-").replace("%", "pct"), text)
+        step(f"people.yaml with {label}: one line, no value printed", chk + ["--people", pv], expect=1, contains=[want], absent=("Traceback", f"got '{value}'", f" {value} "))
+        step(f"people.yaml with {label}: --report says so first", chk + ["--people", pv, "--report"], expect=1, contains=["plan.yaml has problems:", want])
     step("plan with a byte order mark is read", chk + ["--plan", variant("bom", plan_text, bom=True)], contains=["0 with findings"])
     named = plan_text.replace('name: "Expense approvals"', 'name: "Expense approvals \u2264 \u2192 \u4e2d"')
     step("a console that cannot show a character does not crash (cp1252)", chk + ["--plan", variant("enc", named), "--report"],
@@ -318,8 +326,8 @@ def composition(tmp, plan_text):
     step("the rationale refresh is stable on a second run", run, contains=["0 file(s) written"])
 
 
-def planning_review(chk, variant, plan_text):
-    """The planning review in the checker and in --report."""
+def planning_review(chk, variant, plan_text, people_text):
+    """The planning review in the checker and in --report. chk carries the people overlay."""
     import re
     step("the sample's planning review is clean and shows each part", chk + ["--report"],
          contains=["Planning review", "Milestone 1, Submit an expense report: Workflow (WI-01), Experience (WI-02).", "The joint check on 2027-02-12 names Workflow and Experience.",
@@ -352,7 +360,7 @@ def planning_review(chk, variant, plan_text):
     solo = plan_text.replace("    track: experience\n    owner: idris\n", "    track: workflow\n    owner: tamsin\n")
     step("a critical path owned by one person is reported", chk + ["--report", "--plan", variant("solo", solo)],
          contains=["The critical path runs through one person, tamsin, on the Workflow track.", "idris has no sized work, so the ratio is not defined."])
-    step("a load ratio above two to one is reported", chk + ["--report", "--plan", variant("ratio", plan_text.replace("allocation: 60", "allocation: 20"))],
+    step("a load ratio above two to one is reported", chk + ["--report", "--people", variant("ratio-people", people_text.replace("allocation: 60", "allocation: 20"))],
          contains=["Highest to lowest is 3.9 to 1 (idris to tamsin). Above two to one"])
     step("a joint check that does not name a track is reported", chk + ["--report", "--plan", variant("unnamed", plan_text.replace(" Experience drives the form and Workflow shows the database.", ""))],
          contains=["The joint check on 2027-02-12 does not name Workflow or Experience."])
@@ -437,13 +445,88 @@ def names(tmp, plan_text):
     proj = tmp / "names"
     shutil.copytree(ROOT / SAMPLE, proj)
     plan = proj / "docs/spec/plan.yaml"
-    plan.write_text(plan_text.replace("Tamsin Hale", "Will Long").replace("tamsin", "will"), encoding="utf-8")
-    chk = [PY, "scripts/check_specs.py", "--root", str(proj)]
+    plan.write_text(plan_text.replace("tamsin", "will"), encoding="utf-8")
+    people = proj / "people.yaml"
+    people.write_text(people.read_text(encoding="utf-8").replace("Tamsin Hale", "Will Long").replace("id: tamsin", "id: will"), encoding="utf-8")
+    chk = [PY, "scripts/check_specs.py", "--root", str(proj), "--people", str(people)]
     step("a person named Will Long does not flag the words will and long", chk, contains=["0 with findings"])
     spec = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
     spec.write_text(spec.read_text(encoding="utf-8") + "\nLong reviewed this with idris.\n", encoding="utf-8")
     step("a capitalized name part and a handle are still flagged", chk, expect=1,
          contains=["person name or handle from the plan at line", "Long reviewed this with idris."])
+
+
+def confidentiality(tmp):
+    """The answer to the one question is recorded and checked, the private workspace is created with
+    owner-only permissions and a pointer that git ignores, and staffing is read from the workspace."""
+    fixture = ROOT / "tests/fixtures/confidential-project"
+    plan_text = (fixture / "docs/spec/plan.yaml").read_text(encoding="utf-8")
+    d = tmp / "confidential"
+    d.mkdir()
+    yes_plan = d / "yes-with-restricted-source.yaml"
+    yes_plan.write_text(plan_text.replace("repo_audience_approved: false", "repo_audience_approved: true"), encoding="utf-8")
+    step("a plan that answers yes to the one question but holds a restricted source fails with a named finding",
+         [PY, "scripts/check_specs.py", "--root", str(fixture), "--plan", str(yes_plan)], expect=1,
+         contains=["sources:company-governance: classification is restricted, but project.handling.repo_audience_approved is true"])
+    step("the fixture, which answers no, checks clean", [PY, "scripts/check_specs.py", "--root", str(fixture)], contains=["0 with findings", "people overlay not loaded"])
+
+    proj = d / "engineering"
+    shutil.copytree(fixture, proj)
+    ident = ["git", "-c", "user.name=Selftest", "-c", "user.email=selftest@example.com"]
+    for cmd in (["git", "init", "-q"], ["git", "add", "-A"], ident + ["commit", "-qm", "fixture"]):
+        subprocess.run(cmd, cwd=proj, env=ENV, check=True, capture_output=True)
+    ws = [PY, "scripts/workspace.py"]
+    folder = Path(HOME) / ".carrydown" / "workspaces" / "confidential-fixture"
+    init = ws + ["init", "--root", str(proj), "--slug", "confidential-fixture", "--answer", "no"]
+    step("workspace.py init is a dry run without --apply", init, contains=["DRY RUN", "would create the folder with owner-only permissions", "gh repo create"])
+    untouched = not folder.exists() and not (proj / ".carrydown").exists()
+    results.append((untouched, "the workspace dry run wrote nothing"))
+    print(("PASS " if untouched else "FAIL ") + "the workspace dry run wrote nothing")
+    step("workspace.py init creates the workspace and prints the staging commands", init + ["--apply"],
+         contains=["carrydown: private workspace ready at", "gh repo create", "open-release-request.yml", "Carrydown does not run these commands"])
+    check = ("import os, stat, subprocess, sys\nfrom pathlib import Path\n"
+             "ws = Path.home() / '.carrydown' / 'workspaces' / 'confidential-fixture'\nproj = Path(sys.argv[1])\n"
+             "assert ws.is_dir(), 'workspace folder'\n"
+             "if os.name != 'nt':\n    assert stat.S_IMODE(ws.stat().st_mode) == 0o700, oct(stat.S_IMODE(ws.stat().st_mode))\n"
+             "for name in ('workspace.yaml', 'retention.yaml', 'people.yaml', '.git', 'sources', 'renderings', 'drafts'):\n    assert (ws / name).exists(), name\n"
+             "local = (proj / '.carrydown' / 'local.yaml').read_text(encoding='utf-8')\nassert 'workspace:' in local and ws.name in local, local\n"
+             "assert '.carrydown/local.yaml' in (proj / '.gitignore').read_text(encoding='utf-8').splitlines()\n"
+             "status = subprocess.run(['git', 'status', '--porcelain', '--untracked-files=all'], cwd=proj, capture_output=True, text=True).stdout\n"
+             "assert '.carrydown' not in status, status\nassert [l[3:] for l in status.splitlines()] == ['.gitignore'], status\nprint('workspace files, permissions, pointer and git status ok')")
+    step("the workspace has its files and owner-only permissions, the pointer is untracked, and git shows nothing new", [PY, "-c", check, str(proj)],
+         contains=["workspace files, permissions, pointer and git status ok"])
+    step("workspace.py doctor reads the permissions back", ws + ["doctor", "--root", str(proj)],
+         contains=["ok    permissions", "ok    path separation", "ok    ignore rule      .carrydown/local.yaml is ignored", "ok    plan schema", "0 failure(s)"])
+    step("workspace.py status prints the path and counts, never names", ws + ["status", "--root", str(proj)],
+         contains=["state: drafting", "permissions: owner only", "people.yaml: 0 people, 0 advisors"], absent=("Traceback", "Tamsin"))
+    step("running workspace.py init again changes nothing", init + ["--apply"], contains=["carrydown: private workspace ready at"])
+    inside = proj / "inside"
+    step("a workspace path inside the engineering repository is refused",
+         ws + ["init", "--root", str(proj), "--slug", "inside", "--workspace", str(inside), "--apply"], expect=2, contains=["workspace-inside-repository"])
+    refused = not inside.exists()
+    results.append((refused, "the refused workspace path was not created"))
+    print(("PASS " if refused else "FAIL ") + "the refused workspace path was not created")
+    step("a slug that is not lowercase words is refused", ws + ["init", "--root", str(proj), "--slug", "../evil", "--apply"], expect=2, contains=["--slug"])
+
+    # staffing: the sample's fictional overlay, loaded from a temporary private workspace
+    sample = d / "sample-project"
+    shutil.copytree(ROOT / SAMPLE, sample)
+    step("a workspace for the sample", ws + ["init", "--root", str(sample), "--slug", "sample-staffing", "--answer", "yes", "--apply"],
+         contains=["carrydown: private workspace ready at"], absent=("Traceback", "gh repo create"))
+    shutil.copyfile(ROOT / SAMPLE / "people.yaml", Path(HOME) / ".carrydown" / "workspaces" / "sample-staffing" / "people.yaml")
+    table = ["tamsin  100%   3 of 10d (30%)  5 of 14d (36%)  6 of 10d (60%)  4 of 10d (40%)  0 of 10d       18 of 54d (33%)",
+             "idris   60%    3 of 6d (50%)   4 of 9d (44%)   4 of 5d (74%)   0 of 6d         3 of 6d (50%)  14 of 32d (43%)",
+             "No person is over 100 percent of allocated capacity in any work unit.", "0 finding(s)."]
+    step("the sample's overlay, found through the workspace pointer, gives the same capacity results", [PY, "scripts/check_specs.py", "--root", str(sample), "--report"],
+         contains=table, absent=("Traceback", "people overlay not loaded"))
+    same = ("import json, subprocess, sys\n"
+            "a, b = (subprocess.run(c, capture_output=True, text=True).stdout for c in json.loads(sys.argv[1]))\n"
+            "sys.exit(0 if a == b and 'Alloc' in a else 1)")
+    cmds = [[PY, "scripts/check_specs.py", "--root", str(sample), "--report"],
+            [PY, "scripts/check_specs.py", "--root", str(sample), "--report", "--people", f"{SAMPLE}/people.yaml"]]
+    step("the workspace overlay and the explicit --people file give the same report", [PY, "-c", same, json.dumps(cmds)])
+    step("the workspace overlay also feeds the sync dry run's capacity summary", [PY, "scripts/github_sync.py", "--root", str(sample), "--offline"],
+         contains=["Track Workflow: 1 person, 100 percent allocated", "Track Experience: 1 person, 60 percent allocated"])
 
 
 def lint_spelling(tmp):
@@ -496,9 +579,6 @@ def regressions(tmp, plan_text):
     # plan values of the wrong type stop every script with one line
     wrong = [
         ("a track given as a list", "    track: workflow\n    owner: tamsin\n", "    track: [workflow]\n    owner: tamsin\n", "track must be text"),
-        ("days_off given as a number", "days_off: [2027-02-22]", "days_off: 5", "days_off must be a list of dates"),
-        ("an advisor given as plain text", '  - name: "Noor Castellan"\n    note: "Finance policy advisor. Reviews the rules and the export format."\n',
-         '  - "Noor Castellan"\n', "advisors: entry 1 must be a mapping"),
         ("an item id that is a word", "  - id: 4\n", "  - id: four\n", "id must be a whole number"),
         ("depends given as a number", "    depends: [2, 3]\n", "    depends: 5\n", "depends must be a list of item ids"),
         ("a label given as a mapping", 'label: "Audit log and retention"', "label: {a: b}", "label must be text"),
@@ -515,6 +595,36 @@ def regressions(tmp, plan_text):
     for i, (label, old, new, want) in enumerate(wrong):
         assert old in plan_text, label
         every_script(f"plan with {label}", project(f"wrong{i}", plan_text.replace(old, new, 1)), want)
+    # a migrated plan holds no staffing: a staffing key in it is found by every script, and no value is printed
+    for i, (label, old, new, want) in enumerate([
+        ("a name in the people list", "  - id: tamsin\n    track: workflow\n", '  - id: tamsin\n    name: "Secret Person"\n    track: workflow\n', "people:tamsin:name is a staffing field"),
+        ("days_off in the people list", "  - id: idris\n    track: experience\n", "  - id: idris\n    track: experience\n    days_off: 5\n", "people:idris:days_off is a staffing field"),
+        ("an advisors list", "milestones:\n", 'advisors:\n  - name: "Secret Advisor"\nmilestones:\n', "advisors is a staffing field"),
+    ]):
+        assert old in plan_text, label
+        every_script(f"migrated plan with {label}", project(f"staffkey{i}", plan_text.replace(old, new, 1)), want)
+    # people.yaml with the wrong shape stops the checker with one line that quotes nothing from the file
+    people_text = (ROOT / SAMPLE / "people.yaml").read_text(encoding="utf-8")
+    for i, (label, old, new, want) in enumerate([
+        ("days_off given as a number", "days_off: [2027-02-22]", "days_off: 5", "tamsin: days_off has the wrong type"),
+        ("an advisor given as plain text", '  - name: "Noor Castellan"\n    note: "Finance policy advisor. Reviews the rules and the export format."\n',
+         '  - "Noor Castellan"\n', "advisors entry 1 must be a mapping"),
+        ("a person without an id", '  - id: idris\n    name: "Idris Okoye"\n', '  - name: "Idris Okoye"\n', "has no id"),
+        ("a person who is not in the plan", "  - id: idris\n", "  - id: ghost\n", "ghost is not a person in plan.yaml"),
+        ("an allocation of 5000 digits", "allocation: 60", "allocation: " + "9" * 5000, "allocation must be a whole percent"),
+    ]):
+        assert old in people_text, label
+        pf = d / f"people-wrong{i}.yaml"
+        pf.write_text(people_text.replace(old, new, 1), encoding="utf-8")
+        root_args = ["--root", SAMPLE, "--people", str(pf)]
+        step(f"people.yaml with {label}: check_specs", chk + root_args, expect=1, contains=[want], timeout=60, absent=("Traceback", "Noor Castellan", "nobody"))
+        step(f"people.yaml with {label}: check_specs --json", chk + root_args + ["--json"], expect=1, contains=[want], timeout=60, json_out=True)
+    step("a people file that does not exist is one line", chk + ["--root", SAMPLE, "--people", str(d / "nowhere.yaml")], expect=2, contains=["people file", "does not exist"], timeout=60)
+    step("an empty --people is refused", chk + ["--root", SAMPLE, "--people", ""], expect=2, contains=["--people is empty"], timeout=60)
+    brokenp = d / "people-broken.yaml"
+    brokenp.write_text("people:\n  - id: tamsin\n    name: [Secret Person\n", encoding="utf-8")
+    step("a people file with a syntax error names the line and quotes nothing", chk + ["--root", SAMPLE, "--people", str(brokenp)], expect=2,
+         contains=["cannot read people file", "syntax error near line"], absent=("Traceback", "Secret Person"), timeout=60)
 
     # files that are not UTF-8 give one line, and the checker reports them as findings
     latin = project("latin")
@@ -557,7 +667,7 @@ def regressions(tmp, plan_text):
     spec.write_text(spec.read_text(encoding="utf-8") + "\nReviewed by Tamsin Hale.\n", encoding="utf-8")
     code = ("import subprocess, sys; o = subprocess.run(sys.argv[1:], capture_output=True, text=True).stdout; "
             "n = o.count('person name or handle from the plan'); print('findings', n); sys.exit(0 if n == 1 else 1)")
-    step("a full name in a specification is one finding, not one per part", [PY, "-c", code] + chk + ["--root", str(named)], contains=["findings 1"])
+    step("a full name in a specification is one finding, not one per part", [PY, "-c", code] + chk + ["--root", str(named), "--people", str(named / "people.yaml")], contains=["findings 1"])
 
     # flags that cannot go together
     for script, cmd in (("github_sync", sync), ("github_project", board)):
@@ -646,7 +756,6 @@ def round_two(tmp, plan_text):
         ("a title format without the id", 'title_format: "{id} {label}"', 'title_format: "{label}"', "must hold {id} or {lower}"),
         ("a slug too long for a file name", "    slug: report-form\n", "    slug: " + "a" * 300 + "\n", "item 2: slug makes the file or folder name"),
         ("a milestone folder too long for a path", "    folder: m1-submit-report\n", "    folder: " + "/".join(["f" * 200] * 25) + "\n", "milestone 1: folder makes the path"),
-        ("a number of 5000 digits", "    allocation: 60\n", "    allocation: " + "9" * 5000 + "\n", "allocation must be a whole percent"),
         ("an Epic number in other digits", "  epic: null\n", "  epic: \"\uff10\uff13\"\n", "project.epic must be an issue number"),
         ("a date in the year 9999", "    complete_by: 2027-02-10\n", "    complete_by: 9999-12-31\n", "complete_by is not a date"),
         ("a project slug with a comma", "  slug: expense-approvals\n", '  slug: "expense,approvals"\n', "project.slug must be lowercase words joined by hyphens"),
@@ -810,34 +919,59 @@ def main():
             path.write_text(text, encoding="utf-8")
             return str(path)
         chk = [PY, "scripts/check_specs.py", "--root", SAMPLE]
-        step("report shows allocation, capacity and the target", chk + ["--report"], contains=["Alloc", "60%", "of 6d", "meets the target"])
-        step("supplied skills and preferences are advisory and reported", chk + ["--report"],
+        people_file = f"{SAMPLE}/people.yaml"
+        people_text = (ROOT / people_file).read_text(encoding="utf-8")
+        overlay = ["--people", people_file]
+
+        def pvariant(name, text):
+            return ["--people", variant("people-" + name, text)]
+        step("without the people overlay the sample has 0 findings and says what was not checked", chk, contains=["0 with findings", "people overlay not loaded: capacity, dates and names not checked"])
+        step("without the people overlay the report skips capacity and keeps the schedule", chk + ["--report"],
+             contains=["people overlay not loaded: capacity, dates and names not checked", "Not shown: allocation, start dates and days off are in the private people file.",
+                       "Critical path", "meets the target", "0 finding(s)."], absent=("Traceback", "Alloc"))
+        step("with the overlay, the report shows allocation, capacity and the target", chk + overlay + ["--report"],
+             contains=["Alloc", "60%", "of 6d", "meets the target"], absent=("Traceback", "people overlay not loaded"))
+        step("with the overlay, the load table is the one the sample always had", chk + overlay + ["--report"],
+             contains=["tamsin  100%   3 of 10d (30%)  5 of 14d (36%)  6 of 10d (60%)  4 of 10d (40%)  0 of 10d       18 of 54d (33%)",
+                       "idris   60%    3 of 6d (50%)   4 of 9d (44%)   4 of 5d (74%)   0 of 6d         3 of 6d (50%)  14 of 32d (43%)",
+                       "No person is over 100 percent of allocated capacity in any work unit.", "Highest to lowest is 1.3 to 1 (idris to tamsin)",
+                       "ends 2027-03-10", "0 finding(s)."])
+        step("supplied skills and preferences are advisory and reported", chk + overlay + ["--report"],
              contains=["Staffing context (advisory)", "Track workflow needs: Service APIs, Workflow rules, Relational data",
                        "tamsin on workflow: skills Python services, PostgreSQL, Workflow design; preferences Service contracts, Policy enforcement",
                        "They do not make the checker pass or fail"])
         optional_staffing = ("skill_needs:", "skills:", "preferences:", "assignment_rationale:")
-        no_staffing = "\n".join(line for line in plan_text.splitlines() if not line.strip().startswith(optional_staffing)) + "\n"
-        step("missing skills and preferences use default assignment and never fail", chk + ["--report", "--plan", variant("nostaffing", no_staffing)],
+        no_skill_needs = "\n".join(line for line in plan_text.splitlines() if not line.strip().startswith(("skill_needs:",))) + "\n"
+        no_staffing = "\n".join(line for line in people_text.splitlines() if not line.strip().startswith(optional_staffing)) + "\n"
+        step("missing skills and preferences use default assignment and never fail", chk + ["--report", "--plan", variant("nostaffing", no_skill_needs)] + pvariant("nostaffing", no_staffing),
              contains=["No skills or work preferences were supplied. The plan uses the default track, capacity, dependency and context-switching rules.",
                        "0 finding(s)."])
-        scalar_staffing = plan_text.replace('skills: ["Python services", "PostgreSQL", "Workflow design"]', 'skills: "Python services and PostgreSQL"', 1)
-        step("staffing context can be plain text without failing", chk + ["--report", "--plan", variant("scalarstaffing", scalar_staffing)],
+        scalar_staffing = people_text.replace('skills: ["Python services", "PostgreSQL", "Workflow design"]', 'skills: "Python services and PostgreSQL"', 1)
+        step("staffing context can be plain text without failing", chk + ["--report"] + pvariant("scalarstaffing", scalar_staffing),
              contains=["tamsin on workflow: skills Python services and PostgreSQL;"])
-        step("allocation is optional and defaults to 100", chk + ["--report", "--plan", variant("noalloc", plan_text.replace("    allocation: 100\n", "").replace("    allocation: 60\n", ""))], contains=["100%"])
-        step("allocation 0 is rejected", chk + ["--plan", variant("alloc0", plan_text.replace("allocation: 60", "allocation: 0"))], expect=1, contains=["allocation must be a whole percent from 1 to 100"])
-        step("allocation 101 is rejected", chk + ["--plan", variant("alloc101", plan_text.replace("allocation: 100", "allocation: 101"))], expect=1, contains=["allocation must be a whole percent"])
+        step("allocation is optional and defaults to 100", chk + ["--report"] + pvariant("noalloc", people_text.replace("    allocation: 100", "    # allocation: 100").replace("    allocation: 60", "    # allocation: 60")), contains=["100%"])
+        step("allocation 0 is rejected", chk + pvariant("alloc0", people_text.replace("allocation: 60", "allocation: 0")), expect=1, contains=["allocation must be a whole percent from 1 to 100"])
+        step("allocation 101 is rejected", chk + pvariant("alloc101", people_text.replace("allocation: 100", "allocation: 101")), expect=1, contains=["allocation must be a whole percent"])
         no_target = plan_text.replace("target:\n  date: 2027-04-23\n\n", "")
         step("no target is accepted and the end date is derived", chk + ["--report", "--plan", variant("notarget", no_target)], contains=["derived from the critical path", "There is no target in plan.yaml"])
         step("a derived target that matches the critical path passes", chk + ["--plan", variant("derivedok", plan_text.replace("  date: 2027-04-23\n", "  date: 2027-04-21\n  derived: true\n"))], contains=["0 with findings", "target derived"])
         step("a stale derived target is reported", chk + ["--plan", variant("derivedstale", plan_text.replace("  date: 2027-04-23\n", "  date: 2027-04-23\n  derived: true\n"))], expect=1, contains=["derived target 2027-04-23 is out of date"])
-        derived_people = plan_text.replace("Tamsin Hale", "Engineer 1").replace("Idris Okoye", "Engineer 2").replace("tamsin", "eng1").replace("idris", "eng2").replace("    allocation: 100\n", "    allocation: 100\n    derived: true\n").replace("    allocation: 60\n", "    allocation: 60\n    derived: true\n").replace("  date: 2027-04-23\n", "  date: 2027-04-21\n  derived: true\n")
+        derived_people = plan_text.replace("tamsin", "eng1").replace("idris", "eng2")
+        derived_people = derived_people.replace("  - id: eng1\n    track: workflow\n", "  - id: eng1\n    track: workflow\n    derived: true\n")
+        derived_people = derived_people.replace("  - id: eng2\n    track: experience\n", "  - id: eng2\n    track: experience\n    derived: true\n")
+        derived_people = derived_people.replace("  date: 2027-04-23\n", "  date: 2027-04-21\n  derived: true\n")
         step("derived people and a derived target are summarized", chk + ["--plan", variant("derivedboth", derived_people)], contains=["2 people derived, target derived"])
-        i0 = plan_text.index("people:\n"); i1 = plan_text.index("advisors:")
-        nobody = plan_text[:i0] + "people: []\n\n" + plan_text[i1:]
+        i0 = plan_text.index("\npeople:") + 1
+        i1 = plan_text.index("\nmilestones:\n") + 1
+        nobody = plan_text[:i0] + "people: []\n" + plan_text[i1:]
         nobody = nobody.replace("    owner: tamsin\n", "").replace("    owner: idris\n", "")
         step("a plan without people passes and says so", chk + ["--report", "--plan", variant("nobody", nobody)], contains=["No people in the plan yet"])
         sync = [PY, "scripts/github_sync.py", "--root", SAMPLE, "--offline"]
-        step("dry run prints the constraints, target given", sync, contains=["Target delivery: 2027-04-23 (given)", "Track Workflow: 1 person, 100 percent allocated", "Track Experience: 1 person, 60 percent allocated"])
+        step("dry run prints the constraints, target given", sync + overlay, contains=["Target delivery: 2027-04-23 (given)", "Track Workflow: 1 person, 100 percent allocated", "Track Experience: 1 person, 60 percent allocated"])
+        step("without the overlay the capacity summary says how many people, not how many percent", sync, contains=["Track Workflow: 1 person", "Track Experience: 1 person"], absent=("Traceback", "percent allocated"))
+        no_summary = plan_text.replace("      capacity_summary: true", "      capacity_summary: false")
+        step("capacity_summary false leaves the people out of the constraints", sync + overlay + ["--plan", variant("nosummary", no_summary)],
+             contains=["Target delivery: 2027-04-23 (given)"], absent=("Traceback", "Track Workflow", "percent allocated"))
         step("dry run prints a derived target", sync + ["--plan", variant("syncnotarget", no_target)], contains=["Target delivery: 2027-04-21 (derived from the critical path)"])
         step("dry run marks placeholder people", sync + ["--plan", variant("syncderived", derived_people)], contains=["(placeholder)"])
         step("dry run says people are to be assigned", sync + ["--plan", variant("syncnobody", nobody)], contains=["People: to be assigned (derived capacity: 2)"])
@@ -857,17 +991,17 @@ def main():
                        "Target delivery for the plan: 2027-04-23 (given)"])
         step("--show-body prints a sub-epic body", sync + ["--show-body", "M2"], contains=["### Joint demonstration", "Target delivery for the plan: 2027-04-23 (given)"])
         step("a target in weeks is accepted", chk + ["--report", "--plan", variant("weeks", plan_text.replace("  date: 2027-04-23\n", "  weeks: 11\n"))], contains=["11 working weeks plus 1 break week(s)", "meets the target"])
-        step("over 100 percent of allocated capacity is flagged", chk + ["--plan", variant("overload", plan_text.replace("allocation: 60", "allocation: 10"))], expect=1, contains=["over 100 percent of allocated capacity"])
+        step("over 100 percent of allocated capacity is flagged", chk + pvariant("overload", people_text.replace("allocation: 60", "allocation: 10")), expect=1, contains=["over 100 percent of allocated capacity"])
         step("a missed target is reported", chk + ["--report", "--plan", variant("late", plan_text.replace("  date: 2027-04-23\n", "  date: 2027-04-16\n"))], contains=["misses the target"])
-        step("the report checks every window against size and allocation", chk + ["--report"], contains=["Every sized item fits between its last dependency and its complete_by date.", "Earliest finish", "ends 2027-03-10"])
+        step("the report checks every window against size and allocation", chk + overlay + ["--report"], contains=["Every sized item fits between its last dependency and its complete_by date.", "Earliest finish", "ends 2027-03-10"])
         squeezed = plan_text.replace("complete_by: 2027-03-17\n    size: \"Medium, about 4 days\"", "complete_by: 2027-03-16\n    size: \"Medium, about 4 days\"")
-        step("an item whose window is too short for its size is flagged", chk + ["--plan", variant("squeezed", squeezed)], expect=1,
+        step("an item whose window is too short for its size is flagged", chk + overlay + ["--plan", variant("squeezed", squeezed)], expect=1,
              contains=["WI-08 needs about 6.7 working days (4 days at 60 percent) but has 6 from 2027-03-09, the day after WI-06 completes, to its complete_by 2027-03-16"])
-        step("an earliest finish after the target is flagged", chk + ["--plan", variant("tooearly", plan_text.replace("  date: 2027-04-23\n", "  date: 2027-03-05\n"))], expect=1,
+        step("an earliest finish after the target is flagged", chk + overlay + ["--plan", variant("tooearly", plan_text.replace("  date: 2027-04-23\n", "  date: 2027-03-05\n"))], expect=1,
              contains=["from sizes and allocation the earliest finish is 2027-03-10, after the target 2027-03-05"])
         step("a size without a number of days is flagged", chk + ["--plan", variant("nosize", plan_text.replace('size: "Large, about 5 days"', 'size: "Large"'))], expect=1,
              contains=["size must say how many days"])
-        planning_review(chk, variant, plan_text)
+        planning_review(chk + overlay, variant, plan_text, people_text)
         for skill, script in (("carrydown-ground-truth", "check_specs.py"), ("carrydown-plan-to-github", "github_sync.py")):
             dst = Path(tmp) / skill
             shutil.copytree(ROOT / "skills" / skill, dst)
@@ -899,6 +1033,7 @@ def main():
         frontmatter(Path(tmp), plan_text)
         path_safety(Path(tmp), plan_text)
         names(Path(tmp), plan_text)
+        confidentiality(Path(tmp))
         lint_spelling(Path(tmp))
         regressions(Path(tmp), plan_text)
         round_two(Path(tmp), plan_text)

@@ -27,6 +27,12 @@ percent allocation of each person (1 to 100), that nobody is over 100 percent of
 capacity in a work unit, and, when a target exists, that the last work item meets it. People and the
 target are optional. Without a target the report prints the critical path end date as derived.
 
+Staffing. A migrated plan (plan_format 2) names people by id and track only. Names, allocation, start
+dates, days off, skills and preferences are in people.yaml in the private workspace, found through
+.carrydown/local.yaml, or named with --people. With that file the capacity, dates and names checks run as
+always. Without it they are skipped, and the output says so in one line: people overlay not loaded:
+capacity, dates and names not checked. A people.yaml that is tracked in the project is never a fallback.
+
 The planning review reads how the plan is composed. Findings: a milestone that covers one track with
 no single_track_reason, and a milestone without a rationale or a joint_demonstration, or a track
 with items and no order_rationale. Advisory lines in the report: the tracks each milestone covers and
@@ -36,6 +42,7 @@ date, theme switches per owner, a critical path owned by one person, and the loa
 Usage
   python3 scripts/check_specs.py --root .            check everything
   python3 scripts/check_specs.py --root . --report   print the schedule, load table and critical path
+  python3 scripts/check_specs.py --root . --people ~/.carrydown/workspaces/my-project/people.yaml   load the staffing overlay by path
   python3 scripts/check_specs.py --root . --item 3   check one item (3, WI-03 and wi-3 all work)
 Exit status is 0 when clean, and 1 when there are findings, including problems with the values in
 plan.yaml, which are listed first. It is 2 when the plan cannot be read at all (a missing file, a
@@ -67,6 +74,8 @@ def _script_hint(name, what):
     """`name` when that script ships next to this one, else the skill that has it."""
     return f"{name} {what}".strip() if (HERE / name).is_file() else "the carrydown-ground-truth skill"
 
+
+OVERLAY_NOTE = "people overlay not loaded: capacity, dates and names not checked"
 
 MILESTONE_PARTS = ["Purpose", "Expected outcomes", "Acceptance criteria", "Demonstration expectations", "Work items"]
 
@@ -486,10 +495,12 @@ def planning_review(plan):
 
     lines.append("  Load ratio (rule 6)")
     tot = {}
-    for pid, _, sized, cap, _ in L.load_rows(plan):
+    for pid, _, sized, cap, _ in (L.load_rows(plan) if L.staffing_loaded(plan) else []):
         s_, c_ = tot.get(pid, (0.0, 0.0))
         tot[pid] = (s_ + sized, c_ + cap)
-    if len(tot) < 2:
+    if not L.staffing_loaded(plan):
+        lines.append("    Capacity is not known without the people overlay, so there is no ratio.")
+    elif len(tot) < 2:
         lines.append("    Fewer than two people in the plan, so there is no ratio.")
     else:
         share = {pid: (100.0 * s_ / c_ if c_ else 0.0) for pid, (s_, c_) in tot.items()}
@@ -517,11 +528,19 @@ def report(plan):
         print(f"  {n}. {source['name']}: {status}; {source.get('source_path', rendered)} -> {rendered}")
         if source.get("limit"):
             print(f"     Coverage limit: {source['limit']}")
+    staffed = L.staffing_loaded(plan)
+    if not staffed:
+        print(f"\n{OVERLAY_NOTE}")
     print("\nStaffing context (advisory)")
     has_staffing_context = any(t.get("skill_needs") for t in plan["tracks"]) or any(
         p.get("skills") or p.get("preferences") or p.get("assignment_rationale") for p in plan["people"]
     ) or any(it.get("skill_needs") for it in plan["items"])
-    if not has_staffing_context:
+    if not staffed:
+        print("  Skills, preferences and names are in the private people file, which is not loaded. Track needs:")
+        for track in plan["tracks"]:
+            if track.get("skill_needs"):
+                print(f"  Track {track['id']} needs: {', '.join(track['skill_needs'])}")
+    elif not has_staffing_context:
         print("  No skills or work preferences were supplied. The plan uses the default track, capacity, dependency and context-switching rules.")
     else:
         for track in plan["tracks"]:
@@ -545,14 +564,17 @@ def report(plan):
     print("\nLoad (sized days of work against allocated capacity, per person and work unit)")
     if not people:
         print("  No people in the plan yet. Add them under `people`, or let the planning step propose a team marked derived.")
-    print("  Capacity is the working days a person has in the work unit, minus days off, times their percent allocation.")
+    elif not staffed:
+        print("  Not shown: allocation, start dates and days off are in the private people file.")
+    if staffed:
+        print("  Capacity is the working days a person has in the work unit, minus days off, times their percent allocation.")
     head = ["Person", "Alloc"] + [f"WU{m['number']}" for m in plan["milestones"]] + ["Total"]
     rows = []
     over = []
     by_person = {}
-    for pid, mnum, sized, cap, pct in L.load_rows(plan):
+    for pid, mnum, sized, cap, pct in (L.load_rows(plan) if staffed else []):
         by_person.setdefault(pid, []).append((mnum, sized, cap, pct))
-    for pid, p in people.items():
+    for pid, p in (people.items() if staffed else []):
         cells, tot_sized, tot_cap = [], 0.0, 0.0
         for mnum, sized, cap, pct in by_person.get(pid, []):
             if sized == 0:
@@ -567,10 +589,13 @@ def report(plan):
         tot = f"{tot_sized:g} of {tot_cap:.0f}d" + (f" ({100 * tot_sized / tot_cap:.0f}%)" if tot_cap else "")
         rows.append([pid, f"{p.get('allocation', 100)}%"] + cells + [tot])
     widths = [max(len(str(r[i])) for r in [head] + rows) for i in range(len(head))]
-    print("  " + "  ".join(h.ljust(w) for h, w in zip(head, widths)))
-    for r in rows:
-        print("  " + "  ".join(str(c).ljust(w) for c, w in zip(r, widths)))
-    if over:
+    if staffed:
+        print("  " + "  ".join(h.ljust(w) for h, w in zip(head, widths)))
+        for r in rows:
+            print("  " + "  ".join(str(c).ljust(w) for c, w in zip(r, widths)))
+    if not staffed:
+        pass
+    elif over:
         print("  Over 100 percent of allocated capacity:")
         for pid, mnum, sized, cap, pct in over:
             print(f"    {pid} in work unit {mnum}: {sized:g} sized days against {cap:.1f} allocated days" + (f" ({pct:.0f}%)" if pct not in (None, float("inf")) else ""))
@@ -598,15 +623,17 @@ def report(plan):
             if tdate and tdate != end_date:
                 print(f"  The derived target in plan.yaml says {fmt(tdate)}. Update it to {fmt(end_date)}.")
     print("\nFit (working days each item needs, from its size and its owner's allocation, against its window)")
-    fits = L.fit_findings(plan)
-    if not any(L.sized_days(it) for it in plan["items"]):
+    fits = L.fit_findings(plan) if staffed else []
+    if not staffed:
+        print("  Not checked: the windows depend on allocation and days off in the private people file.")
+    elif not any(L.sized_days(it) for it in plan["items"]):
         print("  No item is sized yet. Write sizes as \"about N days\" to check the windows.")
     elif fits:
         for f in fits:
             print("  " + f)
     else:
         print("  Every sized item fits between its last dependency and its complete_by date.")
-    times, chain = L.earliest_finish(plan)
+    times, chain = L.earliest_finish(plan) if staffed else ({}, [])
     if chain:
         fin = times[chain[-1]][1]
         print("\nEarliest finish (forward pass over the dependencies, from sizes and allocation)")
@@ -661,7 +688,8 @@ def run_checks(plan, root, a):
     ok = 0
     unfinished = 0
     load_issues = []
-    for pid, mnum, sized, cap, pct in L.load_rows(plan):
+    staffed = L.staffing_loaded(plan)   # without the people overlay, capacity and dates are not checked
+    for pid, mnum, sized, cap, pct in (L.load_rows(plan) if staffed else []):
         if pct is not None and pct > 100:
             load_issues.append(f"{pid} is over 100 percent of allocated capacity in work unit {mnum}: {sized:g} sized days against {cap:.1f} allocated days")
     tdate, _ = L.target_date(plan)
@@ -671,8 +699,9 @@ def run_checks(plan, root, a):
             load_issues.append(f"the last work item completes {L.fmt_date(last)}, after the target {L.fmt_date(tdate)}")
         if not L.target_is_constraint(plan) and last != tdate:
             load_issues.append(f"the derived target {L.fmt_date(tdate)} is out of date. The last work item completes {L.fmt_date(last)}, so write that date under target")
-    load_issues += L.fit_findings(plan)
-    times, chain = L.earliest_finish(plan)
+    if staffed:
+        load_issues += L.fit_findings(plan)
+    times, chain = L.earliest_finish(plan) if staffed else ({}, [])
     if chain and tdate and L.target_is_constraint(plan) and times[chain[-1]][1] > tdate:
         load_issues.append(f"from sizes and allocation the earliest finish is {L.fmt_date(times[chain[-1]][1])}, after the target {L.fmt_date(tdate)} "
                            f"(chain {' -> '.join(L.tag(plan, n) for n in chain)})")
@@ -749,6 +778,9 @@ def main(argv=None):
     ap.add_argument("--report", action="store_true", help="print the schedule, load table and critical path, then exit")
     ap.add_argument("--json", action="store_true", help="print the findings as JSON")
     ap.add_argument("--quiet", action="store_true", help="print only the summary line")
+    ap.add_argument("--people", help="path to people.yaml: the staffing overlay (names, allocation, start dates, days off) for "
+                                     "the capacity, dates and names checks. Default: people.yaml in the private workspace named by "
+                                     ".carrydown/local.yaml. Without an overlay those checks are skipped, and the output says so")
     a = ap.parse_args(argv)
 
     def fail(msg):
@@ -776,7 +808,7 @@ def main(argv=None):
     if why:
         return fail(f"the plan path {why}" if why.startswith(str(plan_path)) else why)
     try:
-        plan, plan_problems = L.load_plan(plan_path, root)
+        plan, plan_problems = L.load_plan_with_people(plan_path, root, people_path=a.people)
     except L.PlanError as e:
         return fail(e.msg)
     if a.item:
@@ -820,6 +852,8 @@ def main(argv=None):
         print(json.dumps({"clean": ok, "files": n_files, "findings": results}, indent=2))
     else:
         print(f"{ok} files clean, {len(results)} with findings ({n_items} work items, {0 if a.item else len(plan['milestones'])} milestones)")
+        if not L.staffing_loaded(plan):
+            print(OVERLAY_NOTE)
         if plan_problems:
             print(f"plan.yaml: {len(plan_problems)} problem(s), listed first.")
         if unfinished:
