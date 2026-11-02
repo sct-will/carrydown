@@ -887,7 +887,7 @@ def main():
              contains=["engineers' skill: expense-approvals-dev"])
         step("installed copy of carrydown-plan-to-github refreshes only the references", [PY, str(gh / "scripts/generate_dev_skill.py"), "--root", str(ROOT / SAMPLE), "--only", "references"],
              contains=["would write: references/work-items.md", "would write: references/ground-truth-map.md"], absent=("Traceback", "SKILL.md"))
-        ships = ("generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_repair.py", "github_sync.py", "github_token.py", "plan_repair.py", "scaffold_spec.py")
+        ships = ("generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_repair.py", "github_sync.py", "github_token.py", "plan_repair.py", "release_schema.py", "scaffold_spec.py")
         extra = sorted(x.name for x in (gh / "scripts").glob("*.py") if x.name not in ships)
         results.append((not extra, "carrydown-plan-to-github ships only the scripts it runs"))
         print(("PASS " if not extra else "FAIL ") + "carrydown-plan-to-github ships only the scripts it runs" + (f" (remove {', '.join(extra)})" if extra else ""))

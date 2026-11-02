@@ -469,6 +469,94 @@ def exists(path):
         return False
 
 
+# ---------------------------------------------------------------------------
+# Release helpers: thin wrappers over release_schema.py, which holds the real code so the
+# independent verifier can carry it unchanged. release_schema is imported when a wrapper runs, so
+# a copy of this file that sits without it (the checker copy in a project) still loads.
+# ---------------------------------------------------------------------------
+
+def _schema():
+    try:
+        import release_schema as module
+    except ImportError:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import release_schema as module
+    return module
+
+
+def normalize_section_text(text):
+    """A source section as the compiler and the verifier compare it: CRLF to LF, trailing blanks
+    removed from each line, exactly one trailing newline."""
+    return _schema().normalize_section_text(text)
+
+
+def sha256_text(text):
+    """The lowercase hex SHA-256 of text, encoded as UTF-8."""
+    return _schema().sha256_text(text)
+
+
+def sha256_file(path):
+    """The lowercase hex SHA-256 of a regular file. A folder, a pipe, a device or a file that
+    cannot be read stops with a one-line TextError message."""
+    why = regular_file_problem(path)
+    if why:
+        raise TextError(why)
+    try:
+        return _schema().sha256_file(path)
+    except FileNotFoundError:
+        raise TextError(f"{path} does not exist")
+    except OSError as e:
+        raise TextError(f"cannot read {path}: {e.strerror or e}")
+
+
+def canonical_json(value):
+    """Canonical JSON bytes: sorted keys, no insignificant whitespace, UTF-8, one trailing LF.
+    Duplicate keys in bytes input, non-finite numbers and unknown values raise SchemaError."""
+    return _schema().canonical_json(value)
+
+
+def _repository_top(root):
+    """The folder of the engineering repository that holds root: the nearest folder at or above
+    root with a .git entry, or root itself when there is none."""
+    base = Path(os.path.realpath(str(root)))
+    for folder in [base] + list(base.parents):
+        if (folder / ".git").exists():
+            return folder
+    return base
+
+
+def workspace_root(root):
+    """The owner's private workspace for the project at root, as (path, None), or (None, reason).
+
+    The path is the `workspace:` line of .carrydown/local.yaml under root. That file is untracked
+    and read only by scripts the owner runs, never from plan.yaml or any tracked file. The reason is
+    a fixed code: workspace-unavailable when the file, the line or the folder is missing or unusable,
+    and workspace-inside-repository when the path resolves inside the engineering repository."""
+    if root_problem(root):
+        return None, "workspace-unavailable"
+    base = Path(root).expanduser().resolve()
+    pointer = base / ".carrydown" / "local.yaml"
+    if regular_file_problem(pointer) or not pointer.exists():
+        return None, "workspace-unavailable"
+    try:
+        data = load_file(pointer)
+    except (YamlError, TextError):
+        return None, "workspace-unavailable"
+    value = data.get("workspace") if isinstance(data, dict) else None
+    if not isinstance(value, str) or not value.strip() or "\x00" in value:
+        return None, "workspace-unavailable"
+    try:
+        candidate = Path(os.path.realpath(str((base / Path(value.strip()).expanduser()))))
+    except (OSError, ValueError, RuntimeError):
+        return None, "workspace-unavailable"
+    for repo in {base, _repository_top(base)}:
+        if candidate == repo or repo in candidate.parents:
+            return None, "workspace-inside-repository"
+    if root_problem(candidate):
+        return None, "workspace-unavailable"
+    return candidate, None
+
+
 def slugify(text):
     """Lowercase words joined by hyphens, ASCII only: "Acme Pay, phase 2" becomes "acme-pay-phase-2"."""
     import unicodedata
