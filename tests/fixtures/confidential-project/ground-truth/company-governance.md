@@ -1,0 +1,63 @@
+# Company governance policy, Harbor Finance Group
+
+*Fictional test fixture. Version 2027.1. Written for carrydown tests. It stands for a company document that the plan owner has not approved for everyone who can read the repository.*
+
+This policy sets the controls that every internal finance system of the fictional group follows. The expense approvals service cites it by section number.
+
+## 1. Scope and precedence
+
+### 1.1 Purpose
+
+The policy keeps money decisions with accountable people and leaves a record that internal audit can read.
+
+### 1.2 Who this applies to
+
+Every system that records a decision about spending, and every person who builds or runs one.
+
+### 1.3 Precedence
+
+When this policy and a system architecture document disagree, this policy applies, unless the finance policy team records another decision in the project plan.
+
+### 1.4 Review cycle
+
+The finance policy team reviews this policy once a year and after every audit finding.
+
+### 1.5 Sole approver
+
+A report with a base total up to 2,500.00 is decided by the line manager alone. A second approver is added only above 2,500.00.
+
+## 2. Approval controls
+
+### 2.1 Separation of duties
+
+Nobody decides their own report. The people who decide one report must be different people.
+
+### 2.2 Delegation
+
+A delegate acts only inside the dates of a written delegation. A delegate never decides a report that the delegator submitted.
+
+### 2.3 Approval limits
+
+Limits apply per approver role and are counted on the base total of a report.
+
+| Role | Limit (USD) |
+| --- | --- |
+| Line manager | Up to 5,000.00 |
+| Department head | Up to 25,000.00 |
+| Finance director | Above 25,000.00, outside the expense service |
+
+A system never approves a report above its role limit, even when a person asks it to.
+
+### 2.4 Exceptions
+
+An exception to a limit needs the written approval of the finance director. The system does not record the exception text.
+
+## 3. Records
+
+### 3.1 Retention
+
+Records of decisions are kept for 7 years from the decision date and then deleted by a scheduled job.
+
+### 3.2 Access to records
+
+Internal audit reads decision records. Other staff read only their own.

@@ -1,0 +1,21 @@
+# Test fixture input: who does the work. All names are fictional.
+# The ids match the ids in docs/spec/plan.yaml. The shape follows sample/expense-approvals/people.yaml.
+# In a migrated project this file lives in the private workspace and never in the repository.
+people:
+  - id: tamsin
+    name: "Tamsin Hale"
+    github: ""                     # GitHub login for issue assignment. Empty in the fixture.
+    track: Workflow                # the lane this person owns
+    allocation: 100                # percent of working time on this plan
+    start: 2027-02-01
+    days_off: [2027-02-22]
+  - id: idris
+    name: "Idris Okoye"
+    github: ""
+    track: Experience
+    allocation: 60                 # works on this plan three days in five
+    start: 2027-02-01
+    days_off: [2027-03-08]
+advisors:                          # advise and review. Own no work items.
+  - name: "Noor Castellan"
+    role: "Finance policy advisor. Reviews the rules and the export format."
