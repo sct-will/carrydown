@@ -7,6 +7,7 @@ Run from the repository root: python -m unittest discover -s tests -v
 """
 import hashlib
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -41,6 +42,7 @@ class RenderCase(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.tmp, True)
         self.project = self.tmp / "project"
         shutil.copytree(FIXTURE, self.project)
+        self.strip_handling()
         self.workspace = self.tmp / "workspace"
         (self.workspace / "renderings").mkdir(parents=True)
         self.link_workspace()
@@ -52,14 +54,38 @@ class RenderCase(unittest.TestCase):
         pointer.parent.mkdir(exist_ok=True)
         pointer.write_text(f"workspace: {json.dumps(str(path or self.workspace))}\n", encoding="utf-8")
 
+    def strip_handling(self, project=None):
+        """Remove a copied project's project.handling block so each test starts from a project with
+        classified sources and no answer yet, and sets the answer it needs with set_handling. The
+        sample and the fixture are both migrated plans now, so a legacy project is made this way."""
+        plan = (project or self.project) / "docs" / "spec" / "plan.yaml"
+        lines = plan.read_text(encoding="utf-8").splitlines(keepends=True)
+        out, skipping = [], False
+        for line in lines:
+            if line.startswith("  handling:"):
+                skipping = True
+                continue
+            if skipping and (line.startswith("    ") or line.strip() == ""):
+                continue
+            skipping = False
+            out.append(line)
+        plan.write_text("".join(out), encoding="utf-8")
+
     def set_handling(self, repo_audience_approved):
+        """Set the answer to the one question. The fixture already carries a handling block
+        (it is the "no" path), so the value is rewritten in place; a plan without one gets a block."""
         plan = self.project / "docs" / "spec" / "plan.yaml"
         text = plan.read_text(encoding="utf-8")
-        block = ("project:\n  handling:\n    policy_version: 1\n"
-                 f"    repo_audience_approved: {'true' if repo_audience_approved else 'false'}\n"
-                 "    state: migrated\n")
-        self.assertIn("project:\n", text)
-        plan.write_text(text.replace("project:\n", block, 1), encoding="utf-8")
+        value = "true" if repo_audience_approved else "false"
+        if re.search(r"(?m)^    repo_audience_approved: ", text):
+            text = re.sub(r"(?m)^(    repo_audience_approved: )\S+", r"\g<1>" + value, text, count=1)
+        else:
+            block = ("project:\n  handling:\n    policy_version: 1\n"
+                     f"    repo_audience_approved: {value}\n"
+                     "    state: migrated\n")
+            self.assertIn("project:\n", text)
+            text = text.replace("project:\n", block, 1)
+        plan.write_text(text, encoding="utf-8")
         return plan
 
     def make_docx(self, mode, name=None):
@@ -169,6 +195,7 @@ class MarkingAndReviewItemTests(RenderCase):
     def test_an_unclassified_legacy_source_is_reported_but_not_stopped(self):
         legacy = self.tmp / "legacy"
         shutil.copytree(SAMPLE, legacy)
+        self.strip_handling(legacy)
         path = legacy / "ground-truth" / "marked.docx"
         fixtures.build(str(path), "confidential")
         run = subprocess.run([sys.executable, str(RENDER), str(path), "--root", str(legacy), "--dry-run"],
