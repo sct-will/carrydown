@@ -47,6 +47,8 @@ SMOKE = [
     (GROUND_TRUTH, "plan_repair.py", ["--root", "{sample}"], ("Dry run",)),
     (GROUND_TRUTH, "render_ground_truth.py",
      ["{sample}/ground-truth/architecture.md", "--root", "{sample}", "--version", "0.3", "--dry-run"], ()),
+    (GROUND_TRUTH, "workspace.py", ["init", "--root", "{sample}", "--slug", "sample-check"], ("DRY RUN", "would create the folder with owner-only permissions")),
+    (GROUND_TRUTH, "check_specs.py", ["--root", "{sample}", "--report", "--people", "{sample}/people.yaml"], ("Alloc", "18 of 54d (33%)")),
 ]
 
 LIBRARIES = ("carrydown_lib.py",)
