@@ -22,6 +22,13 @@ Modes
   dupfigures two figures captioned "Figure 1" with different images.
   badnumbers level and outline numbers that are not ASCII digits ("x0", a superscript two),
              as a damaged or crafted document holds. The renderer must not fail on them.
+  confidential  a marked document: the footer says "Internal, do not distribute", the header
+             names a project, one run is hidden (w:vanish) and one insertion is tracked (w:ins).
+  marking    the same header and footer, and nothing hidden or tracked.
+  review     hidden text in a run and in a character style, a tracked insertion, a tracked
+             deletion, and a run with w:vanish set to 0 that must stay visible.
+  links      an https link, an http link and links with the schemes mailto:, file: and
+             javascript:, plus a network share path. Only the web links may survive rendering.
 
 Usage
   python3 tests/fixtures/make_numbered_docx.py OUT.docx [MODE]
@@ -145,7 +152,105 @@ def style_mode():
     return body, styles, numbering, ""
 
 
+# Marked documents. Each feature adds one thing the renderer must notice; a mode is a set of them.
+MARKED_MODES = {
+    "confidential": ("marking", "hidden-run", "insertion"),
+    "marking": ("marking",),
+    "review": ("hidden-run", "hidden-style", "insertion", "deletion", "shown-vanish"),
+    "links": ("links",),
+}
+HEADER_TEXT = "Project Atlas working copy"
+FOOTER_TEXT = "Internal, do not distribute"
+LINKS = {  # relationship id -> (target, link text)
+    "rIdWeb": ("https://example.com/handbook", "Handbook"),
+    "rIdPlain": ("http://example.com/plain", "Plain page"),
+    "rIdMail": ("mailto:owner@example.com", "Mail the owner"),
+    "rIdFile": ("file:///C:/Users/owner/plan.docx", "Local plan"),
+    "rIdScript": ("javascript:alert(1)", "Script link"),
+    "rIdShare": ("\\\\corp-fs\\finance\\q3.xlsx", "Finance share"),
+}
+
+
+def marked_body(features):
+    parts = [p("Marked fixture", "Title"), p("1 Overview", "Heading1"), p("A visible sentence.")]
+    if "hidden-run" in features:
+        parts.append('<w:p><w:r><w:t xml:space="preserve">Before </w:t></w:r>'
+                     '<w:r><w:rPr><w:vanish/></w:rPr><w:t>HIDDEN-RUN-TEXT</w:t></w:r>'
+                     '<w:r><w:t xml:space="preserve"> after.</w:t></w:r></w:p>')
+    if "hidden-style" in features:
+        parts.append('<w:p><w:r><w:rPr><w:rStyle w:val="Secret"/></w:rPr><w:t>HIDDEN-STYLE-TEXT</w:t></w:r>'
+                     '<w:r><w:t xml:space="preserve"> Shown.</w:t></w:r></w:p>')
+    if "shown-vanish" in features:
+        parts.append('<w:p><w:r><w:rPr><w:vanish w:val="0"/></w:rPr><w:t>SHOWN-DESPITE-FLAG</w:t></w:r></w:p>')
+    if "insertion" in features or "deletion" in features:
+        tracked = '<w:r><w:t xml:space="preserve">Kept </w:t></w:r>'
+        if "insertion" in features:
+            tracked += '<w:ins w:id="11" w:author="reviewer"><w:r><w:t>INSERTED-WORDS</w:t></w:r></w:ins>'
+        if "deletion" in features:
+            tracked += '<w:del w:id="12" w:author="reviewer"><w:r><w:delText>DELETED-WORDS</w:delText></w:r></w:del>'
+        parts.append(f"<w:p>{tracked}</w:p>")
+    if "links" in features:
+        parts.append(p("2 Links", "Heading1"))
+        for rid, (_, text) in LINKS.items():
+            parts.append(f'<w:p><w:hyperlink r:id="{rid}"><w:r><w:t>{text}</w:t></w:r></w:hyperlink></w:p>')
+    if "marking" in features:
+        parts.append('<w:sectPr><w:headerReference w:type="default" r:id="rIdHdr"/>'
+                     '<w:footerReference w:type="default" r:id="rIdFtr"/></w:sectPr>')
+    return "".join(parts)
+
+
+def build_marked(out, mode):
+    features = MARKED_MODES[mode]
+    styles = "".join([
+        style("Normal", "Normal"),
+        style("Title", "Title", "Normal"),
+        style("Heading1", "heading 1", "Normal", outline=0),
+        '<w:style w:type="character" w:styleId="Secret"><w:name w:val="Secret"/><w:rPr><w:vanish/></w:rPr></w:style>',
+    ])
+    rel_ns = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    rels = ""
+    if "marking" in features:
+        rels += (f'<Relationship Id="rIdHdr" Type="{rel_ns}/header" Target="header1.xml"/>'
+                 f'<Relationship Id="rIdFtr" Type="{rel_ns}/footer" Target="footer1.xml"/>')
+    if "links" in features:
+        for rid, (target, _) in LINKS.items():
+            rels += f'<Relationship Id="{rid}" Type="{rel_ns}/hyperlink" Target="{target}" TargetMode="External"/>'
+    doc = f"{DECL}<w:document {W}><w:body>{marked_body(features)}</w:body></w:document>"
+    ct = ('<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+          '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+          '<Default Extension="xml" ContentType="application/xml"/>'
+          '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
+          + ('<Override PartName="/word/header1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"/>'
+             '<Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/>'
+             if "marking" in features else "") + "</Types>")
+    parts = [
+        ("[Content_Types].xml", ct),
+        ("_rels/.rels", '<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                        '<Relationship Id="r1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'),
+        ("word/document.xml", doc),
+        ("word/styles.xml", f"{DECL}<w:styles {W}>{styles}</w:styles>"),
+        ("word/_rels/document.xml.rels", '<?xml version="1.0" encoding="UTF-8"?>'
+                                         f'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">{rels}</Relationships>'),
+    ]
+    if "marking" in features:
+        parts.append(("word/header1.xml", f"{DECL}<w:hdr {W}>{p(HEADER_TEXT)}</w:hdr>"))
+        # the footer also holds a page number field, whose cached text is only a digit
+        page = '<w:p><w:fldSimple w:instr=" PAGE "><w:r><w:t>1</w:t></w:r></w:fldSimple></w:p>'
+        parts.append(("word/footer1.xml", f"{DECL}<w:ftr {W}>{p(FOOTER_TEXT)}{page}</w:ftr>"))
+    write_zip(out, parts)
+
+
+def write_zip(out, parts):
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
+        for name, data in parts:
+            info = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            z.writestr(info, data.encode("utf-8") if isinstance(data, str) else data)
+
+
 def build(out, mode):
+    if mode in MARKED_MODES:
+        return build_marked(out, mode)
     if mode == "style":
         body, styles, numbering, footnotes = style_mode()
     else:
