@@ -4,7 +4,7 @@ One file per work item, named `<id>-<slug>.md` and placed in the milestone folde
 
 ## What a specification is for
 
-It orients the engineer and their coding agent so that they can finish one item without opening the original documents. It is the part of the ground truth that this item must honor, in the form an engineer starts from.
+It orients the engineer and their coding agent so that they can finish one item without opening the original documents. It is the part of the ground truth that this item must honor, in the form an engineer starts from. The exact source text sits beside it in the approved bundle, `docs/context/<id>.md`, which `compile_bundles.py` builds from the sections the Ground truth row cites. Write the Contract and the rules as this file needs them, and cite the sections so the bundle holds them.
 
 ## Header table
 
@@ -22,7 +22,7 @@ Written by the scaffold script from `plan.yaml`. Do not edit it by hand. After a
 8. Integration points. One sentence naming the counterpart items on the other track. Then bullets that start with `Crosses the boundary.`, `Joint check.` and `Handoff on close.` The joint check is this item's share of the checkpoint's joint check. Add `Timing.` when the counterpart is due within three working days.
 9. Out of scope. What a reasonable person might add and should not, with a pointer to the item that has it, or a note that it is an external item.
 10. Watch out for. Traps, ordering risks, security and data rules, contradictions found in the ground truth and which side wins.
-11. References. Links to the ground truth sections (use the anchors in the section index), and to dependency and dependent specifications. Every link must resolve.
+11. References. One line for each source section the Ground truth row cites, written `- <source id> section <n.n>, <heading>`, for example `- architecture section 3.5, Routing`. The id is the source id in `plan.yaml`, and the heading is optional. Do not link into a rendering: the engineers read the approved bundle of the item, and a citation counts when that bundle lists the source and the section. Then relative links to the dependency and dependent specifications. Every link must resolve.
 12. Decisions recorded. `None yet.` At the start. Later the engineer adds dated lines when the implementation departs from the file: `- 2027-03-02. What changed and why, with the pull request number.`
 
 ## Voice and rules

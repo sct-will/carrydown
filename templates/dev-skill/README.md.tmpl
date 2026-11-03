@@ -2,11 +2,11 @@
 
 The engineers' skill for the {{project_name}} work in this repository. It follows the Agent Skills format, a folder with a `SKILL.md` and reference files, so any coding agent that supports skills can load it.
 
-When an engineer asks the agent to work on a work item by id ({{example_id}}), or touches the files an item names, the skill gives the agent the steps to orient on the item, the project conventions, the definition of done and the test commands. Its reference files hold the work item index, the contract headings and the ground truth map.
+When an engineer asks the agent to work on a work item by id ({{example_id}}), or touches the files an item names, the skill gives the agent the steps to orient on the item, the project conventions, the definition of done and the test commands. Its reference files hold the work item index, the contract headings and the map of approved source sections. Its `scripts/check_context.py` checks that the approved context of an item can be used before the agent reads it.
 
 ## Why use it
 
-Without the skill, a coding agent tends to invent function names, skip the feature flag, drift from the contracts or work from memory instead of the specification. When you ask it to work on a work item id, the skill orients the agent on that one item. It reads the specification and the ground truth sections the item cites, then the project conventions, before it changes code. You review every change.
+Without the skill, a coding agent tends to invent function names, skip the feature flag, drift from the contracts or work from memory instead of the specification. When you ask it to work on a work item id, the skill orients the agent on that one item. It reads the specification and the approved context of the item, then the project conventions, before it changes code. The approved context is one file, `{{context_dir}}/<id>.md`, with the exact text of the source sections the item must honor. You review every change.
 
 ## What is in this folder
 
@@ -15,7 +15,8 @@ Without the skill, a coding agent tends to invent function names, skip the featu
 | `SKILL.md` | How to orient on a work item, the project conventions and tests, the definition of done, and when to read each reference. |
 | `references/work-items.md` | The {{item_count}} work items with track, date, dependencies and specification path, and the external items. |
 | `references/contracts.md` | Where each contract is defined and the headings of every Contract or Protocol section. |
-| `references/ground-truth-map.md` | Ground truth headings with anchors and line numbers, and the sections each work item cites. |
+| `references/ground-truth-map.md` | The source sections inside the approved contexts, by source id and section number, and the sections each work item holds. It names no original file. |
+| `scripts/check_context.py` | The check an engineer runs for one work item id. It prints one line and exits 0, or prints one of four messages and stops. |
 
 ## Install
 
@@ -66,11 +67,57 @@ mklink /D <skills folder>\{{skill_name}} "<absolute path of the repository>\{{sk
 
 Ask your agent: "Read {{skill_path}}/SKILL.md and follow it for work item {{example_id}}." This works in any agent that can read files.
 
+## The approved context, and the check that guards it
+
+Each work item has a bundle in `{{context_dir}}/`: `<id>.md` for the agent and `<id>.bundle.json` beside it. The Markdown holds the verbatim text of the source sections the item cites, the decisions that settle a conflict between them, the other items that cite the same sections and what the text may be used for. The plan owner approved this text for everyone who can read this repository. Anyone with read access can read every bundle, so nothing is hidden from a teammate by leaving it out of an item's bundle.
+
+Before the agent reads a bundle it runs the check:
+
+```bash
+python3 {{skill_path}}/scripts/check_context.py {{example_id}}
+```
+
+On Windows, from a Command Prompt or PowerShell in the repository:
+
+```bat
+py -3 {{skill_path_win}}\scripts\check_context.py {{example_id}}
+```
+
+The check works in this order. It reads only this repository, and its one network use is a `git fetch` of the default branch with the Git credentials you already have.
+
+1. Local validity, offline. The bundle files exist, the Markdown matches the digest in its sidecar, every source section the specification cites is in the bundle, and a receipt in `docs/release/` marked active lists both files with the same digests.
+2. Freshness. It fetches the default branch and reads the receipts there. A release that was superseded or withdrawn makes the context stale. A receipt that is newer and terminal is never replaced by an older active one in your checkout.
+3. Offline grace. If the fetch fails, it carries on only when your last good refresh is on record for this repository and this release and is no older than the grace period in the receipt (7 days by default). It then prints `warning: freshness not confirmed; within offline grace`. With no record, or past the grace period, the context is stale.
+4. Expiry. The receipt may carry an expiry date, compared with your computer's clock.
+
+**What the check is and is not.** The check lives in your checkout, so you can edit it. It is a convenience and an integrity check for you. It is not a security control. The controls are the release gate that runs on the plan owner's side and the independent check on pull requests. Text already copied into a clone, a transcript or an agent session cannot be recalled. The check cannot learn of a release or a withdrawal your clone has not seen, which is why it refreshes first and allows only a short, recorded grace period when it cannot.
+
+## If you are blocked
+
+The check prints one of four messages and stops. It never prints withheld text, the headings of restricted sources, private paths or the names of approvers.
+
+| First line of the message | What happened | What you do |
+| --- | --- | --- |
+| `carrydown: no approved context for <ID>` | There is no bundle for the item, the bundle fails its integrity check, or no active release lists it. The id may also be unknown. | Ask the plan owner to release the item. |
+| `carrydown: the approved context for <ID> is stale` | Its release was superseded, withdrawn or has expired, the default branch does not confirm it, or freshness could not be confirmed within the offline grace period. The next line gives the reason. | Ask the plan owner to re-release, or connect to the network and run the check again. |
+| `carrydown: <ID> cites an obligation that is not in its approved context` | The specification cites a source section that the bundle does not contain. | Ask the plan owner. Do not guess the rule. |
+| `carrydown: <ID> has a restricted destination that this project does not publish` | The plan owner published a placeholder that says this item is handled outside this project. | Follow the owner's approved instruction in the placeholder. |
+
+Exit codes: 0 means ready, 10, 11, 12 and 13 are the four messages in the order above. An id the project does not know gets the first message, which does not say whether private work exists.
+
+## Requesting a change to a rule
+
+Do not edit a bundle, a receipt or a source. If you think a rule in the approved context is wrong, unclear or missing, say so to the plan owner and carry on only with what the bundle permits.
+
+- Ask your agent to draft a comment on the work item issue titled `Rule clarification request`, with the section number and your question. The agent posts it only after you give permission, and only with a tool you have authorized. The generated skill holds no token and cannot post by itself.
+- When the project allows engineers to append to "Decisions recorded" in the work item file, add a dated entry in your pull request. The next release reassesses it.
+- The plan owner updates the sources, prepares and approves a new release, and exports it. A new release supersedes the old one, and your next check picks it up.
+
 ## How the skill relates to the specification folder
 
 The specification folder `{{spec_dir}}/` is canonical. It holds the conventions, the schedule, the index and one file per work item. The skill carries the conventions and points at those files. It does not replace them.
 
 - The conventions and definition of done in `SKILL.md` are copied from `{{spec_dir}}/README.md` and `plan.yaml`. A pull request that changes them there updates `SKILL.md` in the same pull request.
 - The contracts reference lists headings. The owning work item file holds the contract.
-- The ground truth map uses the anchors of the current rendering. Regenerating the rendering for a new document version may move line numbers, so refresh the map then.
+- The map of approved source sections is generated from the bundles. When a release adds or removes a section, the plan owner refreshes the map.
 - Owners, status and dates of record live in the GitHub issues.

@@ -5,11 +5,14 @@ Output, under project.dev_skill_path in plan.yaml
   SKILL.md                         when to use it, how to orient on an item, conventions, definition of done
   README.md                        what it is and how to install it for each agent
   references/work-items.md         the index of work items with dates, dependencies and file paths
-  references/contracts.md          the headings of every Contract or Protocol section, by item
-  references/ground-truth-map.md   ground truth headings with anchors and line numbers, and sections by item
+  references/contracts.md          the headings of every Contract or Protocol section, by item, and each item's approved context
+  references/ground-truth-map.md   the source sections inside the approved contexts, by source id and section number
+  scripts/check_context.py         the engineer's check: local validity, freshness, expiry (offline except one fetch)
 
-The files are generated from plan.yaml, the specs and the rendered ground truth. Read them
-after generating: add the topics and contracts only a person knows to be important.
+The files are generated from plan.yaml, the specs and the approved contexts in docs/context/ (see
+compile_bundles.py). The skill holds no original filename, no rendering path and no source text:
+the map lists only the sections that appear in at least one bundle. Read the files after generating:
+add the topics and contracts only a person knows to be important.
 
 Dry run unless --apply. Existing files are replaced only with --force.
 
@@ -28,6 +31,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
 
 md_table = L.md_table
+CONTEXT_DIR = "docs/context"
 
 
 def work_items_md(plan, root):
@@ -79,7 +83,8 @@ def work_items_md(plan, root):
 def contracts_md(plan, root):
     spec_dir = plan["project"]["spec_dir"]
     out = ["# Contracts quick reference", "",
-           "Where each contract is defined. The owning work item file holds the contract text. When a contract changes, the work item file changes first and this page follows.", "",
+           "Where each contract is defined. The owning work item file holds the contract text. The approved context of the item, docs/context/<id>.md, holds the source text the contract comes from. "
+           "When a contract changes, the work item file changes first and this page follows.", "",
            "## Where each contract is defined", ""]
     rows = []
     blocks = []
@@ -97,9 +102,9 @@ def contracts_md(plan, root):
         fences = len(re.findall(r"(?m)^```", body)) // 2
         ms = L.milestone_by_num(plan)[it["milestone"]]
         rel = f"{spec_dir}/{ms['folder']}/{sp.name}"
-        rows.append([L.tag(plan, it["id"]), it["label"], name, f"`{rel}`"])
+        rows.append([L.tag(plan, it["id"]), it["label"], name, f"`{rel}`", f"`{CONTEXT_DIR}/{L.tag(plan, it['id']).lower()}.md`"])
         blocks.append((it, name, subs, tables, fences, rel))
-    out += [md_table(["Id", "Work item", "Section", "File"], rows), ""]
+    out += [md_table(["Id", "Work item", "Section", "File", "Approved context"], rows), ""]
     for it, name, subs, tables, fences, rel in blocks:
         out += [f"## {L.tag(plan, it['id'])} {it['label']}", "", f"Section `## {name}` in `{rel}`. {tables} table(s), {fences} code block(s)."]
         if subs:
@@ -108,30 +113,83 @@ def contracts_md(plan, root):
     return "\n".join(out).rstrip() + "\n"
 
 
-def ground_truth_map_md(plan, root):
+def read_sidecars(root, bundles=None):
+    """The bundle sidecars of the project as {work item tag: sidecar}. bundles maps a path such as
+    docs/context/wi-06.bundle.json to its bytes (what compile_bundles returns); without it the files
+    under root/docs/context are read. A file that is not a sidecar is skipped."""
+    raw = {}
+    if bundles is not None:
+        raw = {p: b for p, b in bundles.items() if p.endswith(".bundle.json")}
+    else:
+        folder = Path(root) / CONTEXT_DIR
+        if L.exists(folder) and folder.is_dir():
+            for f in sorted(folder.glob("*.bundle.json")):
+                if f.is_file() and not f.is_symlink():
+                    raw[f"{CONTEXT_DIR}/{f.name}"] = f.read_bytes()
+    out = {}
+    for path, data in raw.items():
+        try:
+            side = json.loads(data.decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            continue
+        if isinstance(side, dict) and isinstance(side.get("work_item"), str) and isinstance(side.get("obligations"), list):
+            out[side["work_item"]] = side
+    return out
+
+
+def section_key(number):
+    return tuple(int(part) if part.isdecimal() else 0 for part in str(number).split("."))
+
+
+def tag_key(tag):
+    tail = tag.rsplit("-", 1)[-1]
+    return int(tail) if tail.isdecimal() else 0
+
+
+def ground_truth_map_md(plan, root, bundles=None):
+    """The map of source sections that the approved contexts hold, built from the bundle sidecars alone.
+    It names no original file, no rendering path, no version and no coverage limit, and it lists only
+    sections that appear in at least one bundle."""
+    sidecars = read_sidecars(root, bundles)
+    sections = {}        # source id -> {section: [heading, [item tags]]}
+    for tag, side in sidecars.items():
+        for ob in side["obligations"]:
+            if not (isinstance(ob, dict) and isinstance(ob.get("source"), str) and isinstance(ob.get("section"), str)):
+                continue
+            row = sections.setdefault(ob["source"], {}).setdefault(ob["section"], [str(ob.get("heading") or ""), []])
+            row[1].append(tag)
     out = ["# Ground truth map", "",
-           "Rendered sources in precedence order, their headings and the sections each work item cites. "
-           "When sources conflict, the earlier source in this file wins unless the plan owner recorded another decision. "
-           "Regenerating a rendering may move line numbers. Then ask the plan owner to run `generate_dev_skill.py --only references` again.", "",
-           "## Sources and precedence", ""]
-    sources = L.ground_truth_sources(plan)
-    out += [md_table(["Precedence", "Source id", "Document", "Original file", "Rendered path", "Section index", "Version", "Status", "Coverage limit", "Use"], [
-        [str(n), s["id"], s["name"], f"`{s.get('source_path', s.get('path', ''))}`", f"`{s['path']}`" if s.get("path") else "Not rendered", f"`{s['path'][:-3] + '.index.txt' if s.get('path', '').endswith('.md') else s.get('path', '')}`" if s.get("path") else "Not available", s.get("version", ""), s.get("status", "reviewed"), s.get("limit", ""), s.get("use", "")]
-        for n, s in enumerate(sources, 1)
-    ]), ""]
-    for source in L.rendered_sources(plan):
-        gt = Path(root) / source["path"]
-        out += [f"## {source['name']}", ""]
-        if gt.exists():
-            lines = L.read_text(gt).split("\n")
-            heads = L.collect_headings(lines)
-            anchors = L.anchors_for(heads)
-            rows = [[f"{ln}", "#" * lvl, text, f"`#{anc}`"] for (ln, lvl, text), anc in zip(heads, anchors) if lvl > 1]
-            out += [md_table(["Line", "Level", "Heading", "Anchor"], rows), ""]
-        else:
-            out += [f"The rendered source was not found at `{source['path']}`. Render it with `render_ground_truth.py`, then run this generator again.", ""]
-    out += ["## By work item", "",
-            md_table(["Id", "Work item", "Ground truth sections"], [[L.tag(plan, it["id"]), it["label"], L.ground_truth_citation(plan, it)] for it in plan["items"]]), ""]
+           "The source sections inside the approved contexts of this project, by source id and section number. "
+           "Read a section through the approved context of a work item, `docs/context/<id>.md`, after "
+           "`scripts/check_context.py <ID>` passes. The sources themselves are not in this repository, and this skill "
+           "does not look for them. When sources conflict, the earlier source in this file wins unless the plan owner "
+           "recorded another decision.", ""]
+    if not sections:
+        out += ["No approved context has been released yet. Ask the plan owner to release the project.", ""]
+        return "\n".join(out).rstrip() + "\n"
+    names = L.source_by_id(plan)
+    present = [s for s in L.ground_truth_sources(plan) if s["id"] in sections]
+    present += [{"id": sid, "name": sid} for sid in sections if sid not in names]
+    out += ["## Sources and precedence", "",
+            md_table(["Precedence", "Source id", "Document"], [[str(n), s["id"], s.get("name") or s["id"]] for n, s in enumerate(present, 1)]), ""]
+    for source in present:
+        rows = [[num, row[0], ", ".join(sorted(set(row[1]), key=tag_key))]
+                for num, row in sorted(sections[source["id"]].items(), key=lambda kv: section_key(kv[0]))]
+        out += [f"## {source.get('name') or source['id']} (`{source['id']}`)", "",
+                md_table(["Section", "Heading", "In the approved context of"], rows), ""]
+    by_item = []
+    for it in plan["items"]:
+        tag = L.tag(plan, it["id"])
+        side = sidecars.get(tag)
+        if side is None:
+            by_item.append([tag, it["label"], "Not released", ""])
+            continue
+        per_source = {}
+        for ob in side["obligations"]:
+            per_source.setdefault(ob["source"], []).append(ob["section"])
+        cited = "; ".join(f"{sid} {', '.join(sorted(nums, key=section_key))}" for sid, nums in per_source.items()) or "No source sections"
+        by_item.append([tag, it["label"], f"`{CONTEXT_DIR}/{tag.lower()}.md`", cited])
+    out += ["## By work item", "", md_table(["Id", "Work item", "Approved context", "Sections"], by_item), ""]
     return "\n".join(out).rstrip() + "\n"
 
 
@@ -222,6 +280,7 @@ def main(argv=None):
     values = {
         # a JSON string is a valid YAML double-quoted value, so ": " or " #" in a project name cannot break the frontmatter
         "skill_name": skill_name, "project_name": proj["name"], "description": json.dumps(description, ensure_ascii=False),
+        "id_prefix": proj["id_prefix"], "context_dir": CONTEXT_DIR,
         "purpose_extra": "Its conventions come from the plan folder, and its references are generated from the same files.",
         "spec_dir": proj["spec_dir"], "example_id": L.tag(plan, first["id"]), "example_stem": stem,
         "example_path": f"{proj['spec_dir']}/{ms1['folder']}/{stem}.md",
@@ -236,6 +295,7 @@ def main(argv=None):
         "references/work-items.md": lambda: work_items_md(plan, root),
         "references/contracts.md": lambda: contracts_md(plan, root),
         "references/ground-truth-map.md": lambda: ground_truth_map_md(plan, root),
+        "scripts/check_context.py": lambda: L.fill(L.read_template("dev-skill", "scripts", "check_context.py"), values),
     }
     if a.only == "references":
         # the references follow plan.yaml and the specs; SKILL.md and README.md may hold hand edits
@@ -247,6 +307,9 @@ def main(argv=None):
               "Run this script without --only first: it writes SKILL.md, README.md and the references")
     L.say(f"engineers' skill: {skill_name}  ->  {skill_path}")
     L.say(f"description length: {len(description)} characters (target under {DESCRIPTION_TARGET}, limit 1024)")
+    released = read_sidecars(root)
+    L.say(f"approved contexts found in {CONTEXT_DIR}/: {len(released)} of {len(plan['items'])} work items" +
+          ("" if released else ". The map will say none is released. Compile them with compile_bundles.py first"))
     if len(description) > DESCRIPTION_WARN:
         L.say(f"warning: the description is over {DESCRIPTION_WARN} characters. Shorten project.name: long descriptions are the first to be dropped when an agent lists many skills")
     n = 0

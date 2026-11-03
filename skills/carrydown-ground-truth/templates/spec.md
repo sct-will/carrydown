@@ -57,8 +57,8 @@ TODO: The traps. Contradictions found in the ground truth, ordering risks, secur
 
 ## References
 
-- TODO: The ground truth sections cited in the header, as links into the correct rendered sources.
-- TODO: The specifications of the items in Depends on and Unblocks.
+- TODO: The source sections cited in the header, one line each, as `<source id> section <n.n>, <heading>`. For example `architecture section 3.5, Routing`. The id is the source id in plan.yaml and the heading is optional. Do not link into a rendering.
+- TODO: The specifications of the items in Depends on and Unblocks, as relative links.
 
 ## Decisions recorded
 
