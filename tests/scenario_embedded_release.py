@@ -2732,10 +2732,7 @@ def _(f):
     return "; ".join(seen) + "; the workspace write is allowed"
 
 
-@step("C7.7", "scaffold_spec.py --refresh-headers on a clone of the released tree refuses with a fixed reason code",
-      flows=("no",),
-      xfail="scaffold_spec.py reads proj['ground_truth'], which a released plan does not carry, and stops with a KeyError traceback before the release gate is asked; "
-            "nothing is written, but the refusal is not one of the fixed reason codes (G6)")
+@step("C7.7", "scaffold_spec.py --refresh-headers on a clone of the released tree refuses with a fixed reason code", flows=("no",))
 def _(f):
     stage("no.clone")
     root = S.tmp / "no-scaffold-clone"
@@ -2744,6 +2741,7 @@ def _(f):
     res = run_script("scaffold_spec.py", "--root", root, "--refresh-headers", "--apply", "--allow-no-git", cwd=root)
     equal(tree_state(root), before, "files written")
     need(res.returncode == 1 and re.search("not-approved|working-copy-differs|drafting-is-private", res.stderr) and "Traceback" not in res.stderr, res.stderr[-200:])
+    return res.stderr.strip().splitlines()[-1][:160]
 
 
 def verdict_without_processes(case, number):
