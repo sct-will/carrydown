@@ -379,7 +379,7 @@ def _(base):
 def _(base):
     text = (ROOT / "skills/carrydown-plan-to-github/SKILL.md").read_text(encoding="utf-8")
     pre = text.index("github_sync.py --root . --preflight")
-    first_git = text.index("git status --porcelain docs/spec")
+    first_git = text.index("git status --porcelain docs")
     inventory = text.index("release.py inventory --root .")
     apply_at = text.index("github_sync.py --root . --repo owner/name --create-epic --apply")
     check(pre < first_git < apply_at, (pre, first_git, apply_at))
