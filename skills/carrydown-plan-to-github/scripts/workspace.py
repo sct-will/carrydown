@@ -101,8 +101,10 @@ def slug_problem(slug):
 
 
 def clean_remote(url):
-    """A remote URL with any user name or password removed, so a token in it is never kept or shown."""
-    return re.sub(r"^([A-Za-z][A-Za-z0-9+.-]*://)[^/@\s]*@", r"\1", url.strip())
+    """A remote URL with any user name or password removed, and any query or fragment, so a token in it is
+    never kept or shown."""
+    url = re.sub(r"^([A-Za-z][A-Za-z0-9+.-]*://)[^/@\s]*@", r"\1", url.strip())
+    return re.sub(r"[?#].*\Z", "", url) if "://" in url else url
 
 
 def engineering_remote(root):

@@ -523,6 +523,25 @@ def _(base):
     return f"malformed: exit {out.returncode}, {last(text)[:110]}; mock error: {message[:80] or 'no error'}"
 
 
+@attempt("token 2: a token in the engineering remote, as a password or a query string, never reaches workspace.yaml")
+def _(base):
+    token = "ghp_" + "C" * 36
+    seen = []
+    for url in (f"https://x-access-token:{token}@github.com/acme/app.git", f"https://github.com/acme/app.git?token={token}"):
+        o_root = Path(base) / f"p{len(seen)}"
+        copy_sample(o_root)
+        subprocess.run(["git", "init", "-q", "-b", "main"], cwd=str(o_root), check=True, capture_output=True)
+        subprocess.run(["git", "remote", "add", "origin", url], cwd=str(o_root), check=True, capture_output=True)
+        ws = Path(base) / f"ws{len(seen)}"
+        run = subprocess.run([PY, str(ROOT / "scripts" / "workspace.py"), "init", "--root", str(o_root), "--slug", "proof", "--workspace", str(ws),
+                              "--apply"], capture_output=True, text=True, timeout=120)
+        check(run.returncode == 0, run.stdout + run.stderr)
+        stored = (ws / "workspace.yaml").read_text(encoding="utf-8")
+        check(token not in stored and token not in run.stdout + run.stderr, f"the token reached workspace.yaml or the output for {url[:30]}")
+        seen.append(next(x.strip() for x in stored.splitlines() if "remote" in x))
+    return "; ".join(seen)
+
+
 def main():
     for fn in ATTEMPTS:
         fn()

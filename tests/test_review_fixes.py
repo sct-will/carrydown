@@ -278,5 +278,22 @@ class DraftNoticeTests(unittest.TestCase):
         self.assertTrue((ROOT / "tests" / "scenario_embedded_release.py").is_file())
 
 
+class RemoteTokenTests(unittest.TestCase):
+    """workspace.clean_remote removed a user name and password from the engineering remote before
+    workspace.yaml kept it, but left a token passed as a query string, as in
+    https://github.com/acme/app.git?token=... It now drops the query and the fragment too."""
+
+    def test_no_token_survives_in_any_part_of_the_remote(self):
+        import workspace as W
+        token = "ghp_" + "A" * 36
+        for url, want in ((f"https://x-access-token:{token}@github.com/acme/app.git", "https://github.com/acme/app.git"),
+                          (f"https://github.com/acme/app.git?token={token}", "https://github.com/acme/app.git"),
+                          (f"https://github.com/acme/app#{token}", "https://github.com/acme/app"),
+                          (f"ssh://git:{token}@github.com/acme/app", "ssh://github.com/acme/app"),
+                          ("git@github.com:acme/app.git", "git@github.com:acme/app.git")):
+            self.assertEqual(W.clean_remote(url), want)
+            self.assertNotIn(token, W.clean_remote(url))
+
+
 if __name__ == "__main__":
     unittest.main()
