@@ -40,6 +40,19 @@ Do not mark a finding fixed until the repair and its effects have been checked. 
 | Review identifier | Owner decision and reason | Changed files or external identifiers | Verification evidence | Status and remaining risk |
 | --- | --- | --- | --- | --- |
 
+## Release preview
+
+When the project is released, record the preview the owner saw before approving: the request id, then the answers to the four questions in this order. Name ids, counts and paths only, never source text. Remove these instructions when writing the report.
+
+| Question | Answer shown to the owner |
+| --- | --- |
+| What will be shared? | Repository files and GitHub payloads, with the count of obligations present in the bundles and any detector exception being granted. |
+| With whom? | The audience, whether logins and the capacity summary are published, and what evidence may hold. |
+| Where? | The repository and board identities (numeric ids) and the destinations. |
+| What remains private? | Originals, staffing records and restricted material that are not released. |
+| Changes since the previous release | Added, changed and removed files, the work items affected and any change of scope, or that this is the first release. |
+| Limits and open points | Anything the preview could not settle. |
+
 ## Review outcome
 
 Record the finding counts, unresolved decisions, accepted residual risks and whether publication is pending. If there are no findings, say so with the scope and limits of the completed review. Do not claim that agent review guarantees correctness.

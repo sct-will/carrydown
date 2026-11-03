@@ -32,6 +32,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
+import release_gate as RG  # noqa: E402
 
 
 md_table = L.md_table
@@ -252,6 +253,24 @@ PLACEHOLDERS = (
 IGNORE_LINES = ("docs/source/", "people.yaml", ".carrydown/local.yaml", ".carrydown/cache/")
 
 
+def gated_check(root, path, text):
+    """The gate's answer for a file the refresh may change, without writing."""
+    root = Path(root).resolve()
+    target = Path(path).resolve()
+    shown = target.relative_to(root).as_posix() if root in target.parents else str(target)
+    RG.require(RG.maintenance_class(root), shown, L.sha256_text(text), "engineering-repo", root)
+
+
+def gated_write(root, path, text):
+    """Ask the release gate, then write. Scaffold writes are maintenance of the engineering repository:
+    draft writes, or release writes (which need an approved request) when the repository is enrolled."""
+    root = Path(root).resolve()
+    target = Path(path).resolve()
+    shown = target.relative_to(root).as_posix() if root in target.parents else str(target)
+    RG.require(RG.maintenance_class(root), shown, L.sha256_text(text), "engineering-repo", root)
+    L.write_text(path, text)
+
+
 def ignore_has(text, entry):
     """True when a line of a .gitignore is exactly entry (a leading slash and trailing blanks ignored)."""
     wanted = entry.strip("/").strip()
@@ -277,7 +296,7 @@ def write_ignore_lines(root, apply):
         print(f"{'appending to' if apply else 'would append to'} {path.name}: {line}")
     if apply:
         new = text + ("" if not text or text.endswith("\n") else "\n") + "".join(line + "\n" for line in missing)
-        L.write_text(path, new)
+        gated_write(root, path, new)
 
 
 def init_plan(root, a, git_top):
@@ -305,7 +324,7 @@ def init_plan(root, a, git_top):
               f"(a docs folder would end up with docs/docs/spec), run from the project folder or pass --root.", file=sys.stderr)
     print(f"{'writing' if a.apply else 'would write'} {rel}")
     if a.apply:
-        L.write_text(target, text)
+        gated_write(root, target, text)
     write_ignore_lines(root, a.apply)
     todo = []
     for key, value, what in PLACEHOLDERS:
@@ -459,11 +478,20 @@ def refreshed_readme(plan, old):
 
 
 def refresh(plan, root, a, actions):
+    if a.apply:
+        # Ask the gate about every file in scope before any is changed, so an edited approved file or a
+        # missing approval refuses the whole refresh, even where the refresh itself would change nothing.
+        scope = [L.spec_path(plan, root, it) for it in plan["items"]] + [L.milestone_path(plan, root, ms) for ms in plan["milestones"]]
+        scope.append(root / plan["project"]["spec_dir"] / "README.md")
+        for p in scope:
+            if p.exists():
+                gated_check(root, p, L.read_text(p))
+
     def put(path, old, new, kind, what="refresh header"):
         if new != old:
             actions.append((what, path, kind))
             if a.apply:
-                L.write_text(L.inside(root, path, kind), new)
+                gated_write(root, L.inside(root, path, kind), new)
     for it in plan["items"]:
         p = L.spec_path(plan, root, it)
         if p.exists():
@@ -539,7 +567,7 @@ def main(argv=None):
             return
         actions.append(("overwrite" if exists else "create", path, kind))
         if a.apply:
-            L.write_text(path, content)
+            gated_write(root, path, content)
 
     plan_write(spec_dir / "README.md", build_readme(plan), "README")
     for ms in plan["milestones"]:

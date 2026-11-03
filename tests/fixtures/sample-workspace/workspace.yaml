@@ -1,0 +1,7 @@
+format: 1
+slug: expense-approvals
+engineering_repo:
+  path: "sample/expense-approvals"
+  remote: ""
+policy_version: 1
+state: drafting

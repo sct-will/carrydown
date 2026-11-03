@@ -1,0 +1,3 @@
+raw_inputs: keep
+history: keep
+limits: "Deleting files from this workspace does not remove them from any backup, remote or copy made earlier. Carrydown records what it deleted and when."

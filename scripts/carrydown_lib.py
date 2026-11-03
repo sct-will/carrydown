@@ -1387,6 +1387,19 @@ def released_plan_problems(projected):
     return problems
 
 
+def released_plan_bytes(workspace_plan):
+    """The bytes of the released plan file for a validated workspace plan: project_released_plan, checked
+    in the released view, written by the plan dumper with one trailing newline. A release stores these
+    bytes as the snapshot's plan.yaml, and the release gate compares a working plan with them. Raises
+    PlanViewError when the projection is not a valid released plan."""
+    import plan_repair   # lazily: the dumper is shipped with every skill that writes a plan
+    projected = project_released_plan(workspace_plan)
+    problems = released_plan_problems(projected)
+    if problems:
+        raise PlanViewError("the released plan is not valid: " + "; ".join(problems[:3]))
+    return (plan_repair.dump(projected) + "\n").encode("utf-8")
+
+
 MAX_WEEKS = 520          # ten years of working weeks: a larger target is a typing error
 MAX_SIZE_DAYS = 260       # a year of working days for one item
 

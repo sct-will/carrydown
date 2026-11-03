@@ -37,6 +37,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
 import github_client as G  # noqa: E402
 import github_sync as S  # noqa: E402
+import release_payloads as RP  # noqa: E402
+import release_sync as RSY  # noqa: E402
 
 CLICK = [
     "Group the Table view by Work unit (View menu, Group by).",
@@ -74,24 +76,8 @@ query($p: ID!, $after: String) { node(id: $p) { ... on ProjectV2 {
 """
 
 
-def days_inclusive(start, end):
-    return (L.parse_date(end) - L.parse_date(start)).days + 1
-
-
-def desired_iterations(plan):
-    """One iteration per milestone. Weekends between two work units belong to the earlier one,
-    so they do not show as breaks. A declared break leaves a real gap in the iterations."""
-    out = []
-    ms = plan["milestones"]
-    for i, m in enumerate(ms):
-        start = L.parse_date(m["start"])
-        end = L.parse_date(m["end"])
-        if i + 1 < len(ms):
-            nxt = L.parse_date(ms[i + 1]["start"])
-            stops = [L.parse_date(b["start"]) for b in plan["breaks"] if end < L.parse_date(b["start"]) < nxt]
-            end = (min(stops) if stops else nxt) - dt.timedelta(days=1)
-        out.append({"title": f"Work unit {m['number']}, {m['name']}", "startDate": m["start"], "duration": (end - start).days + 1})
-    return out
+days_inclusive = RP.days_inclusive
+desired_iterations = RP.desired_iterations
 
 
 def break_ranges(plan):
@@ -271,6 +257,9 @@ def run(argv=None):
         return _run(argv)
     except G.GitHubError as e:
         return G.report(e)
+    except RSY.PublicationRefused as e:
+        print(f"error: {e.line()}", file=sys.stderr)
+        return 1
 
 
 def _run(argv=None):
@@ -316,11 +305,34 @@ def _run(argv=None):
         for p in problems:
             L.say("  - " + p)
         return 1
+    pub, early = None, None
+    if not a.offline and S.release_mode(root):
+        # a project with a handling policy builds the board from an approved release, never from its working files
+        token = G.read_token(a.token_file, required=a.apply or a.verify)
+        if token:
+            early = G.GitHub(token, pause=0.3)
+            try:
+                pub = RSY.open_publication(root, a, early)
+            except RSY.PublicationRefused as e:
+                L.say(e.line())
+                return 1
+            plan = pub.plan
+            if a.repo and a.repo.casefold() != pub.repository.casefold():
+                L.say("target-identity-mismatch: --repo names another repository than the one this release approved")
+                return 1
+            a.repo = pub.repository
     owner_repo, name = L.repo_parts(plan, a.repo)
     plan["project"]["repo"] = f"{owner_repo}/{name}"
     owner = a.owner or owner_repo
     title = a.title or plan["project"]["project_title"]
     iterations = desired_iterations(plan)
+    board = None
+    if pub is not None:
+        board = pub.payload("board", "project")[1] if ("board", "project") in pub.payloads else None
+        if board is None:
+            L.say("destination-not-allowed: this release has no board. Nothing was written.")
+            return 1
+        iterations = board["fields"]["Work unit"]["iterations"]
 
     L.say("")
     L.say(f"carrydown github_project  {'APPLY' if a.apply else 'VERIFY' if a.verify else 'DRY RUN (nothing will be written)'}")
@@ -339,7 +351,8 @@ def _run(argv=None):
     if not token:
         L.say(f"not checked against GitHub (no token): showing the intended configuration only. To set one up, run: python3 {G.TOKEN_SCRIPT}")
         return 0
-    gh = G.GitHub(token, pause=0.3)
+    gh = early or G.GitHub(token, pause=0.3)
+    RSY.install_guard(gh, root, pub)
     st, ujs = gh.rest_status("GET", f"/users/{owner}")
     if st == 404:
         L.die(f"owner {owner} not found")
@@ -355,7 +368,7 @@ def _run(argv=None):
 
     # issues to place: only issues with the project label, matched by marker, then by title.
     # Titles printed below are the plan's, never the ones fetched from GitHub.
-    sync = S.Sync(plan, root, gh, owner_repo, name, False)
+    sync = S.Sync(plan, root, gh, owner_repo, name, False, mapping=pub is None)
     placements = []   # (issue, kind, milestone, item, plan title)
     epic = plan["project"].get("epic")
     epic_issue = None
@@ -381,7 +394,16 @@ def _run(argv=None):
         L.say("Create the issues first, then rerun this script.")
         return 1
 
-    proj = find_project(gh, owner, owner_type, title, a.project_number)
+    if pub is not None:
+        bt = pub.targets_resolved.get("board")
+        node = bt.identity["project_id"] if bt else None
+        info = retry_graphql(gh, FIELD_Q, {"p": node, "fa": None, "va": None})["node"] if node else None
+        if not info or not info.get("id"):
+            L.say("destination-not-allowed: the approved board does not exist. Provision it first; a release never creates a board. Nothing was written.")
+            return 1
+        proj = {"id": info["id"], "number": info.get("number"), "url": info.get("url"), "title": info.get("title"), "closed": False}
+    else:
+        proj = find_project(gh, owner, owner_type, title, a.project_number)
     if a.project_number and not proj:
         L.die(f"project #{a.project_number} was not found for {owner}, or it is closed, so nothing was created. "
               "Check the number in the project's address, or leave out --project-number to find or create the project by title", 1)
@@ -409,6 +431,13 @@ def _run(argv=None):
 
     pdata = load_project(gh, proj["id"])
     fields = field_map(pdata)
+    if pub is not None:
+        done = pub.journal.get("board/project")
+        if done and done.get("state") == "completed":
+            have = RSY.board_state(load_items(gh, proj["id"], f"{owner_repo}/{name}"), placements, plan)
+            if RSY.managed_digest(have) != done.get("managed_state_sha256"):
+                L.say("target changed since publication: board")
+                return 1
     for fname, kind in (("Work unit", "ITERATION"), ("Track", "SINGLE_SELECT"),
                         ("Complete by", "DATE"), ("Checkpoint", "DATE")):
         if fname in fields and fields[fname].get("dataType") != kind:
@@ -523,18 +552,21 @@ def _run(argv=None):
             continue
         desired = {}
         wu_title = f"Work unit {ms['number']}, {ms['name']}"
+        approved = board["items"].get(L.tag(plan, it["id"]) if it else f"M{ms['number']}") if board else None
+        if approved is not None:
+            wu_title = approved["Work unit"]
         if "Work unit" in fields and wu_title in iter_ids:
             desired["Work unit"] = ("iterationId", iter_ids[wu_title])
         if kind == "item":
             if "Track" in fields:
-                tl = L.track_label(plan, it["track"]).casefold()
+                tl = (approved["Track"] if approved else L.track_label(plan, it["track"])).casefold()
                 if tl in track_ids:
                     desired["Track"] = ("singleSelectOptionId", track_ids[tl])
-            desired["Complete by"] = ("date", it["complete_by"])
-            desired["Checkpoint"] = ("date", it["checkpoint"])
+            desired["Complete by"] = ("date", approved["Complete by"] if approved else it["complete_by"])
+            desired["Checkpoint"] = ("date", approved["Checkpoint"] if approved else it["checkpoint"])
         else:
-            desired["Complete by"] = ("date", ms["end"])
-            desired["Checkpoint"] = ("date", ms["demo"])
+            desired["Complete by"] = ("date", approved["Complete by"] if approved else ms["end"])
+            desired["Checkpoint"] = ("date", approved["Checkpoint"] if approved else ms["demo"])
         for fname, (key, val) in desired.items():
             if fname not in fields:
                 continue
@@ -553,6 +585,10 @@ def _run(argv=None):
                 L.say("  failed: " + e.line())
             time.sleep(0.1)
     L.say(f"  items added: {added}; field values set: {filled}")
+    if pub is not None and a.apply:
+        state = RSY.board_state(load_items(gh, proj["id"], f"{owner_repo}/{name}"), placements, plan)
+        pub.journal.start("board/project", github_id=proj["id"], payload_sha256=pub.payload("board", "project")[2])
+        pub.journal.complete("board/project", pub.payload("board", "project")[2], RSY.managed_digest(state))
 
     # ---------------- report ----------------
     if a.apply or a.verify:

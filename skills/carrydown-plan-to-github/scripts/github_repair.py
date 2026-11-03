@@ -23,6 +23,10 @@ from pathlib import Path
 import carrydown_lib as L
 import github_client as G
 import github_sync as S
+import release_sync as RSY
+
+
+PUB = [None]      # the opened publication of this run, when the project publishes an approved release
 
 
 def entries(plan):
@@ -81,7 +85,7 @@ def fingerprint(issue):
 
 
 def repair(gh, before, plan, root, owner, repo, apply=False, verify=False, selections=None):
-    sync = S.Sync(plan, root, gh, owner, repo, False, selections)
+    sync = S.Sync(plan, root, gh, owner, repo, False, selections, mapping=PUB[0] is None)
     base = sync.base
     expected = entries(plan)
     known = entries(before)
@@ -146,6 +150,8 @@ def repair(gh, before, plan, root, owner, repo, apply=False, verify=False, selec
         current_parent = parent_of(gh, base, current)
         if fingerprint(current) != fingerprint(issue) or (current_parent or {}).get("id") != (parent or {}).get("id"):
             L.die(f"{key} changed during this run. Stop and preview again", 1)
+        if patch and PUB[0] is not None:
+            RSY.check_patch(PUB[0], key, current, patch)
         if patch:
             gh.rest("PATCH", f"{base}/issues/{issue['number']}", patch)
         if move:
@@ -167,6 +173,9 @@ def run(argv=None):
         return main(argv)
     except G.GitHubError as e:
         return G.report(e)
+    except RSY.PublicationRefused as e:
+        print(f"error: {e.line()}", file=sys.stderr)
+        return 1
 
 
 def main(argv=None):
@@ -217,6 +226,14 @@ def main(argv=None):
         return check.returncode
     owner, repo = L.repo_parts(plan, a.repo)
     gh = G.GitHub(G.read_token(a.token_file))
+    pub = None
+    if S.release_mode(root):
+        # a project with a handling policy repairs only what an approved release lists
+        pub = RSY.open_publication(root, a, gh)
+        if pub is not None and f"{owner}/{repo}".casefold() != pub.repository.casefold():
+            L.die("target-identity-mismatch: this release approved another repository", 1)
+    RSY.install_guard(gh, root, pub)
+    PUB[0] = pub
     status, repository = gh.rest_status("GET", f"/repos/{owner}/{repo}")
     if status != 200:
         L.die("repository not found or inaccessible", 1)

@@ -62,6 +62,9 @@ ROOT = HERE.parent.parent
 TMP = tempfile.mkdtemp(prefix="carrydown-mock-")
 SAMPLE = str(Path(TMP) / "sample")
 shutil.copytree(ROOT / "sample" / "expense-approvals", SAMPLE)
+sys.path.insert(0, str(HERE))
+from release_fixture import strip_handling  # noqa: E402
+strip_handling(SAMPLE)       # these scenarios are about the GitHub scripts of a legacy project
 atexit.register(shutil.rmtree, TMP, True)
 os.environ["HOME"] = TMP
 os.environ["USERPROFILE"] = TMP

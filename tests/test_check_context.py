@@ -655,7 +655,7 @@ class CommandLineTests(OriginTests):
         run = self.run_script("WI-06", script=GENERATED)
         self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
 
-    def test_the_sample_has_no_receipt_yet_so_the_check_gives_the_first_message(self):
+    def test_run_from_the_top_of_the_carrydown_repository_the_sample_has_no_context(self):
         run = self.run_script("WI-06", cwd=SAMPLE, script=GENERATED)
         self.assertEqual((run.returncode, run.stdout.splitlines()[0]), (10, FIRST))
         self.assertFalse((SAMPLE / ".carrydown").exists())

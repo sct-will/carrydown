@@ -54,90 +54,29 @@ import carrydown_lib as L  # noqa: E402
 import github_client as G  # noqa: E402
 import check_specs  # noqa: E402
 
-COLORS = {"GRAY": "6e7781", "BLUE": "1d76db", "GREEN": "0e8a16", "YELLOW": "fbca04", "ORANGE": "d93f0b",
-          "RED": "b60205", "PINK": "e99695", "PURPLE": "5319e7"}
-MARKER = "<!-- carrydown:rollup -->"
-MARKER_RE = re.compile(r"<!-- carrydown:([A-Za-z0-9_-]+) -->")
-SEVEN = ["Work item", "AI engineering notes", "Depends on", "Acceptance criteria", "Evidence of completion", "Integration points", "Definition of done"]
+import release_payloads as RP  # noqa: E402
+import release_gate as RG  # noqa: E402
 
-
-def subepic_title(plan, ms):
-    return f"{plan['project']['subepic_prefix']} {ms['number']}, {ms['name']}"
-
-
-def item_title(plan, it):
-    """The issue title of a work item. validate_plan has checked project.title_format, and every
-    script stops on a plan problem before it calls this."""
-    return L.format_title(plan["project"]["title_format"], L.tag(plan, it["id"]), it["label"])
-
-
-def definition_of_done(plan):
-    c = plan["conventions"]
-    items = ["Every acceptance criterion is proven by a test or a recorded check named in the pull request."]
-    land = f"The work landed on {plan['project']['branch']}"
-    if c.get("feature_flag"):
-        land += f" behind the {c['feature_flag']} flag"
-    items.append(land + ".")
-    checks = [f"`{c[k]}`" for k in ("test_command", "lint_command") if c.get(k)]
-    if checks:
-        items.append(" and ".join(checks) + " pass.")
-    for extra in c.get("extra") or []:
-        items.append(extra if extra.endswith(".") else extra + ".")
-    items.append("The \"Decisions recorded\" section of the specification is updated if the implementation departed from it.")
-    items.append("The item is demonstrated at its checkpoint with the joint check run.")
-    items.append("The closing comment on this issue follows the template in the specification folder README (Demo, Evidence, Decisions, Handoff) with every artifact listed above attached.")
-    return "\n".join(f"- [ ] {i}" for i in items)
-
-
-def plan_end_date(plan):
-    return max((L.parse_date(it["complete_by"]) for it in plan["items"]), default=None)
-
-
-def target_phrase(plan):
-    """(date text, 'given' or 'derived') for the plan's target delivery."""
-    tdate, _ = L.target_date(plan)
-    if tdate and L.target_is_constraint(plan):
-        return L.fmt_date(tdate), "given"
-    end = plan_end_date(plan)
-    return (L.fmt_date(end) if end else "not known yet"), "derived"
-
-
-def constraints_lines(plan, staffed=None):
-    """The project constraints as they appear on GitHub: target delivery, then people by track.
-
-    The people by track are the capacity summary. They appear only when the plan's downstream
-    capacity_summary flag allows (L.downstream_flags: true for a legacy plan, false for a migrated
-    one unless the owner set it). Percent allocated comes from staffed, the plan with people.yaml
-    merged in; a migrated plan on its own holds no allocation, so the percent is left out."""
-    date, how = target_phrase(plan)
-    lines = [f"Target delivery: {date} (" + ("given" if how == "given" else "derived from the critical path") + ")"]
-    if not L.downstream_flags(plan)["capacity_summary"]:
-        return lines
-    people = plan["people"]
-    if not people:
-        lines.append(f"People: to be assigned (derived capacity: {len(plan['tracks'])})")
-        return lines
-    known = staffed if staffed is not None else plan
-    percent = L.staffing_loaded(known)
-    allocation = {p.get("id"): p.get("allocation", 100) for p in known["people"]}
-    for t in plan["tracks"]:
-        mine = [p for p in people if p.get("track") == t["id"]]
-        if not mine:
-            continue
-        n = len(mine)
-        total = sum(allocation.get(p.get("id"), 100) for p in mine)
-        holder = " (placeholder)" if any(p.get("derived") for p in mine) else ""
-        lines.append(f"Track {t['label']}: {n} {'person' if n == 1 else 'people'}{holder}" + (f", {total} percent allocated" if percent else ""))
-    return lines
-
-
-def marker(key):
-    """The hidden line at the end of each body that ties an issue to its plan key (WI-07, M1, EPIC)."""
-    return f"<!-- carrydown:{key} -->"
-
-
-def with_marker(body, key):
-    return "<!-- carrydown-managed:start -->\n" + body.rstrip("\n") + "\n<!-- carrydown-managed:end -->\n\n" + marker(key) + "\n"
+# The body builders live in release_payloads.py, which publication and preparation share. They are
+# imported again here under their old names.
+COLORS = RP.COLORS
+MARKER = RP.MARKER
+MARKER_RE = RP.MARKER_RE
+SEVEN = RP.SEVEN
+subepic_title = RP.subepic_title
+item_title = RP.item_title
+definition_of_done = RP.definition_of_done
+plan_end_date = RP.plan_end_date
+target_phrase = RP.target_phrase
+constraints_lines = RP.constraints_lines
+marker = RP.marker
+with_marker = RP.with_marker
+first_paragraph = RP.first_paragraph
+link_ids = RP.link_ids
+build_item_body = RP.build_item_body
+optional_section = RP.optional_section
+build_subepic_body = RP.build_subepic_body
+build_rollup = RP.build_rollup
 
 
 MANAGED_RE = re.compile(r"<!-- carrydown-managed:start -->\n?(.*?)\n?<!-- carrydown-managed:end -->", re.S)
@@ -180,100 +119,6 @@ def unlinked_ids(plan, text, numbers):
     return out
 
 
-def first_paragraph(text):
-    paras = [p.strip() for p in re.split(r"\n\s*\n", text.strip()) if p.strip()]
-    return paras[0] if paras else ""
-
-
-def link_ids(plan, text, numbers):
-    prefix = re.escape(plan["project"]["id_prefix"])
-
-    def sub(m):
-        n = int(m.group(2))
-        key = L.tag(plan, n)
-        if key in numbers:
-            return f"{m.group(0)} (#{numbers[key]})"
-        return m.group(0)
-
-    out = []
-    for line in text.split("\n"):
-        # the skill invocation line names an id the agent must read as plain text
-        out.append(line if line.startswith("Install it once") else re.sub(rf"\b({prefix})-(\d+)\b(?! \(#)", sub, line))
-    return "\n".join(out)
-
-
-def build_item_body(plan, root, it, numbers=None, mark=True):
-    numbers = numbers or {}
-    sp = L.spec_path(plan, root, it)
-    spec = L.read_spec(sp)
-    rel = sp.relative_to(root).as_posix()
-    cp = L.checkpoint_of(plan, it) or {"date": it["checkpoint"], "name": ""}
-    proj = plan["project"]
-    skill = ""
-    if proj.get("dev_skill_path") and proj.get("repo"):
-        skill = (
-            f"Engineers' skill: {L.github_tree_url(plan, proj['dev_skill_path'])}\n\n"
-            f"Install it once following its README, then start this item by asking your coding agent to work on {L.tag(plan, it['id'])}. "
-            "The skill makes the agent read the specification above, the ground truth sections it cites and the project conventions "
-            "before it changes code. You review every change."
-        )
-    deps = [f"- {L.tag(plan, d)} {L.item_by_id(plan)[d]['label']}" for d in it["depends"]]
-    if it["external_input"]:
-        deps.append(f"- External input: {it['external_input']}")
-    values = {
-        "complete_by": it["complete_by"],
-        "checkpoint": f"{cp['date']}, {cp['name']}",
-        "description": first_paragraph(L.section_text(spec, "Why this work item exists")) or first_paragraph(L.section_text(spec, "Outcome")),
-        "spec_url": L.github_blob_url(plan, rel),
-        "skill_line": skill,
-        "ground_truth": L.ground_truth_citation(plan, it) or spec["rows"].get("Ground truth", ""),
-        "depends": "\n".join(deps) if deps else "None.",
-        "acceptance": L.section_text(spec, "Acceptance criteria"),
-        "evidence": L.section_text(spec, "Evidence of completion"),
-        "integration": L.section_text(spec, "Integration points"),
-        "definition_of_done": definition_of_done(plan),
-    }
-    body = L.fill(L.read_template("issue-body.md"), values)
-    body = re.sub(r"\n{3,}", "\n\n", body)
-    if not skill:
-        body = body.replace("Specification: " + values["spec_url"] + "\n\n\n", "Specification: " + values["spec_url"] + "\n\n")
-    body = link_ids(plan, body.rstrip() + "\n", numbers)
-    return with_marker(body, L.tag(plan, it["id"])) if mark else body
-
-
-def optional_section(spec, name):
-    """A heading and the section text, without the HTML comments scaffold_spec.py writes into
-    generated sections. Nothing when the milestone file has no such section."""
-    text = re.sub(r"<!--.*?-->", "", L.section_text(spec, name), flags=re.S).strip()
-    return [f"### {name}", "", text, ""] if text else []
-
-
-def build_subepic_body(plan, root, ms, numbers=None, mark=True):
-    numbers = numbers or {}
-    p = L.milestone_path(plan, root, ms)
-    spec = L.read_spec(p)
-    rel = p.relative_to(root).as_posix()
-    lines = [L.section_text(spec, "Purpose"), "", f"**Exit gate.** {ms['gate']}", "",
-             f"**Due.** {ms['end']}. **Demonstration.** {ms['demo']}.", "",
-             f"Target delivery for the plan: {target_phrase(plan)[0]} ({target_phrase(plan)[1]})", ""]
-    lines += optional_section(spec, "Why these items form this milestone")
-    lines += ["### Expected outcomes", "", L.section_text(spec, "Expected outcomes"), ""]
-    lines += optional_section(spec, "Joint demonstration")
-    lines += ["### Acceptance criteria", "", L.section_text(spec, "Acceptance criteria"), "",
-             "### Demonstration expectations", "", L.section_text(spec, "Demonstration expectations"), "",
-             "### Work items", ""]
-    for it in plan["items"]:
-        if it["milestone"] != ms["number"]:
-            continue
-        t = L.tag(plan, it["id"])
-        who = L.assignee_login(plan, it)
-        ref = f"#{numbers[t]} " if t in numbers else ""
-        lines.append(f"- [ ] {ref}{t} {it['label']}" + (f", @{who}" if who else "") + f", by {it['complete_by']}")
-    lines += ["", f"Milestone file: {L.github_blob_url(plan, rel)}"]
-    body = re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).rstrip() + "\n"
-    return with_marker(body, f"M{ms['number']}") if mark else body
-
-
 def safe_to_rewrite(have, pristine):
     """True when a body is still exactly as this script wrote it (with or without the marker),
     so a rerun may add the links. A body a person edited is never in this set."""
@@ -281,34 +126,8 @@ def safe_to_rewrite(have, pristine):
     return any(norm == p.rstrip() for p in pristine)
 
 
-def build_rollup(plan, numbers, epic_number, staffed=None):
-    proj = plan["project"]
-    readme = L.github_blob_url(plan, f"{proj['spec_dir']}/README.md")
-    intro = (f"{len(plan['milestones'])} sub-epics, one per milestone, each holding its work item issues as sub-issues. A box is checked when its issue closes. "
-             f"Conventions, the checkpoint schedule and the comment templates are in [{proj['spec_dir']}/README.md]({readme}).")
-    if plan["external"]["items"]:
-        intro += " External items are owned outside the team and tracked outside these issues."
-    out = [MARKER, f"## Development plan, {proj['name']}", "", "**Constraints**", ""] + [f"- {l}" for l in constraints_lines(plan, staffed)] + ["", intro, ""]
-    for ms in plan["milestones"]:
-        sk = f"M{ms['number']}"
-        ref = f"#{numbers[sk]} " if sk in numbers else ""
-        out.append(f"- [ ] {ref}{subepic_title(plan, ms)}, due {ms['end']}")
-        for it in plan["items"]:
-            if it["milestone"] == ms["number"]:
-                t = L.tag(plan, it["id"])
-                who = L.assignee_login(plan, it)
-                r = f"#{numbers[t]} " if t in numbers else ""
-                out.append(f"  - [ ] {r}{t} {it['label']}" + (f", @{who}" if who else "") + f", by {it['complete_by']}")
-    out += ["", "### How progress is shown", "",
-            "Each milestone is a sub-epic with its acceptance criteria and demonstration expectations in its body. "
-            "The demonstration is given by the people who own the items, in a meeting, and its outcome is noted on the sub-epic. "
-            "Checkpoints between the tracks, each on its date in the plan, are integration checks, not demonstrations, and their short records are comments here. "
-            "Each work item closes with an evidence comment on its own issue (Demo, Evidence, Decisions, Handoff)."]
-    return "\n".join(out) + "\n"
-
-
 class Sync:
-    def __init__(self, plan, root, gh, owner, repo, apply, selections=None):
+    def __init__(self, plan, root, gh, owner, repo, apply, selections=None, mapping=True):
         self.plan, self.root, self.gh, self.owner, self.repo, self.apply = plan, Path(root), gh, owner, repo, apply
         self.staffed = None   # the plan with people.yaml merged in, used only for the allocation percent in the roll-up
         self.base = f"/repos/{owner}/{repo}"
@@ -321,9 +140,12 @@ class Sync:
         self.planned = set()
         self.counts = {"labels": 0, "subepics": 0, "items": 0, "links": 0, "bodies": 0}
         self.selections = selections or {}
+        self.persist = mapping           # a release keeps its issue numbers in the publication journal, not in a file
+        self.before_write = None         # called with the plan key before each create; a release asks the gate here
+        self.expected_hook = None        # a release supplies the expected body of a key from its payloads
         self.mapping_path = L.inside(self.root, self.root / plan["project"]["spec_dir"] / "github-issues.json", "issue mapping")
         self.mapping = {}
-        if self.mapping_path.exists():
+        if mapping and self.mapping_path.exists():
             saved = json.loads(L.read_text(self.mapping_path))
             if saved.get("repository", "").casefold() != f"{owner}/{repo}".casefold():
                 raise G.GitHubError("persisted issue mapping names a different repository; review github-issues.json before continuing")
@@ -382,7 +204,9 @@ class Sync:
             expected = None
             item = next((it for it in self.plan["items"] if L.tag(self.plan, it["id"]) == key), None)
             ms = next((m for m in self.plan["milestones"] if f"M{m['number']}" == key), None)
-            if item:
+            if self.expected_hook is not None:
+                expected = self.expected_hook(key)
+            elif item:
                 expected = build_item_body(self.plan, self.root, item)
             elif ms:
                 expected = build_subepic_body(self.plan, self.root, ms)
@@ -433,15 +257,14 @@ class Sync:
         return chosen
 
     def save_mapping(self):
-        if self.apply:
+        if self.apply and self.persist:
+            text = json.dumps({"repository": f"{self.owner}/{self.repo}", "issues": self.mapping}, indent=2, sort_keys=True) + "\n"
+            rel = self.mapping_path.relative_to(self.root.resolve()).as_posix() if self.root.resolve() in self.mapping_path.parents else str(self.mapping_path)
+            RG.require("draft", rel, L.sha256_text(text), "engineering-repo", self.root)
             L.write_text(self.mapping_path, json.dumps({"repository": f"{self.owner}/{self.repo}", "issues": self.mapping}, indent=2, sort_keys=True) + "\n")
 
     def desired_labels(self):
-        proj = self.plan["project"]
-        out = [(proj["slug"], "6e7781", f"Work item of {proj['name']}"), ("sub-epic", "5319e7", "Milestone sub-epic")]
-        for t in self.plan["tracks"]:
-            out.append((t["id"], COLORS.get(str(t.get("color", "GRAY")).upper(), "6e7781"), f"{t['label']} track"))
-        return out
+        return RP.desired_labels(self.plan)
 
     def labels(self):
         have = {l["name"].lower() for l in self.gh.paged(f"{self.base}/labels")} if self.gh else set()
@@ -471,6 +294,8 @@ class Sync:
         if not self.apply:
             self.planned.add(key)
             return None, True
+        if self.before_write is not None:
+            self.before_write(key)
         payload = {"title": title, "body": body, "labels": labels}
         if assignees:
             payload["assignees"] = assignees
@@ -515,11 +340,260 @@ class Sync:
         time.sleep(0.5)
 
 
+
+# ---------------------------------------------------------------------------
+# Publishing an approved release (specification D4, D5)
+# ---------------------------------------------------------------------------
+
+def release_mode(root):
+    """True when the project has a handling policy or an enrollment, so GitHub writes need an approved release."""
+    return not RG._is_legacy(RG.project_state(root))
+
+
+def release_state(pub, s, gh, kind, key, issue):
+    """The managed state of one issue-like target as read back now, and its digest."""
+    import release_sync as RSY
+    payload = pub.payload(kind, key)[1]
+    state = RSY.issue_state(managed_content, gh, s.base, payload, issue)
+    return state, RSY.managed_digest(state)
+
+
+def release_expected(pub, s, kind, key):
+    payload = pub.payload(kind, key)[1]
+    return payload, pub.text_for(payload, s.numbers)
+
+
+def release_check(pub, s, gh, skip_comment):
+    """Read GitHub and compare every target with its approved payload. Returns True when all match."""
+    ok = True
+    L.say("\nVerification (read only)")
+    labels = {x["name"].lower() for x in gh.paged(f"{s.base}/labels")}
+    for (kind, key), (path, payload, sha) in sorted(pub.payloads.items()):
+        if kind in ("issue", "subepic", "epic"):
+            found = s.find(key, payload["title"])      # every number is known before any body is compared
+            if found:
+                s.remember(key, found)
+    for (kind, key), (path, payload, sha) in sorted(pub.payloads.items()):
+        if kind == "label":
+            present = payload["name"].lower() in labels
+            L.say(f"  label {payload['name']}: " + ("present" if present else "MISSING"))
+            ok &= present
+            continue
+        if kind in ("issue", "subepic", "epic"):
+            issue = s.find(key, payload["title"])
+            if not issue:
+                L.say(f"  MISSING {kind}: {key}")
+                ok = False
+                continue
+            s.remember(key, issue)
+            want = pub.text_for(payload, s.numbers).strip()
+            have = managed_content(issue.get("body"))
+            wanted_labels = {x.casefold() for x in payload["labels"]}
+            has_labels = {x["name"].casefold() for x in issue.get("labels", [])}
+            wanted_assignees = {x.casefold() for x in payload["assignees"]}
+            has_assignees = {x["login"].casefold() for x in issue.get("assignees", [])}
+            problems = []
+            if issue["title"] != payload["title"]:
+                problems.append("title")
+            if have != want:
+                problems.append("body")
+            if not wanted_labels <= has_labels:
+                problems.append("labels")
+            if not wanted_assignees <= has_assignees:
+                problems.append("assignees")
+            L.say(f"  {key} #{issue['number']}: " + ("matches the approved payload" if not problems else "DIFFERS in " + ", ".join(problems)))
+            ok &= not problems
+    epic = s.numbers.get("EPIC")
+    if ("epic-comment", "rollup") in pub.payloads and epic and not skip_comment:
+        com = own_rollups(gh, s.base, epic)
+        payload = pub.payloads[("epic-comment", "rollup")][1]
+        want = pub.text_for(payload, s.numbers)
+        good = bool(com) and com[0]["body"].replace("\r\n", "\n") == want
+        L.say("  Epic roll-up comment: " + ("matches the approved payload" if good else "MISSING or different"))
+        ok &= good
+    L.say("verification " + ("passed" if ok else "FAILED"))
+    return ok
+
+
+def release_run(a, root, gh):
+    """The release path of github_sync (D4, D5): payloads from the snapshot, substitutions only, a journal,
+    and the release gate asked before every write. Returns an exit status, or None for a legacy project."""
+    import release_sync as RSY
+    try:
+        pub = RSY.open_publication(root, a, gh)
+    except RSY.PublicationRefused as e:
+        L.say(e.line())
+        return 1
+    if pub is None:
+        return None
+    owner, repo = pub.repository.split("/", 1)
+    if a.repo and a.repo.casefold() != pub.repository.casefold():
+        L.say("target-identity-mismatch: --repo names another repository than the one this release approved")
+        return 1
+    selections = {}
+    for selection in a.select_issue:
+        match = re.fullmatch(r"([A-Za-z0-9_-]+)=([1-9][0-9]*)", selection)
+        if not match:
+            L.die("--select-issue must be KEY=NUMBER")
+        selections[match[1]] = int(match[2])
+    L.say("")
+    L.say(f"carrydown github_sync  {'APPLY' if a.apply else 'VERIFY (read only)' if a.verify else 'DRY RUN (nothing will be written)'}  (approved release)")
+    L.say(f"repository: {pub.repository} (numeric id {pub.repository_id})    request: {pub.rid}")
+    kinds = {}
+    for (kind, key) in pub.payloads:
+        kinds[kind] = kinds.get(kind, 0) + 1
+    L.say("payloads: " + ", ".join(f"{n} {k}" for k, n in sorted(kinds.items())))
+    s = Sync(pub.plan, Path(root), gh, owner, repo, a.apply, selections, mapping=False)
+    s.expected_hook = lambda key: with_marker(pub.text_for(pub.payload(RSY.kind_of(key), key)[1], s.numbers), key)
+    RSY.install_guard(gh, root, pub, s)
+    status, js = gh.rest_status("GET", s.base)
+    if status == 404 or not isinstance(js, dict):
+        L.say(f"repository {pub.repository} was not found, or the token cannot see it.")
+        return 1
+    if a.verify:
+        return 0 if release_check(pub, s, gh, a.skip_comment) else 1
+    # nothing is written until every approved login resolves and every needed label is approved or present
+    for login in sorted({x for (_k, _key), (_p, payload, _s) in pub.payloads.items() for x in payload.get("assignees", [])}):
+        st, _ = gh.rest_status("GET", f"/users/{login}")
+        if st == 404:
+            L.say("assignee-unresolved: an approved assignee login does not resolve to a GitHub user. Nothing was written.")
+            return 1
+    have_labels = {x["name"].lower() for x in gh.paged(f"{s.base}/labels")}
+    approved_labels = {payload["name"].lower() for (k, _key), (_p, payload, _s) in pub.payloads.items() if k == "label"}
+    needed = {x.lower() for (k, _key), (_p, payload, _s) in pub.payloads.items() if k in ("issue", "subepic", "epic") for x in payload["labels"]}
+    absent = sorted(needed - have_labels - approved_labels)
+    if absent:
+        L.say(f"destination-not-allowed: {len(absent)} label(s) are neither on GitHub nor approved for creation in this release. Nothing was written.")
+        return 1
+    # resume: a target completed under this request must still read back as it was published
+    for jkey, entry in sorted(pub.journal.targets.items()):
+        if entry.get("state") != "completed":
+            continue
+        kind, key = jkey.split("/", 1)
+        if (kind, key) not in pub.payloads or kind not in ("issue", "subepic", "epic"):
+            continue
+        status, issue = gh.rest_status("GET", f"{s.base}/issues/{entry.get('number')}")
+        if status != 200:
+            L.say(f"target changed since publication: {key}")
+            return 1
+        _, digest = release_state(pub, s, gh, kind, key, issue)
+        if digest != entry.get("managed_state_sha256"):
+            L.say(f"target changed since publication: {key}")
+            return 1
+    # a replacement: a target an earlier request published and nobody has edited since may be updated to the
+    # new approved payload. One that was edited stops the run, as a changed completed target does.
+    approved_update = set()
+    others = pub.journal.others()
+    for (kind, key) in sorted(pub.payloads):
+        jkey = f"{kind}/{key}"
+        mine = pub.journal.get(jkey)
+        if kind not in ("issue", "subepic", "epic") or (mine and mine.get("state") == "completed") or not others.get(jkey):
+            continue
+        prior = [e for e in others[jkey] if e.get("state") == "completed" and e.get("number")]
+        if not prior:
+            continue
+        status, issue = gh.rest_status("GET", f"{s.base}/issues/{prior[-1]['number']}")
+        if status != 200:
+            L.say(f"target changed since publication: {key}")
+            return 1
+        _, digest = release_state(pub, s, gh, kind, key, issue)
+        # the earlier request's payload decides what its published state looked like, so compare against it
+        if digest != prior[-1].get("managed_state_sha256"):
+            L.say(f"target changed since publication: {key}")
+            return 1
+        approved_update.add(key)
+    L.say("\nLabels")
+    for (kind, key), (_p, payload, _s) in sorted(pub.payloads.items()):
+        if kind != "label":
+            continue
+        if payload["name"].lower() in have_labels:
+            L.say(f"  label exists: {payload['name']}")
+            continue
+        L.say(f"  {'create' if a.apply else 'would create'} label: {payload['name']}")
+        if a.apply:
+            gh.rest("POST", f"{s.base}/labels", {"name": payload["name"], "color": payload["color"], "description": payload["description"]})
+            pub.journal.start(f"label/{key}", payload_sha256=pub.payload(kind, key)[2])
+            pub.journal.complete(f"label/{key}", pub.payload(kind, key)[2], RSY.managed_digest({"name": payload["name"], "color": payload["color"], "description": payload["description"]}))
+            s.counts["labels"] += 1
+    order = [("epic", k) for (kd, k) in sorted(pub.payloads) if kd == "epic"] + \
+            [("subepic", k) for (kd, k) in sorted(pub.payloads) if kd == "subepic"] + \
+            [("issue", k) for (kd, k) in sorted(pub.payloads) if kd == "issue"]
+    epic_number = pub.plan["project"].get("epic")
+    if epic_number and not any(k == "epic" for k, _ in order):
+        s.remember("EPIC", gh.rest("GET", f"{s.base}/issues/{epic_number}"))
+    for kind, key in order:
+        payload = pub.payload(kind, key)[1]
+        body = with_marker(pub.text_for(payload, s.numbers), key)
+        iss, new = s.create_or_find(payload["title"], body, payload["labels"], payload["assignees"], key, a.issue_type if kind == "issue" else "")
+        if iss and a.apply:
+            pub.journal.start(f"{kind}/{key}", github_id=iss["id"], number=iss["number"], node_id=iss.get("node_id"),
+                              payload_sha256=pub.payload(kind, key)[2])
+    if not a.apply:
+        L.say("\nSummary")
+        L.say(f"  to create now: {len(s.planned)} of {len(order)} issue(s). The rest are on GitHub already.")
+        L.say("\nDry run complete. Read it, then add --apply to write.")
+        return 0
+    L.say("\nLinks")
+    for kind, key in order:
+        parent = pub.payload(kind, key)[1].get("relationships", {}).get("parent")
+        if parent and parent in s.numbers and key in s.numbers:
+            s.ensure_sub(parent, key)
+    L.say("\nLinking dependency ids and work item lists")
+    for kind in ("subepic", "issue"):
+        for k, key in order:
+            if k != kind:
+                continue
+            payload = pub.payload(kind, key)[1]
+            cur = s.objs[key]
+            want = with_marker(pub.text_for(payload, s.numbers), key)
+            have = (cur.get("body") or "").replace("\r\n", "\n")
+            first = pub.text_for(payload, {})
+            pristine = [with_marker(first, key), first, pub.text_for(payload, s.numbers)]
+            if want != have and (key in s.created or key in approved_update or a.update_bodies or safe_to_rewrite(have, pristine)):
+                merged = merge_managed(have, want, key)
+                pub.check_sent(payload, s.numbers, managed_content(merged))
+                gh.rest("PATCH", f"{s.base}/issues/{cur['number']}", {"body": merged})
+                cur["body"] = merged
+                s.counts["bodies"] += 1
+                L.say(f"  updated {key} #{cur['number']}")
+                time.sleep(0.4)
+    if ("epic-comment", "rollup") in pub.payloads and "EPIC" in s.numbers and not a.skip_comment:
+        L.say("\nEpic roll-up comment")
+        payload = pub.payloads[("epic-comment", "rollup")][1]
+        text = pub.text_for(payload, s.numbers)
+        existing = own_rollups(gh, s.base, s.numbers["EPIC"])
+        if existing:
+            if existing[0]["body"].replace("\r\n", "\n") != text:
+                gh.rest("PATCH", f"{s.base}/issues/comments/{existing[0]['id']}", {"body": text})
+                L.say(f"  updated comment {existing[0]['html_url']}")
+            else:
+                L.say("  comment already up to date")
+            comment = existing[0]
+        else:
+            comment = gh.rest("POST", f"{s.base}/issues/{s.numbers['EPIC']}/comments", {"body": text})
+            L.say(f"  posted comment {comment['html_url']}")
+        pub.journal.start("epic-comment/rollup", github_id=comment["id"], payload_sha256=pub.payloads[("epic-comment", "rollup")][2])
+        pub.journal.complete("epic-comment/rollup", pub.payloads[("epic-comment", "rollup")][2], RSY.managed_digest({"body": text}))
+    for kind, key in order:
+        issue = gh.rest("GET", f"{s.base}/issues/{s.numbers[key]}")
+        _, digest = release_state(pub, s, gh, kind, key, issue)
+        pub.journal.complete(f"{kind}/{key}", pub.payload(kind, key)[2], digest)
+    L.say("\nSummary")
+    L.say(f"  labels created: {s.counts['labels']}, bodies rewritten: {s.counts['bodies']}, new sub-issue links: {s.counts['links']}")
+    ok = release_check(pub, s, gh, a.skip_comment)
+    L.say(f"Next: python3 {Path(__file__).resolve().parent / 'github_project.py'} to build the board. Then run this script with --verify.")
+    return 0 if ok else 1
+
+
 def run(argv=None):
+    import release_sync as RSY
     try:
         return _run(argv)
     except G.GitHubError as e:
         return G.report(e)
+    except RSY.PublicationRefused as e:
+        print(f"error: {e.line()}", file=sys.stderr)
+        return 1
 
 
 def _run(argv=None):
@@ -589,6 +663,15 @@ def _run(argv=None):
             L.die(f"no item with id {a.show_body}. Use the tag ({example}) or the number, or M and a milestone number")
         L.say(build_item_body(plan, root, it))
         return 0
+    if not a.offline and release_mode(root):
+        # a project with a handling policy publishes only an approved release, from its snapshot
+        token = G.read_token(a.token_file, required=a.apply or a.verify)
+        if token:
+            rc = release_run(a, root, G.GitHub(token))
+            if rc is not None:
+                return rc
+        else:
+            L.say("this project publishes an approved release, which needs a token to verify. Showing the plan only; nothing is read from GitHub.")
     staffed = None
     if plan["_modern"] and L.downstream_flags(plan)["capacity_summary"]:
         merged, _ = L.load_plan_with_people(plan_path, root, people_path=a.people)
@@ -607,6 +690,8 @@ def _run(argv=None):
         token = G.read_token(a.token_file, required=a.apply or a.verify)
         if token:
             gh = G.GitHub(token)
+            import release_sync as RSY
+            RSY.install_guard(gh, root)        # a legacy project: the gate is asked and answers legacy
         else:
             unchecked = "no token"
     L.say("")

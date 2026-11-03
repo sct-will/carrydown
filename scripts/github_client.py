@@ -220,6 +220,14 @@ class GitHub:
         self.log = log
         self.scopes = None
         self._me = None
+        # Called as write_guard(method, path, data) before every request that changes anything: a REST
+        # call other than GET, and a GraphQL mutation. A release sets it so that the release gate is asked
+        # about each write, and a refusal raises before the request is sent. None means no guard.
+        self.write_guard = None
+
+    def _guard(self, method, path, data=None):
+        if self.write_guard is not None and method != "GET":
+            self.write_guard(method, path, data)
 
     def _headers(self):
         return {
@@ -289,11 +297,13 @@ class GitHub:
                                   f"check the network connection, then rerun; {RERUN}")
 
     def rest(self, method, path, data=None, ok=(200, 201, 202, 204)):
+        self._guard(method, path, data)
         status, js, _ = self._send(method, self.api + path, data, ok)
         return js
 
     def rest_status(self, method, path, data=None):
         """Return (status, json) and treat 404, 409 and 422 as normal answers."""
+        self._guard(method, path, data)
         status, js, _ = self._send(method, self.api + path, data, ok=(200, 201, 202, 204, 404, 409, 422))
         return status, js
 
@@ -324,6 +334,8 @@ class GitHub:
 
     def graphql(self, query, variables=None):
         safe = query.lstrip().startswith("query")   # a read; a mutation is never repeated
+        if not safe:
+            self._guard("POST", "/graphql", {"query": query, "variables": variables or {}})
         status, js, _ = self._send("POST", self.api + "/graphql", {"query": query, "variables": variables or {}}, safe=safe)
         if js is None:
             raise GitHubError("GraphQL returned no body")

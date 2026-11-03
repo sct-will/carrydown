@@ -51,6 +51,7 @@ VENDOR_OK = [
     "skills/*/templates/dev-skill/README.md.tmpl",
     "skills/carrydown-plan-to-github/references/engineers-skill-install.md",
     "sample/*/docs/dev/skills/*/README.md",
+    "tests/fixtures/sample-workspace/releases/*/snapshot/repo/docs/dev/skills/*/README.md",
 ]
 
 

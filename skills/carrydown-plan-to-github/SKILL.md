@@ -46,6 +46,8 @@ The scripts and templates folders sit next to this SKILL.md. In the commands bel
 
 Run `python3 <skill>/scripts/check_specs.py --root .`. It must report 0 findings. If it does not, stop and go back to `carrydown-ground-truth`. The sync script runs the checker again before it does anything.
 
+**An approved release comes first.** A project with a `project.handling` block publishes only an approved release, from its snapshot, never from working files. Check that one is active before any step below: run `python3 <skill>/scripts/release.py diff --root .`. If the working files differ from the active release, or none is active, run the sequence of `carrydown-ground-truth` step 8: `release.py preview`, the three named approvals (the plan is correct, these exact outputs may be shared, Carrydown may create or update these GitHub items), `prepare`, `approve` and `export`. Each GitHub script verifies the approval again before every write and refuses with a fixed reason code (`not-approved`, `withdrawn`, `superseded`, `expired`, `mixed-release`, `target-identity-mismatch`, `audience-visibility-mismatch`, `unapproved-substitution`, `assignee-unresolved`, `destination-not-allowed`). Say the code and the plain meaning to the user. Do not look for a way around it: there is none. A project with no handling block is a legacy project and runs as before.
+
 For a plan just completed by the ground-truth skill, read the outcome of its second-pass report and resolve pending planning decisions with the owner. For an older plan without that report, offer the review path in `references/plan-review-repair.md`; existing scripts do not require a new report or plan field.
 
 Every issue body links its specification at `https://github.com/<owner>/<repo>/blob/<branch>/docs/spec/...`, where `<branch>` is `project.branch`. Those links work only when the specification folder is committed and pushed to that branch. Check it before any `--apply`. Ask the user to run these commands in their own terminal, from the project root, and to tell you what they print. They only read. Do not run them yourself:
@@ -80,9 +82,14 @@ The script stores the token with mode 600 and keeps the user's file. Ask the use
 
 ### 3. Dry run of the issues
 
+For a project that publishes an approved release, leave out `--repo` and `--create-epic`: the repository and the Epic come from the approved payloads, and a different `--repo` is refused (`target-identity-mismatch`).
+
 ```bash
-python3 <skill>/scripts/github_sync.py --root . --repo owner/name --create-epic
+python3 <skill>/scripts/github_sync.py --root .                                  # an approved release
+python3 <skill>/scripts/github_sync.py --root . --repo owner/name --create-epic   # a legacy project
 ```
+
+For an approved release the dry run lists the payloads and the request id. This is the third named approval, the external-write line: "Carrydown may create or update these GitHub items", followed by the counts. An interrupted `--apply` resumes from `publication/<request id>.journal.json` in the private workspace and creates nothing twice. If it prints `target changed since publication: <key>`, a person edited the managed part of that item; stop and ask the owner what to do, and never rewrite it.
 
 `--create-epic` makes a parent Epic only when `project.epic` is empty; when it holds a number, that Epic is used. Leave the flag out of every command in steps 3 and 4 only if the user wants no parent Epic, and the summary then starts with `0 Epic`. Show the user the summary line, which reads exactly `1 Epic, N sub-epics, N work item issues` with the real numbers, and which of them exist already. Offer `--show-body ID` to print one issue body without any network call.
 

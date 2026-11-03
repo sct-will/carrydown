@@ -51,6 +51,13 @@ SMOKE = [
     (GROUND_TRUTH, "check_specs.py", ["--root", "{sample}", "--report", "--people", "{sample}/people.yaml"], ("Alloc", "18 of 54d (33%)")),
     (GROUND_TRUTH, "compile_bundles.py", ["--root", "{sample}"], ("WI-06  obligations present: 3 of 3", "18 file(s) would be written")),
     (PLAN_TO_GITHUB, "compile_bundles.py", ["--root", "{sample}"], ("WI-06  obligations present: 3 of 3", "18 file(s) would be written")),
+    (PLAN_TO_GITHUB, "release.py", ["preview", "--root", "{sample}", "--repository-id", "4200"], ("What will be shared?", "With whom?", "Where?", "What remains private?")),
+    (PLAN_TO_GITHUB, "release.py", ["prepare", "--root", "{sample}", "--repository-id", "4200"], ("DRY RUN", "Dry run: nothing was written")),
+    (PLAN_TO_GITHUB, "release.py", ["diff", "--root", "{sample}", "--repository-id", "4200"], ("This is the first release",)),
+    (PLAN_TO_GITHUB, "release.py", ["inventory", "--root", "{sample}"], ("not implemented until WP8",)),
+    (GROUND_TRUTH, "release_gate.py", ["--help"], ("The release gate",)),
+    (GROUND_TRUTH, "release_verify.py", ["--help"], ("Verification of releases",)),
+    (PLAN_TO_GITHUB, "release_verify.py", ["--help"], ("Verification of releases",)),
 ]
 
 LIBRARIES = ("carrydown_lib.py",)
@@ -137,7 +144,7 @@ class SkillPackagingTests(unittest.TestCase):
         self.assertEqual(template.read_bytes(), (ROOT / "templates" / "dev-skill" / "scripts" / "check_context.py").read_bytes())
         self.assertFalse((self.copy[GROUND_TRUTH] / "templates" / "dev-skill").exists(), "the first skill does not generate the engineers' skill")
         project = self.base / "generated-project"
-        shutil.copytree(SAMPLE, project, ignore=shutil.ignore_patterns("dev"))
+        shutil.copytree(SAMPLE, project, ignore=shutil.ignore_patterns("dev", "release"))
         run = self.run_script(PLAN_TO_GITHUB, "generate_dev_skill.py", ["--root", str(project), "--apply"])
         self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
         self.assertIn("write: scripts/check_context.py", run.stdout)
