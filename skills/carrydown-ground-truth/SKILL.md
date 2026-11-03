@@ -100,9 +100,18 @@ When identity or provenance validation fails, run `python3 <skill>/scripts/plan_
 
 After the finished set passes step 6, load `templates/plan-review-prompt.md` and run its separate review and accepted-repair procedure. Load `templates/plan-review-report.md` when writing the report. This pass is automatic for newly completed plans and can be requested for an existing local plan. The user decides changes to owners, dates, scope and order. Keep this pass local; it needs no GitHub access.
 
-### 8. Review and hand off
+### 8. Review, release and hand off
 
-Show the user the index, review tables, updated load table and checker result. Review the files with them as the engineer who will build each item. Record unresolved decisions and accepted risks, verify accepted repairs and ask for final plan approval. Then suggest `carrydown-plan-to-github`.
+Show the user the index, review tables, updated load table and checker result. Review the files with them as the engineer who will build each item. Record unresolved decisions and accepted risks, and verify accepted repairs. Then release what the engineers and GitHub will see, in this order. The release commands, `release.py`, ship with `carrydown-plan-to-github`, so install both skills before this step. Run them from the project root with `--root .`.
+
+1. Ask the first named approval: "The plan and specifications are correct." A yes here is not a yes to the next two.
+2. Preview. Run `python3 <plan-to-github skill>/scripts/release.py preview --root .` and show its four answers in order: what will be shared, with whom, where, and what remains private, then the changes since the previous release and the limits. Presence of every cited obligation is checked by the compiler; whether each bundle is enough to do the work is the owner's review, so say so. Fix a detector finding by rewording; a copied passage or an organization phrase can be cleared only by an exception the owner approves.
+3. Prepare. Run `release.py prepare --root . --apply`. It writes only into the private workspace. Print both ids it shows and explain them: the release id names the exact content, the request id names this one permission decision over it.
+4. Ask the second named approval, the disclosure line: "These exact outputs may be shared with repository readers of `<repo>`" (or "published publicly" for a public audience), with the preview above it. On the "yes" path the owner answers in chat, then run `release.py approve --root . --request ID --local --apply --preview-shown`. On the "no" path the answer is not a chat answer: the approval is the owner's review of the staging pull request. Ask permission to write to GitHub, run `release.py approve --root . --request ID --github --apply`, tell the owner to review the final revision of the pull request in the private staging repository and merge it, then continue. Local approval is refused for an enrolled project, and a signed tag is not available.
+5. Export. Run `release.py export --root . --request ID --apply` after a dry run. On the "yes" path it copies the approved files and the receipt into the working tree; the owner commits and pushes. On the "no" path it commits to a new branch in an isolated worktree and prints the push and pull request commands; run them only if the owner asks for those commands in this chat.
+6. Ask the third named approval, the external-write line: "Carrydown may create or update these GitHub items", with the dry-run counts. It belongs to `carrydown-plan-to-github`.
+
+A change to the plan, a specification or a source after approval needs a new `preview`, `prepare` and approval; `release.py diff` names the affected work items. `release.py withdraw` ends a request. Never edit a file under `docs/context/` or `docs/release/`. Then suggest `carrydown-plan-to-github`.
 
 ## What good looks like
 

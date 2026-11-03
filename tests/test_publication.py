@@ -369,6 +369,26 @@ class SyncTests(PubCase):
         self.assertEqual(code, 0, out + err)
         self.assertEqual([a["login"] for a in self.issue_by_key("WI-01").get("assignees", [])], ["tamsin-gh"])
 
+    def test_a_replacement_updates_the_same_issues_and_keeps_the_earlier_request_in_the_history(self):
+        first = self.released()
+        self.assertEqual(self.sync("--apply")[0], 0)
+        numbers = {i["title"]: i["number"] for i in mockgh.S.issues}
+        spec = self.root / "docs/spec/m2-route-to-approvers/wi-03-routing-engine.md"
+        spec.write_text(spec.read_text(encoding="utf-8").replace("## Acceptance criteria\n", "## Acceptance criteria\n\n- A replacement release changed this criterion.\n", 1), encoding="utf-8")
+        self.assertEqual(self.yp.prepare(nonce=None, created=None)[0], 0)
+        second = self.yp.request_id
+        self.assertNotEqual(first, second)
+        self.assertEqual(self.yp.approve()[0], 0)
+        self.assertEqual(self.yp.export()[0], 0)
+        code, out, err = self.sync("--apply")
+        self.assertEqual(code, 0, out + err)
+        self.assertEqual({i["title"]: i["number"] for i in mockgh.S.issues}, numbers)
+        self.assertIn("A replacement release changed this criterion", self.issue_by_key("WI-03")["body"])
+        journal = RS.loads_strict((self.ws / "publication" / f"{second}.journal.json").read_bytes())
+        entry = journal["targets"]["issue/WI-03"]
+        self.assertEqual((entry["state"], entry["request_id"]), ("completed", second))
+        self.assertEqual([h["request_id"] for h in entry["history"]], [first])
+
     def test_a_legacy_project_still_publishes_as_before_and_the_gate_is_asked_for_each_write(self):
         legacy = self.base / "legacy"
         shutil.copytree(SAMPLE, legacy)

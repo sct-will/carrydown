@@ -480,6 +480,28 @@ def release_run(a, root, gh):
         if digest != entry.get("managed_state_sha256"):
             L.say(f"target changed since publication: {key}")
             return 1
+    # a replacement: a target an earlier request published and nobody has edited since may be updated to the
+    # new approved payload. One that was edited stops the run, as a changed completed target does.
+    approved_update = set()
+    others = pub.journal.others()
+    for (kind, key) in sorted(pub.payloads):
+        jkey = f"{kind}/{key}"
+        mine = pub.journal.get(jkey)
+        if kind not in ("issue", "subepic", "epic") or (mine and mine.get("state") == "completed") or not others.get(jkey):
+            continue
+        prior = [e for e in others[jkey] if e.get("state") == "completed" and e.get("number")]
+        if not prior:
+            continue
+        status, issue = gh.rest_status("GET", f"{s.base}/issues/{prior[-1]['number']}")
+        if status != 200:
+            L.say(f"target changed since publication: {key}")
+            return 1
+        _, digest = release_state(pub, s, gh, kind, key, issue)
+        # the earlier request's payload decides what its published state looked like, so compare against it
+        if digest != prior[-1].get("managed_state_sha256"):
+            L.say(f"target changed since publication: {key}")
+            return 1
+        approved_update.add(key)
     L.say("\nLabels")
     for (kind, key), (_p, payload, _s) in sorted(pub.payloads.items()):
         if kind != "label":
@@ -527,7 +549,7 @@ def release_run(a, root, gh):
             have = (cur.get("body") or "").replace("\r\n", "\n")
             first = pub.text_for(payload, {})
             pristine = [with_marker(first, key), first, pub.text_for(payload, s.numbers)]
-            if want != have and (key in s.created or a.update_bodies or safe_to_rewrite(have, pristine)):
+            if want != have and (key in s.created or key in approved_update or a.update_bodies or safe_to_rewrite(have, pristine)):
                 merged = merge_managed(have, want, key)
                 pub.check_sent(payload, s.numbers, managed_content(merged))
                 gh.rest("PATCH", f"{s.base}/issues/{cur['number']}", {"body": merged})

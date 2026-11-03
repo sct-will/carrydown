@@ -281,6 +281,29 @@ class YesPathTests(Temp):
         self.assertEqual(code, 1)
         self.assertEqual(list(outside.iterdir()), [])
 
+    def test_a_local_copy_that_failed_part_way_is_repeated_without_a_duplicate(self):
+        self.yp.prepare()
+        self.yp.approve()
+        shutil.rmtree(self.root / "docs" / "context")
+        real = R.write_file
+        count = {"n": 0}
+
+        def flaky(*a, **k):
+            count["n"] += 1
+            if count["n"] == 4:
+                raise OSError("the disk went away")
+            return real(*a, **k)
+        with mock.patch.object(R, "write_file", flaky):
+            with _RaisesOSError():
+                self.yp.export()
+        code, out, err = self.yp.export()
+        self.assertEqual(code, 0, out + err)
+        self.assertEqual(len(list((self.root / "docs" / "context").iterdir())), 18)
+        self.assertTrue((self.root / "docs" / "release" / f"{self.yp.request_id}.receipt.json").is_file())
+        self.assertEqual(len(list((self.root / "docs" / "release").iterdir())), 2)       # the sample's own receipt and this one
+        self.assertEqual(len(list((self.ws / "events").iterdir())), 1)
+        self.assertEqual(len(list((self.ws / "requests").iterdir())), 1)
+
     def test_the_working_plan_that_is_the_draft_of_the_released_plan_is_left_in_place(self):
         before = (self.root / "docs/spec/plan.yaml").read_bytes()
         self.yp.release()
@@ -416,6 +439,15 @@ class YesPathTests(Temp):
         path.write_text(path.read_text(encoding="utf-8").replace("Full specification.", "Full specification, as the owner uses it.", 1), encoding="utf-8")
         d = RG.check("draft", "docs/spec/plan.yaml", "0" * 64, "engineering-repo", str(self.root))
         self.assertTrue(d.allowed, d)
+
+
+class _RaisesOSError:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, kind, value, tb):
+        assert kind is not None and issubclass(kind, OSError), "expected the simulated disk failure"
+        return True
 
 
 class _Expect:
@@ -583,12 +615,55 @@ class NoPathTests(Temp):
         self.assertEqual(code, 0, out + err)
         self.assertIn("already holds this export", out)
 
+
+    def test_dry_runs_write_nothing_on_the_no_path(self):
+        self.np.prepare()
+        ws_before, root_before = tree_state(self.ws), tree_state(self.root)
+        calls = len(self.reader.calls)
+        self.assertEqual(self.np.approve(apply=False)[0], 0)
+        self.assertEqual(tree_state(self.ws), ws_before)
+        self.assertEqual(self.staging_branches(), ["refs/heads/main"])
+        self.assertEqual(self.reader.repos[FE.STAGING_ID]["prs"], {})
+        self.np.approve()
+        self.np.land()
+        ws_before = tree_state(self.ws)
+        self.assertEqual(self.np.export(apply=False)[0], 0)
+        self.assertEqual(tree_state(self.ws), ws_before)
+        self.assertEqual(tree_state(self.root), root_before)
+        self.assertEqual(F.sh(["git", "branch", "--list", "carrydown/*"], self.root).stdout.strip(), "")
+        self.assertEqual(self.np.approve()[0], 0)       # after the merge a repeat finds the request active and uploads nothing
+        self.assertEqual(len(self.reader.repos[FE.STAGING_ID]["prs"]), 1)
+
+    def test_an_export_that_stopped_part_way_is_redone_without_a_duplicate(self):
+        self.np.prepare()
+        self.np.approve()
+        self.np.land()
+        real = R.write_file
+        count = {"n": 0}
+
+        def flaky(*a, **k):
+            count["n"] += 1
+            if count["n"] == 5:
+                raise OSError("the disk went away")
+            return real(*a, **k)
+        with mock.patch.object(R, "write_file", flaky):
+            with _RaisesOSError():
+                self.np.export()
+        rid = self.np.request_id
+        code, out, err = self.np.export()
+        self.assertEqual(code, 0, out + err)
+        branches = F.sh(["git", "branch", "--list", "carrydown/*"], self.root).stdout.split()
+        self.assertEqual(branches, [f"carrydown/request-{rid}"])
+        self.assertEqual(F.sh(["git", "rev-list", "--count", f"origin/main..carrydown/request-{rid}"], self.root).stdout.strip(), "1")
+
     def test_an_unrelated_branch_of_the_same_name_is_refused(self):
         self.np.prepare()
         self.np.approve()
         self.np.land()
         rid = self.np.request_id
-        F.sh(["git", "branch", f"carrydown/request-{rid}"], self.root)
+        F.sh(["git", "checkout", "-q", "-b", f"carrydown/request-{rid}"], self.root)
+        F.sh(["git", "commit", "-q", "--allow-empty", "-m", "unrelated work"], self.root)
+        F.sh(["git", "checkout", "-q", "main"], self.root)
         code, out, err = self.np.export()
         self.assertEqual(code, 1)
         self.assertIn("approval-scope-mismatch", err)

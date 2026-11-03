@@ -1229,8 +1229,18 @@ def export_no(a, project, ev, items):
         say("Dry run: nothing was written. Add --apply.")
         return 0
     git(["fetch", "--quiet", "origin", base], root, timeout=300)
-    exists = git(["rev-parse", "--verify", "--quiet", f"refs/heads/{branch}"], root, check=False)
     wt = ws / "exports" / ev.rid
+    if wt.exists():
+        shutil.rmtree(wt, ignore_errors=True)         # left behind by an export that stopped part way
+    git(["worktree", "prune"], root, check=False)
+    exists = git(["rev-parse", "--verify", "--quiet", f"refs/heads/{branch}"], root, check=False)
+    if exists.returncode == 0:
+        tip = git(["rev-parse", f"refs/heads/{branch}"], root, check=False).stdout.strip()
+        base_tip = git(["rev-parse", f"refs/remotes/origin/{base}"], root, check=False).stdout.strip()
+        if tip and tip == base_tip:
+            # an earlier export created the branch and stopped before committing: it holds nothing, so it is redone
+            git(["branch", "-D", branch], root, check=False)
+            exists = git(["rev-parse", "--verify", "--quiet", f"refs/heads/{branch}"], root, check=False)
     if exists.returncode == 0:
         expected = {rel: data for rel, data, _ in items}
         expected.update(ev.receipts)
