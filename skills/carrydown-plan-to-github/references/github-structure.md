@@ -42,6 +42,15 @@ The title follows `project.title_format`, by default `{id} {label}`. The body ha
 
 Each issue is a sub-issue of its sub-epic and carries the project label and the track label. If the engineer on the item (its `owner` in `plan.yaml`) has a GitHub login there, the issue is assigned.
 
+## Restricted items and restricted sources
+
+Two things keep text out of GitHub. Neither needs a flag; the plan owner decides them in the workspace plan, and the preview shows both before anything is approved.
+
+- A work item the owner marks `restricted: true` with a `restricted_summary` has no issue, no sub-issue link, no board item, no specification and no approved context. It is not in the released plan either. Where another item depends on it, the dependent issue shows the owner's summary as "External input: <summary>", and the plan lists one external item whose only text is that summary. If the owner also wrote a `restricted_placeholder`, the engineers' check tells an engineer who names the item to follow that instruction. An id that is unknown, or wholly withheld, gets "no approved context" and is not confirmed to exist. Nothing is posted to GitHub when the item is finished: the owner records the evidence in the workspace.
+- A work item whose approved context holds a section of a source classified restricted gets an issue with all seven headings, so `--verify` keeps working, and with "Acceptance criteria", "Evidence of completion" and "Integration points" replaced by links to the same headings in the specification. The text of those sections stays in the specification file, which the owner approved for the audience. The rest of the issue is as above.
+
+`templates/projections.yaml` lists these choices for each GitHub destination. It is read when a release is prepared, not when it is published.
+
 ## The Epic comment
 
 If an Epic exists, the script posts one comment. It opens with a Constraints block: "Target delivery: <date> (given)" or "(derived from the critical path)", then one line per track such as "Track Workflow: 1 person, 100 percent allocated" (placeholder people are marked, and a plan with no people says "People: to be assigned (derived capacity: N)"). The dry run prints the same block before anything is written. Below it come nested checkboxes: each sub-epic, and under it each work item with owner and date. A box is checked when its issue closes. The comment has a hidden marker, so reruns update it instead of adding a second one.

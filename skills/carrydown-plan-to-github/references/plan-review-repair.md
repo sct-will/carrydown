@@ -23,7 +23,7 @@ python3 <skill>/scripts/github_repair.py --root . --before docs/spec/review-base
 
 Read the preview. Resolve any blocked title, missing marker, outside parent or retired item before applying. For a moved item, repair its parent before running the normal issue synchronization; a normal creation run is not a reparenting command. If the destination milestone or a track label does not exist, preview its creation with an available authorized GitHub tool and obtain approval first. Then preview the metadata repair again. Do not run a full creation sync while an existing item still belongs to a different parent. If that staged creation cannot be performed with the available tools, record the precise update as publication pending. Keep the saved plan for retries.
 
-After approval, run the same repair command with `--apply`, then run it separately with `--verify`. For a public repository, explain that the destination is public, obtain explicit publication approval and include `--allow-public` on the apply run. If a run stops after some writes, read back the results and preview again; the command finds the same issue numbers on rerun.
+After approval, run the same repair command with `--apply`, then run it separately with `--verify`. The apply run prints the preflight first. For a project that publishes an approved release, a destination its audience does not allow is refused with a reason code and there is no flag to override it. For a legacy project on a public repository, explain that the destination is public and obtain explicit publication approval in the chat before the apply run. If a run stops after some writes, read back the results and preview again; the command finds the same issue numbers on rerun.
 
 ### Bodies, dependencies and epic roll-ups
 

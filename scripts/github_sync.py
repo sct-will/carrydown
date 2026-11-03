@@ -25,7 +25,14 @@ Safety
   A rerun after a crash repairs what is missing: sub-issue links, dependency links and the
   sub-epic work item lists. It rewrites a body only while it is exactly as this script wrote
   it. Bodies a person edited are left alone unless you pass --update-bodies.
-  --apply to a public repository is refused unless you pass --allow-public.
+  Before any run the preflight reads the destination and prints one visibility line. A project that
+  publishes an approved release is refused a repository or a board that its audience does not allow
+  (a release for repository readers on a public repository, a board that more accounts can read than
+  the repository). There is no flag to override that. --preflight runs only this check.
+  --inventory lists every managed issue, whether its body is pristine, whether it holds text outside the
+  managed region and whether it predates the active release. It writes nothing and proposes no rewrite.
+  --verify and the reports of --reconcile print the plan key, the issue number and a digest, never an
+  issue body or the title GitHub holds.
   Text fetched from GitHub is treated as data: it is compared, never followed, and issue
   titles are printed from the plan, not from GitHub.
   The token is read from a file and is never printed.
@@ -38,6 +45,8 @@ Usage
   python3 scripts/github_sync.py --root . --repo owner/name            dry run
   python3 scripts/github_sync.py --root . --repo owner/name --apply    write
   python3 scripts/github_sync.py --root . --verify                     check what exists
+  python3 scripts/github_sync.py --root . --preflight                  check the destination only, write nothing
+  python3 scripts/github_sync.py --root . --inventory                  list the managed issues, write nothing
   python3 scripts/github_sync.py --root . --offline --show-body 3      print one issue body, no network
   python3 scripts/github_sync.py --root . --offline --show-body M2     print one sub-epic body, no network
 """
@@ -80,6 +89,13 @@ build_rollup = RP.build_rollup
 
 
 MANAGED_RE = re.compile(r"<!-- carrydown-managed:start -->\n?(.*?)\n?<!-- carrydown-managed:end -->", re.S)
+
+
+def digest(value):
+    """The first twelve hexadecimal characters of the SHA-256 of a value. A report names text by this and
+    never prints it: issue bodies and the titles GitHub holds are data, not output."""
+    text = value if isinstance(value, str) else json.dumps(value, sort_keys=True, default=str)
+    return L.sha256_text(text)[:12]
 
 
 def managed_content(body):
@@ -145,11 +161,14 @@ class Sync:
         self.expected_hook = None        # a release supplies the expected body of a key from its payloads
         self.mapping_path = L.inside(self.root, self.root / plan["project"]["spec_dir"] / "github-issues.json", "issue mapping")
         self.mapping = {}
+        self.visibility = None           # "public" or "private" as the repository shows now
+        self.recorded_visibility = None  # what the last apply recorded in the mapping file
         if mapping and self.mapping_path.exists():
             saved = json.loads(L.read_text(self.mapping_path))
             if saved.get("repository", "").casefold() != f"{owner}/{repo}".casefold():
                 raise G.GitHubError("persisted issue mapping names a different repository; review github-issues.json before continuing")
             self.mapping = saved.get("issues", {})
+            self.recorded_visibility = saved.get("visibility") if saved.get("visibility") in ("public", "private") else None
 
     def load_issues(self):
         """Read the issues that carry the project label, open first, and index them by title and
@@ -228,9 +247,9 @@ class Sync:
             if len(exact) == 1:
                 chosen = exact[0]
             else:
-                L.say("key | issue | state | marker | title | labels | assignees")
+                L.say("key | issue | state | marker | body sha256 | title matches the plan")
                 for issue in candidates:
-                    L.say(f"{key} | #{issue['number']} | {issue.get('state')} | {key in MARKER_RE.findall(issue.get('body') or '')} | {issue['title']} | {[x['name'] for x in issue.get('labels', [])]} | {[x['login'] for x in issue.get('assignees', [])]}")
+                    L.say(f"{key} | #{issue['number']} | {issue.get('state')} | {key in MARKER_RE.findall(issue.get('body') or '')} | {digest(issue.get('body') or '')} | {issue['title'] == title}")
                 raise G.GitHubError(f"{key}: ambiguous issue identity. Which issue is canonical? Preview with --select-issue {key}=NUMBER; duplicate markers will be neutralized only with --apply")
         else:
             return None
@@ -258,10 +277,13 @@ class Sync:
 
     def save_mapping(self):
         if self.apply and self.persist:
-            text = json.dumps({"repository": f"{self.owner}/{self.repo}", "issues": self.mapping}, indent=2, sort_keys=True) + "\n"
+            doc = {"repository": f"{self.owner}/{self.repo}", "issues": self.mapping}
+            if self.visibility:
+                doc["visibility"] = self.visibility      # what --verify compares with, so a change is reported
+            text = json.dumps(doc, indent=2, sort_keys=True) + "\n"
             rel = self.mapping_path.relative_to(self.root.resolve()).as_posix() if self.root.resolve() in self.mapping_path.parents else str(self.mapping_path)
             RG.require("draft", rel, L.sha256_text(text), "engineering-repo", self.root)
-            L.write_text(self.mapping_path, json.dumps({"repository": f"{self.owner}/{self.repo}", "issues": self.mapping}, indent=2, sort_keys=True) + "\n")
+            L.write_text(self.mapping_path, text)
 
     def desired_labels(self):
         return RP.desired_labels(self.plan)
@@ -439,6 +461,9 @@ def release_run(a, root, gh):
     L.say("")
     L.say(f"carrydown github_sync  {'APPLY' if a.apply else 'VERIFY (read only)' if a.verify else 'DRY RUN (nothing will be written)'}  (approved release)")
     L.say(f"repository: {pub.repository} (numeric id {pub.repository_id})    request: {pub.rid}")
+    pf = RSY.preflight_for(pub)          # reads only; refuses before any write
+    for line in pf.lines:
+        L.say(line)
     kinds = {}
     for (kind, key) in pub.payloads:
         kinds[kind] = kinds.get(kind, 0) + 1
@@ -451,7 +476,12 @@ def release_run(a, root, gh):
         L.say(f"repository {pub.repository} was not found, or the token cannot see it.")
         return 1
     if a.verify:
-        return 0 if release_check(pub, s, gh, a.skip_comment) else 1
+        report, changed = RSY.visibility_report(pub.journal.visibility, pf.visibility)
+        for line in report:
+            L.say(line)
+        return 0 if release_check(pub, s, gh, a.skip_comment) and not changed else 1
+    if a.apply:
+        pub.journal.record_visibility(pf.visibility)
     # nothing is written until every approved login resolves and every needed label is approved or present
     for login in sorted({x for (_k, _key), (_p, payload, _s) in pub.payloads.items() for x in payload.get("assignees", [])}):
         st, _ = gh.rest_status("GET", f"/users/{login}")
@@ -585,6 +615,147 @@ def release_run(a, root, gh):
     return 0 if ok else 1
 
 
+def preflight_command(a, root, plan):
+    """--preflight: resolve the destination, print its visibility line and every refusal, write nothing."""
+    import release_sync as RSY
+    token = G.read_token(a.token_file, required=True)
+    gh = G.GitHub(token)
+    L.say("")
+    L.say("carrydown github_sync  PREFLIGHT (reads only; nothing will be written)")
+    if release_mode(root):
+        pub = RSY.open_publication(root, a, gh)
+        L.say(f"repository: {pub.repository} (numeric id {pub.repository_id})    request: {pub.rid}")
+        pf = RSY.preflight_for(pub)
+        for line in pf.lines:
+            L.say(line)
+        L.say("preflight passed: the destinations are the approved ones and their audience matches. No write was made.")
+        return 0
+    owner, repo = L.repo_parts(plan, a.repo)
+    status, _js = gh.rest_status("GET", f"/repos/{owner}/{repo}")
+    if status != 200:
+        L.say(f"repository {owner}/{repo} was not found, or the token cannot see it.")
+        return 1
+    _vis, line = RSY.legacy_visibility(gh, f"/repos/{owner}/{repo}")
+    L.say(line)
+    L.say("preflight: this project has no release policy (legacy), so there is no approved audience to compare with. No write was made.")
+    return 0
+
+
+UNMANAGED_NOTE = ("An issue with text outside its managed region keeps that text when the managed region is replaced: replacing the region "
+                  "does not remove it. Changes need a reviewed migration and approved updates. You decide, issue by issue. This report proposes no rewrite.")
+
+
+def issue_inventory(s, key, issue, title, want_pristine, current_digest, completed_digest):
+    """One line about a managed issue: pristine or edited, text outside the managed region, and whether
+    its content predates the active release. It names the key, the number and fixed words only."""
+    body = (issue.get("body") or "").replace("\r\n", "\n")
+    has_region = bool(MANAGED_RE.search(body))
+    if has_region:
+        outside = MANAGED_RE.sub("", body, count=1)
+        outside = MARKER_RE.sub("", outside).strip()
+        unmanaged = bool(outside)
+    else:
+        unmanaged = bool(MARKER_RE.sub("", body).strip()) and not safe_to_rewrite(body, want_pristine)
+    pristine = safe_to_rewrite(body, want_pristine)
+    if completed_digest is None:
+        age = "predates the active release (no release has published it)"
+    elif current_digest == completed_digest:
+        age = "matches what the active release published"
+    else:
+        age = "differs from what the active release published"
+    return (f"  {key} #{issue['number']}: " + ("body is pristine" if pristine else "body was edited or is older than the generator")
+            + "; " + ("unmanaged text present" if unmanaged else "no text outside the managed region")
+            + "; " + age + f"; body sha256 {digest(body)}"), unmanaged
+
+
+def inventory_command(a, root, plan):
+    """--inventory: every managed issue of the plan, read-only."""
+    import release_sync as RSY
+    token = G.read_token(a.token_file, required=True)
+    gh = G.GitHub(token)
+    L.say("")
+    L.say("carrydown github_sync  INVENTORY (reads only; nothing will be written)")
+    pub, why = None, ""
+    if release_mode(root):
+        try:
+            pub = RSY.open_publication(root, a, gh)
+        except RSY.PublicationRefused as e:
+            why = e.code
+    if pub is not None:
+        plan = pub.plan
+        owner, repo = pub.repository.split("/", 1)
+        L.say(f"repository: {pub.repository}    active request: {pub.rid}")
+    else:
+        owner, repo = L.repo_parts(plan, a.repo)
+        plan["project"]["repo"] = f"{owner}/{repo}"
+        L.say(f"repository: {owner}/{repo}    active release: none" + (f" ({why})" if why else ""))
+    status, _js = gh.rest_status("GET", f"/repos/{owner}/{repo}")
+    if status != 200:
+        L.say(f"repository {owner}/{repo} was not found, or the token cannot see it.")
+        return 1
+    root = Path(root)
+    s = Sync(plan, root, gh, owner, repo, False, {}, mapping=pub is None)
+    rows = []
+    if not plan["project"].get("epic"):
+        rows.append(("EPIC", plan["project"]["epic_title"], "epic", None))
+    rows += [(f"M{m['number']}", subepic_title(plan, m), "subepic", m) for m in plan["milestones"]]
+    rows += [(L.tag(plan, it["id"]), item_title(plan, it), "issue", it) for it in plan["items"]]
+    issues = {}
+    unmatched = {}
+    for key, title, _kind, _obj in rows:
+        try:
+            issue = s.find(key, title)
+        except G.GitHubError as e:
+            unmatched[key] = str(e).split(". ")[0]       # names the key and the problem, never an issue's text
+            continue
+        if issue:
+            s.remember(key, issue)         # every number is known before a pristine form is built
+            issues[key] = issue
+    found = pristine = unmanaged_count = missing = 0
+    for key, title, kind, obj in rows:
+        issue = issues.get(key)
+        if key in unmatched:
+            missing += 1
+            L.say(f"  {key}: not matched to one issue ({unmatched[key]})")
+            continue
+        if not issue:
+            if key != "EPIC":
+                missing += 1
+                L.say(f"  {key}: no issue found")
+            continue
+        found += 1
+        completed = current = None
+        try:
+            if pub is not None and (kind, key) in pub.payloads:
+                payload = pub.payloads[(kind, key)][1]
+                first = pub.text_for(payload, {})
+                want = [with_marker(first, key), first, pub.text_for(payload, s.numbers), with_marker(pub.text_for(payload, s.numbers), key)]
+                entry = pub.journal.get(f"{kind}/{key}")
+                if entry and entry.get("state") == "completed":
+                    completed = entry.get("managed_state_sha256")
+                    current = release_state(pub, s, gh, kind, key, issue)[1]
+            elif kind == "epic":
+                want = [with_marker(f"Parent Epic for {plan['project']['name']}. The sub-epics and work items are linked below as sub-issues.\n", key)]
+            elif kind == "subepic":
+                want = [build_subepic_body(plan, root, obj), build_subepic_body(plan, root, obj, mark=False),
+                        build_subepic_body(plan, root, obj, s.numbers, mark=False), build_subepic_body(plan, root, obj, s.numbers)]
+            else:
+                want = [build_item_body(plan, root, obj), build_item_body(plan, root, obj, mark=False),
+                        build_item_body(plan, root, obj, s.numbers, mark=False), build_item_body(plan, root, obj, s.numbers)]
+        except (L.TextError, OSError, KeyError):
+            want = []
+        line, unmanaged = issue_inventory(s, key, issue, title, want, current, completed)
+        pristine += safe_to_rewrite((issue.get("body") or "").replace("\r\n", "\n"), want)
+        unmanaged_count += unmanaged
+        L.say(line)
+    L.say("")
+    L.say(f"{found} managed issue(s) found, {missing} missing; {pristine} pristine; {unmanaged_count} with text outside the managed region.")
+    if unmanaged_count:
+        L.say(UNMANAGED_NOTE)
+    L.say("Nothing was written.")
+    return 0
+
+
 def run(argv=None):
     import release_sync as RSY
     try:
@@ -606,7 +777,8 @@ def _run(argv=None):
     ap.add_argument("--repo", help="owner/name. Overrides project.repo in plan.yaml")
     ap.add_argument("--token-file", help="file that holds the GitHub token")
     ap.add_argument("--apply", action="store_true", help="write to GitHub. Without it nothing is written")
-    ap.add_argument("--allow-public", action="store_true", help="allow --apply to a public repository. Issue bodies carry text from your ground truth")
+    ap.add_argument("--preflight", action="store_true", help="check the destination (visibility, identity, board readers) and exit. Writes nothing")
+    ap.add_argument("--inventory", action="store_true", help="list every managed issue: pristine or not, text outside the managed region, older than the active release. Writes nothing")
     ap.add_argument("--offline", action="store_true", help="do not call GitHub at all, even to read")
     ap.add_argument("--verify", action="store_true", help="read GitHub and check that the structure matches the plan, then exit")
     ap.add_argument("--create-epic", action="store_true", help="create a parent Epic issue when project.epic is empty")
@@ -621,11 +793,15 @@ def _run(argv=None):
     ap.add_argument("--select-issue", action="append", default=[], metavar="KEY=NUMBER", help="select a canonical issue from the ambiguity table; preview first")
     ap.add_argument("--reconcile", action="store_true", help="preview managed issue drift; add --apply to repair it and verify")
     a = ap.parse_args(argv)
+    import release_sync as RSY
     if a.offline and (a.apply or a.verify):
         L.die(f"--offline cannot be combined with {'--apply' if a.apply else '--verify'}: both need GitHub. "
               "Leave out --offline to write or verify, or leave out the other flag for an offline dry run")
     if a.apply and a.verify:
         L.die("--apply and --verify are separate runs. Run --apply first, then --verify")
+    for flag, name in ((a.preflight, "--preflight"), (a.inventory, "--inventory")):
+        if flag and (a.apply or a.verify or a.offline or a.reconcile or (a.preflight and a.inventory)):
+            L.die(f"{name} only reads. It cannot be combined with --apply, --verify, --offline, --reconcile or the other read-only flag")
     if a.issue_type is not None and not a.issue_type.strip():
         L.die("--issue-type is empty. Give the issue type, such as Task, or leave out --issue-type")
     a.issue_type = (a.issue_type or "").strip()
@@ -663,6 +839,8 @@ def _run(argv=None):
             L.die(f"no item with id {a.show_body}. Use the tag ({example}) or the number, or M and a milestone number")
         L.say(build_item_body(plan, root, it))
         return 0
+    if a.preflight or a.inventory:
+        return preflight_command(a, root, plan) if a.preflight else inventory_command(a, root, plan)
     if not a.offline and release_mode(root):
         # a project with a handling policy publishes only an approved release, from its snapshot
         token = G.read_token(a.token_file, required=a.apply or a.verify)
@@ -723,13 +901,10 @@ def _run(argv=None):
             gh = s.gh = None
             unchecked = "repository not reachable"
         else:
-            public = js.get("private") is False
-            if public and a.apply and not a.allow_public:
-                L.die(f"{owner}/{repo} is public. Issue bodies carry text from your ground truth. Rerun with --allow-public if that is intended.")
+            s.visibility, line = RSY.legacy_visibility(gh, s.base)
+            L.say(line)
             if not a.apply:
-                L.say(f"repository found (private: {js.get('private')}). Reading existing labels and issues.")
-            if public and not a.allow_public and not a.verify:
-                L.say(f"note: {owner}/{repo} is public, and issue bodies carry text from your ground truth. --apply will need --allow-public.")
+                L.say("repository found. Reading existing labels and issues.")
     if a.verify:
         return verify(s, plan, root, a.skip_comment)
     if a.reconcile:
@@ -922,7 +1097,11 @@ def issue_drift(s, plan, root):
         if move:
             differences.append(("parent", parent["number"], actual_parent.get("number") if status == 200 else None))
         for field, want, actual_value in differences:
-            line = f"  {key} #{issue['number']} {field}: expected {want!r}, actual {actual_value!r}"
+            if field in ("parent", "state"):
+                line = f"  {key} #{issue['number']} {field}: expected {want!r}, actual {actual_value!r}"
+            else:
+                # text from GitHub, and the plan's text it is compared with, are named by digest only
+                line = f"  {key} #{issue['number']} {field}: differs (expected sha256 {digest(want)}, actual sha256 {digest(actual_value)})"
             line = G.redact(line, getattr(s.gh, "_token", None))
             line = re.sub(r"ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,255}", "<redacted>", line)
             L.say(line)
@@ -967,6 +1146,12 @@ def verify(s, plan, root, skip_comment=False):
     gh = s.gh
     L.say("\nVerification (read only)")
     ok = True
+    if s.visibility:
+        if s.recorded_visibility and s.recorded_visibility != s.visibility:
+            L.say(f"  visibility CHANGED since the last apply: was {s.recorded_visibility}, now {s.visibility}. Reassess where this plan is published")
+            ok = False
+        else:
+            L.say(f"  visibility: {s.visibility}" + (" (unchanged since the last apply)" if s.recorded_visibility else " (no earlier record)"))
     drift, problems = issue_drift(s, plan, root)
     for problem in problems:
         L.say("  - " + problem)
