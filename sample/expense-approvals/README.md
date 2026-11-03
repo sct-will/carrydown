@@ -50,7 +50,7 @@ python3 scripts/github_sync.py --root sample/expense-approvals --offline
 python3 tests/rebuild_sample_release.py --check
 ```
 
-None of these needs a token or the network. The `--offline` form of `github_sync.py` shows the plan without reading GitHub. To see the release commands on a throwaway copy of the sample, with the owner's working plan in place, read the first section of [the recorded run](https://github.com/sct-will/carrydown/blob/main/docs/sample-run.md) in the main repository: it shows `release.py preview`, `prepare`, `approve --local` and `export` with what each prints. Every command that writes is a dry run until you pass `--apply`. Use a throwaway repository of your own for any GitHub write, and add `--apply` only when you have read what it would do.
+None of these needs a token or the network. The `--offline` form of `github_sync.py` shows the plan without reading GitHub. To see the release commands on a throwaway copy of the sample, with the owner's working plan in place, read the first section of [the recorded run](https://github.com/sct-will/carrydown/blob/main/docs/sample-run.md) in the main repository: it shows `release.py release`, the one command of the yes path, as a dry run and with `--apply`, with what each prints. Every command that writes is a dry run until you pass `--apply`. Use a throwaway repository of your own for any GitHub write, and add `--apply` only when you have read what it would do.
 
 ## On GitHub
 

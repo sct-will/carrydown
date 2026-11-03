@@ -18,7 +18,7 @@ Each GitHub step shows the dry run first and the write second. A second run of e
 
 ## 0. The release, run on the sample
 
-This section was run again with the current scripts, in a throwaway copy of the sample, with a fixed time and request nonce so the ids match the files in the repository. It needs no token and no network. The sample answers yes to the one question, so its fictional documents are approved for everyone who can read the repository. It shows what a project holds before and after a release, and which commands print what. The private path, with a staging repository and the independent verifier, needs an organization's setup and has not been run on real GitHub. [The setup guide](setup.md#organization-setup-for-private-drafting) says so.
+This section was run again with the current scripts, in a throwaway copy of the sample, against the loopback mock of GitHub that the tests use (`tests/mock/mockgh.py`) in place of github.com, so it needs no real token and no network. The ids in it differ from the committed receipt, which `tests/rebuild_sample_release.py` makes with a fixed time and request nonce. The sample answers yes to the one question, so its fictional documents are approved for everyone who can read the repository. It shows what a project holds before and after a release, and which commands print what. The private path, with a staging repository and the independent verifier, needs an organization's setup and has not been run on real GitHub. [The setup guide](setup.md#organization-setup-for-private-drafting) says so.
 
 **What the sample is.** The committed sample is a project after its release. Its `docs/spec/plan.yaml` is the released plan: ids and tracks for the people, and for each source only an id, a display name and a version. It holds no source path, no classification, no digest and no personal fact. The two documents in the sample, the original `ground-truth/architecture.md` and its rendering, and the fictional `people.yaml`, are public fixtures. They are here so the sample can show every step. A real project does not copy staffing records or confidential originals into git, and the sample's `.gitignore` carries the same four lines that `scaffold_spec.py --init` writes: `docs/source/`, `people.yaml`, `.carrydown/local.yaml` and `.carrydown/cache/`.
 
@@ -30,11 +30,14 @@ carrydown: private workspace ready at <tmp>/workspace (owner only, git initializ
 [exit 0]
 ```
 
-```text
-$ python3 scripts/release.py preview --root .
-carrydown release preview (reads your working files; writes nothing)
+After "Put the plan on GitHub." and the token, the agent runs one command as a dry run. It reads the repository's numeric id with the token, derives the audience from the repository and looks the board up by the plan's project title. Nobody types an id, an audience or a destination.
 
-release id (the content): fc44c286ad456971e45fe089cda6979f277d340487880498d69d2ba2aa5189ae
+```text
+$ python3 scripts/release.py release --root .
+carrydown release  DRY RUN (nothing will be written)
+
+release id (the content): 06a45d2a3fb46a17f54e76e0b69adb08697ecf5b725758a1454218392d19f92e
+
 
 What will be shared?
   40 repository file(s): the released plan, 16 specification file(s), 18 approved context file(s) and the engineers' skill.
@@ -54,7 +57,6 @@ With whom?
   Evidence in tests and code: synthetic data only.
 
 Where?
-  Board: project PVT_sample (owner id 4400), linked to repository id 4200.
   Repository: sct-will/carrydown-sample (numeric id 4200) on github.com.
   Destinations: engineering-repo, issue, subepic, epic, epic-comment, label, board, engineers-skill.
 
@@ -68,50 +70,48 @@ Changes since the previous release
 Limitations
   None found. The detectors are a safety net and do not prove safety.
 
-Nothing was written. Run prepare --apply to build the snapshot and the approval request.
+Board: the board 'Expense approvals plan' does not exist yet under sct-will. The run with --apply creates it empty, linked to sct-will/carrydown-sample, before it prepares the release.
+
+Ask the owner in one prompt, with the preview above it. Each line is answered on its own:
+  1. "The plan and specifications are correct." (only if not already approved in this session)
+  2. "These exact outputs may be shared with everyone who can read sct-will/carrydown-sample."
+  3. "Carrydown may create or update these GitHub items: 1 Epic, 5 sub-epics, 9 work item issues, 1 Epic comment, 4 labels, the board 'Expense approvals plan' (created empty first, then filled)."
+
+Dry run: nothing was written to the project or to GitHub. The private workspace keeps a digest of this preview, so the approval of --apply covers exactly what is shown here. After a yes to line 2, run this command again with --apply. If line 3 was not a yes, add --no-github to both runs: the release then carries no GitHub items.
 [exit 0]
 ```
 
-The release id names the exact bytes. `prepare` adds the request id, which names one permission decision over those bytes. A dry run shows a request id that is not final, because a dry run does not keep its nonce.
+The agent shows the preview and asks lines 2 and 3 in one prompt; line 1 was answered at the end of planning. On a yes to both it runs the same command with `--apply`. That run approves only what the preview showed: the dry run left a digest of it in the private workspace, and a file changed in between makes `--apply` refuse with `not-approved` before it writes anything.
 
 ```text
-$ python3 scripts/release.py prepare --root . --apply
+$ python3 scripts/release.py release --root . --apply
+carrydown release  APPLY
+Created the empty board 'Expense approvals plan' for sct-will, linked to sct-will/carrydown-sample. It holds nothing until the release is published.
 carrydown release prepare  APPLY
 
-release id (content): fc44c286ad456971e45fe089cda6979f277d340487880498d69d2ba2aa5189ae
-request id (permission): b032ae922bfe6dcaa455607f8ed7f8727523fdfb97c13a91190ee0ee642e1bce
+release id (content): 06a45d2a3fb46a17f54e76e0b69adb08697ecf5b725758a1454218392d19f92e
+request id (permission): db2d1727f7cc97302be9aaaf17e9e6d0ce4c7eb1168d25ac7cc0db9aadebe802
 The release id names these exact bytes. The request id names one permission decision over them: this audience, these
 destinations, these targets and these downstream uses. The same content can have several requests, and approving one
 never approves another.
 61 file(s) in the snapshot; audience repo-readers; destinations engineering-repo, issue, subepic, epic, epic-comment, label, board, engineers-skill.
-Prepared. Next: python3 <carrydown>/scripts/release.py approve --root . --request b032ae92...1bce --local --apply
-[exit 0]
-```
 
-The agent then asks the disclosure line, under the preview: "These exact outputs may be shared with repository readers of this repository." On a yes it runs the approval. The sample has no terminal, so the agent passes `--preview-shown` after you have seen the preview and answered.
-
-```text
-$ python3 scripts/release.py approve --root . --request b032ae92...1bce --local --apply --preview-shown
 carrydown release approve --local  APPLY
-(the four-question preview is printed again)
-Approved locally. The request b032ae92...1bce is active. This approval is labeled not authenticated.
-Next: python3 <carrydown>/scripts/release.py export --root . --request b032ae92...1bce --apply
-[exit 0]
-```
+The owner approved this preview in the dry run of release: db2d1727f7cc97302be9aaaf17e9e6d0ce4c7eb1168d25ac7cc0db9aadebe802
+Approved locally. The request db2d1727f7cc97302be9aaaf17e9e6d0ce4c7eb1168d25ac7cc0db9aadebe802 is active. This approval is labeled not authenticated.
 
-```text
-$ python3 scripts/release.py export --root . --request b032ae92...1bce
-carrydown release export  DRY RUN (nothing will be written)
-request b032ae92...1bce  release fc44c286...89ae
+carrydown release export  APPLY
+request db2d1727f7cc97302be9aaaf17e9e6d0ce4c7eb1168d25ac7cc0db9aadebe802  release 06a45d2a3fb46a17f54e76e0b69adb08697ecf5b725758a1454218392d19f92e
 40 approved repository file(s), 1 receipt(s). Evidence: local owner approval, not authenticated
-  docs/spec/plan.yaml: your working plan is the draft of the released plan, so it is left in place
-0 file(s) and 1 receipt(s) would be written; 39 already match.
+1 file(s) and 1 receipt(s) would be written; 39 already match.
+  docs/spec/plan.yaml becomes the released plan. Your working plan, with its comments, moves to the private workspace as drafts/plan.yaml, where the scripts find it from now on.
+Exported 1 file(s) and 1 receipt(s) into your working tree. Review them with git status, then commit and push as you usually do.
 
-Dry run: nothing was written. Add --apply.
+Released. Ask the owner to commit and push these files as they do today. Then the GitHub step publishes from this release.
 [exit 0]
 ```
 
-In this run the 39 other files already match because the owner had drafted them in the working tree. The export writes the receipt, `docs/release/b032ae922bfe6dcaa455607f8ed7f8727523fdfb97c13a91190ee0ee642e1bce.receipt.json`, which is in the sample. It is the small public file of the release. It holds the request id, the release id, the manifest digest, the state `active`, the audience, the destinations, the targets with their numeric ids, the source ids and versions, the list of artifacts with their digests, the downstream permissions, the grace period of 7 days, and `"approval": {"type": "local-owner", "authenticated": false}`. It holds no staging name, no reviewer, no source classification and no private reason. The receipt does not list itself in the manifest, and the verifier regenerates it from the approved records and compares every byte.
+In this run the 39 other files already match because the owner had drafted them in the working tree. The export writes the released plan and the receipt, `docs/release/db2d1727f7cc97302be9aaaf17e9e6d0ce4c7eb1168d25ac7cc0db9aadebe802.receipt.json`. The receipt is the small public file of the release. It holds the request id, the release id, the manifest digest, the state `active`, the audience, the destinations, the targets with their numeric ids, the source ids and versions, the list of artifacts with their digests, the downstream permissions, the grace period of 7 days, and `"approval": {"type": "local-owner", "authenticated": false}`. It holds no staging name, no reviewer, no source classification and no private reason. The receipt does not list itself in the manifest, and the verifier regenerates it from the approved records and compares every byte. The sample's committed receipt is the same file for the fixed time and nonce of `tests/rebuild_sample_release.py`.
 
 From a fresh clone of the sample, with no private workspace and no original or rendering, both checks pass:
 

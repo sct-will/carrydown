@@ -201,7 +201,7 @@ Before it renders or copies anything, the agent asks you one question:
 
 > Can everyone who can read this repository see all of these documents and your staffing notes?
 
-**If you can answer yes, you are done with this section.** That is the case for most teams. You work as before: the agent drafts in the repository, you keep the documents where they are or in an ignored `docs/source/` folder, and the only things that change are these. Your staffing notes go to a private file on your machine instead of the plan. Originals are optional in the project. Before anything is shared, you approve a short preview along with the plan. Nothing else is required, and the rest of this page applies to you only when you reach [organization setup](#organization-setup-for-private-drafting), which you can skip.
+**If you can answer yes, you are done with this section.** That is the case for most teams. You work as before: the agent drafts in the repository, you keep the documents where they are or in an ignored `docs/source/` folder, and the only things that change are these. Your staffing notes go to a private file on your machine instead of the plan. Originals are optional in the project. When you put the plan on GitHub, you approve a short preview of what will be shared, in the same prompt as the GitHub question you already answer. Nothing else is required, and the rest of this page applies to you only when you reach [organization setup](#organization-setup-for-private-drafting), which you can skip.
 
 If you want a local copy of the documents on a yes answer, use `docs/source/` and add `docs/source/` to `.gitignore` before you copy anything into it. The agent adds that line when it scaffolds the plan, but not before. Read [the enterprise security questions](enterprise-security.md) if you are unsure what carrydown protects.
 
@@ -519,20 +519,20 @@ Run the live doctor, then upload the candidate, review it in GitHub and export.
 
 ```bash
 python3 scripts/release.py doctor --root .
-python3 scripts/release.py approve --root . --request <request id> --github
-python3 scripts/release.py approve --root . --request <request id> --github --apply
+python3 scripts/release.py approve --root . --github
+python3 scripts/release.py approve --root . --github --apply
 ```
 
-The dry run of `approve --github` checks the staging repository without pushing anything. The `--apply` run first repeats the live checks, then pushes the branch `request/<request id>` to the staging repository with your own git credentials. No token goes into a URL. It waits up to two minutes for the staging workflow to open the pull request. A timeout prints `candidate uploaded; approval request pending` and the retry command. That is neither an approval nor a reason to upload again. In GitHub, review the final revision of the pull request, approve it and merge it with a merge commit. Then export:
+None of these commands needs a request id: `approve` takes the request `prepare` saved last, `export` and `withdraw` the active request, and `export-state` the request the most recent state change ended. Each prints the id it uses, and `--request <request id>` names another one. The dry run of `approve --github` checks the staging repository without pushing anything. The `--apply` run first repeats the live checks, then pushes the branch `request/<request id>` to the staging repository with your own git credentials. No token goes into a URL. It waits up to two minutes for the staging workflow to open the pull request. A timeout prints `candidate uploaded; approval request pending` and the retry command. That is neither an approval nor a reason to upload again. In GitHub, review the final revision of the pull request, approve it and merge it with a merge commit. Then export:
 
 ```bash
-python3 scripts/release.py export --root . --request <request id>
-python3 scripts/release.py export --root . --request <request id> --apply
+python3 scripts/release.py export --root .
+python3 scripts/release.py export --root . --apply
 ```
 
 `export --apply` verifies the approval through the GitHub API before it writes anything. It makes an isolated worktree on a new branch `carrydown/request-<request id>`, copies only the approved files and the receipt, and commits as you. It prints the push and `gh pr create` commands. It does not run them. Creating the engineering pull request is a separate write that needs your approval.
 
-When something changes, `release.py diff --root .` names the work items a change touches, and a new `preview`, `prepare` and approval follow. To end a request, run `release.py withdraw --root . --request <request id> --reason <code>` and `--apply`, approve the state change the same way, then `release.py export-state --root . --request <request id> --apply` to publish the terminal receipt. [Recover a plan or publication](recovery.md#resume-an-interrupted-release) says how to resume each step if it is interrupted.
+When something changes, `release.py diff --root .` names the work items a change touches, and a new `preview`, `prepare` and approval follow. To end the active request, run `release.py withdraw --root . --reason <code>` and `--apply`, approve the state change the same way, then `release.py export-state --root . --apply` to publish the terminal receipt. [Recover a plan or publication](recovery.md#resume-an-interrupted-release) says how to resume each step if it is interrupted.
 
 Minimum GitHub access for these commands:
 
@@ -566,7 +566,7 @@ Status: **not yet performed.** The fake-API tests cover the logic of every item 
 Run these steps in order, and record the outcome of each in the table.
 
 1. Install the tooling repository, the App, the staging repository and the engineering repository as above. Run the live doctor. Every component must be verified.
-2. Prepare a fictional candidate, approve it with `release.py approve --github --request <id> --apply`, and confirm that the request pull request was opened by the Actions identity, not by the owner.
+2. Prepare a fictional candidate, approve it with `release.py approve --root . --github --apply`, and confirm that the request pull request was opened by the Actions identity, not by the owner.
 3. As the owner, approve the final head. Push another commit and confirm the approval is dismissed as stale. Approve the new head again.
 4. Confirm that `require_last_push_approval` is off and that the owner, who pushed the branch, can approve it.
 5. Confirm that `carrydown-staging-verifier` passes only after the authorized review of the final head, and fails before it.

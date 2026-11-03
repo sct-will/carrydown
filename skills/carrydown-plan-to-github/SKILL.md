@@ -26,8 +26,8 @@ Then it generates the engineers' skill: a small folder in the Agent Skills forma
 
 ## Rules that never bend
 
-- Ask before you write anything to GitHub. Always run the dry run first, show the user its summary, and wait for a clear yes. Writing means `--apply`. A yes to one run is not a yes to the next.
-- Run the preflight before you ask the user to commit, push or publish anything (step 3). It reads the destination and prints one visibility line for each target. For a project that publishes an approved release it refuses a destination the release's audience does not allow: a release for repository readers on a public repository (`audience-visibility-mismatch`), a board that more accounts can read than the repository, or a board whose readers cannot be listed and that no current administrator attestation covers (`destination-access-not-verified`). There is no flag that overrides it. Say the code and its plain meaning, and do not look for a way around it. A repository that is public is not a reason to ask the user anything new when the release is approved for the public at that exact repository.
+- Ask before you write anything to GitHub. Always run the dry run first, show the user its summary, and wait for a clear yes. Writing means `--apply`. A yes to one run is not a yes to the next. For a release, the dry run of `release.py release` and its external-write line are that dry run and that yes, for exactly the runs the line names (step 3).
+- Run the preflight before you ask the user to commit, push or publish anything (step 4). It reads the destination and prints one visibility line for each target. For a project that publishes an approved release it refuses a destination the release's audience does not allow: a release for repository readers on a public repository (`audience-visibility-mismatch`), a board that more accounts can read than the repository, or a board whose readers cannot be listed and that no current administrator attestation covers (`destination-access-not-verified`). There is no flag that overrides it. Say the code and its plain meaning, and do not look for a way around it. A repository that is public is not a reason to ask the user anything new when the release is approved for the public at that exact repository.
 - A project with no release policy (a legacy project) has no approved audience, so the preflight only reports. If its repository is public, say so before you ask for the yes: issue bodies carry text from the ground truth, and anyone can read them.
 - Never print, log, echo, paste or commit the token. Never ask the user to paste it into the chat. Never put it in a URL or a command line argument. Never set or read the token in the shell. Only the scripts read it.
 - When the user gives you the path of a token file, never open, read, cat, grep, list or display that file, and never pass it to any tool other than `github_token.py --from-file`. If the script fails, report its message. Do not inspect the file.
@@ -47,11 +47,9 @@ The scripts and templates folders sit next to this SKILL.md. In the commands bel
 
 Run `python3 <skill>/scripts/check_specs.py --root .`. It must report 0 findings. If it does not, stop and go back to `carrydown-ground-truth`. The sync script runs the checker again before it does anything.
 
-**An approved release comes first.** A project with a `project.handling` block publishes only an approved release, from its snapshot, never from working files. Check that one is active before any step below: run `python3 <skill>/scripts/release.py diff --root .`. If the working files differ from the active release, or none is active, run the sequence of `carrydown-ground-truth` step 8: `release.py preview`, the three named approvals (the plan is correct, these exact outputs may be shared, Carrydown may create or update these GitHub items), `prepare`, `approve` and `export`. Each GitHub script verifies the approval again before every write and refuses with a fixed reason code (`not-approved`, `withdrawn`, `superseded`, `expired`, `mixed-release`, `target-identity-mismatch`, `audience-visibility-mismatch`, `unapproved-substitution`, `assignee-unresolved`, `destination-not-allowed`). Say the code and the plain meaning to the user. Do not look for a way around it: there is none. A project with no handling block is a legacy project and runs as before.
-
 For a plan just completed by the ground-truth skill, read the outcome of its second-pass report and resolve pending planning decisions with the owner. For an older plan without that report, offer the review path in `references/plan-review-repair.md`; existing scripts do not require a new report or plan field.
 
-**A legacy project migrates first.** A project with no `project.handling` block was set up before releases existed. Its first step is the inventory, which reads the working tree and the git history and writes nothing:
+**A legacy project migrates first.** A project with no `project.handling` block was set up before releases existed. It publishes as before (steps 2, 4 and 5 with `--repo owner/name`), and step 3 does not apply to it. To migrate it, the first step is the inventory, which reads the working tree and the git history and writes nothing:
 
 ```bash
 python3 <skill>/scripts/release.py inventory --root .
@@ -59,9 +57,7 @@ python3 <skill>/scripts/release.py inventory --root .
 
 It lists the tracked originals and renderings, the staffing fields in tracked files, the generated references of the engineers' skill and whether any of them are in git history, and it says plainly that Carrydown cannot rewrite history and links GitHub's guidance. Show it to the user. The user then answers the one question in step 0 of `carrydown-ground-truth`, which migrates the project. For the issues already on GitHub, the same step has a read-only report once there is a token (step 2): `github_sync.py --root . --inventory` lists every managed issue, whether its body is pristine, whether it holds text outside the managed region and whether it predates the active release. Text outside the managed region stays when the managed region is replaced, so replacing it does not remove that text. Changes need a reviewed migration and approved updates, and the user decides issue by issue. The report proposes no rewrite, and you must not make one.
 
-Every issue body links its specification at `https://github.com/<owner>/<repo>/blob/<branch>/docs/spec/...`, where `<branch>` is `project.branch`. Those links work only when the specification folder is committed and pushed to that branch. The check for that comes in step 3, after the preflight. Do not ask the user to commit or push anything before the preflight has passed.
-
-Confirm with the user, in plain words: the repository (`owner/name`) and whether it is public, whether a parent Epic issue exists (its number) or may be created, the people's GitHub logins if they should be assigned, and which account owns the project board (the user's own GitHub account or the organization). Put the repository, Epic number and project title in `plan.yaml` under `project`.
+Confirm with the user, in plain words: the repository (`owner/name`) and whether it is public, whether a parent Epic issue exists (its number) or may be created, the people's GitHub logins if they should be assigned, and which account owns the project board (the user's own GitHub account or the organization). Put the repository, Epic number and project title in `plan.yaml` under `project` (after a first release on the yes answer, in the working plan, `drafts/plan.yaml` in the private workspace).
 
 ### 2. Token
 
@@ -81,7 +77,31 @@ python3 <skill>/scripts/github_token.py --from-file <path> --repo owner/name
 
 The script stores the token with mode 600 and keeps the user's file. Ask the user to delete it. Do not delete it yourself. If a token is already stored, run only `github_token.py --check --repo owner/name`. If the check fails, `references/troubleshooting.md` has the fix.
 
-### 3. Preflight, commit and push check, dry run of the issues
+### 3. Release
+
+A project with a `project.handling` block publishes only an approved release, from its snapshot, never from working files. Each GitHub script verifies the approval again before every write and refuses with a fixed reason code (`not-approved`, `withdrawn`, `superseded`, `expired`, `mixed-release`, `target-identity-mismatch`, `audience-visibility-mismatch`, `unapproved-substitution`, `assignee-unresolved`, `destination-not-allowed`). Say the code and the plain meaning to the user. Do not look for a way around it: there is none.
+
+**You run the commands. The owner never types a request id, a flag, an audience or a destination, and you never pass one either: the command derives the repository's numeric id (with the token of step 2), the audience, the board and the request.** Say what you are about to run in one plain sentence, not the command.
+
+**On the yes answer**, one command does the release, a dry run first:
+
+```bash
+python3 <skill>/scripts/release.py release --root .
+```
+
+It prints the four-question preview (what will be shared, with whom, where, what remains private), the changes since the previous release and the limits, then the GitHub items the release would create or update, and the lines to ask. It derives the audience from the repository: everyone who can read it, which is the public when the repository is public. It looks the board up by the plan's `project_title` under the account that owns it (`--board-owner LOGIN` when that is not the repository's owner); a missing board is created empty by the `--apply` run, before anything else. Show the owner the preview and ask, in one prompt, each line on its own: "These exact outputs may be shared with everyone who can read `<repo>`" (or "published publicly"), and "Carrydown may create or update these GitHub items:" followed by the items the dry run listed. The first line of the three approvals, "The plan and specifications are correct.", was given at the end of `carrydown-ground-truth`; ask it again only if the plan changed since. A yes to one line is a yes to that line only. After a yes to the disclosure line, run:
+
+```bash
+python3 <skill>/scripts/release.py release --root . --apply
+```
+
+It prepares the request, records the owner's approval (labeled not authenticated, as the yes path is), and copies the approved files, a small receipt and the engineers' skill into the working tree. `docs/spec/plan.yaml` becomes the released plan, and the owner's working plan moves to the private workspace as `drafts/plan.yaml`. The dry run kept a digest of the preview in the private workspace, and `--apply` approves only what that preview showed: if a file or the scope changed in between, it refuses with `not-approved` before it writes anything. Then run the dry run again, show the new preview and ask again. If the external-write line was not a yes, run the dry run again with `--no-github`, show it, and after a yes to its disclosure line run `--apply --no-github`: the release then holds no GitHub items, and steps 4 and 5 do not run. The yes to the external-write line covers the `--apply` runs of steps 4 and 5 for this release, and nothing else.
+
+When nothing changed since the active release, the command says so and prepares nothing. `release.py diff --root .` names the work items a change touches. `release.py withdraw --root . --reason <code> --apply` ends the active request, and `release.py export-state --root . --apply` then rewrites its receipt. A change to the plan, a specification or a source after a release needs a new release: run this step again.
+
+**Only on the no answer**, the approval is not a chat answer, and the release needs the organization setup in the setup guide. Run `release.py doctor --root .` and show its table. After the preview (`release.py preview --root .`), run `release.py prepare --root . --apply`, ask permission to write to GitHub, and run `release.py approve --root . --github --apply`. Tell the owner to review the final revision of the pull request in the private staging repository and merge it with a merge commit, then run `release.py export --root . --apply`. It commits to a new branch in an isolated worktree and prints the push and pull request commands. Run those only if the owner asks for them in this chat. Local approval is refused for an enrolled project, and a signed tag is not available. Publication (steps 4 and 5) waits until the engineering pull request has merged. Do not describe this path to a yes-path owner.
+
+### 4. Preflight, commit and push check, issues
 
 **Preflight first.** It needs the token from step 2 and writes nothing:
 
@@ -90,15 +110,15 @@ python3 <skill>/scripts/github_sync.py --root . --preflight                  # a
 python3 <skill>/scripts/github_sync.py --root . --repo owner/name --preflight   # a legacy project
 ```
 
-Show the user the visibility lines. If it refuses, say the reason code and stop; step 1 and the release sequence of `carrydown-ground-truth` step 8 say how to fix the release or the destination. `github_project.py` and `github_repair.py` run the same preflight before they write, and `--verify` on each reports a change of visibility since the last apply. Only after the preflight has passed, check the commit and push state. Ask the user to run these commands in their own terminal, from the project root, and to tell you what they print. They only read. Do not run them yourself:
+Show the user the visibility lines. If it refuses, say the reason code and stop; step 3 says how to fix the release, and the setup guide how to fix the destination. `github_project.py` and `github_repair.py` run the same preflight before they write, and `--verify` on each reports a change of visibility since the last apply. Only after the preflight has passed, check the commit and push state. Every issue body links its specification at `https://github.com/<owner>/<repo>/blob/<branch>/docs/spec/...`, where `<branch>` is `project.branch`. Those links work only when the specification folder is committed and pushed to that branch. Ask the user to run these commands in their own terminal, from the project root, and to tell you what they print. They only read. Do not run them yourself:
 
 ```bash
-git status --porcelain docs/spec
+git status --porcelain docs
 git fetch origin <branch>
-git log origin/<branch>..HEAD --oneline -- docs/spec
+git log origin/<branch>..HEAD --oneline -- docs
 ```
 
-The first and the last command must print nothing. If the first prints a file, the plan or a specification is not committed. If the last prints a commit, it is not pushed. Ask the user to commit and push the plan and the specifications. Do not run `git commit` or `git push` yourself unless the user asks for that command in this chat. Then ask the user to run the check again.
+The first and the last command must print nothing. If the first prints a file, the release or a specification is not committed. If the last prints a commit, it is not pushed. Ask the user to commit and push the released files, with the plan, the specifications, the approved contexts, the receipt and the engineers' skill, in one commit as they do today. Do not run `git commit` or `git push` yourself unless the user asks for that command in this chat. Then ask the user to run the check again.
 
 **Dry run.** For a project that publishes an approved release, leave out `--repo` and `--create-epic`: the repository and the Epic come from the approved payloads, and a different `--repo` is refused (`target-identity-mismatch`).
 
@@ -107,32 +127,28 @@ python3 <skill>/scripts/github_sync.py --root .                                 
 python3 <skill>/scripts/github_sync.py --root . --repo owner/name --create-epic   # a legacy project
 ```
 
-For an approved release the dry run lists the payloads and the request id. This is the third named approval, the external-write line: "Carrydown may create or update these GitHub items", followed by the counts. An interrupted `--apply` resumes from `publication/<request id>.journal.json` in the private workspace and creates nothing twice. If it prints `target changed since publication: <key>`, a person edited the managed part of that item; stop and ask the owner what to do, and never rewrite it.
+For an approved release the dry run lists the payloads, the request id and which items exist already. Show the summary. The owner already approved these writes with the external-write line in step 3; if the dry run shows anything that line did not name, stop and ask again. For a legacy project, `--create-epic` makes a parent Epic only when `project.epic` is empty; when it holds a number, that Epic is used. Leave the flag out of every legacy command in this step only if the user wants no parent Epic, and the summary then starts with `0 Epic`. Show the summary line, which reads exactly `1 Epic, N sub-epics, N work item issues` with the real numbers, and which of them exist already. Offer `--show-body ID` to print one issue body without any network call. For a legacy project ask: "This will create 1 Epic, N sub-epics and N work item issues in owner/name. Shall I go ahead?" Wait for a yes ("Go ahead.").
 
-`--create-epic` makes a parent Epic only when `project.epic` is empty; when it holds a number, that Epic is used. Leave the flag out of every command in steps 3 and 4 only if the user wants no parent Epic, and the summary then starts with `0 Epic`. Show the user the summary line, which reads exactly `1 Epic, N sub-epics, N work item issues` with the real numbers, and which of them exist already. Offer `--show-body ID` to print one issue body without any network call.
-
-Ask: "This will create 1 Epic, N sub-epics and N work item issues in owner/name. Shall I go ahead?" Wait for a yes ("Go ahead.").
-
-### 4. Apply and verify
-
-Run `--apply` only after the user answered yes to that question for this run.
+**Apply and verify.** Run `--apply` only after the yes for this release (the external-write line) or, for a legacy project, after the yes to the question above:
 
 ```bash
-python3 <skill>/scripts/github_sync.py --root . --repo owner/name --create-epic --apply
+python3 <skill>/scripts/github_sync.py --root . --apply      # an approved release
+python3 <skill>/scripts/github_sync.py --root . --verify
+python3 <skill>/scripts/github_sync.py --root . --repo owner/name --create-epic --apply    # a legacy project
 python3 <skill>/scripts/github_sync.py --root . --repo owner/name --create-epic --verify
 ```
 
-Add `--issue-type Task` if the organization uses issue types, `--update-bodies` only if the user wants existing bodies rewritten. `references/verification.md` lists what `--verify` checks and the expected counts. Its drift reports name each issue by plan key, issue number and a digest, never by the body or the title that GitHub holds.
+Add `--issue-type Task` if the organization uses issue types, `--update-bodies` only if the user wants existing bodies rewritten. `references/verification.md` lists what `--verify` checks and the expected counts. Its drift reports name each issue by plan key, issue number and a digest, never by the body or the title that GitHub holds. An interrupted `--apply` resumes from `publication/<request id>.journal.json` in the private workspace and creates nothing twice. If it prints `target changed since publication: <key>`, a person edited the managed part of that item; stop and ask the owner what to do, and never rewrite it.
 
 A work item whose approved context holds a section of a restricted source gets an issue with the seven headings and links in place of the text of Acceptance criteria, Evidence of completion and Integration points. A restricted work item has no issue at all. `references/github-structure.md` says what each looks like.
 
 ### 5. Project board
 
 ```bash
-python3 <skill>/scripts/github_project.py --root . --repo owner/name            # dry run
+python3 <skill>/scripts/github_project.py --root .            # dry run (a legacy project adds --repo owner/name)
 ```
 
-Its first lines are the preflight for the board: the board must exist already and be the one the release approved, because a release never creates a board. Show the fields and views it would create. Ask: "This will create the board and its fields in the account that owns it. Shall I go ahead?" Run the same command with `--apply` only after a yes for this run. Then run it with `--verify`. `references/project-board.md` has the fields, how breaks are made and what the script does not set.
+For an approved release the board is the one the release named: on the yes answer the release found it or created it empty, and on the no answer an administrator provisioned it before the release. Show the fields and views it would create. For an approved release the external-write line of step 3 already covers this run; for a legacy project ask: "This will create the board and its fields in the account that owns it. Shall I go ahead?" Run the same command with `--apply` only after that yes. Then run it with `--verify`. `references/project-board.md` has the fields, how breaks are made and what the script does not set.
 
 ### 6. Tell the user what to click
 
@@ -142,22 +158,26 @@ The script does not yet set grouping, sorting, the board column field, the roadm
 
 Show the user the counts and the project link. Remind them of the rhythm: closing comment on every issue, a checkpoint comment after each checkpoint, a demonstration note on each sub-epic.
 
-### 8. Generate the engineers' skill
+### 8. The engineers' skill
 
-Needs no token and makes no network call. When the user asks only for this step, run the checker from step 1 and skip steps 2 to 7. In `plan.yaml`, `project.dev_skill` (by default `<slug>-dev`) and `project.dev_skill_path` (by default `docs/dev/skills/<slug>-dev`) are set, and the last folder of the path equals the name.
+Needs no network call of its own. In `plan.yaml`, `project.dev_skill` (by default `<slug>-dev`) and `project.dev_skill_path` (by default `docs/dev/skills/<slug>-dev`) are set, and the last folder of the path equals the name.
+
+For a project with a `project.handling` block the engineers' skill is part of the release: step 3 generated it and copied it into the working tree with the other approved files, so there is nothing more to run. When the user asks only for this step ("Generate the engineers' skill."), run the checker from step 1 and then step 3 with `--no-github`, and skip the other steps. The release reads the repository's numeric id from an earlier release of this project, or with the token of step 2. For the very first release of a project without a token the command says the id is not known yet: set up the token once (step 2), then run step 3 again.
+
+For a legacy project:
 
 ```bash
 python3 <skill>/scripts/generate_dev_skill.py --root .            # dry run
 python3 <skill>/scripts/generate_dev_skill.py --root . --apply    # write
 ```
 
-It writes `SKILL.md`, `README.md` and three references, skips files that exist unless you pass `--force`, and prints the length of the description. Go through `references/engineers-skill-review.md` with the user and add what only they know. Then print the install line for the engineers, from the generated README, for each engineer to run in their own terminal. Do not run it yourself. For example:
+It writes `SKILL.md`, `README.md` and three references, skips files that exist unless you pass `--force`, and prints the length of the description. Go through `references/engineers-skill-review.md` with the user and add what only they know. A hand edit to the released skill's `SKILL.md` or `README.md` is kept by the next release. Then print the install line for the engineers, from the generated README, for each engineer to run in their own terminal. Do not run it yourself. For example:
 
 ```bash
 npx skills add https://github.com/<owner>/<repo>/tree/<branch>/<dev_skill_path> -a <agent>
 ```
 
-The line works once the folder is on `project.branch` on GitHub, so ask the user to commit and push it. Do not commit or push it yourself unless the user asks for that command in this chat. `references/engineers-skill-install.md` has every agent, the copy and link options and the team rollout. `references/engineers-skill-maintenance.md` says when to regenerate. The engineers review every change their agent makes.
+The line works once the folder is on `project.branch` on GitHub, so ask the user to commit and push it if it is not yet. Do not commit or push it yourself unless the user asks for that command in this chat. `references/engineers-skill-install.md` has every agent, the copy and link options and the team rollout. `references/engineers-skill-maintenance.md` says when to regenerate. The engineers review every change their agent makes.
 
 ## When something fails
 
