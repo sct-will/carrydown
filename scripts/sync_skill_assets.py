@@ -40,7 +40,9 @@ NEEDS = {
 
 # Copies outside the skills: the checker copy in the sample, as scaffold_spec.py --ci writes it.
 SAMPLE_COPIES = [("scripts/check_specs.py", "sample/expense-approvals/tools/carrydown/check_specs.py"),
-                 ("scripts/carrydown_lib.py", "sample/expense-approvals/tools/carrydown/carrydown_lib.py")]
+                 ("scripts/carrydown_lib.py", "sample/expense-approvals/tools/carrydown/carrydown_lib.py"),
+                 ("scripts/release_schema.py", "sample/expense-approvals/tools/carrydown/release_schema.py"),
+                 ("scripts/detectors.py", "sample/expense-approvals/tools/carrydown/detectors.py")]
 
 # Modules that may ship with one skill only, because they hold network or token code.
 ONLY_IN = {"github_client.py": "carrydown-plan-to-github"}
