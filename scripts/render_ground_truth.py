@@ -44,6 +44,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
+import release_gate as RG  # noqa: E402
 from carrydown_lib import anchors_for, collect_headings  # noqa: E402
 
 slugify = L.anchor_slug
@@ -1702,6 +1703,26 @@ def main(argv=None):
                 return "workspace:" + p.relative_to(ws).as_posix()
         return str(p.relative_to(root)) if p.is_relative_to(root) else str(p)
 
+    def gate(path, data, classification):
+        """Ask the release gate before a write: a candidate write into the private workspace, a draft write
+        into the project. A rendering of a source that is not repo-readers or public may not be drafted in the project."""
+        target = Path(path).resolve()
+        in_workspace = workspace is not None and (target == Path(workspace).resolve() or Path(workspace).resolve() in target.parents)
+        shown = target.relative_to(root.resolve()).as_posix() if root.resolve() in target.parents else str(target)
+        hint = {"source_classification": classification} if classification and not in_workspace else None
+        decision = RG.check("candidate" if in_workspace else "draft", shown, L.sha256_text(data) if isinstance(data, str) else RG.RS.sha256_bytes(data),
+                            "workspace" if in_workspace else "engineering-repo", str(root), verified_context=hint)
+        if not decision.allowed:
+            print(f"error: {decision.code}: the release gate refused the write of {shown}. Nothing was written.", file=sys.stderr)
+            return False
+        return True
+
+    if not a.dry_run:
+        for job, figs, notes, findings, text, index_txt, n_head in rendered:
+            outputs = [(job["out_md"], text), (job["out_idx"], index_txt)] + [(job["fig_dir"] / f, d) for f, d in figs.files]
+            if not all(gate(path, data, job["classification"]) for path, data in outputs):
+                return 2
+
     verb = "would write" if a.dry_run else "wrote"
     digests = {}
     for job, figs, notes, findings, text, index_txt, n_head in rendered:
@@ -1754,6 +1775,8 @@ def main(argv=None):
             if a.dry_run:
                 print(f"would record content_sha256 and rendering_sha256 for {', '.join(sorted(digests))} in {where}")
             else:
+                if not gate(target, Path(target).read_bytes(), None):
+                    return 2
                 try:
                     done, missing, problem = record_source_digests(target, digests)
                 except (L.TextError, ValueError, OSError) as e:

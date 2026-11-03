@@ -30,10 +30,10 @@ REPO = Path(__file__).resolve().parent.parent
 NEEDS = {
     "carrydown-ground-truth": {
         "scripts": ["render_ground_truth.py", "scaffold_spec.py", "check_specs.py", "plan_repair.py", "release_schema.py", "workspace.py", "compile_bundles.py"],
-        "templates": ["plan.yaml", "spec.md", "milestone.md", "spec-README.md", "closing-comment.md", "checkpoint-comment.md", "check-specs-workflow.yml", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md", "staging/open-release-request.yml"],
+        "templates": ["plan.yaml", "spec.md", "milestone.md", "spec-README.md", "closing-comment.md", "checkpoint-comment.md", "check-specs-workflow.yml", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md", "staging/open-release-request.yml", "staging/ruleset.json"],
     },
     "carrydown-plan-to-github": {
-        "scripts": ["github_token.py", "github_sync.py", "github_project.py", "github_repair.py", "github_client.py", "check_specs.py", "generate_dev_skill.py", "plan_repair.py", "release_schema.py", "compile_bundles.py"],
+        "scripts": ["github_token.py", "github_sync.py", "github_project.py", "github_repair.py", "github_client.py", "check_specs.py", "generate_dev_skill.py", "plan_repair.py", "release_schema.py", "compile_bundles.py", "release.py", "release_github.py"],
         "templates": ["issue-body.md", "closing-comment.md", "checkpoint-comment.md", "dev-skill/SKILL.md.tmpl", "dev-skill/README.md.tmpl", "dev-skill/scripts/check_context.py", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md", "plan.yaml", "spec.md", "milestone.md", "spec-README.md", "check-specs-workflow.yml"],
     },
 }
@@ -45,7 +45,7 @@ SAMPLE_COPIES = [("scripts/check_specs.py", "sample/expense-approvals/tools/carr
                  ("scripts/detectors.py", "sample/expense-approvals/tools/carrydown/detectors.py")]
 
 # Modules that may ship with one skill only, because they hold network or token code.
-ONLY_IN = {"github_client.py": "carrydown-plan-to-github"}
+ONLY_IN = {"github_client.py": "carrydown-plan-to-github", "release_github.py": "carrydown-plan-to-github", "release.py": "carrydown-plan-to-github"}
 
 
 def closure(names):

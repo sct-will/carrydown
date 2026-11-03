@@ -95,22 +95,25 @@ def is_text_file(file_id):
 
 
 def read_files(root, snapshot_files):
-    """{file id: text}. snapshot_files is a mapping of file id to path, or a list of file ids relative
-    to root. Only text suffixes are read. A file that is missing or cannot be read is skipped here
+    """{file id: text}. snapshot_files is a mapping of file id to a path (or to the bytes themselves), or a
+    list of file ids relative to root. Only text suffixes are read. A file that is missing or cannot be read is skipped here
     and listed by missing_files, so the caller can fail closed."""
     out = {}
     if isinstance(snapshot_files, dict):
-        pairs = [(str(k), Path(v)) for k, v in snapshot_files.items()]
+        pairs = [(str(k), v if isinstance(v, (bytes, bytearray)) else Path(v)) for k, v in snapshot_files.items()]
     else:
         pairs = [(str(f).replace("\\", "/"), Path(root) / str(f)) for f in snapshot_files or []]
     for file_id, path in pairs:
         if not is_text_file(file_id):
             continue
-        try:
-            with open(path, "rb") as handle:
-                data = handle.read(MAX_BYTES)
-        except OSError:
-            continue
+        if isinstance(path, (bytes, bytearray)):
+            data = bytes(path)[:MAX_BYTES]       # content given directly, as a release preview does
+        else:
+            try:
+                with open(path, "rb") as handle:
+                    data = handle.read(MAX_BYTES)
+            except OSError:
+                continue
         out[file_id] = data.decode("utf-8", errors="replace").replace("\r\n", "\n")
     return out
 

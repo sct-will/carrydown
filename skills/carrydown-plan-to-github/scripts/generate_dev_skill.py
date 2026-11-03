@@ -29,6 +29,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
+import release_gate as RG  # noqa: E402
 
 md_table = L.md_table
 CONTEXT_DIR = "docs/context"
@@ -238,6 +239,65 @@ def dod_checkboxes(plan):
     return "\n".join(f"- [ ] {i}" for i in items)
 
 
+def skill_target(plan):
+    """(skill name, skill path) of the plan, after the checks that make them usable. A problem stops the
+    script with one line."""
+    proj = plan["project"]
+    skill_path = proj.get("dev_skill_path")
+    skill_name = proj.get("dev_skill")
+    if not skill_path or not skill_name:
+        L.die("project.dev_skill and project.dev_skill_path are required in plan.yaml")
+    if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", skill_name):
+        L.die("project.dev_skill must be lowercase words joined by hyphens")
+    if len(skill_name) > 64:
+        L.die(f"project.dev_skill is {len(skill_name)} characters. A skill name has at most 64")
+    if Path(skill_path).name != skill_name:
+        L.die(f"the last folder of project.dev_skill_path ({Path(skill_path).name}) must equal project.dev_skill ({skill_name}). "
+              "Agents load a skill only when its folder and its name match")
+    if not plan["items"]:
+        L.die("plan.yaml has no items yet, so there is nothing for the engineers' skill to describe")
+    return skill_name, skill_path
+
+
+def skill_makers(plan, root, bundles=None):
+    """{relative path: function that returns the file's text} for the engineers' skill. root is the folder
+    that holds the specification and, unless bundles is given, docs/context. bundles maps a path such as
+    docs/context/wi-06.bundle.json to its bytes (what compile_bundles returns)."""
+    proj = plan["project"]
+    skill_name, skill_path = skill_target(plan)
+    first = plan["items"][0]
+    ms1 = L.milestone_by_num(plan)[first["milestone"]]
+    stem = f"{L.tag(plan, first['id']).lower()}-{first['slug']}"
+    description = make_description(plan)
+    values = {
+        # a JSON string is a valid YAML double-quoted value, so ": " or " #" in a project name cannot break the frontmatter
+        "skill_name": skill_name, "project_name": proj["name"], "description": json.dumps(description, ensure_ascii=False),
+        "id_prefix": proj["id_prefix"], "context_dir": CONTEXT_DIR,
+        "purpose_extra": "Its conventions come from the plan folder, and its references are generated from the same files.",
+        "spec_dir": proj["spec_dir"], "example_id": L.tag(plan, first["id"]), "example_stem": stem,
+        "example_path": f"{proj['spec_dir']}/{ms1['folder']}/{stem}.md",
+        "conventions": L.conventions_text(plan), "branch": proj["branch"],
+        "definition_of_done": dod_checkboxes(plan), "tests": tests_text(plan),
+        "item_count": len(plan["items"]), "skill_path": skill_path, "skill_path_win": skill_path.replace("/", "\\"),
+        "tree_url": L.github_tree_url(plan, skill_path) if proj.get("repo") else "<repository tree url for this folder>",
+    }
+    return {
+        "SKILL.md": lambda: L.fill(L.read_template("dev-skill", "SKILL.md.tmpl"), values),
+        "README.md": lambda: L.fill(L.read_template("dev-skill", "README.md.tmpl"), values),
+        "references/work-items.md": lambda: work_items_md(plan, root),
+        "references/contracts.md": lambda: contracts_md(plan, root),
+        "references/ground-truth-map.md": lambda: ground_truth_map_md(plan, root, bundles=bundles),
+        "scripts/check_context.py": lambda: L.fill(L.read_template("dev-skill", "scripts", "check_context.py"), values),
+    }
+
+
+def skill_files(plan, root, bundles=None):
+    """{relative path: text} of every file of the engineers' skill, built from the plan, the
+    specifications under root and the bundles (see skill_makers). Nothing is read from or written to
+    docs/dev."""
+    return {rel: make() for rel, make in skill_makers(plan, root, bundles).items()}
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Generate the engineers' skill folder (SKILL.md, README.md, references/) from plan.yaml, the specs and the rendered ground truth. Dry run unless --apply.",
@@ -260,43 +320,9 @@ def main(argv=None):
             L.say("  - " + p)
         return 1
     proj = plan["project"]
-    skill_path = proj.get("dev_skill_path")
-    skill_name = proj.get("dev_skill")
-    if not skill_path or not skill_name:
-        L.die("project.dev_skill and project.dev_skill_path are required in plan.yaml")
-    if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", skill_name):
-        L.die("project.dev_skill must be lowercase words joined by hyphens")
-    if len(skill_name) > 64:
-        L.die(f"project.dev_skill is {len(skill_name)} characters. A skill name has at most 64")
-    if Path(skill_path).name != skill_name:
-        L.die(f"the last folder of project.dev_skill_path ({Path(skill_path).name}) must equal project.dev_skill ({skill_name}). "
-              "Agents load a skill only when its folder and its name match")
-    if not plan["items"]:
-        L.die("plan.yaml has no items yet, so there is nothing for the engineers' skill to describe")
-    first = plan["items"][0]
-    ms1 = L.milestone_by_num(plan)[first["milestone"]]
-    stem = f"{L.tag(plan, first['id']).lower()}-{first['slug']}"
+    skill_name, skill_path = skill_target(plan)
     description = make_description(plan)
-    values = {
-        # a JSON string is a valid YAML double-quoted value, so ": " or " #" in a project name cannot break the frontmatter
-        "skill_name": skill_name, "project_name": proj["name"], "description": json.dumps(description, ensure_ascii=False),
-        "id_prefix": proj["id_prefix"], "context_dir": CONTEXT_DIR,
-        "purpose_extra": "Its conventions come from the plan folder, and its references are generated from the same files.",
-        "spec_dir": proj["spec_dir"], "example_id": L.tag(plan, first["id"]), "example_stem": stem,
-        "example_path": f"{proj['spec_dir']}/{ms1['folder']}/{stem}.md",
-        "conventions": L.conventions_text(plan), "branch": proj["branch"],
-        "definition_of_done": dod_checkboxes(plan), "tests": tests_text(plan),
-        "item_count": len(plan["items"]), "skill_path": skill_path, "skill_path_win": skill_path.replace("/", "\\"),
-        "tree_url": L.github_tree_url(plan, skill_path) if proj.get("repo") else "<repository tree url for this folder>",
-    }
-    outputs = {
-        "SKILL.md": lambda: L.fill(L.read_template("dev-skill", "SKILL.md.tmpl"), values),
-        "README.md": lambda: L.fill(L.read_template("dev-skill", "README.md.tmpl"), values),
-        "references/work-items.md": lambda: work_items_md(plan, root),
-        "references/contracts.md": lambda: contracts_md(plan, root),
-        "references/ground-truth-map.md": lambda: ground_truth_map_md(plan, root),
-        "scripts/check_context.py": lambda: L.fill(L.read_template("dev-skill", "scripts", "check_context.py"), values),
-    }
+    outputs = skill_makers(plan, root)
     if a.only == "references":
         # the references follow plan.yaml and the specs; SKILL.md and README.md may hold hand edits
         outputs = {k: v for k, v in outputs.items() if k.startswith("references/")}
@@ -321,6 +347,8 @@ def main(argv=None):
             continue
         L.say(f"  {'write' if a.apply else 'would write'}: {rel} ({len(content.splitlines())} lines)")
         if a.apply:
+            shown = p.relative_to(root).as_posix() if root in p.parents else str(p)
+            RG.require(RG.maintenance_class(root), shown, L.sha256_text(content), "engineers-skill", root)
             L.write_text(p, content)
         n += 1
     L.say(f"{n} file(s) {'written' if a.apply else 'would be written'}." + ("" if a.apply else " Dry run. Add --apply to write."))

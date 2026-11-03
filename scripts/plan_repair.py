@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import carrydown_lib as L
+import release_gate as RG  # noqa: E402
 
 
 def dump(value, indent=0):
@@ -246,6 +247,8 @@ def main(argv=None):
         L.say(f"{len(actions)} repair action(s). Dry run; use --apply after review.")
         return 0
     if proposed != raw:
+        shown = Path(path).resolve().relative_to(root.resolve()).as_posix() if root.resolve() in Path(path).resolve().parents else str(path)
+        RG.require(RG.maintenance_class(root), shown, L.sha256_text(after), "engineering-repo", root)
         L.write_text(path, after)
     _, problems = L.load_plan(path, root)
     if problems:

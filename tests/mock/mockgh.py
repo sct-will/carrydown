@@ -50,6 +50,7 @@ class State:
         self.next_id = 1000
         self.private = True
         self.repos = {"o/r"}   # the repositories that exist; any other answers 404
+        self.repo_ids = {"o/r": 4200}   # numeric id of each repository; one not listed gets the next free id
         self.orgs = set()       # logins that are organizations; any other login is a user
         self.fail = {}
         self.redirect = {}
@@ -60,6 +61,11 @@ class State:
         self.gql = []
         self.seq = 0
         self.link_base = None   # the address in Link headers; None means this server
+
+    def repo_id(self, name):
+        if name not in self.repo_ids:
+            self.repo_ids[name] = 4200 + len(self.repo_ids)
+        return self.repo_ids[name]
 
     def nid(self, prefix):
         self.seq += 1
@@ -175,11 +181,20 @@ class H(BaseHTTPRequestHandler):
         if p == "/graphql":
             b = self.body()
             return self.send(200, graphql(b.get("query") or "", b.get("variables") or {}))
+        m = re.fullmatch(r"/repositories/(\d+)", p)
+        if m:
+            name = next((n for n in S.repos if S.repo_id(n) == int(m.group(1))), None)
+            if name is None:
+                return self.send(404, {"message": "Not Found"})
+            return self.send(200, {"id": int(m.group(1)), "full_name": name, "private": S.private, "visibility": "private" if S.private else "public",
+                                   "default_branch": "main", "permissions": {"push": True}, "node_id": "R_1"})
         m = re.match(rf"/repos/({NAME})/({NAME})(/|$)", p)
         if m and f"{m.group(1)}/{m.group(2)}" not in S.repos:
             return self.send(404, {"message": "Not Found"})
         if re.fullmatch(rf"/repos/{NAME}/{NAME}", p):
-            return self.send(200, {"private": S.private, "permissions": {"push": True}, "node_id": "R_1"})
+            full = "/".join(p.split("/")[2:4])
+            return self.send(200, {"id": S.repo_id(full), "full_name": full, "private": S.private, "visibility": "private" if S.private else "public",
+                                   "default_branch": "main", "permissions": {"push": True}, "node_id": "R_1"})
         base = rf"/repos/{NAME}/{NAME}"
         if re.fullmatch(base + "/labels", p):
             if method == "GET":
@@ -308,6 +323,12 @@ def graphql(query, v):
     if op is None and "projectsV2(" in query:
         root = "organization" if "organization(" in query else "user"
         return ok({root: {"projectsV2": {"nodes": [_public(x) for x in S.projects]}}})
+    if op is None and "public owner" in query:
+        pr = _project(v.get("p"))
+        if pr is None:
+            return ok({"node": None})
+        return ok({"node": {"id": pr["id"], "public": pr.get("public", False), "owner": {"databaseId": pr.get("owner_id", 4400)},
+                            "repositories": {"nodes": [{"databaseId": rid} for rid in pr.get("repo_ids", [4200])]}}})
     if op is None and "items(first:" in query:
         pr = _project(v.get("p"))
         if pr is None:

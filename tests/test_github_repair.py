@@ -19,6 +19,7 @@ import github_repair as R
 import github_sync as S
 import github_project as P
 import mockgh
+from release_fixture import strip_handling
 
 
 class RepairTests(unittest.TestCase):
@@ -36,6 +37,7 @@ class RepairTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name) / "project"
         shutil.copytree(ROOT / "sample/expense-approvals", self.root)
+        strip_handling(self.root)       # a legacy project: these tests are about the GitHub scripts, not releases
         self.before, problems = L.load_plan(self.root / "docs/spec/plan.yaml", self.root)
         self.assertFalse(problems)
         self.before["people"][0]["github"] = "old-owner"
@@ -172,6 +174,7 @@ class PublicationRecoveryTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name) / "project"
         shutil.copytree(ROOT / "sample/expense-approvals", self.root)
+        strip_handling(self.root)       # a legacy project: these tests are about the GitHub scripts, not releases
         self.plan, _ = L.load_plan(self.root / "docs/spec/plan.yaml", self.root)
         mockgh.S = mockgh.State()
         self.m = mockgh.S
