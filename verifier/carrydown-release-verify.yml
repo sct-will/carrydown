@@ -1,0 +1,112 @@
+# The launcher of the independent verifier. Copy this file to .github/workflows/carrydown-release-verify.yml
+# in the TOOLING repository, never in an engineering or staging repository. The tooling repository is
+# writable only by release owners and administrators, and its default branch is protected.
+#
+# What it does
+#   plan   Checks out the protected default branch as the POLICY (enrollment.yaml, read as data) and
+#          records its commit. Lists the verifier commits the policy pins.
+#   scan   For each pinned commit, checks out the CODE at exactly that commit in another folder, proves the
+#          checkout is that commit, and runs verifier/verify_release.py from it. The code gets the policy file
+#          and the policy commit as arguments. The code never contains its own commit or the latest policy.
+#
+# Credentials
+#   CARRYDOWN_APP_ID and CARRYDOWN_APP_PRIVATE_KEY are secrets of THIS repository only. Never an
+#   organization secret, and never a secret of an engineering or staging repository. The scan step mints a
+#   short-lived installation token from them. The GITHUB_TOKEN of this workflow can only read contents.
+#   The staging repository's request-opening workflow has its own narrow GITHUB_TOKEN and no part in this.
+#
+# What it never does
+#   It never checks out an engineering or staging repository, and it never runs anything from a pull
+#   request. Pull request content is read through the API as data.
+#
+# Pinning
+#   Third-party actions are pinned by full commit SHA. An administrator reviews this file, and the pinned
+#   commit of each action, before installing it, and does not edit it afterward.
+#
+# The schedule is a requested interval of five minutes, offset from the hour. It is not a deadline.
+# GitHub can delay or drop scheduled runs. Run the workflow by hand with "Run workflow" to scan sooner.
+# An optional organization-hosted webhook may dispatch it earlier. That does not remove queueing or the
+# race between a poll and a merge. A scan that does not complete makes this run fail, and the doctor
+# reads the last completed run as the verifier's health.
+name: Carrydown release verifier
+
+on:
+  schedule:
+    - cron: "3-58/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: carrydown-release-verify
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      policy_commit: ${{ steps.policy.outputs.commit }}
+      code_commits: ${{ steps.policy.outputs.code_commits }}
+    steps:
+      - name: Check out the policy (the protected default branch, as data)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          path: policy
+          persist-credentials: false
+          submodules: false
+      - name: Record the policy commit and list the pinned verifier commits
+        id: policy
+        run: |
+          set -euo pipefail
+          commit=$(git -C policy rev-parse HEAD)
+          [[ "${commit}" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::the policy commit is not a full commit id"; exit 1; }
+          pins=$(grep -E '^[[:space:]]*(-[[:space:]]+)?verifier_sha:[[:space:]]*[0-9a-f]{40}[[:space:]]*$' policy/enrollment.yaml | sed -E 's/.*verifier_sha:[[:space:]]*([0-9a-f]{40}).*/\1/' | sort -u || true)
+          total=$(grep -cE '^[[:space:]]*(-[[:space:]]+)?verifier_sha:' policy/enrollment.yaml || true)
+          valid=$(grep -cE '^[[:space:]]*(-[[:space:]]+)?verifier_sha:[[:space:]]*[0-9a-f]{40}[[:space:]]*$' policy/enrollment.yaml || true)
+          [[ -n "${pins}" && "${valid}" == "${total}" ]] || { echo "::error::every enrolled repository must pin a full verifier commit id"; exit 1; }
+          list=$(echo "${pins}" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().split()))')
+          echo "commit=${commit}" >> "${GITHUB_OUTPUT}"
+          echo "code_commits=${list}" >> "${GITHUB_OUTPUT}"
+
+  scan:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        code_commit: ${{ fromJSON(needs.plan.outputs.code_commits) }}
+    steps:
+      - name: Check out the policy again, at the recorded commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ needs.plan.outputs.policy_commit }}
+          path: policy
+          persist-credentials: false
+          submodules: false
+      - name: Check out the verifier code at the commit the policy pins
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ matrix.code_commit }}
+          path: code
+          persist-credentials: false
+          submodules: false
+      - name: Prove the code checkout is exactly the pinned commit
+        run: |
+          set -euo pipefail
+          [[ "$(git -C code rev-parse HEAD)" == "${{ matrix.code_commit }}" ]] || { echo "::error::verifier-code-mismatch"; exit 1; }
+          [[ -z "$(git -C code status --porcelain --untracked-files=all)" ]] || { echo "::error::verifier-code-mismatch"; exit 1; }
+      - name: Scan every open pull request of every enrolled repository
+        env:
+          CARRYDOWN_APP_ID: ${{ secrets.CARRYDOWN_APP_ID }}
+          CARRYDOWN_APP_PRIVATE_KEY: ${{ secrets.CARRYDOWN_APP_PRIVATE_KEY }}
+        run: |
+          python3 -I -B code/verifier/verify_release.py scan \
+            --policy-file policy/enrollment.yaml \
+            --policy-commit "${{ needs.plan.outputs.policy_commit }}" \
+            --tooling "${{ github.repository }}" \
+            --code-dir code

@@ -69,7 +69,7 @@ COMPONENT_CODES = {
     "staging-ruleset": "setup-not-verified", "verifier-code": "verifier-code-mismatch",
     "engineering-ruleset": "setup-not-verified", "approvers": "setup-not-verified",
     "scan-health": "verifier-unhealthy", "runtime-isolation": "setup-not-verified",
-    "workspace-access": "workspace-unavailable",
+    "workspace-access": "workspace-unavailable", "destinations": "destination-access-not-verified",
 }
 
 
@@ -168,6 +168,7 @@ class EvidenceReader:
       installations(repo)        installed Apps: [{id, slug}]
       deploy_keys(repo)          [{id, read_only}]
       actions_settings(repo)     {can_create_pull_requests, default_workflow_permissions}
+      secret_names(repo)         the names (never the values) of the repository's Actions secrets
       workflow_runs(repo, workflow, branch)   [{id, status, conclusion, created_at}]
       scan_health(repo)          {completed_at, policy_commit_sha, complete, oldest_outstanding_age_seconds}
       project(node_id)           {id, owner_id, owner_type, public, repository_ids, reader_ids}
@@ -196,6 +197,7 @@ class EvidenceReader:
     def installations(self, repo): self._no()
     def deploy_keys(self, repo): self._no()
     def actions_settings(self, repo): self._no()
+    def secret_names(self, repo): self._no()
     def workflow_runs(self, repo, workflow, branch=None): self._no()
     def scan_health(self, repo): self._no()
     def project(self, node_id): self._no()
@@ -224,6 +226,18 @@ class Enrollment(NamedTuple):
     @property
     def approver_ids(self):
         return [a["id"] for a in self.entry["approvers"]]
+
+    @property
+    def verifier_app_id(self):
+        return self.entry.get("verifier_app_id")
+
+    @property
+    def governed_paths(self):
+        return list(self.entry.get("governed_paths") or [])
+
+    @property
+    def engineer_edits(self):
+        return dict(self.entry.get("engineer_edits") or {})
 
 
 class LocalPolicy(NamedTuple):
@@ -380,6 +394,27 @@ def _check_entry(entry, host, tooling_id, repository_id):
     return entry
 
 
+_GIT_COMMIT = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64})\Z")
+EDIT_POLICIES = ("allowed", "request-only")
+
+
+def _check_current(entry):
+    """The fields only a current policy needs (WP7): the verifier App id that both required checks must
+    come from, the pinned verifier commit, and the governed paths with their engineer edit policy. A
+    historical policy captured by an older request is not asked for them."""
+    if not _is_int(entry.get("verifier_app_id")) or entry["verifier_app_id"] <= 0:
+        refuse("policy-pointer-mismatch", "enrollment", "verifier_app_id must be the numeric id of the verifier App")
+    if not isinstance(entry.get("verifier_sha"), str) or not _GIT_COMMIT.match(entry["verifier_sha"]):
+        refuse("policy-pointer-mismatch", "enrollment", "verifier_sha must be a full commit id")
+    paths = entry["governed_paths"]
+    if not isinstance(paths, list) or not paths or not all(isinstance(p, str) and p and not p.startswith("/") for p in paths):
+        refuse("policy-pointer-mismatch", "enrollment", "governed_paths must list repository paths such as docs/spec/**")
+    edits = entry.get("engineer_edits", {})
+    if not isinstance(edits, dict) or not all(isinstance(k, str) and v in EDIT_POLICIES for k, v in edits.items()):
+        refuse("policy-pointer-mismatch", "enrollment", "engineer_edits must map a governed path to allowed or request-only")
+    return entry
+
+
 def _parse_enrollment(parse, data):
     try:
         text = bytes(data).decode("utf-8")
@@ -422,11 +457,43 @@ def load_current_enrollment(repository_id, reader, tooling_repository, parse=Non
     doc = _parse_enrollment(parse, data)
     if doc.get("host") != host or doc.get("tooling_repository_id") != tooling["id"]:
         refuse("policy-pointer-mismatch", "enrollment", "enrollment.yaml names another host or tooling repository")
-    entry = _check_entry(_find_entry(doc, repository_id), host, tooling["id"], repository_id)
+    entry = _check_current(_check_entry(_find_entry(doc, repository_id), host, tooling["id"], repository_id))
     if pointer_enrollment_id is not None and pointer_enrollment_id != entry["enrollment_id"]:
         refuse("policy-pointer-mismatch", "pointer", "the project's pointer names another enrollment")
     return Enrollment(host, tooling["id"], tooling["full_name"], repository_id, tip, entry["policy_sha256"],
                       entry["enrollment_id"], entry, parse)
+
+
+def capture_enrollments(reader, tooling_repository, policy_commit_sha, policy_bytes, parse=None, host="github.com"):
+    """Every enrolled repository of one captured policy, for a verifier run (D9).
+
+    The launcher reads enrollment.yaml from its own checkout of the tooling repository's protected default
+    branch and passes the file and its commit here as data. This function accepts them only when the commit
+    is the current head of the tooling repository's default branch and the API returns the same bytes for
+    that commit, so a file from another branch or a stale checkout is refused (policy-revision-mismatch).
+    The result is a list of Enrollment records, one per repository, each fully validated."""
+    tooling = reader.repository(tooling_repository)
+    if tooling is None:
+        refuse("policy-pointer-mismatch", "enrollment", "the tooling repository cannot be found")
+    tip = reader.branch_head(tooling["id"], tooling["default_branch"])
+    if not tip or tip != policy_commit_sha:
+        refuse("policy-revision-mismatch", "policy_commit_sha", "is not the head of the protected default branch")
+    served = reader.file_at(tooling["id"], tip, "enrollment.yaml")
+    if served is None or bytes(served) != bytes(policy_bytes):
+        refuse("policy-revision-mismatch", "enrollment", "the policy file differs from the protected default branch")
+    doc = _parse_enrollment(parse, policy_bytes)
+    if doc.get("host") != host or doc.get("tooling_repository_id") != tooling["id"]:
+        refuse("policy-pointer-mismatch", "enrollment", "enrollment.yaml names another host or tooling repository")
+    out, seen = [], set()
+    for row in doc["repositories"]:
+        rid = row.get("repository_id") if isinstance(row, dict) else None
+        if not _is_int(rid) or rid in seen:
+            refuse("policy-pointer-mismatch", "enrollment", "a repository is listed twice or has no numeric id")
+        seen.add(rid)
+        entry = _check_current(_check_entry(row, host, tooling["id"], rid))
+        out.append(Enrollment(host, tooling["id"], tooling["full_name"], rid, tip, entry["policy_sha256"],
+                              entry["enrollment_id"], entry, parse))
+    return out
 
 
 def captured_policy(reader, enrollment, commit_sha, policy_sha256):
@@ -956,7 +1023,8 @@ def verify_targets(reader, policy, wanted_targets, audience):
             readers = proj.get("reader_ids")
             if audience == "repo-readers" and getattr(policy, "enrolled", False):
                 if readers is None:
-                    if not _attested(policy.entry, "destination-readers", {"project_id": t["project_id"]}, clock()):
+                    if not _attested(policy.entry, "destination-readers", {"repository_id": t["repository_id"], "owner_id": t["owner_id"],
+                                                                         "project_id": t["project_id"]}, clock()):
                         refuse("destination-access-not-verified", "targets", "the board's readers cannot be listed and no current attestation covers them")
                 else:
                     eng, _why = _call(reader.collaborators, t["repository_id"])
@@ -1110,6 +1178,42 @@ def _call(fn, *args):
         return None, e.detail or "unavailable"
 
 
+VERIFIER_SECRET_PREFIX = "CARRYDOWN_APP"
+VERIFIER_WORKFLOW = ".github/workflows/carrydown-release-verify.yml"
+
+
+def _verifier_isolation(reader, enrollment, now):
+    """(status, evidence) for the part of the verifier-code component that is about credentials (WP7 item 1):
+    the engineering and staging repositories hold no verifier workflow and no secret of the verifier App.
+    A workflow file is read through the contents API. Secret names need administrative read, so when they
+    cannot be listed only a current scoped verifier-isolation attestation satisfies the component."""
+    entry = enrollment.entry
+    unreadable, problems = [], []
+    for label, repo_id in (("engineering", enrollment.repository_id), ("staging", _staging(enrollment))):
+        repo, why = _call(reader.repository, repo_id)
+        if why is not None or repo is None:
+            unreadable.append(f"the {label} repository")
+            continue
+        wf, why = _call(reader.file_at, repo_id, repo["default_branch"], VERIFIER_WORKFLOW)
+        if why is not None:
+            unreadable.append(f"the {label} workflows")
+        elif wf is not None:
+            problems.append(f"the {label} repository holds a verifier workflow")
+        names, why = _call(reader.secret_names, repo_id)
+        if why is not None:
+            unreadable.append(f"the {label} secret names")
+        elif any(str(n).upper().startswith(VERIFIER_SECRET_PREFIX) for n in names or []):
+            problems.append(f"the {label} repository holds a secret of the verifier App")
+    if problems:
+        return MISSING, "; ".join(problems)
+    if unreadable:
+        subject = {"repository_id": enrollment.repository_id, "staging_repository_id": _staging(enrollment)}
+        if _attested(entry, "verifier-isolation", subject, now):
+            return VERIFIED, "a separate verifier commit exists, and a current verifier-isolation attestation covers " + ", ".join(sorted(set(unreadable)))
+        return NOT_VERIFIABLE, "cannot inspect " + ", ".join(sorted(set(unreadable))) + " and no current verifier-isolation attestation matches"
+    return VERIFIED, "a verifier commit separate from the policy commit exists, and neither repository holds the verifier workflow or its secrets"
+
+
 def _check_staging_readers(reader, enrollment, now):
     entry = enrollment.entry
     repo_id = _staging(enrollment)
@@ -1186,9 +1290,22 @@ def _ruleset_rules(rulesets, default_branch_hint=True):
     return summary
 
 
-def staging_ruleset_problem(rulesets):
+def _check_from_app(summary, name, app_id):
+    """None when the rules require check name from the verifier App with this integration id, else a plain
+    description. A check name alone is not enough: any other App could report a check with the same name."""
+    found = [i for c, i in summary["checks"] if c == name]
+    if not found:
+        return f"the check {name} is not required"
+    if app_id is not None and app_id not in found:
+        return f"the check {name} is not required from the verifier App (integration id {app_id})"
+    return None
+
+
+def staging_ruleset_problem(rulesets, app_id=None):
     """None when the staging rulesets encode D10 item 3, else a plain description of what is wrong.
-    A last-pusher approval requirement is reported as such: the sole owner cannot satisfy it."""
+    A last-pusher approval requirement is reported as such: the sole owner cannot satisfy it. app_id is
+    the numeric id of the verifier App (the enrollment's verifier_app_id). When it is given the required
+    check must come from that integration, not merely carry the right name."""
     s = _ruleset_rules(rulesets)
     if s["reviews"] < 1:
         return "the default branch does not require an approving review"
@@ -1196,8 +1313,9 @@ def staging_ruleset_problem(rulesets):
         return "approvals are not dismissed when new commits are pushed"
     if s["last_push"] is not False:
         return "require_last_push_approval is on or unset. The sole owner pushed the branch, so a second human would be needed. Turn it off"
-    if STAGING_CHECK not in [c for c, _ in s["checks"]]:
-        return f"the check {STAGING_CHECK} is not required"
+    why = _check_from_app(s, STAGING_CHECK, app_id)
+    if why:
+        return why
     if not s["strict"]:
         return "branches are not required to be up to date before merging"
     if not (s["no_force"] and s["no_delete"]):
@@ -1206,6 +1324,20 @@ def staging_ruleset_problem(rulesets):
         return "a bypass actor can skip the review rules"
     if s["merge_methods"] is not None and s["merge_methods"] != ["merge"]:
         return "merge methods other than a merge commit are allowed"
+    return None
+
+
+def engineering_ruleset_problem(rulesets, app_id=None):
+    """None when the engineering default branch requires the release check from the verifier App, with no
+    bypass, no force push and no deletion (WP7 item 3), else a plain description of what is wrong."""
+    s = _ruleset_rules(rulesets)
+    why = _check_from_app(s, ENGINEERING_CHECK, app_id)
+    if why:
+        return why
+    if s["bypass"]:
+        return "a bypass actor can skip the rules of the default branch"
+    if not (s["no_force"] and s["no_delete"]):
+        return "force pushes or deletions of the default branch are allowed"
     return None
 
 
@@ -1258,7 +1390,7 @@ def verify_prerequisites(reader, enrollment, now=None, workspace_access=None):
     if why is not None:
         add("staging-ruleset", NOT_VERIFIABLE, "the staging rulesets cannot be read")
     else:
-        problem = staging_ruleset_problem(rulesets)
+        problem = staging_ruleset_problem(rulesets, enrollment.verifier_app_id)
         add("staging-ruleset", MISSING if problem else VERIFIED, problem or "the ruleset encodes the review, check and up-to-date rules")
     tooling_id = enrollment.tooling_repository_id
     sha = entry["verifier_sha"]
@@ -1268,16 +1400,13 @@ def verify_prerequisites(reader, enrollment, now=None, workspace_access=None):
     elif not exists or sha == enrollment.policy_commit_sha:
         add("verifier-code", MISSING, "the pinned verifier commit does not exist or is the policy commit")
     else:
-        add("verifier-code", VERIFIED, "a verifier commit separate from the policy commit exists")
+        add("verifier-code", *_verifier_isolation(reader, enrollment, when))
     eng_rulesets, why = _call(reader.rulesets, enrollment.repository_id)
-    cover = {"repository_id": enrollment.repository_id}
+    cover = {"repository_id": enrollment.repository_id, "integration_id": enrollment.verifier_app_id}
     if why is None:
-        s = _ruleset_rules(eng_rulesets)
-        named = [c for c, _ in s["checks"]]
-        if ENGINEERING_CHECK in named and not s["bypass"]:
-            add("engineering-ruleset", VERIFIED, f"the default branch requires {ENGINEERING_CHECK}")
-        else:
-            add("engineering-ruleset", MISSING, f"the default branch does not require {ENGINEERING_CHECK} without bypass")
+        problem = engineering_ruleset_problem(eng_rulesets, enrollment.verifier_app_id)
+        add("engineering-ruleset", MISSING if problem else VERIFIED,
+            problem or f"the default branch requires {ENGINEERING_CHECK} from the verifier App, with no bypass, force push or deletion")
     elif _attested(entry, "ruleset-coverage", cover, when):
         add("engineering-ruleset", VERIFIED, "a current ruleset-coverage attestation covers the engineering repository")
     else:
@@ -1303,8 +1432,10 @@ def verify_prerequisites(reader, enrollment, now=None, workspace_access=None):
     elif when - to_epoch(health["completed_at"], "completed_at") > max_age or \
             (health.get("oldest_outstanding_age_seconds") or 0) > max_age:
         add("scan-health", MISSING, "the last complete scan or the oldest outstanding check is older than the health limit")
+    elif health.get("policy_commit_sha") not in (None, enrollment.policy_commit_sha):
+        add("scan-health", MISSING, "the last complete scan captured an earlier policy revision than the current one")
     else:
-        add("scan-health", VERIFIED, "the last complete scan is within the health limit")
+        add("scan-health", VERIFIED, "the last complete scan is within the health limit. A health check cannot expire an old GitHub success")
     if _attested(entry, "runtime-isolation", {"repository_id": enrollment.repository_id}, when):
         add("runtime-isolation", VERIFIED, "a current administrator attestation covers the agent environment")
     else:
@@ -1315,6 +1446,28 @@ def verify_prerequisites(reader, enrollment, now=None, workspace_access=None):
         add("workspace-access", VERIFIED if workspace_access else MISSING,
             "the workspace is owner only" if workspace_access else "the workspace is not owner only")
     return out
+
+
+def verify_destinations(reader, enrollment, audience="repo-readers"):
+    """The intended destinations of the enrollment against the API now (WP7 item 7): each allowed target
+    resolves by its numeric identity and none is broader than the audience. A Component named destinations.
+    The doctor shows it. An export or a publication checks the exact targets of its own request instead."""
+    wanted = [dict(id=name, **row) for name, row in sorted(enrollment.entry["allowed_targets"].items())]
+    try:
+        verify_targets(reader, enrollment, wanted, audience)
+    except EvidenceUnavailable:
+        return Component("destinations", NOT_VERIFIABLE, "a destination cannot be read", COMPONENT_CODES["destinations"])
+    except SchemaError as e:
+        status = NOT_VERIFIABLE if e.code == "destination-access-not-verified" else MISSING
+        return Component("destinations", status, f"{e.code}: {e.detail or e.field}", COMPONENT_CODES["destinations"])
+    return Component("destinations", VERIFIED, "each destination matches its numeric identity and no destination is broader than the audience",
+                     COMPONENT_CODES["destinations"])
+
+
+# The administrator attestation that can stand in for a component whose live fact cannot be read with the
+# caller's credential (D9). Absent names, such as enrollment and scan-health, can never be attested.
+ATTESTATION_FOR = {"staging-readers": "staging-readers", "engineering-ruleset": "ruleset-coverage", "runtime-isolation": "runtime-isolation",
+                   "verifier-code": "verifier-isolation", "destinations": "destination-readers"}
 
 
 def require(components, names):

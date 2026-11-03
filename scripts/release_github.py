@@ -113,7 +113,8 @@ class GitHubEvidenceReader(V.EvidenceReader):
 
     def pull_request_files(self, repo, number):
         rows = self._paged("pull request files", f"/repos/{self._name(repo)}/pulls/{number}/files", MAX_FILES)
-        return [{"filename": r["filename"], "status": r["status"], "sha": r.get("sha")} for r in rows]
+        return [{"filename": r["filename"], "status": r["status"], "sha": r.get("sha"), "previous_filename": r.get("previous_filename")}
+                for r in rows]
 
     def reviews(self, repo, number):
         rows = self._paged("reviews", f"/repos/{self._name(repo)}/pulls/{number}/reviews")
@@ -172,6 +173,15 @@ class GitHubEvidenceReader(V.EvidenceReader):
         return {"can_create_pull_requests": bool(js.get("can_approve_pull_request_reviews")),
                 "default_workflow_permissions": js.get("default_workflow_permissions")}
 
+    def secret_names(self, repo):
+        """The names of the repository's Actions secrets. GitHub shows them only to a token with administrative
+        read, so a token without it gets EvidenceUnavailable and the caller needs an attestation."""
+        js = self._get("secret names", f"/repos/{self._name(repo)}/actions/secrets")
+        names = js.get("secrets") or []
+        if len(names) >= 100 or js.get("total_count", len(names)) > len(names):
+            raise V.EvidenceUnavailable("secret names listing is truncated")
+        return [n["name"] for n in names]
+
     def workflow_runs(self, repo, workflow, branch=None):
         suffix = f"?branch={branch}" if branch else ""
         js = self._get("workflow runs", f"/repos/{self._name(repo)}/actions/workflows/{workflow}/runs{suffix}")
@@ -204,8 +214,73 @@ class GitHubEvidenceReader(V.EvidenceReader):
         return {"id": js["id"], "login": js["login"]} if js else None
 
 
+class GitHubCheckPublisher:
+    """Posts the verifier's check runs (WP7, D11) through an installation token of the verifier App.
+
+    A check run is found by its name and the App that owns it. start() moves an existing one back to
+    in_progress, or creates it, so a head that already has a success or a failure is never skipped.
+    finish() completes it only while it is still the newest run of that name on the head, so an older
+    scan cannot overwrite a newer decision. The title and summary hold identifiers and fixed reason
+    codes only. Every request goes through GitHub.rest, so a failure raises GitHubError."""
+
+    def __init__(self, gh, app_id, clock=None):
+        self.gh = gh
+        self.app_id = app_id
+        self._clock = clock
+        self._names = {}
+
+    def _name(self, repo_id):
+        if repo_id not in self._names:
+            status, js = self.gh.rest_status("GET", f"/repositories/{repo_id}")
+            if status != 200:
+                raise V.EvidenceUnavailable("a repository cannot be found by its numeric id")
+            self._names[repo_id] = js["full_name"]
+        return self._names[repo_id]
+
+    def _now(self):
+        return V.utc_text(self._clock() if self._clock else V.clock())
+
+    def _runs(self, repo_id, head_sha, name):
+        try:
+            rows = self.gh.paged(f"/repos/{self._name(repo_id)}/commits/{head_sha}/check-runs?check_name={name}&app_id={self.app_id}", key="check_runs")
+        except G.GitHubError:
+            raise V.EvidenceUnavailable("check runs cannot be listed completely")
+        return [r for r in rows if (r.get("app") or {}).get("id") in (None, self.app_id)]
+
+    def latest_id(self, repo_id, head_sha, name):
+        runs = self._runs(repo_id, head_sha, name)
+        return max((r["id"] for r in runs), default=None)
+
+    def start(self, repo_id, head_sha, name, summary="Verification is running."):
+        body = {"status": "in_progress", "started_at": self._now(), "output": {"title": "carrydown: verification is running", "summary": summary}}
+        try:
+            runs = self._runs(repo_id, head_sha, name)
+            if runs:
+                newest = max(runs, key=lambda r: r["id"])
+                self.gh.rest("PATCH", f"/repos/{self._name(repo_id)}/check-runs/{newest['id']}", dict(body, name=name))
+                return newest["id"]
+            made = self.gh.rest("POST", f"/repos/{self._name(repo_id)}/check-runs", dict(body, name=name, head_sha=head_sha))
+            return made["id"]
+        except G.GitHubError:
+            raise V.EvidenceUnavailable("a check run cannot be started")
+
+    def finish(self, repo_id, head_sha, name, check_id, conclusion, title, summary):
+        """True when the result was posted, False when a newer check run of the same name exists."""
+        newest = self.latest_id(repo_id, head_sha, name)
+        if newest is not None and newest != check_id:
+            return False
+        try:
+            self.gh.rest("PATCH", f"/repos/{self._name(repo_id)}/check-runs/{check_id}",
+                         {"status": "completed", "conclusion": conclusion, "completed_at": self._now(),
+                          "output": {"title": title[:200], "summary": summary[:60000]}})
+        except G.GitHubError:
+            raise V.EvidenceUnavailable("a check run cannot be completed")
+        return True
+
+
 def main(argv=None):
-    ap = argparse.ArgumentParser(description="The GitHub API behind release_verify.EvidenceReader. A library: import it, do not run it.")
+    ap = argparse.ArgumentParser(description="The GitHub API behind release_verify.EvidenceReader, and the check run publisher of the "
+                                             "independent verifier. A library: import it, do not run it.")
     ap.parse_args(argv)
     ap.print_help()
     return 0
