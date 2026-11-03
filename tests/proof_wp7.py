@@ -572,7 +572,7 @@ def _():
     now = w.reader._clock
     subject = {"repository_id": FE.STAGING_ID, "reader_ids": sorted(w.entry["staging_readers"]["user_ids"]), "service_ids": []}
     w.update_policy(lambda e: e["attestations"].append({"component": "staging-readers", "by_id": w.admins[0][0], "at": V.utc_text(now - 3600),
-                                                         "expires_at": V.utc_text(now + 86400), "subject": subject, "note": "reviewed"}))
+                                                         "expires_at": V.utc_text(now + 86400 * 30), "subject": subject, "note": "reviewed"}))
     w.reader.fail("collaborators", FE.STAGING_ID)
     before = {c.name: c.status for c in V.verify_prerequisites(w.reader, w.enrollment(), workspace_access=True)}["staging-readers"]
     w.reader.users[777] = {"id": 777, "login": "new-reader"}
@@ -625,7 +625,7 @@ def _():
     def attest(world):
         now = world.reader._clock
         world.update_policy(lambda e: e["attestations"].append({"component": "ruleset-coverage", "by_id": world.admins[0][0], "at": V.utc_text(now - 3600),
-                                                                 "expires_at": V.utc_text(now + 86400), "subject": {"repository_id": FE.ENGINEERING_ID, "integration_id": FE.APP_ID},
+                                                                 "expires_at": V.utc_text(now + 86400 * 30), "subject": {"repository_id": FE.ENGINEERING_ID, "integration_id": FE.APP_ID},
                                                                  "note": "reviewed"}))
     np_ = no_project("attested", attest)
     try:

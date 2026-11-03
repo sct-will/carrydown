@@ -224,6 +224,14 @@ class EngineeringTests(ExportedBase):
         self.assertFalse(report.ok)
         self.assertIn("schema-view-mismatch", codes(report))
 
+    def test_an_external_item_with_only_an_id_and_a_label_is_valid_in_the_released_plan(self):
+        import re
+        plan = "docs/spec/plan.yaml"
+        text = re.sub(r'\n      note: "[^\n]*"', "", self.text(plan))
+        self.assertTrue("note:" not in text.split("external:")[1].split("limits:")[0])
+        report = self.verify(self.case.open(edit={plan: text.encode()}))
+        self.assertNotIn("schema-view-mismatch", codes(report))
+
     def test_a_credential_in_a_governed_file_fails_and_no_exception_clears_it(self):
         report = self.verify(self.case.open(edit={self.spec: self.ex.files[self.spec][1] + b"\napi_key = abcdef0123456789\n"}))
         self.assertFalse(report.ok)
@@ -635,6 +643,17 @@ class BundleTests(unittest.TestCase):
         light = Light(files={"docs/context/wi-99.md": md, "docs/context/wi-99.bundle.json": good})
         light.land()
         self.assertTrue(RE.verify_engineering(light.r, light.world.enrollment(), light.open()).ok)
+
+
+    def test_a_placeholder_bundle_of_a_restricted_item_is_accepted(self):
+        md = b"# Approved context for WI-05, Restricted work\n\nBundle format 1. Sources: none.\n"
+        side = RS.canonical_json({"bundle_format": 1, "work_item": "WI-05", "obligations": [], "conflicts": [], "shared_with": [],
+                                  "downstream": {"code": False, "tests": False, "issues": False, "evidence": "synthetic-only"},
+                                  "content_sha256": RS.sha256_bytes(md), "extensions": {}, "restricted_destination": True})
+        light = Light(files={"docs/context/wi-05.md": md, "docs/context/wi-05.bundle.json": side})
+        light.land()
+        report = RE.verify_engineering(light.r, light.world.enrollment(), light.open())
+        self.assertTrue(report.ok, report.findings)
 
 
 class CaptureTests(unittest.TestCase):
