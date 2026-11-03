@@ -466,13 +466,20 @@ class ProjectionTests(unittest.TestCase):
         # nothing depends on item 11 in the fixture, so the omission leaves a valid released plan
         self.assertEqual(L.released_plan_problems(out), [])
 
-    def test_an_item_that_depends_on_an_omitted_one_is_reported_until_the_hook_replaces_it(self):
+    def test_an_item_that_depends_on_an_omitted_one_gets_an_external_item_with_the_owners_summary(self):
         plan = copy.deepcopy(self.plan)
         item = next(i for i in plan["items"] if i["id"] == 3)
         item["restricted"] = True
         item["restricted_summary"] = "Owner summary"
-        problems = L.released_plan_problems(L.project_released_plan(plan))
-        self.assertTrue(any("depends on 3, which is not an item" in p for p in problems), problems)
+        out = L.project_released_plan(plan)
+        self.assertEqual(L.released_plan_problems(out), [])
+        self.assertIn({"id": 3, "label": "Owner summary"}, out["external"]["items"])
+        dependents = [i for i in plan["items"] if 3 in i["depends"]]
+        self.assertTrue(dependents)
+        for d in dependents:
+            released = next(i for i in out["items"] if i["id"] == d["id"])
+            self.assertNotIn(3, released["depends"])
+            self.assertTrue(released["external_input"].endswith("Owner summary"), released["external_input"])
 
     def test_the_projection_dumps_and_reloads_to_the_same_released_plan(self):
         import plan_repair

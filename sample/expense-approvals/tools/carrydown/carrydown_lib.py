@@ -762,7 +762,8 @@ _TEXT_FIELDS = {
     "milestones": ("name", "folder", "start", "end", "demo", "gate"),
     "breaks": ("name", "start", "end"),
     "checkpoints": ("date", "name", "joint_check"),
-    "items": ("slug", "label", "track", "owner", "complete_by", "size", "checkpoint", "ground_truth", "external_input", "program_input"),
+    "items": ("slug", "label", "track", "owner", "complete_by", "size", "checkpoint", "ground_truth", "external_input", "program_input",
+              "restricted_summary", "restricted_placeholder", "restricted_evidence"),
     "external.items": ("label", "note"),
     "sources": ("id", "name", "source_path", "path", "use", "version", "status", "limit", "classification",
                 "content_sha256", "rendering_sha256"),
@@ -1296,11 +1297,93 @@ def restricted_item(item):
     return isinstance(item, dict) and item.get("restricted") is True
 
 
+RESTRICTED_SUMMARY_MAX = 200
+RESTRICTED_PLACEHOLDER_MAX = 600
+RESTRICTED_TEXT_KEYS = (("restricted_summary", RESTRICTED_SUMMARY_MAX), ("restricted_placeholder", RESTRICTED_PLACEHOLDER_MAX),
+                        ("restricted_evidence", RESTRICTED_PLACEHOLDER_MAX))
+
+
+def restricted_summary(item):
+    """The owner's one-line summary of a restricted item, whitespace folded. It is the only text of the
+    item that reaches the released plan, the specifications, the payloads and the engineers' skill."""
+    return " ".join(str(item.get("restricted_summary") or "").split())
+
+
+def restricted_evidence(item):
+    """The owner's note that a restricted item is done, or "". It lives in the workspace plan only. Until the
+    owner writes it the item stays open in the owner's plan; nothing is ever posted to GitHub for it."""
+    return " ".join(str(item.get("restricted_evidence") or "").split()) if restricted_item(item) else ""
+
+
+def restricted_placeholder(item):
+    """The owner's approved instruction for a restricted item that has a published placeholder, or "".
+    A placeholder is the only way an engineer is told that private work exists (check_context.py,
+    fourth message). It is published only because the owner wrote it and the approver approved it."""
+    return " ".join(str(item.get("restricted_placeholder") or "").split()) if restricted_item(item) else ""
+
+
+def withhold(items, external, restricted):
+    """Take the restricted items out of a plan's lists. This is the one place that decides what a
+    restricted item leaves behind (specification WP9, item 1).
+
+    items       the work items that stay, as copies the caller owns. They are changed in place.
+    external    the plan's external items, as a list the caller owns. Returned extended.
+    restricted  the restricted work items of the workspace plan.
+
+    For each stay-behind item that depends on a restricted item, the dependency is removed and the
+    owner's restricted_summary is added to the item's external_input (after any text it had). Each
+    restricted item that something depended on, or that has a published placeholder, becomes one
+    external item: its id and, as its label, the summary. No other text of a restricted item is used,
+    and an unblocks entry that names one is removed. Returns (items, external items sorted by id)."""
+    gone = {r["id"]: r for r in restricted if isinstance(r.get("id"), int)}
+    shown = []
+    for it in items:
+        dropped = [d for d in it.get("depends") or [] if d in gone]
+        if dropped:
+            it["depends"] = [d for d in it["depends"] if d not in gone]
+            texts = [str(it.get("external_input") or "").strip()] + [restricted_summary(gone[d]) for d in dropped]
+            it["external_input"] = "; ".join(dict.fromkeys(t for t in texts if t))
+            shown += [d for d in dropped if d not in shown]
+        if it.get("unblocks"):
+            it["unblocks"] = [u for u in it["unblocks"] if u not in gone]
+    shown += [rid for rid in sorted(gone) if restricted_placeholder(gone[rid]) and rid not in shown]
+    out = list(external) + [{"id": rid, "label": restricted_summary(gone[rid])} for rid in sorted(shown)]
+    return items, sorted(out, key=lambda row: (row.get("id") if isinstance(row.get("id"), int) else 0))
+
+
+def withheld_view(plan):
+    """A copy of a loaded workspace plan with its restricted items taken out (withhold), in the shape the
+    generators read: the specification stubs, the README and milestone tables, the engineers' skill and
+    the GitHub payloads are built from this view, so a restricted item cannot reach them. The input is
+    not changed. Underscore keys of the loaded plan are kept, and the derived unblocks are recomputed."""
+    import copy
+    restricted = [it for it in plan.get("items") or [] if restricted_item(it)]
+    out = copy.deepcopy({k: v for k, v in plan.items() if k != "items"})
+    live = [copy.deepcopy(it) for it in plan.get("items") or [] if not restricted_item(it)]
+    out["external"] = dict(out.get("external") or {})
+    live, out["external"]["items"] = withhold(live, out["external"].get("items") or [], restricted)
+    gone = {r.get("id") for r in restricted}
+    derived = {it["id"]: [] for it in live if isinstance(it.get("id"), int)}
+    for it in live:
+        for d in it.get("depends") or []:
+            if d in derived and isinstance(it.get("id"), int):
+                derived[d].append(it["id"])
+    for it in live:
+        it["_derived_unblocks"] = sorted(derived.get(it.get("id"), []))
+        if it.get("unblocks") is not None:
+            it["unblocks"] = [u for u in it["unblocks"] if u not in gone]
+    out["items"] = live
+    return out
+
+
 def _restricted_hook(workspace_plan, projected, omitted):
-    """The extension point for restricted items. omitted holds the ids of the items left out of
-    projected. A later work package replaces each omitted item that another item depends on with an
-    external item whose only text is the owner's restricted_summary. Today an item that depends on
-    an omitted one makes the released validation report it, which is the safe failure."""
+    """Replace the restricted items of the projected plan by what the owner approved to leave behind
+    (withhold): an external item with the owner's summary for each omitted item that another item
+    depends on or that has a published placeholder. omitted holds the ids of the items left out."""
+    if omitted:
+        restricted = [it for it in workspace_plan.get("items") or [] if restricted_item(it)]
+        ext = projected.setdefault("external", {"items": []})
+        projected["items"], ext["items"] = withhold(projected["items"], ext.get("items") or [], restricted)
     return projected
 
 
@@ -1983,8 +2066,22 @@ def validate_plan(plan, view=None):
                 P.append(f"items:{iid}:restricted must be true or false")
             elif it["restricted"] and not str(it.get("restricted_summary") or "").strip():
                 P.append(f"items:{iid}:restricted_summary is required when the item is restricted")
-        if released and "restricted_summary" in it:
-            P.append(f"items:{iid}:restricted_summary is not allowed in a released plan")
+        if modern and not released and it.get("restricted") is not True:
+            for k, _longest in RESTRICTED_TEXT_KEYS:
+                if k in it:
+                    P.append(f"items:{iid}:{k} is only for an item with restricted: true")
+        if modern and not released and it.get("restricted") is True:
+            for k, longest in RESTRICTED_TEXT_KEYS:
+                if k in it and isinstance(it[k], str):
+                    if not _one_line(it[k]):
+                        P.append(f"items:{iid}:{k} must be one line, with no line break or control character")
+                    elif len(it[k].strip()) > longest:
+                        P.append(f"items:{iid}:{k} is longer than {longest} characters")
+            if "restricted_placeholder" in it and not str(it["restricted_placeholder"]).strip():
+                P.append(f"items:{iid}:restricted_placeholder is empty. Leave it out, or write the instruction engineers are shown")
+        for k, _longest in RESTRICTED_TEXT_KEYS:
+            if released and k in it:
+                P.append(f"items:{iid}:{k} is not allowed in a released plan")
         if it.get("size") and not re.search(r"about \d+(?:\.\d+)?", str(it["size"])):
             P.append(f"item {iid}: size must say how many days, as in \"Medium, about 4 days\", got {it['size']!r}")
         elif sized_days(it) > MAX_SIZE_DAYS:

@@ -16,7 +16,7 @@ Commands (every one that writes is a dry run unless you pass --apply)
   export-state --request ID           write only the regenerated receipt of a superseded or withdrawn request
   withdraw  --request ID --reason CODE   prepare the terminal event that ends a request
   diff      --root .                  what changed since the active release, and which work items it touches
-  inventory --root .                  not implemented until the migration inventory work package
+  inventory --root .                  what a legacy project tracks and has in git history. The first step of migrating. Writes nothing
   doctor    --root .                  the offline workspace checks, and the live checks when a token is set
 
 How a decision is made (specification D6, D10, D13)
@@ -63,6 +63,7 @@ import detectors as D  # noqa: E402
 import release_assemble as A  # noqa: E402
 import release_build as B  # noqa: E402
 import release_gate as RG  # noqa: E402
+import release_inventory as RI  # noqa: E402
 import release_schema as RS  # noqa: E402
 import release_verify as V  # noqa: E402
 
@@ -455,9 +456,21 @@ def build_preview(project, asm, request_params, entries, previous_id):
     if restricted_sources:
         private.append(f"{len(restricted_sources)} restricted source(s) are not released; only the sections the bundles cite appear, as approved text.")
     if asm.restricted_items:
-        private.append(f"{asm.restricted_items} restricted work item(s) are not published and appear nowhere in this release.")
+        hidden = asm.restricted_items - len(asm.withheld)
+        private.append(f"{asm.restricted_items} restricted work item(s) are not published: no specification, no approved context and no GitHub issue."
+                       + (f" {hidden} of them appear nowhere in this release." if hidden else ""))
+        for tag, summary, instruction in asm.withheld:
+            shared.append(f"External item {tag}, published with this text from you and nothing else: \"{summary}\"")
+            if instruction:
+                shared.append(f"Placeholder for {tag}, shown to an engineer who asks for it: \"{instruction}\"")
+    if asm.link_items:
+        shared.append(f"{len(asm.link_items)} issue(s) hold links instead of the text of Acceptance criteria, Evidence of completion and "
+                      "Integration points, because their approved context holds a section of a restricted source: " + ", ".join(sorted(asm.link_items)[:20]))
     changes, _ = diff_lines(project, asm, entries, request_params, previous_id)
     limits = list(asm.notes)
+    for tag, done in asm.restricted_status:
+        limits.append(f"Restricted work item {tag} is " + ("done: you recorded evidence in your workspace plan." if done else
+                      "still open: no evidence is recorded in your workspace plan (restricted_evidence).") + " Nothing is posted to GitHub for it.")
     if asm.resolution is not None and asm.resolution.resolved:
         limits.append(f"{len(asm.resolution.resolved)} detector finding(s) are cleared by recorded exceptions that you approve with this request.")
     if not limits:
@@ -502,6 +515,17 @@ def yes_no(value):
     return None if value is None else value == "yes"
 
 
+def engineer_edits_of(enrollment):
+    """allowed or request-only for docs/spec/**, from the enrollment's captured policy. None when the
+    project is not enrolled: the engineers' skill then follows project.handling.engineer_edits of the plan.
+    An enrollment that does not say gets the stricter value, request-only."""
+    if enrollment is None or not getattr(enrollment, "enrolled", False):
+        return None
+    edits = enrollment.entry.get("engineer_edits")
+    value = edits.get("docs/spec/**") if isinstance(edits, dict) else None
+    return value if value in L.ENGINEER_EDITS else "request-only"
+
+
 def build_assembly(project, a, enrollment=None):
     """The Assembly for the command's options. The board is part of the release only when its identity is
     known: given with --board-owner-id and --board-project-id, or allowed by the enrollment."""
@@ -516,7 +540,7 @@ def build_assembly(project, a, enrollment=None):
     overrides = {"assignees": yes_no(getattr(a, "assignees", None)), "capacity_summary": yes_no(getattr(a, "capacity_summary", None)),
                  "evidence": getattr(a, "evidence", None)}
     asm = A.assemble(project.root, with_github=not getattr(a, "no_github", False), exceptions=read_exceptions(getattr(a, "exceptions", None)),
-                     flag_overrides=overrides, destinations=destinations, with_board=with_board)
+                     flag_overrides=overrides, destinations=destinations, with_board=with_board, engineer_edits=engineer_edits_of(enrollment))
     if not with_board and not getattr(a, "no_github", False) and asm.payload_paths:
         asm = asm._replace(notes=asm.notes + ["The board is not in this release: its identity is not known "
                                               "(--board-owner-id and --board-project-id, or an enrollment that allows it)."])
@@ -1438,7 +1462,8 @@ def cmd_withdraw(a):
 # ---------------------------------------------------------------------------
 
 def cmd_inventory(a):
-    say("carrydown release inventory: not implemented until WP8 (the migration inventory work package). It writes nothing.")
+    for line in RI.inventory(L.project_root(a.root)):
+        say(line)
     return 0
 
 
@@ -1531,7 +1556,7 @@ def main(argv=None):
     p = sub.add_parser("diff", help="what changed since the active release, and which work items it touches. Writes nothing")
     add_common(p)
     add_shape(p)
-    p = sub.add_parser("inventory", help="not implemented until the migration inventory work package")
+    p = sub.add_parser("inventory", help="what a legacy project tracks and has in git history. Writes nothing")
     add_common(p)
     p = sub.add_parser("doctor", help="the offline workspace checks, and the live checks when a token is set")
     add_common(p)
