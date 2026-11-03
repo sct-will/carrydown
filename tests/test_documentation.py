@@ -269,11 +269,15 @@ class EnterpriseSecurityPageTests(unittest.TestCase):
         self.assertIn("**supported** (implemented, documented and tested)", text)
         self.assertIn("**supported with prerequisites** (implemented and tested, but needs configuration your organization provides)", text)
         self.assertIn("**planned** (the design exists, the feature does not)", text)
+        # every bold label is exactly one of the three, alone: no compound such as "Supported; ... supported with prerequisites."
         labels = set(re.findall(r"\*\*((?:S|s)upported[^*]*|(?:P|p)lanned[^*]*)\*\*", text))
-        allowed = {"supported", "supported with prerequisites", "planned", "Supported.", "Supported with prerequisites.", "Planned",
-                   "Supported; authenticated approval is supported with prerequisites.", "Planned."}
-        stray = {l for l in labels if l not in allowed and not l.startswith("supported") and not l.startswith("Supported with")}
-        self.assertEqual(stray, set(), stray)
+        allowed = {"supported", "supported with prerequisites", "planned", "Supported.", "Supported with prerequisites.", "Planned."}
+        self.assertEqual(labels - allowed, set())
+        for row in (line for line in text.split("\n") if line.startswith("| ")):
+            for cell in row.split(" | "):
+                for sentence in re.split(r"(?<=[.!?])\*{0,2} ", cell):
+                    found = re.findall(r"\*\*((?:S|s)upported(?: with prerequisites)?|(?:P|p)lanned)\.?\*\*", sentence)
+                    self.assertLessEqual(len(found), 1, sentence)
 
     def test_every_answer_that_depends_on_the_real_github_run_says_it_was_not_performed(self):
         rows = [line for line in self.text().split("\n") if line.startswith("| ") and "**Supported with prerequisites.**" in line and not line.startswith("| Do hosted coding agents work?")]   # the hosted agent answer depends on the host, not on the GitHub run

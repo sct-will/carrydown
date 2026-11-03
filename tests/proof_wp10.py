@@ -204,6 +204,10 @@ def main():
         claim(all(l in page for l in labels) and "**Draft notice: not yet supported.**" in page and "**It has not been performed.**" in page,
               "The security page carries the three support labels exactly, a visible draft notice, and says the real GitHub acceptance run has not been performed",
               "labels present; notice present")
+        bold = sorted(set(re.findall(r"\*\*((?:S|s)upported[^*]*|(?:P|p)lanned[^*]*)\*\*", page)))
+        exact = {"supported", "supported with prerequisites", "planned", "Supported.", "Supported with prerequisites.", "Planned."}
+        claim(set(bold) <= exact, "Every support label on the security page is one of the three labels alone, with no compound label",
+              f"bold labels used: {bold}")
         setup = (ROOT / "docs" / "setup.md").read_text(encoding="utf-8")
         rows = [l for l in setup.split("\n") if l.startswith("| ") and "Not yet performed" in l]
         claim("Status: **not yet performed.**" in setup and len(rows) >= 15, "The setup guide keeps the real GitHub acceptance run marked not yet performed",
