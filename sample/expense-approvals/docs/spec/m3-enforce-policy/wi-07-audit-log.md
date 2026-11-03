@@ -10,7 +10,7 @@
 | Size | Medium, about 3 days |
 | Depends on | WI-03 |
 | Unblocks | WI-09 |
-| Ground truth | Sections 3.3, 4.2 |
+| Ground truth | Architecture document: Sections 3.3, 4.2 |
 
 ## Why this work item exists
 
@@ -132,9 +132,9 @@ The counterpart on the Experience track is WI-08, Notifications and delegates, w
 
 ## References
 
-- [Section 3.3, Data model](../../ground-truth/architecture.md#33-data-model)
-- [Section 4.2, GOV-2](../../ground-truth/architecture.md#42-gov-2-audit-and-retention)
-- [Section 7.1, REST API](../../ground-truth/architecture.md#71-rest-api)
+- architecture section 3.3, Data model
+- architecture section 4.2, GOV-2 Audit and retention
+- architecture section 7.1, REST API
 - [WI-03 Approval routing engine](../m2-route-to-approvers/wi-03-routing-engine.md)
 - [WI-09 Ledger export job](../m4-pilot/wi-09-ledger-export.md)
 - [WI-08 Notifications and delegates](wi-08-notifications-delegates.md)

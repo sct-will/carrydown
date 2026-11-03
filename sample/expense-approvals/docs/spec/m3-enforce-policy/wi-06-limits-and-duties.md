@@ -10,7 +10,7 @@
 | Size | Medium, about 3 days |
 | Depends on | WI-03 |
 | Unblocks | WI-08 |
-| Ground truth | Sections 3.5, 4.1, 7.1 |
+| Ground truth | Architecture document: Sections 3.5, 4.1, 7.1 |
 
 ## Why this work item exists
 
@@ -136,9 +136,9 @@ The counterpart items on the Experience track are WI-04, Approver inbox and deci
 
 ## References
 
-- [Section 3.5, Routing](../../ground-truth/architecture.md#35-routing)
-- [Section 4.1, GOV-1](../../ground-truth/architecture.md#41-gov-1-approval-limits-and-separation-of-duties)
-- [Section 7.1, REST API](../../ground-truth/architecture.md#71-rest-api)
+- architecture section 3.5, Routing
+- architecture section 4.1, GOV-1 Approval limits and separation of duties
+- architecture section 7.1, REST API
 - [WI-03 Approval routing engine](../m2-route-to-approvers/wi-03-routing-engine.md)
 - [WI-04 Approver inbox and decisions](../m2-route-to-approvers/wi-04-approver-inbox.md)
 - [WI-08 Notifications and delegates](wi-08-notifications-delegates.md)

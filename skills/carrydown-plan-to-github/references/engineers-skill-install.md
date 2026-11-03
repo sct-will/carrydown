@@ -57,7 +57,7 @@ If your agent is not listed, find its documentation for skills or custom instruc
 
 ## Check that it works
 
-Start a new session. Name the first item, for example "Work on <first id>." The agent should open the specification for that id, read the sections of the ground truth it cites, and state a short plan before it writes code.
+Start a new session. Name the first item, for example "Work on <first id>." The agent should open the specification for that id, run the skill's context check, read the approved context of the item (the exact text of the source sections it cites), and state a short plan before it writes code. It should not open the source documents. If the check stops with one of its four messages, the engineer shows it to the plan owner. The check needs a `git fetch` of the default branch with the engineer's own git credentials, and the first run in a clone needs it to succeed.
 
 ## Team rollout
 

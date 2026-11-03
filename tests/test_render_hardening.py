@@ -16,6 +16,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests" / "fixtures"))
 import carrydown_lib as L  # noqa: E402
@@ -194,7 +196,7 @@ class MarkingAndReviewItemTests(RenderCase):
 
     def test_an_unclassified_legacy_source_is_reported_but_not_stopped(self):
         legacy = self.tmp / "legacy"
-        shutil.copytree(SAMPLE, legacy)
+        copy_sample(legacy)
         self.strip_handling(legacy)
         path = legacy / "ground-truth" / "marked.docx"
         fixtures.build(str(path), "confidential")
@@ -420,7 +422,7 @@ class DestinationTests(RenderCase):
 
     def test_a_legacy_project_renders_where_it_always_did(self):
         legacy = self.tmp / "legacy"
-        shutil.copytree(SAMPLE, legacy)
+        copy_sample(legacy)
         run = subprocess.run([sys.executable, str(RENDER), str(legacy / "ground-truth/architecture.md"), "--root", str(legacy), "--version", "0.3"],
                              capture_output=True, text=True, timeout=120)
         self.assertEqual(run.returncode, 0, run.stdout + run.stderr)

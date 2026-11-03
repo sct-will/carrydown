@@ -23,6 +23,8 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests" / "mock"))
 import github_client as G  # noqa: E402
@@ -51,13 +53,13 @@ class ReleaseInventoryTests(unittest.TestCase):
     def setUpClass(cls):
         cls.temp = tempfile.TemporaryDirectory(prefix="carrydown-inventory-")
         cls.root = Path(cls.temp.name) / "legacy"
-        shutil.copytree(SAMPLE, cls.root)
+        copy_sample(cls.root)
         F.strip_handling(cls.root)
         (cls.root / "docs" / "source").mkdir(parents=True)
         (cls.root / "docs" / "source" / "architecture.docx").write_bytes(b"original")
         (cls.root / "docs" / "source" / "old-notes.docx").write_bytes(b"old")
         F.init_git(cls.root)
-        sh(["git", "add", "-A"], cls.root)
+        sh(["git", "add", "-f", "-A"], cls.root)      # a legacy project committed its originals before any ignore line existed
         sh(["git", "commit", "-q", "-m", "legacy project"], cls.root)
         sh(["git", "rm", "-q", "docs/source/old-notes.docx"], cls.root)
         sh(["git", "commit", "-q", "-m", "drop the notes"], cls.root)
@@ -110,7 +112,7 @@ class ReleaseInventoryTests(unittest.TestCase):
 
     def test_a_folder_that_is_not_a_git_repository_says_so(self):
         with tempfile.TemporaryDirectory(prefix="carrydown-inventory-nogit-") as tmp:
-            shutil.copytree(SAMPLE, Path(tmp) / "p")
+            copy_sample(Path(tmp) / "p")
             with mock.patch.dict(os.environ, {"GIT_CEILING_DIRECTORIES": tmp}):
                 code, out, err = F.run(R.main, ["inventory", "--root", str(Path(tmp) / "p")])
             self.assertEqual(code, 0, out + err)
@@ -146,7 +148,7 @@ class MockCase(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix="carrydown-legacy-mock-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name) / "legacy"
-        shutil.copytree(SAMPLE, self.root)
+        copy_sample(self.root)
         F.strip_handling(self.root)
         mockgh.S.__init__()
         mockgh.S.repos.add(REPO)

@@ -57,6 +57,17 @@ A work item is the smallest piece of work that an engineer can finish, show and 
 
 Split an item if it spans two tracks or runs past five days. Merge items that cannot be shown separately.
 
+### Items that must not be published
+
+Some work cannot be shared with the engineers who can read the repository, and cannot be described to them either. Mark such an item in the workspace plan only, and only when the owner asks, with these keys on the item:
+
+- `restricted: true`. The item gets no specification, no approved context, no issue, no board entry and no place in the released plan. Nothing derived from it is released.
+- `restricted_summary`. Required, one line of at most 200 characters, written by the owner. It is the only text that leaves the workspace. Wherever another item depends on the restricted one, the released plan shows an external item whose only text is this summary, and the dependent item says "external input" with it.
+- `restricted_placeholder`. Optional, one line of at most 600 characters, written by the owner. It is told to an engineer who names the item, as the owner's approved instruction. Without it, an engineer who names the item is told there is no approved context, exactly as for an id that does not exist. Carrydown never exports a list of private ids.
+- `restricted_evidence`. Optional private note that the item is done. It is never released. The item stays open in the owner's plan until this note exists, and nothing is posted to GitHub when it does.
+
+Show the owner the summary and the placeholder, word for word, because the approver approves exactly that text. The summary, the placeholder and the evidence note are valid only on an item with `restricted: true`, and a restricted item with no summary is an error. A release also stops if the label or the specification text of a restricted item still appears in a released file. The commented examples in `templates/plan.yaml` show each one.
+
 ### Match people to the work
 
 Skills and work preferences are optional. Never stop, fail the plan or ask the project lead to invent them when they were not supplied. In that case, assign people with the existing rules for track ownership, capacity, dependencies, theme continuity and reduced handoffs.
@@ -65,7 +76,7 @@ When the project lead supplies skills or preferences:
 
 1. Describe the capabilities each track needs in `skill_needs`. Add item-level `skill_needs` only when an item needs something more specific than its track.
 2. Match fixed assignments first, then required skills, stated work preferences, schedule and dependency fit, reduced context switching and balanced load. Preferences are soft guidance. They do not override a fixed assignment, missing capability or schedule constraint.
-3. Record the result in each person's `track` and `assignment_rationale`. Keep `skills` and `preferences` in the project lead's words.
+3. Record the result in each person's `track` in `plan.yaml`, and in that person's `assignment_rationale` in the private `people.yaml` of the workspace. Keep `skills` and `preferences` there too, in the project lead's words. None of them goes into `plan.yaml`.
 4. Show the proposed match, skill gaps, preference tradeoffs and any critical-path concentration to the project lead. The project lead decides.
 5. If a skill, preference or match is incomplete, contradictory or unclear, do not stall. Use the default assignment rules, record the uncertainty in the rationale and continue.
 
@@ -109,11 +120,11 @@ Read the plan with the user, adversarially and week by week, before anything is 
 Write down why the plan is composed the way it is, where anyone can argue with it. Each reason must be true of the dates.
 
 - For each milestone, `rationale`: why these items form it, in two to four sentences. `joint_demonstration`: what the engineers whose tracks meet show together, in one or two sentences. `single_track_reason`, only when all its items are on one track.
-- For each track, `order_rationale`: why its items are in this order. Name each theme switch you keep, and the critical path risk with its alternative when it falls on this track. When skills or preferences were supplied, keep each person's match explanation in `people.assignment_rationale`; do not copy names into the specification prose.
+- For each track, `order_rationale`: why its items are in this order. Name each theme switch you keep, and the critical path risk with its alternative when it falls on this track. When skills or preferences were supplied, keep each person's match explanation in `assignment_rationale` in the private `people.yaml`; do not copy names into the specification prose.
 - No names of people. The scaffold copies the text into `milestone.md` and the README, where the checker rejects names.
 
 The checker fails while any of these is missing. Show the user the planning review block of `check_specs.py --report` and go through each line with them.
 
 ## 11. Fill in plan.yaml
 
-Write the decisions into `docs/spec/plan.yaml`. The annotated `plan.yaml` template in the templates folder inside this skill shows every field. Then run the checker. Ask the user to read the schedule and to say yes before you scaffold the folder.
+Write the decisions into the plan: `docs/spec/plan.yaml` on the yes answer, and `drafts/plan.yaml` in the private workspace on the no answer. Write the people's personal facts into `people.yaml` in the workspace. The annotated `plan.yaml` template in the templates folder inside this skill shows every field. Then run the checker. Ask the user to read the schedule and to say yes before you scaffold the folder.

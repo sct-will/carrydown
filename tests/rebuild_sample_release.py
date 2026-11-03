@@ -4,12 +4,20 @@
 The sample project (sample/expense-approvals) has a release of its own: the owner's private workspace is
 kept as a fixture in tests/fixtures/sample-workspace/ (releases, requests, events and the workspace
 files, with no staffing record), and the receipt it exports is in sample/expense-approvals/docs/release/.
-This script rebuilds that release from the sample in a temporary folder, with a fixed time, a fixed
-request nonce and a fixed git identity, using the real scripts (release.py prepare, approve --local and
-export), and checks that every byte is what the repository holds:
+
+The fixture also holds the owner's working plan, drafts/plan.yaml. It is the workspace view: it carries
+what a released plan leaves out (the classification of the source, the path of the original and of the
+rendering, and their digests). It is an input of this script, not a product, so --write keeps it. The
+sample's own docs/spec/plan.yaml is the released plan, the exact projection of the working plan, and
+this script checks that too.
+
+This script rebuilds the release from the sample and the working plan in a temporary folder, with a
+fixed time, a fixed request nonce and a fixed git identity, using the real scripts (release.py prepare,
+approve --local and export), and checks that every byte is what the repository holds:
 
   the receipt          sample/expense-approvals/docs/release/<request id>.receipt.json
   the workspace files  releases/, requests/ and events/ of the fixture
+  the released plan    sample/expense-approvals/docs/spec/plan.yaml, from drafts/plan.yaml
 
 so any change to a sample file, a template or a script that the release depends on is caught as drift.
 
@@ -77,6 +85,8 @@ def rebuild(base, sample=SAMPLE):
         project, env)
     (workspace / "workspace.yaml").write_text(WORKSPACE_YAML, encoding="utf-8")       # the fixture's own, with no machine path in it
     (workspace / "people.yaml").unlink()                                                # no staffing record is part of the fixture
+    (workspace / "drafts").mkdir(parents=True, exist_ok=True)                           # the owner's working plan: classification, original and rendering paths
+    shutil.copy(FIXTURE / "drafts" / "plan.yaml", workspace / "drafts" / "plan.yaml")
     release = [sys.executable, str(scripts / "release.py")]
     out = run(release + ["prepare", "--root", str(project), "--repository-id", REPOSITORY_ID, "--created", CREATED, "--nonce", NONCE, "--apply"] + BOARD, project, env)
     request_id = next(line.split(":", 1)[1].split()[0] for line in out.splitlines() if line.startswith("request id (permission):"))
@@ -96,6 +106,29 @@ def files_of(folder, only=None):
     return out
 
 
+def released_plan_problems(sample):
+    """Problems with the pair (the fixture's working plan, the sample's released plan): the working plan
+    is the workspace view and holds the classification and the paths, and the sample's own plan is
+    exactly its released projection and holds neither."""
+    import carrydown_lib as L
+    out = []
+    drafts = FIXTURE / "drafts" / "plan.yaml"
+    if not drafts.is_file():
+        return ["fixture file is missing: drafts/plan.yaml"]
+    try:
+        plan, found = L.load_plan(drafts, sample)
+    except L.PlanError as e:
+        return [f"drafts/plan.yaml cannot be read: {str(e).splitlines()[0][:120]}"]
+    if found:
+        return [f"drafts/plan.yaml has problems: {found[0][:120]}"]
+    if plan.get("_view") != "workspace" or any(s.get("classification") != "repo-readers" or not s.get("source_path") for s in plan["sources"]):
+        out.append("drafts/plan.yaml must be the workspace view, with a classification and an original path on every source")
+    shown = sample / "docs" / "spec" / "plan.yaml"
+    if not shown.is_file() or shown.read_bytes() != L.released_plan_bytes(plan):
+        out.append("the sample's docs/spec/plan.yaml is not the released projection of drafts/plan.yaml")
+    return out
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     mode = ap.add_mutually_exclusive_group()
@@ -109,8 +142,10 @@ def main(argv=None):
         receipt_name = f"{request_id}.receipt.json"
         built_receipt = (project / "docs" / "release" / receipt_name).read_bytes()
         if a.write:
+            drafts = (FIXTURE / "drafts" / "plan.yaml").read_bytes()       # an input, not a product: keep it
             shutil.rmtree(FIXTURE, ignore_errors=True)
-            FIXTURE.mkdir(parents=True)
+            (FIXTURE / "drafts").mkdir(parents=True)
+            (FIXTURE / "drafts" / "plan.yaml").write_bytes(drafts)
             for name in KEEP:
                 shutil.copytree(workspace / name, FIXTURE / name)
             (FIXTURE / "workspace.yaml").write_text(WORKSPACE_YAML, encoding="utf-8")
@@ -136,6 +171,7 @@ def main(argv=None):
                 problems.append(f"fixture file is missing: {name}")
         if (FIXTURE / "people.yaml").exists():
             problems.append("the fixture must hold no people.yaml")
+        problems += released_plan_problems(sample)
         if problems:
             print("FAIL the sample's release is not reproducible from the repository")
             for line in problems[:20]:

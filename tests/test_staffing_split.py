@@ -20,6 +20,8 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample, WORKING_PLAN  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 import carrydown_lib as L  # noqa: E402
 import check_specs as CS  # noqa: E402
@@ -30,7 +32,7 @@ import plan_repair as PR  # noqa: E402
 import workspace as W  # noqa: E402
 
 SAMPLE = ROOT / "sample" / "expense-approvals"
-PLAN = SAMPLE / "docs" / "spec" / "plan.yaml"
+PLAN = WORKING_PLAN
 PEOPLE = SAMPLE / "people.yaml"
 NOTE = "people overlay not loaded: capacity, dates and names not checked"
 REMOVED = ("name", "github", "skills", "preferences", "assignment_rationale", "days_off", "allocation", "start")
@@ -65,7 +67,7 @@ class WithTemp(unittest.TestCase):
 
     def project(self, name="project"):
         root = self.base / name
-        shutil.copytree(SAMPLE, root)
+        copy_sample(root)
         return root
 
     def people_file(self, text, name="people.yaml"):
@@ -330,7 +332,7 @@ class BannedNamesTests(unittest.TestCase):
     def test_a_name_in_a_specification_is_found_only_with_the_overlay(self):
         root = self.base_project = Path(tempfile.mkdtemp(prefix="carrydown-banned-"))
         self.addCleanup(shutil.rmtree, str(root), True)
-        shutil.copytree(SAMPLE, root / "p")
+        copy_sample(root / "p")
         spec = root / "p" / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
         spec.write_text(spec.read_text(encoding="utf-8") + "\nReviewed by Tamsin Hale.\n", encoding="utf-8")
         code, out, err = check(["--root", root / "p"])
@@ -492,7 +494,8 @@ class DownstreamFlagTests(WithTemp):
         self.assertEqual(L.payload_assignees(merged_on, unowned), [])
 
     def test_the_sync_dry_run_takes_the_overlay_for_the_percent_only(self):
-        base = [sys.executable, str(ROOT / "scripts/github_sync.py"), "--root", str(SAMPLE), "--offline"]
+        project = copy_sample(self.base / "owner-sample")      # the owner's working tree: its plan holds the downstream defaults
+        base = [sys.executable, str(ROOT / "scripts/github_sync.py"), "--root", str(project), "--offline"]
         plain = subprocess.run(base, capture_output=True, text=True, cwd=str(self.base))
         self.assertIn("Track Workflow: 1 person\n", plain.stdout)
         self.assertNotIn("percent allocated", plain.stdout)

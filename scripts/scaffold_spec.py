@@ -165,17 +165,53 @@ def external_section(plan):
     )
 
 
+CONTEXT_DIR = "docs/context"
+
+
 def source_table(plan):
+    """The "Source documents" table of the specification README.
+
+    A plan in the plan_format 2 layout lists only what a released plan holds for a source: its
+    precedence, id, display name and version. No original path, no rendering path, no status, no
+    coverage limit and no use text, so the README is the same whether it is written from the owner's
+    workspace plan or from the released plan, and it never carries a private location. A legacy
+    plan keeps the table it always had."""
+    if L.is_modern(plan):
+        rows = [[str(n), f"`{s.get('id', '')}`", s.get("name", ""), s.get("version", "")]
+                for n, s in enumerate(plan.get("sources") or [], 1)]
+        table = md_table(["Precedence", "Source id", "Document", "Version"], rows) if rows else "No source is listed."
+        return (table + "\n\nThe documents are not part of this folder. The exact text of the sections a work item cites is in its "
+                f"approved context, `{CONTEXT_DIR}/<id>.md`, which the plan owner approved for everyone who can read this repository.")
     rows = [[str(n), s.get("name", ""), f"`{s.get('source_path', s.get('path', ''))}`", f"`{s.get('path', '')}`" if s.get("path") else "Not rendered", s.get("version", ""), s.get("status", "reviewed"), s.get("limit", ""), s.get("use", "")]
             for n, s in enumerate(L.ground_truth_sources(plan), 1)]
     return md_table(["Precedence", "Document", "Original file", "Rendered path", "Version", "Status", "Coverage limit", "Use"], rows)
 
 
+def readme_ground_truth_lines(plan):
+    """(where, use, wins): the three sentences of the specification README that say where the source text
+    is, how to use it and which text wins in a conflict. A plan in the plan_format 2 layout points at the
+    approved contexts and names no source path. A legacy plan points at its rendered ground truth, as it
+    always did. A plan without project.ground_truth, such as a released plan, never fails here."""
+    if L.is_modern(plan):
+        return (f"The exact text of the source sections each work item cites is in its approved context, `{CONTEXT_DIR}/<id>.md`.",
+                "Read the approved context of the item for the exact text of the sections the file cites. "
+                "Do not look for the original documents. If a rule seems to be missing, ask the plan owner.",
+                "Where it conflicts with the approved context of the item, the approved context wins. "
+                "Correct the file in the same pull request, or ask the plan owner.")
+    where = plan["project"].get("ground_truth") or ""
+    return (f"The rendered ground truth lives at `{where}`." if where else "The rendered ground truth is in the project.",
+            "Open the ground truth only for the sections the file cites.",
+            "Where it conflicts with the ground truth, the ground truth wins and the file is corrected in the same pull request.")
+
+
 def build_readme(plan):
     proj = plan["project"]
+    where, use, wins = readme_ground_truth_lines(plan)
     vals = {
         "project_name": proj["name"],
-        "ground_truth": proj["ground_truth"],
+        "ground_truth_where": where,
+        "ground_truth_use": use,
+        "ground_truth_wins": wins,
         "dev_skill_path": proj.get("dev_skill_path", ""),
         "branch": proj["branch"],
         "source_table": source_table(plan),
@@ -192,6 +228,14 @@ def build_readme(plan):
     return L.fill(L.read_template("spec-README.md"), vals)
 
 
+def milestone_source_lines(plan):
+    """The source bullets of a milestone file's References. A plan in the plan_format 2 layout points at
+    the approved contexts and names no source path."""
+    if L.is_modern(plan):
+        return [f"- The approved context of each item, in `{CONTEXT_DIR}/`"]
+    return [f"- {source['name']}, `{source['path']}`" for source in L.rendered_sources(plan)]
+
+
 def build_milestone(plan, ms):
     its = [L.tag(plan, it["id"]) for it in plan["items"] if it["milestone"] == ms["number"]]
     vals = {
@@ -203,7 +247,7 @@ def build_milestone(plan, ms):
         "joint_demonstration": joint_demonstration_text(plan, ms),
         "references": "\n".join(
             [f"- `{L.tag(plan, it['id']).lower()}-{it['slug']}.md`" for it in plan["items"] if it["milestone"] == ms["number"]]
-            + [f"- {source['name']}, `{source['path']}`" for source in L.rendered_sources(plan)]
+            + milestone_source_lines(plan)
             + ["- The schedule and checkpoint tables in `../README.md`"]
         ),
     }

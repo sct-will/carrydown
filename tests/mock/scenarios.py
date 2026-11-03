@@ -61,7 +61,9 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 TMP = tempfile.mkdtemp(prefix="carrydown-mock-")
 SAMPLE = str(Path(TMP) / "sample")
-shutil.copytree(ROOT / "sample" / "expense-approvals", SAMPLE)
+sys.path.insert(0, str(HERE))
+from sample_tree import copy_sample  # noqa: E402
+copy_sample(SAMPLE)
 sys.path.insert(0, str(HERE))
 from release_fixture import strip_handling  # noqa: E402
 strip_handling(SAMPLE)       # these scenarios are about the GitHub scripts of a legacy project

@@ -25,6 +25,8 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests" / "mock"))
 import carrydown_lib as L  # noqa: E402
@@ -64,7 +66,7 @@ class TempCase(unittest.TestCase):
 class GateLegacyTests(TempCase):
     def test_a_project_with_no_handling_is_legacy_for_every_write_class(self):
         root = self.base / "legacy"
-        shutil.copytree(ROOT / "sample/expense-approvals", root)
+        copy_sample(root)
         strip_handling(root)
         self.assertEqual(RG.WRITE_CLASSES, ("draft", "candidate", "release", "state-only"))
         for write_class in RG.WRITE_CLASSES:
@@ -77,7 +79,7 @@ class GateLegacyTests(TempCase):
 
     def test_the_request_id_is_echoed_for_a_legacy_project(self):
         root = self.base / "legacy"
-        shutil.copytree(ROOT / "sample/expense-approvals", root)
+        copy_sample(root)
         strip_handling(root)
         with contextlib.redirect_stderr(io.StringIO()):
             decision = RG.check("release", "WI-01", "a" * 64, "engineering", str(root), request_id="b" * 64, event_id="c" * 64,
@@ -86,7 +88,7 @@ class GateLegacyTests(TempCase):
 
     def test_the_legacy_notice_goes_to_standard_error_once(self):
         root = self.base / "legacy"
-        shutil.copytree(ROOT / "sample/expense-approvals", root)
+        copy_sample(root)
         strip_handling(root)
         RG._noticed.discard("legacy")
         err = io.StringIO()

@@ -20,6 +20,8 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests" / "mock"))
 import fake_evidence as FE  # noqa: E402
@@ -744,7 +746,7 @@ class SampleReleaseTests(Temp):
 
     def test_a_changed_sample_file_is_caught_as_drift(self):
         sample = self.base / "sample"
-        shutil.copytree(ROOT / "sample" / "expense-approvals", sample)
+        copy_sample(sample, working=False)
         spec = sample / SPEC
         spec.write_text(spec.read_text(encoding="utf-8").rstrip("\n") + " A drifting sentence.\n", encoding="utf-8")
         run = subprocess.run([sys.executable, str(ROOT / "tests" / "rebuild_sample_release.py"), "--check", "--sample", str(sample)],
@@ -754,7 +756,7 @@ class SampleReleaseTests(Temp):
 
     def test_the_fixture_holds_no_staffing_record_and_the_receipt_is_the_local_owner_receipt(self):
         self.assertFalse((self.FIXTURE / "people.yaml").exists())
-        self.assertEqual(sorted(p.name for p in self.FIXTURE.iterdir()), ["events", "releases", "requests", "retention.yaml", "workspace.yaml"])
+        self.assertEqual(sorted(p.name for p in self.FIXTURE.iterdir()), ["drafts", "events", "releases", "requests", "retention.yaml", "workspace.yaml"])
         receipt = RS.validate_receipt(self.receipt_path().read_bytes())
         self.assertEqual(self.receipt_path().name, receipt["request_id"] + ".receipt.json")
         self.assertEqual((receipt["approval"]["type"], receipt["approval"]["authenticated"], receipt["state"]), ("local-owner", False, "active"))
@@ -775,13 +777,11 @@ class SampleReleaseTests(Temp):
         for entry in manifest_entries:
             if entry["path"].startswith("repo/"):
                 path = ROOT / "sample" / "expense-approvals" / entry["path"][len("repo/"):]
-                if entry["path"].endswith("docs/spec/plan.yaml"):
-                    continue      # the working plan is the owner's draft of the released plan
                 self.assertEqual(RS.sha256_file(path), entry["sha256"], entry["path"])
 
     def test_the_engineers_check_exits_zero_on_the_sample_once_the_clone_has_an_origin(self):
         project = self.base / "clone"
-        shutil.copytree(ROOT / "sample" / "expense-approvals", project)
+        copy_sample(project, working=False)
         F.init_git(project)
         F.sh(["git", "add", "-A"], project)
         F.sh(["git", "commit", "-q", "-m", "sample"], project)

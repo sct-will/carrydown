@@ -8,7 +8,7 @@ folder, runs it from there with no path to the repository's scripts/ folder, and
 - the first skill carries no network or token code.
 
 To cover a new script, add a row to SMOKE: (skill, script, arguments, text the output must hold).
-In the arguments, {sample} is the sample project and {fixture} is the confidential project fixture.
+In the arguments, {sample} is the sample project as committed (a released project), {owner} is a copy that holds the owner's working plan, and {fixture} is the confidential project fixture.
 No token and no network are used. Run from the repository root:
 python -m unittest discover -s tests -v
 """
@@ -22,6 +22,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 import sync_skill_assets as SYNC  # noqa: E402
 
@@ -49,11 +51,11 @@ SMOKE = [
      ["{sample}/ground-truth/architecture.md", "--root", "{sample}", "--version", "0.3", "--dry-run"], ()),
     (GROUND_TRUTH, "workspace.py", ["init", "--root", "{sample}", "--slug", "sample-check"], ("DRY RUN", "would create the folder with owner-only permissions")),
     (GROUND_TRUTH, "check_specs.py", ["--root", "{sample}", "--report", "--people", "{sample}/people.yaml"], ("Alloc", "18 of 54d (33%)")),
-    (GROUND_TRUTH, "compile_bundles.py", ["--root", "{sample}"], ("WI-06  obligations present: 3 of 3", "18 file(s) would be written")),
-    (PLAN_TO_GITHUB, "compile_bundles.py", ["--root", "{sample}"], ("WI-06  obligations present: 3 of 3", "18 file(s) would be written")),
-    (PLAN_TO_GITHUB, "release.py", ["preview", "--root", "{sample}", "--repository-id", "4200"], ("What will be shared?", "With whom?", "Where?", "What remains private?")),
-    (PLAN_TO_GITHUB, "release.py", ["prepare", "--root", "{sample}", "--repository-id", "4200"], ("DRY RUN", "Dry run: nothing was written")),
-    (PLAN_TO_GITHUB, "release.py", ["diff", "--root", "{sample}", "--repository-id", "4200"], ("This is the first release",)),
+    (GROUND_TRUTH, "compile_bundles.py", ["--root", "{owner}"], ("WI-06  obligations present: 3 of 3", "18 file(s) would be written")),
+    (PLAN_TO_GITHUB, "compile_bundles.py", ["--root", "{owner}"], ("WI-06  obligations present: 3 of 3", "18 file(s) would be written")),
+    (PLAN_TO_GITHUB, "release.py", ["preview", "--root", "{owner}", "--repository-id", "4200"], ("What will be shared?", "With whom?", "Where?", "What remains private?")),
+    (PLAN_TO_GITHUB, "release.py", ["prepare", "--root", "{owner}", "--repository-id", "4200"], ("DRY RUN", "Dry run: nothing was written")),
+    (PLAN_TO_GITHUB, "release.py", ["diff", "--root", "{owner}", "--repository-id", "4200"], ("This is the first release",)),
     (PLAN_TO_GITHUB, "release.py", ["inventory", "--root", "{sample}"], ("carrydown release inventory", "Nothing was changed.")),
     (GROUND_TRUTH, "release_gate.py", ["--help"], ("The release gate",)),
     (GROUND_TRUTH, "release_verify.py", ["--help"], ("Verification of releases",)),
@@ -85,6 +87,7 @@ class SkillPackagingTests(unittest.TestCase):
             cls.copy[skill] = cls.base / "installed" / skill
             shutil.copytree(ROOT / "skills" / skill, cls.copy[skill])
         cls.env = clean_env(cls.home)
+        cls.owner = copy_sample(cls.base / "owner-sample")
 
     @classmethod
     def tearDownClass(cls):
@@ -92,7 +95,7 @@ class SkillPackagingTests(unittest.TestCase):
 
     def run_script(self, skill, script, args):
         path = self.copy[skill] / "scripts" / script
-        argv = [sys.executable, str(path)] + [a.format(sample=SAMPLE, fixture=FIXTURE) for a in args]
+        argv = [sys.executable, str(path)] + [a.format(sample=SAMPLE, fixture=FIXTURE, owner=self.owner) for a in args]
         # the working folder is outside the repository, so nothing resolves to scripts/ by accident
         return subprocess.run(argv, cwd=str(self.work), env=self.env, capture_output=True, text=True,
                               encoding="utf-8", errors="replace", timeout=120)
@@ -144,7 +147,7 @@ class SkillPackagingTests(unittest.TestCase):
         self.assertEqual(template.read_bytes(), (ROOT / "templates" / "dev-skill" / "scripts" / "check_context.py").read_bytes())
         self.assertFalse((self.copy[GROUND_TRUTH] / "templates" / "dev-skill").exists(), "the first skill does not generate the engineers' skill")
         project = self.base / "generated-project"
-        shutil.copytree(SAMPLE, project, ignore=shutil.ignore_patterns("dev", "release"))
+        copy_sample(project, ignore=shutil.ignore_patterns("dev", "release"))
         run = self.run_script(PLAN_TO_GITHUB, "generate_dev_skill.py", ["--root", str(project), "--apply"])
         self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
         self.assertIn("write: scripts/check_context.py", run.stdout)
