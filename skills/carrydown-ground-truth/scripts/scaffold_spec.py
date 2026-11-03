@@ -661,17 +661,13 @@ def main(argv=None):
 
     plan_write(spec_dir / "README.md", build_readme(plan), "README")
     for ms in plan["milestones"]:
+        # The milestone page lives in the milestone folder, so its gated write creates the folder; a page that
+        # already exists means the folder does too. No folder is created without a gate decision.
         plan_write(L.milestone_path(plan, root, ms), build_milestone(plan, ms), "milestone")
         if a.stubs:
             for it in plan["items"]:
                 if it["milestone"] == ms["number"]:
                     plan_write(L.spec_path(plan, root, it), build_stub(plan, it), "stub")
-        elif a.apply:
-            folder = L.inside(root, spec_dir / ms["folder"], "milestone folder")
-            try:
-                folder.mkdir(parents=True, exist_ok=True)
-            except OSError as e:
-                L.die(f"cannot create {folder}: {e.strerror or e}")
     if a.ci:
         gt_dirs = {str(Path(source["path"]).parent) for source in L.rendered_sources(plan) if source.get("path")}
         gt_dir = sorted(gt_dirs)[0] if gt_dirs else "docs/ground-truth"

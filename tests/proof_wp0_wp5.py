@@ -193,6 +193,24 @@ def _(base):
     return line_with(out, "Ran ") + " " + last_line(out)
 
 
+@claim("WP0 gate scaffold: a missing milestone folder comes back only through the gated write of its page; on the no path the refused page leaves no folder")
+def _(base):
+    source = (SCRIPTS / "scaffold_spec.py").read_text(encoding="utf-8")
+    check(".mkdir(" not in source and "makedirs(" not in source, "scaffold_spec.py creates a folder of its own")
+    seen = []
+    yes = copy_sample(base, "yes")
+    shutil.rmtree(yes / "docs" / "spec" / "m5-release")
+    code, out = run(base, ["scaffold_spec.py", "--root", yes, "--apply", "--allow-no-git"], cwd=yes)
+    check(code == 0 and (yes / "docs" / "spec" / "m5-release" / "milestone.md").is_file(), f"yes path: exit {code}: {out[-300:]}")
+    seen.append(line_with(out, "m5-release/milestone.md"))
+    no = copy_fixture(base, "no")
+    shutil.rmtree(no / "docs" / "spec" / "m5-release")
+    code, out = run(base, ["scaffold_spec.py", "--root", no, "--apply", "--allow-no-git"], cwd=no)
+    check(code != 0 and "drafting-is-private" in out and not (no / "docs" / "spec" / "m5-release").exists(), f"no path: exit {code}: {out[-300:]}")
+    seen.append(line_with(out, "drafting-is-private"))
+    return " || ".join(seen)
+
+
 @claim("WP0 digests (pure functions): the request digest omits only request_sha256, the event digest only event_id")
 def _(base):
     request = json.loads(next((SAMPLE_WS / "requests").iterdir()).joinpath("approval-request.json").read_text(encoding="utf-8"))

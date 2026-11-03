@@ -385,8 +385,8 @@ class GateNoPathTests(TempCase):
 
 
 class Recorder:
-    """Records, in order, each gate decision, each file write through carrydown_lib.write_text and
-    each GitHub request that changes anything."""
+    """Records, in order, each gate decision, each file write through carrydown_lib.write_text, each folder
+    that Path.mkdir creates and each GitHub request that changes anything."""
 
     def __init__(self):
         self.events = []
@@ -403,6 +403,16 @@ class Recorder:
             return real(path, text)
         return spy
 
+    def folder(self, real):
+        def spy(path, *args, **kwargs):
+            target = Path(os.path.abspath(str(path)))
+            existed = target.exists()
+            result = real(path, *args, **kwargs)
+            if not existed and target.is_dir():
+                self.events.append(("folder", str(target.resolve())))
+            return result
+        return spy
+
     def github(self, real):
         def spy(client, method, url, data=None, *args, **kwargs):
             query = (data or {}).get("query", "") if isinstance(data, dict) else ""
@@ -414,6 +424,22 @@ class Recorder:
 
     def writes(self):
         return [(i, e) for i, e in enumerate(self.events) if e[0] in ("file", "github")]
+
+    def ungated_folders(self, root):
+        """The folders created inside root with no earlier gate decision for a path inside them. A folder is
+        written content too: its name can come from the plan."""
+        root = Path(root).resolve()
+        found = []
+        for index, event in enumerate(self.events):
+            if event[0] != "folder":
+                continue
+            folder = Path(event[1])
+            if folder != root and root not in folder.parents:
+                continue
+            asked = [Path(g[3], g[2]).resolve() for g in self.events[:index] if g[0] == "gate"]
+            if not any(folder in p.parents for p in asked):
+                found.append(folder.relative_to(root).as_posix())
+        return found
 
 
 class WriteAssertionScaffold(TempCase):
@@ -447,6 +473,7 @@ class WriteAssertionScaffold(TempCase):
             stack.enter_context(mock.patch.object(RGH.GitHubEvidenceReader, "HOST_OVERRIDE", "github.com"))
             stack.enter_context(mock.patch.object(RG, "check", rec.gate(RG.check)))
             stack.enter_context(mock.patch.object(L, "write_text", rec.file(L.write_text)))
+            stack.enter_context(mock.patch.object(Path, "mkdir", rec.folder(Path.mkdir)))
             stack.enter_context(mock.patch.object(G.GitHub, "_send", lambda c, m, u, d=None, *a, **k: rec.github(real_send)(c, m, u, d, *a, **k)))
             stack.enter_context(mock.patch.object(G.GitHub.__init__, "__defaults__", (self.url, 0.0, None)))
             self.statuses = {
@@ -490,6 +517,54 @@ class WriteAssertionScaffold(TempCase):
         github_writes = [e for _, e in writes if e[0] == "github"]
         all_release = [e for e in rec.events if e[0] == "gate" and e[1] == "release"]
         self.assertGreaterEqual(len(all_release), len(github_writes))
+        self.assertEqual(rec.ungated_folders(self.root), [])
+        self.assertTrue([e for e in rec.events if e[0] == "folder" and Path(e[1]).name == "expense-approvals-dev"],
+                        "the recorder saw no folder created, so the folder check proves nothing")
+
+
+class FolderCreationTests(TempCase):
+    """A folder in the engineering repository is created only by the gated write of a file inside it. The
+    scaffold used to create each milestone folder with a mkdir of its own; the milestone page's gated write
+    already creates it, so that mkdir is gone."""
+
+    def scaffold(self, root, *extra):
+        rec = Recorder()
+        with contextlib.ExitStack() as stack:
+            stack.enter_context(mock.patch.dict(os.environ, {"HOME": str(self.base), "USERPROFILE": str(self.base)}))
+            stack.enter_context(mock.patch.object(RG, "check", rec.gate(RG.check)))
+            stack.enter_context(mock.patch.object(L, "write_text", rec.file(L.write_text)))
+            stack.enter_context(mock.patch.object(Path, "mkdir", rec.folder(Path.mkdir)))
+            code, out, err = F.run(SS.main, ["--root", str(root), "--apply", "--allow-no-git"] + list(extra))
+        return code, out + err, rec
+
+    def test_a_missing_milestone_folder_is_created_by_the_gated_write_of_its_page(self):
+        project = F.YesProject(self.base / "yes")
+        folder = project.root / "docs" / "spec" / "m5-release"
+        shutil.rmtree(folder)
+        code, out, rec = self.scaffold(project.root)
+        self.assertEqual(code, 0, out)
+        self.assertTrue((folder / "milestone.md").is_file())
+        self.assertIn(("folder", str(folder.resolve())), rec.events)
+        self.assertEqual(rec.ungated_folders(project.root), [])
+
+    def test_on_the_no_path_a_refused_milestone_page_leaves_no_folder(self):
+        root = self.base / "no"
+        shutil.copytree(FIXTURE, root)
+        folder = root / "docs" / "spec" / "m5-release"
+        shutil.rmtree(folder)
+        code, out, rec = self.scaffold(root)
+        self.assertNotEqual(code, 0, out)
+        self.assertFalse(folder.exists(), "a folder named from the private plan was created in the repository")
+        self.assertIn("drafting-is-private", out)
+        self.assertEqual(rec.ungated_folders(root), [])
+
+    def test_negative_control_an_ungated_folder_is_reported(self):
+        rec = Recorder()
+        root = self.base / "project"
+        root.mkdir()
+        with mock.patch.object(Path, "mkdir", rec.folder(Path.mkdir)):
+            (root / "named-from-the-plan").mkdir()
+        self.assertEqual(rec.ungated_folders(root), ["named-from-the-plan"])
 
 
 if __name__ == "__main__":
