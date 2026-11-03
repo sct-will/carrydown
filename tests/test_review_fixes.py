@@ -252,5 +252,17 @@ class SampleIgnoreTests(unittest.TestCase):
             self.assertIn(words, comment)
 
 
+class StalePublicSampleTests(unittest.TestCase):
+    """WP10 defect 8: the public sample repository and docs/images/issue-9.png predate the release layout
+    and need the owner's account to republish. Until then the README and the storyboard say so."""
+
+    def test_the_readme_and_the_storyboard_mark_them_as_waiting_to_be_republished(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        self.assertIn("waiting to be republished from the current sample", readme)
+        storyboard = (ROOT / "docs" / "recording-storyboard.md").read_text(encoding="utf-8")
+        row = next(x for x in storyboard.splitlines() if x.startswith("| `docs/images/issue-9.png`"))
+        self.assertIn("Legacy pending replacement", row)
+
+
 if __name__ == "__main__":
     unittest.main()
