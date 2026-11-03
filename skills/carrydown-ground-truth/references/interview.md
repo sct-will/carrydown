@@ -33,7 +33,7 @@ Why you ask: the answer decides where the drafting happens. The user never types
   2. Who may approve that a document is shared with the repository's readers? Default: the owner's GitHub login. Collect GitHub logins, never email addresses.
   3. Keep the raw inputs after the release? Default: kept in the private workspace, never in the repository.
 
-Record the answer once. Step 3 writes it into `plan.yaml` as `project.handling` and a `classification` on every source (`templates/plan.yaml` shows the lines). On the no path, draft in the private workspace and keep the plan there until a release. On the yes path the plan can be in the project.
+Record the answer once. Step 3 writes it into `plan.yaml` as `project.handling` and a `classification` on every source (`templates/plan.yaml` shows the lines). On the no path, draft in the private workspace, at `drafts/plan.yaml`, and keep the plan there until a release. The note in `SKILL.md` on where the plan is drafted gives the two flags every plan command takes. On the yes path the plan can be in the project.
 
 Create the workspace now, with the user's yes to a short folder name for the project:
 
@@ -122,6 +122,16 @@ Ask.
 2. Which development items wait for one of these? Those items carry an "external input" note.
 
 Explain: each piece is an external item, listed under `external` in `plan.yaml`. Each gets an id gap and is never numbered inside the plan. Specifications mention it only as "the external input".
+
+### Work the team must not see (only when the answer to step 0 was no)
+
+Ask once: "Is any work item itself something the engineers who can read this repository must not see?" If the answer is no, move on. If yes, for each such item collect:
+
+1. A one-line summary, in the owner's words, of at most 200 characters. It is the only text about the item that will ever be shared, wherever another item depends on it. Read it back word for word, because the approver approves exactly that text.
+2. Optional: a one-line instruction, at most 600 characters, for an engineer who names the item, such as who to ask. Without it, an engineer who names the item is told there is no approved context, which is also what they are told for an id that does not exist.
+3. Optional, later: a private note that the item is done. It is never shared, and nothing is posted to GitHub when it is recorded.
+
+Record them as `restricted: true`, `restricted_summary`, `restricted_placeholder` and `restricted_evidence` on the item in the workspace plan. `planning.md` describes what each key does. Never put the item's real title or description in a file in the project.
 
 ## Step 6 of 6. Engineering conventions
 

@@ -4,9 +4,11 @@ Follow this page from computer setup through your first conversation with carryd
 
 **My computer is ready:** skip to [open your project folder](#open-your-project-folder).
 
-**The skills are already installed:** skip to [start your plan](#start-your-plan).
+**The skills are already installed:** skip to [who may see your documents](#before-you-add-documents-who-may-see-them), then [start your plan](#start-your-plan).
 
-[Choose an agent](#choose-a-coding-agent) | [Prepare your computer](#prepare-your-computer) | [Open a project](#open-your-project-folder) | [Install](#install-the-two-skills) | [Check](#check-the-installation) | [Start a plan](#start-your-plan) | [Other options](#other-installation-options) | [Get help](#when-something-does-not-work)
+[Choose an agent](#choose-a-coding-agent) | [Prepare your computer](#prepare-your-computer) | [Open a project](#open-your-project-folder) | [Install](#install-the-two-skills) | [Check](#check-the-installation) | [Who may see your documents](#before-you-add-documents-who-may-see-them) | [Start a plan](#start-your-plan) | [Other options](#other-installation-options) | [Organization setup](#organization-setup-for-private-drafting) | [Get help](#when-something-does-not-work)
+
+**Documents that are confidential?** Read [who may see your documents](#before-you-add-documents-who-may-see-them) before you copy anything into a project.
 
 ## Choose a coding agent
 
@@ -193,17 +195,48 @@ npx skills list --global
 
 The list confirms the installed files. To make the agent load them, close and reopen the application or end the current agent session and start a new one. Open the same project folder. If the agent still cannot use either skill, follow [the help below](#the-agent-does-not-see-the-skills).
 
+## Before you add documents: who may see them
+
+Before it renders or copies anything, the agent asks you one question:
+
+> Can everyone who can read this repository see all of these documents and your staffing notes?
+
+**If you can answer yes, you are done with this section.** That is the case for most teams. You work as before: the agent drafts in the repository, you keep the documents where they are or in an ignored `docs/source/` folder, and the only things that change are these. Your staffing notes go to a private file on your machine instead of the plan. Originals are optional in the project. Before anything is shared, you approve a short preview along with the plan. Nothing else is required, and the rest of this page applies to you only when you reach [organization setup](#organization-setup-for-private-drafting), which you can skip.
+
+If you want a local copy of the documents on a yes answer, use `docs/source/` and add `docs/source/` to `.gitignore` before you copy anything into it. The agent adds that line when it scaffolds the plan, but not before. Read [the enterprise security questions](enterprise-security.md) if you are unsure what carrydown protects.
+
+<details>
+<summary>If some documents are confidential, answer no and read this</summary>
+
+Everyone who can read your project repository can read what you commit to it. When some documents are not for them, answer no. Then:
+
+| | Yes | No |
+| --- | --- | --- |
+| Where drafting happens | In the repository, as before. | In a private workspace on your machine, including for documents you call shareable. Nothing is drafted in the repository before approval. |
+| What reaches the repository | Renderings, the plan, specifications, approved contexts and a receipt. Never staffing notes. | Only the outputs you approve after a preview, exported on a new branch. |
+| What you need | The two skills. | An organization that has installed the pieces in [organization setup for private drafting](#organization-setup-for-private-drafting), and a private staging repository for your project. |
+
+What this means in practice:
+
+- **Keep confidential documents where they are.** Give the agent their paths in the system your organization already uses. Do not copy a confidential document into the project folder. The checks pass in a clean clone without originals.
+- **Staffing stays private on both answers.** Names, GitHub logins, skills, preferences, days off, allocation and start dates go to `people.yaml` in the private workspace, never into the plan or any file in the project. The load table and the date checks run on your machine.
+- **An ignore rule does not erase history.** If a confidential file was ever committed, it is still in the repository's history. `release.py inventory` lists tracked originals, renderings and staffing fields and whether they appear in history. Carrydown cannot rewrite history. [GitHub's guidance on removing sensitive data](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository) applies.
+- **The approved context is readable by everyone who can read the repository.** Version 1 cannot hide a section from a teammate who has repository access. Material that some of those readers must not see needs a delivery mode that is planned and not yet available. See [delivery modes](delivery-modes.md).
+- **Answer once.** The agent records your answer for each document and shows it in two lines, with where drafting will happen. Change it only by running step 0 again.
+
+</details>
+
 ## Start your plan
 
-1. In the project folder, create a folder named `docs`, then a folder named `source` inside it. Use your file manager or ask the agent to create them.
-2. Copy the files the project must obey into `docs/source/`. Include architecture, requirements, governance rules, development standards and company context as needed. Word, Markdown and plain UTF-8 text render directly. The agent can inspect readable PDF, PNG and other files and create reviewed Markdown renderings. Export older Word files to `.docx` first. You can include more than one file.
-3. In the agent's chat, say:
+1. Collect the locations of the files the project must obey: architecture, requirements, governance rules, development standards and company context as needed. Word, Markdown and plain UTF-8 text render directly. The agent can inspect readable PDF, PNG and other files and create reviewed Markdown renderings. Export older Word files to `.docx` first. You can include more than one file. You do not need to create a folder or copy anything into the project. Read [who may see your documents](#before-you-add-documents-who-may-see-them) first if you have not.
+2. In the agent's chat, say:
 
    > Set up a project plan from this document.
 
-   For multiple documents, specify which files to use. The agent can list the files in `docs/source/`.
-4. The agent inventories the folder and reports how each file will be processed. It identifies unreadable files and continues with readable sources. It stops only when none of the intended ground truth can be processed. It also checks the setup and requests approval if Git needs to be initialized. Initialization is local and does not upload the project.
-5. The interview begins. Replies identify the current step as `carrydown: interview, step N of 6`. Dates, team size and other constraints can remain undecided; the agent proposes assumptions for review.
+   For multiple documents, give the paths of the files to use.
+3. The agent inventories the files and reports how each will be processed. It identifies unreadable files and continues with readable sources. It stops only when none of the intended ground truth can be processed. It reports a file that is already inside the project folder. It does not call that file safe and does not delete it. It also checks the setup and requests approval if Git needs to be initialized. Initialization is local and does not upload the project.
+4. The first reply is `carrydown: interview, step 0 of 6`, and it asks the one question above. After your answer the agent creates the private workspace on your machine with owner-only permissions, and tells you where drafting will happen. On the no answer it also prints the commands that create the private staging repository. It does not run them.
+5. The interview continues. Replies identify the current step as `carrydown: interview, step N of 6`. Dates, team size and other constraints can remain undecided; the agent proposes assumptions for review. Staffing details you give in step 2 are saved to the private workspace.
    Skills and work preferences are optional. Supply them only when you want them to influence the proposed tracks and assignments. Missing or unclear staffing context does not stop planning.
 
 **You are ready when the agent begins the interview.**
@@ -394,7 +427,7 @@ The plan owner then runs two checks, the offline and the live doctor, and reads 
 
 1. Create a private repository, by default `carrydown-tooling`: `gh repo create OWNER/carrydown-tooling --private`.
 2. Limit write access to the release owners and administrators. Protect the default branch with a ruleset that requires a pull request review, blocks force pushes and deletion, and allows no bypass. Changes to the verifier or to the enrollment then go through review.
-3. Copy these folders from the carrydown repository into the tooling repository: `scripts/` and `verifier/`. They are the pinned verifier code. Copy `verifier/carrydown-release-verify.yml` to `.github/workflows/carrydown-release-verify.yml` in the tooling repository. Merge that commit first. It is the commit that the enrollment pins as the verifier code, and the enrollment goes in a later commit.
+3. Copy two folders, whole, from a clone of the carrydown repository into the tooling repository: `scripts/` and `verifier/`. They are the pinned verifier code. Do not copy from an installed skill. An installed skill carries only the scripts it runs, and the verifier also needs `release_engineering.py` and `release_scan.py`, which no skill carries. Copy `verifier/carrydown-release-verify.yml` to `.github/workflows/carrydown-release-verify.yml` in the tooling repository. Merge that commit first. It is the commit that the enrollment pins as the verifier code, and the enrollment goes in a later commit.
 4. Read `.github/workflows/carrydown-release-verify.yml` before you merge it. It checks out the policy and the code into separate folders, proves the code checkout is exactly the pinned commit, and runs the verifier with `python3 -I`. Its actions are pinned by full commit SHA (Secure Hash Algorithm). Confirm each pinned commit against the action's release page.
 
 ### Step 2: create the verifier App
@@ -411,7 +444,7 @@ The verifier mints a short-lived installation token from these two secrets at th
 For each engineering repository:
 
 1. Create a private repository for release candidates. The plan owner's `python3 scripts/workspace.py init --root . --answer no --apply` prints the exact commands. The staging repository receives snapshots and manifests only, never originals or staffing records.
-2. Copy `templates/staging/open-release-request.yml` to `.github/workflows/open-release-request.yml` on its default branch. Another administrator reviews it, and nobody edits it afterward, because the enrollment pins its digest: `shasum -a 256 .github/workflows/open-release-request.yml`.
+2. Copy `templates/staging/open-release-request.yml` to `.github/workflows/open-release-request.yml` on its default branch. Another administrator reviews it, and nobody edits it afterward, because the enrollment pins its digest: `shasum -a 256 .github/workflows/open-release-request.yml`. The workflow runs from the default branch on a schedule and on manual dispatch. It lists the `request/*` and `state/*` branches as data and opens a pull request for each, with `contents: read` and `pull-requests: write` only. It never runs or imports a file from a candidate branch. The plan owner's `release.py approve --github` dispatches it when the owner's permissions allow, and otherwise the schedule picks the branch up. A delay is normal, and a wait that ends without a pull request leaves a pending candidate and no approval.
 3. Under Settings, Actions, General, allow GitHub Actions to create pull requests. This is how the owner is not the author of the request.
 4. Allow merge commits only. Squash and rebase would stop the verifier from comparing the reviewed head with the merged tree.
 5. Create the rulesets. Print them with the App's id filled in, then import each JSON file under Settings, Rules, Rulesets:
@@ -464,7 +497,50 @@ python3 scripts/release.py doctor --root .
 
 On the private path every mandatory component must be verified before anything is uploaded or released. A not verifiable or missing component blocks the step that needs it and names the reason code. On the "yes" path the remote checks are informational.
 
+From an installed skill, `workspace.py` is in the `scripts/` folder of `carrydown-ground-truth` and `release.py` is in the `scripts/` folder of `carrydown-plan-to-github`. The examples use the paths of a carrydown clone.
+
 The owner's token needs read access only for the doctor: Metadata, Contents, Pull requests and Administration (read) on the engineering and staging repositories, and Actions (read) on the tooling repository. It reads rulesets, collaborators, deploy keys and the verifier's last completed run.
+
+The doctor also reports the verifier's health. A scan counts as healthy when its last completed run covered every open pull request and is no older than `check_health_max_age_seconds` (900 seconds by default). When the verifier is stale, owner-side writes refuse and the doctor tells you to restore it or to run the workflow by hand. The health check is an operational safeguard. It cannot expire a check that GitHub already shows as successful.
+
+### Step 7: the owner's release commands
+
+This step is for the private path. A yes-path owner does not need it: the agent runs the release for you, and [the plan owner guide](plan-owner-guide.md#release-what-the-engineers-will-see) shows what it runs. On the private path too, the agent runs these commands and shows you each dry run, and you never type a request id. They are listed so you and your administrator can see what happens. Every command that writes is a dry run until `--apply`. Run these from the project root.
+
+```bash
+python3 scripts/release.py preview --root .
+python3 scripts/release.py prepare --root .
+python3 scripts/release.py prepare --root . --apply
+```
+
+`preview` answers four questions in order: what will be shared, with whom, where, and what remains private. It then lists the changes since the last release. `prepare --apply` writes only into the private workspace. It prints two ids. The release id names the exact content. The request id names one permission decision over that content. The same content can have several requests, and approving one never approves another.
+
+Run the live doctor, then upload the candidate, review it in GitHub and export.
+
+```bash
+python3 scripts/release.py doctor --root .
+python3 scripts/release.py approve --root . --request <request id> --github
+python3 scripts/release.py approve --root . --request <request id> --github --apply
+```
+
+The dry run of `approve --github` checks the staging repository without pushing anything. The `--apply` run first repeats the live checks, then pushes the branch `request/<request id>` to the staging repository with your own git credentials. No token goes into a URL. It waits up to two minutes for the staging workflow to open the pull request. A timeout prints `candidate uploaded; approval request pending` and the retry command. That is neither an approval nor a reason to upload again. In GitHub, review the final revision of the pull request, approve it and merge it with a merge commit. Then export:
+
+```bash
+python3 scripts/release.py export --root . --request <request id>
+python3 scripts/release.py export --root . --request <request id> --apply
+```
+
+`export --apply` verifies the approval through the GitHub API before it writes anything. It makes an isolated worktree on a new branch `carrydown/request-<request id>`, copies only the approved files and the receipt, and commits as you. It prints the push and `gh pr create` commands. It does not run them. Creating the engineering pull request is a separate write that needs your approval.
+
+When something changes, `release.py diff --root .` names the work items a change touches, and a new `preview`, `prepare` and approval follow. To end a request, run `release.py withdraw --root . --request <request id> --reason <code>` and `--apply`, approve the state change the same way, then `release.py export-state --root . --request <request id> --apply` to publish the terminal receipt. [Recover a plan or publication](recovery.md#resume-an-interrupted-release) says how to resume each step if it is interrupted.
+
+Minimum GitHub access for these commands:
+
+| Command | Access it needs |
+| --- | --- |
+| `doctor`, `approve --github`, `export`, `export-state` on the "no" path | The read-only token above, for the checks. Your git credentials with write access to the staging repository, to push the candidate branch. |
+| Pushing the export branch and opening the engineering pull request | Your git credentials with write access to the engineering repository, and your own `gh` sign-in to create the pull request. |
+| Publishing issues and the board with `carrydown-plan-to-github` | The token in [the plan owner guide](plan-owner-guide.md#the-token): Issues read and write, Metadata read, and Projects read and write. |
 
 ### Who holds which credential
 

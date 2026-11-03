@@ -58,11 +58,11 @@ The text below replaces everything above the "Renderings" section of the sample 
 
 This is what [carrydown](https://github.com/sct-will/carrydown) made from one document. The ground truth is a short architecture document for a fictional expense approvals service, with its requirements, two governance rules, a development standard and a business analyst note, and the company, the people and the dates are invented. Everything else here is real output of the skills: the plan, one specification per work item, the engineers' skill, and on GitHub the issues and a public project board.
 
-Start with one work item. WI-03, the approval routing engine, is a GitHub issue whose AI engineering notes link to its specification, and that specification cites sections 3.4, 3.5 and 7.1 of the document. That chain, from issue to specification to paragraph, is what an engineer's coding agent reads before it changes code.
+Start with one work item. WI-03, the approval routing engine, is a GitHub issue whose AI engineering notes link to its specification, and that specification cites sections 3.4, 3.5 and 7.1 of the document. That chain, from issue to specification to the approved text of those sections, is what an engineer's coding agent reads before it changes code.
 
 [![Work item WI-03 as a GitHub issue, beside the specification file its AI engineering notes link to, which cites ground truth sections 3.4, 3.5 and 7.1.](docs/images/issue-9.png)](https://github.com/sct-will/carrydown-sample/issues/9)
 
-**Look.** Open the [public board](https://github.com/users/sct-will/projects/2), click WI-03, then follow its specification link to the sections it cites. No account and no install.
+**Look.** Open the [public board](https://github.com/users/sct-will/projects/2), click WI-03, then follow its specification link to the sections it cites, and open its approved context in `docs/context/`. No account and no install.
 
-**Install.** Run `npx skills add sct-will/carrydown` in a project folder, put `ground-truth/architecture.md` from this repository in `docs/source/`, and tell your agent "Set up a project plan from this document." Compare your plan with this one. Nothing is written to GitHub until you say yes.
+**Install.** Run `npx skills add sct-will/carrydown` in a project folder, give your agent `ground-truth/architecture.md` from this repository, and tell it "Set up a project plan from this document." It asks first who may see the documents. This one is fictional and public, so answer yes. Compare your plan with this one. Nothing is written to GitHub until you say yes.
 ```

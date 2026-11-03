@@ -11,9 +11,125 @@ How it was made.
 - The scripts have since gained a Constraints block in the Epic comment (the target delivery and the allocation by track) and a target delivery line in every sub-epic. The write blocks below predate it. The dry runs print the block before anything is written. The project is fictional. The numbers are the real issue numbers the run created: Epic #1, sub-epics #2 to #6, work items #7 to #15.
 - The sample dates have since moved so that every item has slack before its checkpoint, and the plan gained its rationale. The write blocks below show the earlier dates. The blocks that need no GitHub account show the current ones.
 - The blocks that need no GitHub account were run again with the current scripts: the help text, the token walkthrough, the renderer, the scaffold, the checker, the dry runs (with `--offline`, so they read nothing from GitHub) and the engineers' skill. The blocks that talk to GitHub are as recorded in the original run: the token check, the writes, the second runs, the verifications and the independent count.
+- Section 0 below is new and was run with the current scripts. The GitHub blocks in sections 2, 6 and 7 were recorded before releases existed, so they show the legacy project flow. A project with a release policy publishes from the approved release instead: the dry runs begin with the destination preflight, which prints one visibility line for each target, and then list the payloads and the request id. Those blocks have not been recorded again, because that needs a real repository and a token.
 - The scripts took about three and a half minutes in total, most of it pauses that keep GitHub from rate limiting the writes. Reading the dry runs takes longer than running the scripts.
 
 Each GitHub step shows the dry run first and the write second. A second run of each write step finds everything in place and creates nothing.
+
+## 0. The release, run on the sample
+
+This section was run again with the current scripts, in a throwaway copy of the sample, with a fixed time and request nonce so the ids match the files in the repository. It needs no token and no network. The sample answers yes to the one question, so its fictional documents are approved for everyone who can read the repository. It shows what a project holds before and after a release, and which commands print what. The private path, with a staging repository and the independent verifier, needs an organization's setup and has not been run on real GitHub. [The setup guide](setup.md#organization-setup-for-private-drafting) says so.
+
+**What the sample is.** The committed sample is a project after its release. Its `docs/spec/plan.yaml` is the released plan: ids and tracks for the people, and for each source only an id, a display name and a version. It holds no source path, no classification, no digest and no personal fact. The two documents in the sample, the original `ground-truth/architecture.md` and its rendering, and the fictional `people.yaml`, are public fixtures. They are here so the sample can show every step. A real project does not copy staffing records or confidential originals into git, and the sample's `.gitignore` carries the same four lines that `scaffold_spec.py --init` writes: `docs/source/`, `people.yaml`, `.carrydown/local.yaml` and `.carrydown/cache/`.
+
+The owner's side of the sample is a test fixture, `tests/fixtures/sample-workspace/`. It holds the owner's working plan (`drafts/plan.yaml`, the workspace view, with the classification, the paths of the original and of the rendering and their digests), and the release records: the snapshot, the manifest, the request, the approval and the event. `python3 tests/rebuild_sample_release.py --check` rebuilds the whole release from the sample and compares every byte, so a change to any sample file, template or script that the release depends on is caught.
+
+```text
+$ python3 scripts/workspace.py init --root . --slug expense-approvals --answer yes --apply
+carrydown: private workspace ready at <tmp>/workspace (owner only, git initialized)
+[exit 0]
+```
+
+```text
+$ python3 scripts/release.py preview --root .
+carrydown release preview (reads your working files; writes nothing)
+
+release id (the content): fc44c286ad456971e45fe089cda6979f277d340487880498d69d2ba2aa5189ae
+
+What will be shared?
+  40 repository file(s): the released plan, 16 specification file(s), 18 approved context file(s) and the engineers' skill.
+  (the 40 paths are listed here)
+  9 issue payload(s) for GitHub: WI-01, WI-02, WI-03, WI-04, WI-06, WI-07, WI-08, WI-09, WI-11
+  5 subepic payload(s) for GitHub: M1, M2, M3, M4, M5
+  1 epic payload(s) for GitHub: EPIC
+  1 epic-comment payload(s) for GitHub: rollup
+  4 label payload(s) for GitHub: expense-approvals, experience, sub-epic, workflow
+  1 board payload(s) for GitHub: project
+  Obligations present in the bundles: 47 of 47. Presence is checked by the compiler. Whether each bundle is enough to do the work is your review.
+
+With whom?
+  Everyone who can read sct-will/carrydown-sample
+  No assignee login is published.
+  The capacity summary (people by track) is published.
+  Evidence in tests and code: synthetic data only.
+
+Where?
+  Board: project PVT_sample (owner id 4400), linked to repository id 4200.
+  Repository: sct-will/carrydown-sample (numeric id 4200) on github.com.
+  Destinations: engineering-repo, issue, subepic, epic, epic-comment, label, board, engineers-skill.
+
+What remains private?
+  The sources and their originals stay in the private workspace or the system they came from.
+  Staffing records (names, skills, allocation, days off, start dates) stay in the private workspace; the released plan holds ids and tracks only.
+
+Changes since the previous release
+  This is the first release. Nothing is being replaced.
+
+Limitations
+  None found. The detectors are a safety net and do not prove safety.
+
+Nothing was written. Run prepare --apply to build the snapshot and the approval request.
+[exit 0]
+```
+
+The release id names the exact bytes. `prepare` adds the request id, which names one permission decision over those bytes. A dry run shows a request id that is not final, because a dry run does not keep its nonce.
+
+```text
+$ python3 scripts/release.py prepare --root . --apply
+carrydown release prepare  APPLY
+
+release id (content): fc44c286ad456971e45fe089cda6979f277d340487880498d69d2ba2aa5189ae
+request id (permission): b032ae922bfe6dcaa455607f8ed7f8727523fdfb97c13a91190ee0ee642e1bce
+The release id names these exact bytes. The request id names one permission decision over them: this audience, these
+destinations, these targets and these downstream uses. The same content can have several requests, and approving one
+never approves another.
+61 file(s) in the snapshot; audience repo-readers; destinations engineering-repo, issue, subepic, epic, epic-comment, label, board, engineers-skill.
+Prepared. Next: python3 <carrydown>/scripts/release.py approve --root . --request b032ae92...1bce --local --apply
+[exit 0]
+```
+
+The agent then asks the disclosure line, under the preview: "These exact outputs may be shared with repository readers of this repository." On a yes it runs the approval. The sample has no terminal, so the agent passes `--preview-shown` after you have seen the preview and answered.
+
+```text
+$ python3 scripts/release.py approve --root . --request b032ae92...1bce --local --apply --preview-shown
+carrydown release approve --local  APPLY
+(the four-question preview is printed again)
+Approved locally. The request b032ae92...1bce is active. This approval is labeled not authenticated.
+Next: python3 <carrydown>/scripts/release.py export --root . --request b032ae92...1bce --apply
+[exit 0]
+```
+
+```text
+$ python3 scripts/release.py export --root . --request b032ae92...1bce
+carrydown release export  DRY RUN (nothing will be written)
+request b032ae92...1bce  release fc44c286...89ae
+40 approved repository file(s), 1 receipt(s). Evidence: local owner approval, not authenticated
+  docs/spec/plan.yaml: your working plan is the draft of the released plan, so it is left in place
+0 file(s) and 1 receipt(s) would be written; 39 already match.
+
+Dry run: nothing was written. Add --apply.
+[exit 0]
+```
+
+In this run the 39 other files already match because the owner had drafted them in the working tree. The export writes the receipt, `docs/release/b032ae922bfe6dcaa455607f8ed7f8727523fdfb97c13a91190ee0ee642e1bce.receipt.json`, which is in the sample. It is the small public file of the release. It holds the request id, the release id, the manifest digest, the state `active`, the audience, the destinations, the targets with their numeric ids, the source ids and versions, the list of artifacts with their digests, the downstream permissions, the grace period of 7 days, and `"approval": {"type": "local-owner", "authenticated": false}`. It holds no staging name, no reviewer, no source classification and no private reason. The receipt does not list itself in the manifest, and the verifier regenerates it from the approved records and compares every byte.
+
+From a fresh clone of the sample, with no private workspace and no original or rendering, both checks pass:
+
+```text
+$ python3 scripts/check_specs.py --root sample/expense-approvals --view released
+15 files clean, 0 with findings (9 work items, 5 milestones)
+people overlay not loaded: capacity, dates and names not checked
+detectors: no findings (this does not prove safety)
+[exit 0]
+```
+
+```text
+$ python3 scripts/check_context.py WI-06      # the engineers' check, from docs/dev/skills/expense-approvals-dev/
+Read docs/context/wi-06.md. Do not open docs/ground-truth/ or any source.
+[exit 0]
+```
+
+The engineers' check refreshes with `git fetch` of the default branch, so it needs the clone to have an `origin`. The line "people overlay not loaded" is expected: the capacity, date and name checks run on the owner's machine, where `people.yaml` is.
 
 ## 1. The scripts answer --help
 
@@ -54,10 +170,12 @@ usage: github_token.py [-h] [--token-file TOKEN_FILE] [--check] [--repo REPO]
 ```text
 $ python3 scripts/github_sync.py --help
 usage: github_sync.py [-h] [--root ROOT] [--plan PLAN] [--repo REPO]
-                      [--token-file TOKEN_FILE] [--apply] [--allow-public]
-                      [--offline] [--verify] [--create-epic] [--update-bodies]
-                      [--skip-comment] [--skip-check]
-                      [--issue-type ISSUE_TYPE] [--show-body ID]
+                      [--token-file TOKEN_FILE] [--apply] [--preflight]
+                      [--inventory] [--offline] [--verify] [--create-epic]
+                      [--update-bodies] [--skip-comment] [--skip-check]
+                      [--people PEOPLE] [--issue-type ISSUE_TYPE]
+                      [--show-body ID] [--select-issue KEY=NUMBER]
+                      [--reconcile]
 [exit 0]
 ```
 
@@ -222,18 +340,22 @@ The checker found problems. Run check_specs.py to see them, fix them, or pass --
 
 The checker finds the worked sample clean. The report shows the sources, advisory staffing context, schedule, load table, critical path, external items, checkpoints and planning review.
 
+Run from a clean clone, the checker has no private people file. It prints one line, `people overlay not loaded: capacity, dates and names not checked`, and skips the capacity, date and name checks. Those are planning checks that run where the owner runs them. The report below is the owner's run, which loads the sample's fictional copy of the people file with `--people`. In a real project the checker finds the private file through the pointer `.carrydown/local.yaml`, and you pass no flag.
+
 ```text
 $ python3 scripts/check_specs.py --root sample/expense-approvals
 15 files clean, 0 with findings (9 work items, 5 milestones)
+people overlay not loaded: capacity, dates and names not checked
+detectors: no findings (this does not prove safety)
 [exit 0]
 ```
 
 ```text
-$ python3 scripts/check_specs.py --root sample/expense-approvals --report
+$ python3 scripts/check_specs.py --root sample/expense-approvals --report --people sample/expense-approvals/people.yaml
 Plan: Expense approvals
 
 Sources (highest precedence first)
-  1. Architecture document: reviewed; ground-truth/architecture.md -> docs/ground-truth/architecture.md
+  1. Architecture document: reviewed; not rendered -> not rendered
 
 Staffing context (advisory)
   Track workflow needs: Service APIs, Workflow rules, Relational data

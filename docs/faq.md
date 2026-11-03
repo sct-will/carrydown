@@ -31,6 +31,38 @@ No token is needed to plan locally. Publishing issues and a project board requir
 
 GitHub does not currently let fine-grained tokens access user-owned projects. The token cannot give you access that your GitHub account does not already have, and an organization may require administrator approval. Follow [the token walkthrough](plan-owner-guide.md#the-token) to create, check, store and revoke it without putting it in the repository or chat.
 
+## Can carrydown handle confidential documents and governance rules?
+
+Yes, within stated limits. Governance rules, standards and company context go in as ground truth like any other document. Before it renders or copies anything, the agent asks one question: can everyone who can read this repository see all of these documents and your staffing notes? On yes it drafts in the repository as before. On no it drafts in a private workspace on your machine, and only outputs you approve are shared. For what carrydown protects and what it cannot, read the [enterprise security questions](enterprise-security.md). They carry one of three labels on each answer: supported, supported with prerequisites, or planned.
+
+## Do my confidential documents end up in the project repository?
+
+Not unless you say everyone who can read the repository may see them. The project holds the outputs you approved, never a restricted original or its full rendering. Originals are optional in the project even when a document is public, and the checks pass in a clean clone without them. An ignore rule keeps new files out of git, but it does not erase a file that an earlier commit already holds. The inventory command, `release.py inventory`, lists what a legacy project tracks and whether it is in history. Carrydown cannot rewrite history. See [who may see your documents](setup.md#before-you-add-documents-who-may-see-them).
+
+## Can one engineer see a section that another engineer must not?
+
+Not in version 1. The approved context of a work item is committed to the repository, so everyone who can read the repository can read every approved context. Leaving a section out of one item's context hides nothing from a teammate. Work that some of those readers must not see is withheld from the release as a restricted item, or needs a delivery mode that is planned and not available. A private repository is an access boundary for its readers. It does not separate them from each other. See [delivery modes](delivery-modes.md).
+
+## Is the engineers' check a security control?
+
+No. The check that the engineers' skill runs is a convenience and an integrity check in the engineer's own checkout, which the engineer can edit. The controls are the release gate on the plan owner's side and the independent verifier on pull requests, and an engineer can edit neither. The check also learns of a replacement or a withdrawal only after the receipt reaches the default branch the engineer fetches. An offline clone cannot learn it, and the first run in a clone needs a successful refresh.
+
+## Can a released document be recalled?
+
+No. Text already delivered, in a clone, a fork, an issue, a stored copy or an agent transcript, cannot be recalled. A withdrawal stops further publication and tells the engineers' check to stop on the next refresh. It does not remove anything. Immediate revocation is not an embedded-delivery promise.
+
+## How quickly does the independent verifier notice a change?
+
+Its workflow asks GitHub for a run every five minutes, and an administrator can start it by hand. Five minutes is a requested interval and not a deadline: GitHub can delay or drop scheduled runs. GitHub does not expire a successful check, so an outage can leave an old success mergeable, and state can change between a poll and a merge. An organization that needs authorization checked at the exact moment of merge has to add its own control. This reference deployment does not claim to be one. See [the limits in the setup guide](setup.md#limits-to-state-to-your-reviewers).
+
+## Do hosted coding agents work?
+
+They can read the approved contexts from the repository, so they need no local workspace. The engineers' check refreshes with a `git fetch` of the default branch, and whether a hosted environment allows that depends on the host. If the fetch fails, the check applies the offline grace rule or stops. Carrydown's tests do not run inside a hosted agent, so confirm the fetch behavior for yours.
+
+## What are the private path and the organization setup?
+
+The private path is for projects where some documents are not for everyone who can read the repository. It needs shared pieces that an organization administrator installs once: a tooling repository with the independent verifier, a private staging repository for each project, and a GitHub App that reports two required checks. The plan owner then runs a doctor command that says which pieces are verified. Without the organization's part, the private path is not available, and carrydown says so before it uploads anything. The real GitHub acceptance run of this setup has not been performed yet. See [organization setup for private drafting](setup.md#organization-setup-for-private-drafting).
+
 ## Isn't this just prompts?
 
 No. The checker is code, and it fails continuous integration when a specification breaks the rules. The board is built through the GitHub application programming interface (API) by scripts. The specifications and the plan are files in Git that you can read, diff and review. The prompts are the smallest part.
@@ -63,7 +95,7 @@ The agent can render it. Numbered sections make citations easier to maintain. As
 
 ## Can the ground truth include PDF, images or plain text?
 
-Yes. Put the files together in `docs/source/`. Word, Markdown and UTF-8 plain text render directly. The agent can inspect readable PDF, image and other files and create a Markdown rendering with numbered sections and provenance. Review extracted rules, tables and diagram meaning before planning. If one file cannot be read reliably, the agent records the coverage limit and continues with the readable sources. It stops only when none of the intended ground truth can be processed.
+Yes. Give the agent the files where you keep them, or keep a local copy in an ignored `docs/source/` folder. Word, Markdown and UTF-8 plain text render directly. The agent can inspect readable PDF, image and other files and create a Markdown rendering with numbered sections and provenance. Review extracted rules, tables and diagram meaning before planning. If one file cannot be read reliably, the agent records the coverage limit and continues with the readable sources. It stops only when none of the intended ground truth can be processed.
 
 ## Can skills and work preferences influence assignments?
 
@@ -85,7 +117,7 @@ Time boxes of equal length force the work to fit the box. Work units take the le
 
 ## Why are people's names not allowed in specifications?
 
-People change. Names go in `plan.yaml`, and the checker keeps them out of the specification files so the files stay true when someone swaps in. Owners live in the GitHub issues.
+People change, and names are personal. Names, logins, skills, days off and allocations go in a private file on your machine, `people.yaml` in the private workspace, and never in `plan.yaml` or any file in the project. The plan holds ids and tracks. The checker merges the private file when you run it and keeps names out of the specification files so the files stay true when someone swaps in. Owners live in the GitHub issues, and you choose whether logins are published.
 
 ## What is an external input?
 

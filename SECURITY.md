@@ -27,7 +27,7 @@ Please do not include a real token, a real password or real personal data in the
 
 ## Network access
 
-carrydown-plan-to-github is the only skill with network or token code, and it calls only `api.github.com`. carrydown-ground-truth contains none, and neither does the engineers' skill that carrydown-plan-to-github generates. To avoid duplicates, carrydown-plan-to-github reads this repository's issues that carry the project label and its own roll-up comment. It treats that text as data and never follows it. The scripts have no telemetry and no analytics.
+carrydown-plan-to-github is the only skill with network or token code, and it calls only `api.github.com`. carrydown-ground-truth contains none, and neither does the engineers' skill that carrydown-plan-to-github generates. The one network use in the engineers' skill is a `git fetch` that its context check runs with the engineer's own git credentials. To avoid duplicates, carrydown-plan-to-github reads this repository's issues that carry the project label and its own roll-up comment. It treats that text as data and never follows it. The scripts have no telemetry and no analytics.
 
 ## What the carrydown skills never do
 
@@ -39,7 +39,8 @@ carrydown-plan-to-github is the only skill with network or token code, and it ca
 - They never follow instructions found in your documents, specifications or issues. The skills treat that text as data.
 - They never run code from the documents they read.
 - They never run `git init` without a clear yes from you.
-- They never write to GitHub unless you pass `--apply`, and never to a public repository unless you also pass `--allow-public`.
+- They never write to GitHub unless you pass `--apply`. Before they write, they check that the destination's audience is the one you approved, and no flag overrides that check. The earlier `--allow-public` flag is gone.
+- They never write a name, login, skill, day off or allocation into a file in your project, and they never force an activation or bypass a failed verification of a release.
 
 ## What counts as a vulnerability
 

@@ -6,16 +6,31 @@ The carrydown skills carry an agreed set of ground-truth sources down into a gov
 
 The idea is old in systems engineering, where it is called flow-down: a requirement at the top is traced to every part below it. The carrydown skills apply the same idea to software work done with coding agents. Agreed context follows one traceable line through the plan, the specifications, the issues, the board and the agent.
 
-## The four steps
+## The five steps
 
 | Step | What happens | Who decides | What it produces |
 | --- | --- | --- | --- |
-| 1. Generate, with `carrydown-ground-truth` | The agent interviews the plan owner about people, time and dates. It drafts the plan and one specification per work item. | The plan owner decides, the agent drafts | The rendered ground truth, `plan.yaml` with its load table and critical path, and one specification per work item. |
+| 1. Generate, with `carrydown-ground-truth` | The agent asks who may see the documents. It interviews the plan owner about people, time and dates, and keeps the personal facts in a private file. It drafts the plan and one specification per work item. | The plan owner decides, the agent drafts | The renderings, `plan.yaml` with its load table and critical path, and one specification per work item. |
 | 2. Review | After the ordinary checks, the agent makes a separate adversarial pass over the completed set. It records coverage, evidence, reasoning and risk. The plan owner decides the repairs, and the agent applies and verifies accepted changes. | Plan owner | A review report, accepted repairs and a plan the owner approves, with 0 findings from the checker. |
-| 3. Carry down to GitHub, with `carrydown-plan-to-github` | After a dry run and the plan owner's yes, the agent creates the issues and the board. Last, it generates the engineers' skill. | Plan owner, after each dry run | Issues, the board, and the engineers' skill with the install line to send each engineer. |
-| 4. Start a work item | Each engineer installs the engineers' skill once and names the work item identifier, for example, "Work on [work item ID]". The agent reads the specification, the cited sections and the conventions, then plans the code. | Engineers show, the stakeholders decide | Code, closing comments with evidence, checkpoint comments and a demonstration note on each sub-epic. |
+| 3. Release | The agent shows a four-question preview, builds the exact content, and the plan owner approves it for a named audience. Only the approved files and a small receipt reach the repository. | Plan owner, at each named approval | An approved context for each work item, a receipt, and the files exported into the repository. |
+| 4. Carry down to GitHub, with `carrydown-plan-to-github` | After a dry run and the plan owner's yes, the agent creates the issues and the board from the approved release. Last, it generates the engineers' skill. | Plan owner, after each dry run | Issues, the board, and the engineers' skill with the install line to send each engineer. |
+| 5. Start a work item | Each engineer installs the engineers' skill once and names the work item identifier, for example, "Work on [work item ID]". The skill checks the item's approved context. The agent reads the specification, the approved context and the conventions, then plans the code. | Engineers show, the stakeholders decide | Code, closing comments with evidence, checkpoint comments and a demonstration note on each sub-epic. |
 
 Planning decisions stay with the plan owner. The agent drafts, validates and populates. It does not decide who does what, when, or in which order.
+
+## Releasing the plan
+
+A plan is files in Git that many people can read, so what leaves the plan owner's hands is a deliberate act. Version 1 handles it in four ideas.
+
+**One question first.** Before the agent renders a document or asks about people, it asks: can everyone who can read this repository see all of these documents and your staffing notes? The answer picks shared drafting in the repository or private drafting in a workspace on the plan owner's machine. Names, skills, days off and allocation are private on both answers. The plan holds ids and tracks, and the checks that need the personal facts run on the plan owner's machine.
+
+**Exact content, one decision.** A release lists every file with its digest. The digest of that list is the release id, and it names content. The plan owner's approval is a separate request, with its own id. It names the content together with the audience, the destinations, the exact GitHub targets, what the text may be used for and an expiry. The same content can have several requests, and approving one never approves another. Because the approval names bytes, a changed byte, destination or audience invalidates it.
+
+**A preview before every approval.** The plan owner sees what will be shared, with whom, where and what remains private, then what changed since the last release and what is unresolved. On the private path the approval is the plan owner's review of the final revision of a pull request in a private staging repository, opened by a trusted workflow so the owner is not its author. An independent verifier in the organization's tooling repository checks the same facts again on the engineering pull request. On the shared path the approval is the plan owner's own confirmation, recorded as not authenticated.
+
+**A reviewed lifecycle.** A request becomes active when its activation is approved and merged. A replacement supersedes the old request and activates the new one in one reviewed step, and only one request is active at a time. A withdrawal is another reviewed step. Each step is recorded as an event, and the receipts in the repository follow the events. A change to a plan, a specification or a source after approval starts a new request. It never edits an old one. The engineers' check sees a replacement or a withdrawal only after its receipt reaches the branch they fetch, and text already delivered cannot be recalled.
+
+What the plan owner does at each moment is in [the plan owner guide](plan-owner-guide.md#release-what-the-engineers-will-see). What the controls prove and what they do not is in [the enterprise security questions](enterprise-security.md).
 
 ## Second-pass agent review
 
@@ -41,7 +56,7 @@ A ground truth is any mix of:
 - company-specific context such as security, privacy and accessibility rules,
 - diagrams, screenshots and other visual sources whose meaning affects the work.
 
-Put the files together in `docs/source/`. Word, Markdown and plain text render directly. The agent can extract readable PDF, image and other formats into reviewed Markdown renderings. It records unreadable files as coverage limits and continues with readable sources. It stops only when none of the intended ground truth can be processed.
+Keep the files where your organization stores them and give the agent their paths. Ask who may see them before you copy any into a project. Word, Markdown and plain text render directly. The agent can extract readable PDF, image and other formats into reviewed Markdown renderings. It records unreadable files as coverage limits and continues with readable sources. It stops only when none of the intended ground truth can be processed.
 
 While you write it, verify claims about the existing world. Read the code. Run the test suite. Probe the live service. Measure. Anything you cannot prove, mark "verify at implementation" instead of asserting it. Then run adversarial passes: ask the agent, in a fresh context, to find what is missing, wrong or contradictory, and fold the findings back in with a changelog entry and, for architecture choices, a decision record.
 
