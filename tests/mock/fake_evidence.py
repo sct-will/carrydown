@@ -50,6 +50,7 @@ class FakeEvidenceReader(V.EvidenceReader):
         self.installations_by_repo = {}
         self.deploy_keys_by_repo = {}
         self.actions_by_repo = {}
+        self.secret_names_by_repo = {}
         self.projects = {}
         self.scan = {}
         self.dispatches = []
@@ -242,11 +243,11 @@ class FakeEvidenceReader(V.EvidenceReader):
         out = []
         for path in sorted(set(base) | set(head)):
             if path not in base:
-                out.append({"filename": path, "status": "added", "sha": blob_sha(head[path][1])})
+                out.append({"filename": path, "status": "added", "sha": blob_sha(head[path][1]), "previous_filename": None})
             elif path not in head:
-                out.append({"filename": path, "status": "removed", "sha": blob_sha(base[path][1])})
+                out.append({"filename": path, "status": "removed", "sha": blob_sha(base[path][1]), "previous_filename": None})
             elif base[path] != head[path]:
-                out.append({"filename": path, "status": "modified", "sha": blob_sha(head[path][1])})
+                out.append({"filename": path, "status": "modified", "sha": blob_sha(head[path][1]), "previous_filename": None})
         return out
 
     def reviews(self, repo_id, number):
@@ -301,6 +302,10 @@ class FakeEvidenceReader(V.EvidenceReader):
         self._enter("actions_settings", repo_id)
         return dict(self.actions_by_repo.get(repo_id, {"can_create_pull_requests": True, "default_workflow_permissions": "read"}))
 
+    def secret_names(self, repo_id):
+        self._enter("secret_names", repo_id)
+        return list(self.secret_names_by_repo.get(repo_id, []))
+
     def workflow_runs(self, repo_id, workflow, branch=None):
         self._enter("workflow_runs", repo_id)
         return []
@@ -325,11 +330,12 @@ class FakeEvidenceReader(V.EvidenceReader):
 # ---------------------------------------------------------------------------
 
 TOOLING_ID, ENGINEERING_ID, STAGING_ID = 4100, 4200, 4300
+APP_ID = 77        # the verifier App's integration id in the fictional organization
 WORKFLOW_BYTES = b"name: Open release requests\n"
 
 
 def staging_ruleset(last_push=False, reviews=1, stale=True, check=V.STAGING_CHECK, strict=True, bypass=False,
-                    no_force=True, no_delete=True, methods=("merge",)):
+                    no_force=True, no_delete=True, methods=("merge",), integration=APP_ID):
     rules = [{"type": "pull_request", "parameters": {"required_approving_review_count": reviews,
                                                      "dismiss_stale_reviews_on_push": stale,
                                                      "require_last_push_approval": last_push,
@@ -337,12 +343,25 @@ def staging_ruleset(last_push=False, reviews=1, stale=True, check=V.STAGING_CHEC
                                                      "required_review_thread_resolution": False,
                                                      "allowed_merge_methods": list(methods)}},
              {"type": "required_status_checks", "parameters": {"strict_required_status_checks_policy": strict,
-                                                               "required_status_checks": [{"context": check, "integration_id": 77}]}}]
+                                                               "required_status_checks": [{"context": check, "integration_id": integration}]}}]
     if no_force:
         rules.append({"type": "non_fast_forward"})
     if no_delete:
         rules.append({"type": "deletion"})
     return {"id": 4501, "name": "carrydown release", "target": "branch", "enforcement": "active",
+            "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
+            "bypass_actors": [{"actor_id": 1, "actor_type": "Team"}] if bypass else [], "rules": rules}
+
+
+def engineering_ruleset(check=V.ENGINEERING_CHECK, integration=APP_ID, bypass=False, no_force=True, no_delete=True):
+    rules = [{"type": "pull_request", "parameters": {"required_approving_review_count": 1, "dismiss_stale_reviews_on_push": True}},
+             {"type": "required_status_checks", "parameters": {"strict_required_status_checks_policy": False,
+                                                               "required_status_checks": [{"context": check, "integration_id": integration}]}}]
+    if no_force:
+        rules.append({"type": "non_fast_forward"})
+    if no_delete:
+        rules.append({"type": "deletion"})
+    return {"id": 4500, "name": "carrydown release", "target": "branch", "enforcement": "active",
             "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
             "bypass_actors": [{"actor_id": 1, "actor_type": "Team"}] if bypass else [], "rules": rules}
 
@@ -361,10 +380,7 @@ class World:
         for uid, login in list(approvers) + list(admins) + list(extra_readers) + [OUTSIDER]:
             r.users[uid] = {"id": uid, "login": login}
         r.rulesets_by_repo[STAGING_ID] = [staging_ruleset()]
-        r.rulesets_by_repo[ENGINEERING_ID] = [{"id": 4500, "name": "carrydown release", "target": "branch", "enforcement": "active",
-                                               "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"]}}, "bypass_actors": [],
-                                               "rules": [{"type": "required_status_checks", "parameters": {
-                                                   "required_status_checks": [{"context": V.ENGINEERING_CHECK, "integration_id": 77}]}}]}]
+        r.rulesets_by_repo[ENGINEERING_ID] = [engineering_ruleset()]
         readers = [{"id": u, "login": l, "permission": "write"} for u, l in list(approvers) + list(admins) + list(extra_readers)]
         r.collaborators_by_repo[STAGING_ID] = readers
         r.collaborators_by_repo[ENGINEERING_ID] = readers + [{"id": OUTSIDER[0], "login": OUTSIDER[1], "permission": "read"}]
@@ -393,7 +409,7 @@ class World:
                 "board": {"host": "github.com", "repository_id": ENGINEERING_ID, "owner_id": 4400, "project_id": "PVT_example"}},
             "governed_paths": ["docs/spec/**", "docs/context/**", "docs/release/**", "docs/dev/skills/**", "docs/ground-truth/**"],
             "engineer_edits": {"docs/spec/**": "request-only"}, "reuse_unchanged_preview": False, "offline_grace_days": 7,
-            "verifier_sha": "9" * 40, "check_health_max_age_seconds": 900, "attestations": [],
+            "verifier_sha": "9" * 40, "verifier_app_id": APP_ID, "check_health_max_age_seconds": 900, "attestations": [],
         }
         r.repos[TOOLING_ID]["commits"]  # tooling commit must exist for the verifier pin
         if self.attest_runtime:
@@ -415,7 +431,10 @@ class World:
             self.entry["verifier_sha"] = code
             self.entry["policy_sha256"] = V.policy_sha256_of(self.entry)
             doc["repositories"] = [self.entry]
-        return r.set_file(TOOLING_ID, "enrollment.yaml", json.dumps(doc, sort_keys=True).encode("utf-8"))
+        tip = r.set_file(TOOLING_ID, "enrollment.yaml", json.dumps(doc, sort_keys=True).encode("utf-8"))
+        if r.scan.get(TOOLING_ID):
+            r.scan[TOOLING_ID]["policy_commit_sha"] = tip     # a completed scan that captured this policy
+        return tip
 
     def update_policy(self, mutate, keep_verifier=False):
         """Change the enrollment entry (mutate receives it), publish it and return the new Enrollment."""
@@ -491,3 +510,65 @@ def make_candidate(world, files=None, audience="repo-readers", supersedes=None, 
     tip_id = tip_of(world) if tip == "auto" else tip
     event = B.activation_event(request, enrollment, tip_id, created=created, nonce=B.derived_nonce(request["request_nonce"], "activation"))
     return Candidate(world, request, manifest, files, event)
+
+
+class FakeCheckPublisher:
+    """The check runs of the verifier App in an in-memory model, with the semantics the verifier relies on:
+    start() moves an existing run of that name on the head back to in_progress or creates one, ids only
+    grow, and finish() posts only while its run is the newest of that name on the head. Nothing here
+    talks to a network."""
+
+    def __init__(self, app_id=APP_ID):
+        self.app_id = app_id
+        self.runs = {}                  # (repo id, head sha, name) -> list of run dicts
+        self.next_id = 1
+        self.calls = []
+        self.fail_start = False
+        self.fail_finish = False
+        self.before_finish = None       # called as before_finish(repo_id, head, name) just before finish()
+
+    def _list(self, repo_id, head, name):
+        return self.runs.setdefault((repo_id, head, name), [])
+
+    def _new(self, repo_id, head_sha, name):
+        run = {"id": self.next_id, "status": "in_progress", "conclusion": None, "title": "", "summary": ""}
+        self.next_id += 1
+        self._list(repo_id, head_sha, name).append(run)
+        return run["id"]
+
+    def start(self, repo_id, head_sha, name, summary="Verification is running."):
+        self.calls.append(("start", repo_id, head_sha, name))
+        if self.fail_start:
+            raise V.EvidenceUnavailable("a check run cannot be started")
+        runs = self._list(repo_id, head_sha, name)
+        if runs:
+            run = max(runs, key=lambda r: r["id"])
+            run.update(status="in_progress", conclusion=None)
+            return run["id"]
+        return self._new(repo_id, head_sha, name)
+
+    def new_run(self, repo_id, head_sha, name):
+        """A second run of the same name, as another scan's start() creates when none was found."""
+        return self._new(repo_id, head_sha, name)
+
+    def latest_id(self, repo_id, head_sha, name):
+        return max((r["id"] for r in self._list(repo_id, head_sha, name)), default=None)
+
+    def finish(self, repo_id, head_sha, name, check_id, conclusion, title, summary):
+        self.calls.append(("finish", repo_id, head_sha, name, conclusion))
+        if self.before_finish is not None:
+            hook, self.before_finish = self.before_finish, None
+            hook(repo_id, head_sha, name)
+        if self.fail_finish:
+            raise V.EvidenceUnavailable("a check run cannot be completed")
+        if self.latest_id(repo_id, head_sha, name) != check_id:
+            return False
+        for run in self._list(repo_id, head_sha, name):
+            if run["id"] == check_id:
+                run.update(status="completed", conclusion=conclusion, title=title, summary=summary)
+        return True
+
+    def state(self, repo_id, head_sha, name):
+        """The newest run of that name on the head, or None."""
+        runs = self._list(repo_id, head_sha, name)
+        return dict(max(runs, key=lambda r: r["id"])) if runs else None
