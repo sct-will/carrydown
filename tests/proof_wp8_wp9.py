@@ -150,14 +150,15 @@ def exported(base, **kw):
 
 @claim("WP8 a repo-readers-only release yields today's issue and sub-epic bodies byte for byte (the sample's --show-body output)")
 def _(base):
-    plan, _ = L.load_plan(WORKING_PLAN, F.SAMPLE)
+    owner = copy_sample(base / "owner")        # the owner's working tree: a release is prepared from its workspace plan
+    plan, _ = L.load_plan(WORKING_PLAN, owner)
     h = hashlib.sha256()
     for key in [str(it["id"]) for it in plan["items"]] + [f"M{m['number']}" for m in plan["milestones"]]:
-        out = script("github_sync.py", "--root", F.SAMPLE, "--offline", "--show-body", key)
+        out = script("github_sync.py", "--root", owner, "--offline", "--show-body", key)
         check(out.returncode == 0, out.stderr)
         h.update(out.stdout.encode("utf-8"))
     check(h.hexdigest() == GOLDEN, h.hexdigest())
-    asm = A.assemble(F.SAMPLE, with_board=False)
+    asm = A.assemble(owner, with_board=False)
     check(asm.problems == [] and asm.link_items == ())
     return f"sha256 of the 14 bodies {h.hexdigest()[:16]}... equals the recorded digest; no issue of the release uses the links projection"
 
@@ -358,7 +359,7 @@ def _(base):
     (root / "docs" / "source").mkdir(parents=True)
     (root / "docs" / "source" / "architecture.docx").write_bytes(b"original")
     F.init_git(root)
-    F.sh(["git", "add", "-A"], root)
+    F.sh(["git", "add", "-f", "-A"], root)
     F.sh(["git", "commit", "-q", "-m", "legacy project"], root)
     F.sh(["git", "rm", "-q", "-r", "docs/source"], root)
     F.sh(["git", "commit", "-q", "-m", "drop the original"], root)

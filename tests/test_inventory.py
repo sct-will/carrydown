@@ -59,7 +59,7 @@ class ReleaseInventoryTests(unittest.TestCase):
         (cls.root / "docs" / "source" / "architecture.docx").write_bytes(b"original")
         (cls.root / "docs" / "source" / "old-notes.docx").write_bytes(b"old")
         F.init_git(cls.root)
-        sh(["git", "add", "-A"], cls.root)
+        sh(["git", "add", "-f", "-A"], cls.root)      # a legacy project committed its originals before any ignore line existed
         sh(["git", "commit", "-q", "-m", "legacy project"], cls.root)
         sh(["git", "rm", "-q", "docs/source/old-notes.docx"], cls.root)
         sh(["git", "commit", "-q", "-m", "drop the notes"], cls.root)
