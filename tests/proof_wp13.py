@@ -8,8 +8,10 @@ Run it from the repository root, with no token and no network:
 It runs scripts/check_python.py as a real process and reads the output. For each claim it prints PASS or
 FAIL, then the line it observed. It exits 0 only when every claim passes. It claims:
 
-  1. check_python.py exits 0 under the Python that runs this proof and under Python 3.9.21
-     (~/.pyenv/versions/3.9.21/bin/python3, or the path in the environment variable CARRYDOWN_PY39)
+  1. check_python.py exits 0 under the Python that runs this proof and under Python 3.9.21: the path in the
+     environment variable CARRYDOWN_PY39, else .pyenv/versions/3.9.21/bin/python3 under the home folder of
+     the account that runs the proof, read from the account database so that an emptied HOME does not hide
+     it. When neither exists the claim is skipped with its reason, printed as SKIP, and is not counted.
   2. under a stub that pretends to be Python 3.6 it exits 2 and prints the link of the system it
      detected and no link of any other system, for macOS, Windows 64-bit, Windows ARM64 and Linux
   3. a stub that is not a real Python (no executable) exits 2 and prints the same single-system answer
@@ -33,8 +35,34 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 PY = sys.executable
-PY39 = os.environ.get("CARRYDOWN_PY39") or str(Path.home() / ".pyenv/versions/3.9.21/bin/python3")
+PYENV_39 = Path(".pyenv") / "versions" / "3.9.21" / "bin" / "python3"
 RESULTS = []
+SKIPPED = []
+
+
+class Skip(Exception):
+    """A claim that cannot run here, with the reason. It is printed as SKIP and not counted."""
+
+
+def account_home():
+    """The home folder of the account that runs the proof, from the account database (not from HOME), or None."""
+    try:
+        import pwd
+        return Path(pwd.getpwuid(os.getuid()).pw_dir)
+    except (ImportError, KeyError, AttributeError, OSError):
+        return None
+
+
+def python39():
+    """(path, where it came from) of the Python 3.9 to test, or (None, why there is none)."""
+    named = os.environ.get("CARRYDOWN_PY39")
+    if named:
+        return named, "CARRYDOWN_PY39"
+    home = account_home()
+    if home is not None and (home / PYENV_39).is_file():
+        return str(home / PYENV_39), "the account's home folder"
+    where = f"{home / PYENV_39}" if home is not None else "the account's home folder (no account database on this system)"
+    return None, f"CARRYDOWN_PY39 is not set and there is no Python 3.9.21 at {where}"
 
 MACOS_PKG = "https://www.python.org/ftp/python/3.15.2/python-3.15.2-macos11.pkg"
 WIN_AMD64 = "https://www.python.org/ftp/python/3.15.2/python-3.15.2-amd64.exe"
@@ -68,6 +96,10 @@ def claim(text):
             RESULTS.append(True)
             print(f"PASS {text}")
             print(f"     observed: {observed}")
+        except Skip as e:
+            SKIPPED.append(text)
+            print(f"SKIP {text}")
+            print(f"     reason: {e}")
         except Exception as e:     # a failed claim is reported, and the rest still run
             RESULTS.append(False)
             print(f"FAIL {text}")
@@ -120,13 +152,35 @@ def _():
     return first_line(r.stdout)
 
 
+@claim("the Python 3.9 this proof tests is found the same way with HOME emptied: from CARRYDOWN_PY39 or the account database, never from HOME")
+def _():
+    saved = {k: os.environ.get(k) for k in ("HOME", "USERPROFILE")}
+    with tempfile.TemporaryDirectory(prefix="carrydown-empty-home-") as empty:
+        try:
+            os.environ["HOME"] = os.environ["USERPROFILE"] = empty
+            emptied = python39()
+        finally:
+            for k, v in saved.items():
+                if v is None:
+                    os.environ.pop(k, None)
+                else:
+                    os.environ[k] = v
+    normal = python39()
+    assert emptied == normal, f"with HOME emptied: {emptied}; with HOME set: {normal}"
+    assert emptied[0] is None or empty not in emptied[0], emptied
+    return f"{emptied[0] or 'none'} from {emptied[1]}" if emptied[0] else f"none: {emptied[1]}"
+
+
 @claim("check_python.py exits 0 under Python 3.9.21")
 def _():
-    assert Path(PY39).is_file(), f"{PY39} is not installed. Set CARRYDOWN_PY39 to a Python 3.9"
-    r = run([PY39, ROOT / "scripts" / "check_python.py"])
+    path, source = python39()
+    if path is None:
+        raise Skip(source)
+    assert Path(path).is_file(), f"{path} (from {source}) is not a file. Set CARRYDOWN_PY39 to a Python 3.9"
+    r = run([path, ROOT / "scripts" / "check_python.py"])
     assert r.returncode == 0, r.stdout + r.stderr
     assert "Python 3.9." in r.stdout, r.stdout
-    return first_line(r.stdout)
+    return f"{first_line(r.stdout)} (interpreter from {source})"
 
 
 @claim("an old interpreter exits 2 and prints the link of its own system only")
@@ -261,5 +315,7 @@ def _():
 
 if __name__ == "__main__":
     failed = RESULTS.count(False)
-    print(f"\n{RESULTS.count(True)} of {len(RESULTS)} claims pass.")
+    if SKIPPED:
+        print(f"\n{len(SKIPPED)} claim(s) skipped, see SKIP above")
+    print(f"\n{RESULTS.count(True)} of {len(RESULTS)} claims passed")
     sys.exit(1 if failed else 0)

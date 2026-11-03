@@ -8,8 +8,11 @@ python -m unittest tests.test_check_python -v
 """
 import contextlib
 import io
+import os
 import re
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -141,6 +144,37 @@ class PreflightPageTests(unittest.TestCase):
     def test_nothing_is_piped_from_a_download_into_a_shell(self):
         self.assertNotRegex(PAGE, r"(curl|wget|iwr|Invoke-WebRequest)[^\n]*\|")
         self.assertIn("never pipe a download into a shell", PAGE.lower())
+
+
+class ProofHomeTests(unittest.TestCase):
+    """tests/proof_wp13.py finds Python 3.9 from CARRYDOWN_PY39 or from the account's home folder, never from HOME,
+    so the empty HOME the testers use does not fail it."""
+
+    def proof(self, **extra):
+        with tempfile.TemporaryDirectory(prefix="carrydown-empty-home-") as home:
+            env = {k: v for k, v in os.environ.items() if k != "CARRYDOWN_PY39"}
+            env.update(HOME=home, USERPROFILE=home, **extra)
+            run = subprocess.run([sys.executable, str(ROOT / "tests" / "proof_wp13.py")], cwd=str(ROOT), env=env,
+                                 capture_output=True, text=True, timeout=300)
+        return run.returncode, run.stdout + run.stderr
+
+    def test_an_empty_home_does_not_fail_the_python_3_9_claim(self):
+        code, out = self.proof()
+        lines = out.splitlines()
+        self.assertEqual(code, 0, out[-600:])
+        self.assertFalse([x for x in lines if x.startswith("FAIL ")], out[-600:])
+        row = next(x for x in lines if x.endswith("check_python.py exits 0 under Python 3.9.21"))
+        if row.startswith("SKIP "):        # a machine with no Python 3.9.21 in the account's home folder: the reason is printed
+            self.assertIn("CARRYDOWN_PY39 is not set", out)
+        else:
+            self.assertTrue(row.startswith("PASS "), row)
+            self.assertIn("(interpreter from the account's home folder)", out)
+        self.assertRegex(lines[-1], r"^(\d+) of \1 claims passed$")
+
+    def test_a_wrong_carrydown_py39_fails_the_claim_instead_of_skipping_it(self):
+        code, out = self.proof(CARRYDOWN_PY39=str(ROOT / "no-such-python"))
+        self.assertEqual(code, 1, out[-600:])
+        self.assertIn("FAIL check_python.py exits 0 under Python 3.9.21", out)
 
 
 if __name__ == "__main__":
