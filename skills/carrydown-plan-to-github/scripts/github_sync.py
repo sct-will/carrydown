@@ -645,9 +645,11 @@ UNMANAGED_NOTE = ("An issue with text outside its managed region keeps that text
                   "does not remove it. Changes need a reviewed migration and approved updates. You decide, issue by issue. This report proposes no rewrite.")
 
 
-def issue_inventory(s, key, issue, title, want_pristine, current_digest, completed_digest):
+def issue_inventory(s, key, issue, title, want_pristine, current_digest, completed_digest, has_release=False):
     """One line about a managed issue: pristine or edited, text outside the managed region, and whether
-    its content predates the active release. It names the key, the number and fixed words only."""
+    its content predates the active release. It names the key, the number and fixed words only.
+    has_release is True when an active release exists; completed_digest is what that release recorded
+    for the issue after it published it, or None when it has not published it."""
     body = (issue.get("body") or "").replace("\r\n", "\n")
     has_region = bool(MANAGED_RE.search(body))
     if has_region:
@@ -658,7 +660,7 @@ def issue_inventory(s, key, issue, title, want_pristine, current_digest, complet
         unmanaged = bool(MARKER_RE.sub("", body).strip()) and not safe_to_rewrite(body, want_pristine)
     pristine = safe_to_rewrite(body, want_pristine)
     if completed_digest is None:
-        age = "predates the active release (no release has published it)"
+        age = "predates the active release (the active release has not published it)" if has_release else "predates the active release (there is no active release)"
     elif current_digest == completed_digest:
         age = "matches what the active release published"
     else:
@@ -744,7 +746,7 @@ def inventory_command(a, root, plan):
                         build_item_body(plan, root, obj, s.numbers, mark=False), build_item_body(plan, root, obj, s.numbers)]
         except (L.TextError, OSError, KeyError):
             want = []
-        line, unmanaged = issue_inventory(s, key, issue, title, want, current, completed)
+        line, unmanaged = issue_inventory(s, key, issue, title, want, current, completed, has_release=pub is not None)
         pristine += safe_to_rewrite((issue.get("body") or "").replace("\r\n", "\n"), want)
         unmanaged_count += unmanaged
         L.say(line)

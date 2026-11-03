@@ -178,6 +178,28 @@ class PreflightUnitTests(unittest.TestCase):
         self.refused("evidence-unavailable")
 
 
+class RelationshipTests(unittest.TestCase):
+    def payloads(self):
+        def row(kind, key, **rel):
+            return (kind, key), ("payloads/x.json", {"relationships": rel}, "0" * 64)
+        return dict([row("epic", "EPIC", parent=None, children=["M1"]), row("subepic", "M1", parent="EPIC", children=["WI-01", "WI-02"]),
+                     row("issue", "WI-01", parent="M1", depends_on=[]), row("issue", "WI-02", parent="M1", depends_on=["WI-01"])])
+
+    def test_relationships_inside_the_release_pass_and_an_epic_that_exists_already_is_allowed(self):
+        payloads = self.payloads()
+        self.assertEqual(RSY.relationship_problems(payloads), [])
+        del payloads[("epic", "EPIC")]
+        self.assertEqual(RSY.relationship_problems(payloads), [])
+
+    def test_a_relationship_that_points_outside_the_release_is_a_problem(self):
+        payloads = self.payloads()
+        payloads[("issue", "WI-02")][1]["relationships"]["depends_on"] = ["WI-09"]
+        payloads[("issue", "WI-01")][1]["relationships"]["parent"] = "M7"
+        problems = RSY.relationship_problems(payloads)
+        self.assertEqual(problems, ["issue WI-01 names the parent M7, which is not in this release",
+                                    "issue WI-02 names WI-09 in depends_on, which is not in this release"])
+
+
 class VisibilityReportTests(unittest.TestCase):
     def test_a_change_is_reported_and_an_unchanged_value_is_not(self):
         lines, changed = RSY.visibility_report({"engineering": "private"}, {"engineering": "private"})
@@ -265,6 +287,31 @@ class PreflightCommandTests(PubCase):
         code, out, err = self.sync("--verify")
         self.assertEqual(code, 1)
         self.assertIn("visibility of engineering CHANGED since publication: was public, now private", out)
+
+    def test_the_issue_inventory_of_a_release_says_what_the_active_release_published(self):
+        self.released()
+        code, out, err = self.sync("--inventory")
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("active request: " + self.yp.request_id, out)
+        self.assertIn("0 managed issue(s) found, 14 missing", out)
+        self.assertEqual(self.sync("--apply")[0], 0)
+        code, out, err = self.sync("--inventory")
+        self.assertEqual(code, 0, out + err)
+        self.assertEqual(out.count("matches what the active release published"), 15, out)
+        self.assertRegex(out, r"15 managed issue\(s\) found, 0 missing; 15 pristine; 0 with text outside the managed region\.")
+        # a person edits the managed region of one issue and adds a note below another
+        edited = self.issue_by_key("WI-03")
+        edited["body"] = edited["body"].replace("Target completion on or before", "Target completion, changed by hand, on or before", 1)
+        noted = self.issue_by_key("WI-04")
+        noted["body"] = noted["body"] + "\n\nA note from a person."
+        mark = len(mockgh.S.log)
+        code, out, err = self.sync("--inventory")
+        self.assertEqual(code, 0, out + err)
+        self.assertRegex(out, r"WI-03 #\d+: body was edited or is older than the generator; no text outside the managed region; differs from what the active release published;")
+        self.assertRegex(out, r"WI-04 #\d+: body was edited or is older than the generator; unmanaged text present;|WI-04 #\d+: body is pristine; unmanaged text present;")
+        self.assertIn("replacing the region does not remove it", out)
+        self.assertNotIn("A note from a person.", out)
+        self.assertEqual([m for m, p in mockgh.S.log[mark:] if m != "GET" and p != "/graphql"], [])
 
     def test_allow_public_no_longer_exists(self):
         self.released()

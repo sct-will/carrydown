@@ -200,7 +200,7 @@ class IssueInventoryTests(MockCase):
         self.assertEqual(code, 0, out + err)
         self.assertRegex(out, r"15 managed issue\(s\) found, 0 missing; 15 pristine; 0 with text outside the managed region\.")
         self.assertNotIn("replacing the region", out)
-        self.assertIn("predates the active release (no release has published it)", out)
+        self.assertIn("predates the active release (there is no active release)", out)
 
     def test_an_issue_that_is_missing_is_counted_and_no_issue_is_created(self):
         self.created()

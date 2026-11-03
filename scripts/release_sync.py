@@ -361,9 +361,31 @@ def publication_preflight(gh, plan, enrollment, request, reader=None, resolved=N
     return Preflight(tuple(lines), visibility, targets)
 
 
+def relationship_problems(payloads):
+    """One-line problems for an issue relationship (parent, children, depends on) that names a key which is
+    not a target of the release. The Epic may be an issue that already exists, so EPIC is always allowed as
+    a parent. payloads maps (kind, key) to (path, payload, sha256), as Publication.payloads does."""
+    keys = {key for (_kind, key) in payloads}
+    problems = []
+    for (kind, key), (_path, payload, _sha) in sorted(payloads.items()):
+        rel = payload.get("relationships") or {}
+        parent = rel.get("parent")
+        if parent and parent != "EPIC" and parent not in keys:
+            problems.append(f"{kind} {key} names the parent {parent}, which is not in this release")
+        for name in ("children", "depends_on"):
+            for other in rel.get(name) or []:
+                if other not in keys:
+                    problems.append(f"{kind} {key} names {other} in {name}, which is not in this release")
+    return problems
+
+
 def preflight_for(pub):
-    """The preflight of an opened Publication: its targets were resolved a moment ago, so they are reused.
-    Prints nothing; the caller prints the lines."""
+    """The preflight of an opened Publication: its targets were resolved a moment ago, so they are reused,
+    and the relationships of its issues must stay inside the release. Prints nothing; the caller prints
+    the lines."""
+    problems = relationship_problems(pub.payloads)
+    if problems:
+        raise PublicationRefused("destination-not-allowed", f"{len(problems)} issue relationship(s) point outside this release: " + "; ".join(problems[:3]))
     return publication_preflight(pub.gh, pub.plan, pub.policy, pub.record.request, reader=pub.reader, resolved=pub.targets_resolved)
 
 

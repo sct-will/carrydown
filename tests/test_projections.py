@@ -189,9 +189,8 @@ class RestrictedSourceTests(unittest.TestCase):
 
     def test_the_preview_says_how_many_issues_hold_links(self):
         import release as R
-        project = R.Project(self.np.root)
-        manifest_paths = None
         import release_build as B
+        project = R.Project(self.np.root)
         _, release_id, entries = B.build_manifest(self.asm.files)
         params = {"audience": "repo-readers", "destinations": self.asm.destinations, "targets": [], "sources": self.asm.sources,
                   "downstream": {"assignees": False, "capacity_summary": False, "evidence": "synthetic-only"}, "offline_grace_days": 7,
@@ -200,7 +199,6 @@ class RestrictedSourceTests(unittest.TestCase):
         shared = "\n".join(preview["What will be shared"])
         self.assertIn("1 issue(s) hold links instead of the text of Acceptance criteria, Evidence of completion and Integration points", shared)
         self.assertIn("WI-06", shared)
-        self.assertIsNone(manifest_paths)
 
 
 if __name__ == "__main__":
