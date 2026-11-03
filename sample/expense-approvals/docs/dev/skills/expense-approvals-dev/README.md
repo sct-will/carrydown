@@ -71,7 +71,7 @@ Ask your agent: "Read docs/dev/skills/expense-approvals-dev/SKILL.md and follow 
 
 Each work item has a bundle in `docs/context/`: `<id>.md` for the agent and `<id>.bundle.json` beside it. The Markdown holds the verbatim text of the source sections the item cites, the decisions that settle a conflict between them, the other items that cite the same sections and what the text may be used for. The plan owner approved this text for everyone who can read this repository. Anyone with read access can read every bundle, so nothing is hidden from a teammate by leaving it out of an item's bundle.
 
-Before the agent reads a bundle it runs the check:
+Your agent first checks that Python 3.9 or newer is installed and offers to install it if it is missing (see `references/preflight.md` in the skill folder). Before the agent reads a bundle it then runs the check:
 
 ```bash
 python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-01

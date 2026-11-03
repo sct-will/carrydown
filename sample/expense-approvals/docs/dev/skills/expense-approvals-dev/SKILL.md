@@ -16,6 +16,7 @@ The specification folder `docs/spec/` is canonical. Where the skill and the fold
 
 ## Orient on a work item
 
+0. Before anything, read `references/preflight.md`. Detect the operating system, then use only that system's section for every command. Run its Python check, `scripts/check_python.py` in this skill folder, once per session. If Python 3.9 or newer is missing, ask once before you install it, as that page says. Use the Python command it names wherever a command below starts with `python3`.
 1. Take the id from the GitHub issue or the branch name, for example `WI-01` or `wi-01-service-scaffold`.
 2. Find the file with `find docs/spec -name '<id in lower case>-*.md'`. For `WI-01` that is `docs/spec/m1-submit-report/wi-01-service-scaffold.md`. Do not read `references/work-items.md` to find it.
 3. Read the whole work item file: the header table, the acceptance criteria, "Evidence of completion" (what the closing comment carries) and "Integration points" (the counterpart items and the joint check).
