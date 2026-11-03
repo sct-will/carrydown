@@ -1,7 +1,7 @@
 """The six negative tests of the specification (Part G, G1 to G6), collected as one group (work package 11).
 
 The tests themselves live beside the code they test (test_release, test_publication, test_release_verify, test_verifier,
-test_verifier_setup) and carry the tag of the negative test they prove, in the first line of their docstring, as `[G1]`, or in
+test_verifier_setup, test_check_context) and carry the tag of the negative test they prove, in the first line of their docstring, as `[G1]`, or in
 their name, as `test_G1_...`. This module finds them by that tag and runs them as a group, so the continuous integration job
 reports G1 to G6 one by one. It adds the tests of G3 that no earlier package could write (the allowlisted projections and the
 attested runtime prerequisite), and a few tests that keep the group honest. It duplicates no assertion of the tests it collects.
@@ -165,7 +165,12 @@ class GroupTests(unittest.TestCase):
 
     def test_the_tags_are_on_tests_that_exist_in_the_modules_the_group_imports(self):
         names = {type(case).__module__ for tests in self.found.values() for case in tests}
-        self.assertTrue(names >= {"test_release", "test_release_verify", "test_verifier"}, names)
+        self.assertTrue(names >= {"test_release", "test_release_verify", "test_verifier", "test_check_context"}, names)
+
+    def test_the_G4_group_covers_the_engineers_check_for_superseded_withdrawn_and_expired_releases_and_offline_grace(self):
+        g4 = {case._testMethodName for case in self.found["G4"] if type(case).__module__ == "test_check_context"}
+        for needed in ("superseded", "withdrawn", "expired", "inside_the_grace_period", "outside_the_grace_period", "first_use"):
+            self.assertTrue(any(needed in name for name in g4), f"G4 has no engineers' check test for {needed}: {sorted(g4)}")
 
     def test_the_continuous_integration_workflow_reports_each_group_and_both_scenarios(self):
         text = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")

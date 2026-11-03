@@ -168,6 +168,17 @@ for _group in GROUPS:
     make(_group)
 
 
+@claim("The G4 job runs the engineers' check too: superseded, withdrawn and expired releases, and offline grace inside, outside and on first use")
+def _():
+    code, output, seconds = run("G4", "tests/test_negative_release.py", "G4")
+    # the job passed (exit 0, every collected test ok), so each engineers' check test it names ran and passed
+    ran = sorted(set(re.findall(r"^(test_\w+) \(test_check_context\.\w+(?:\.\w+)?\)", output, re.M)))
+    needed = ("superseded", "withdrawn", "expired", "inside_the_grace_period", "outside_the_grace_period", "first_use")
+    missing = [n for n in needed if not any(n in name for name in ran)]
+    check(code == 0 and not missing, f"exit {code}; no passing engineers' check test for {missing}; ran {ran}")
+    return f"{len(ran)} engineers' check tests passed in the G4 job: " + ", ".join(sorted(ran))
+
+
 @claim("The continuous integration workflow runs both scenarios and each group on every pull request and on main")
 def _():
     text = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")

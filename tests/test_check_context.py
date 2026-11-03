@@ -3,7 +3,9 @@
 They cover local validity (bundle bytes, sidecar, the specification's citations, an active receipt),
 the four messages and their exit codes, freshness against a fake origin (a bare git repository on
 disk), offline grace and its record, expiry, the replacement and withdrawal of a release, and that
-no message holds withheld text, a private path or a name. A synthetic receipt is built with the
+no message holds withheld text, a private path or a name. Tests tagged [G4] are negative tests of the
+specification (Part G): the consumer side of the expired, withdrawn and superseded behavior and of the offline
+grace rule. tests/test_negative_release.py collects them into the G4 group. A synthetic receipt is built with the
 release_schema helpers. No token and no network are used: the only fetch is from a folder on disk.
 Run from the repository root: python -m unittest discover -s tests -v
 """
@@ -409,6 +411,7 @@ class FreshnessTests(OriginTests):
         self.assertTrue(CC.origin_identity(self.eng).endswith("origin.git") or "origin" in CC.origin_identity(self.eng))
 
     def test_a_superseded_release_on_the_default_branch_is_stale_after_the_refresh(self):
+        """[G4] A superseded release is refused by the engineers' check after a refresh of the default branch."""
         rid, data = build_receipt(self.files, state="superseded", superseded_by=H("replacement"))
         self.assertEqual(rid, self.rid)
         self.write_receipt(self.pub, rid, data)
@@ -419,6 +422,7 @@ class FreshnessTests(OriginTests):
         self.assertFalse((self.eng / ".carrydown").exists(), "no refresh is recorded for a stale result")
 
     def test_a_withdrawn_release_on_the_default_branch_is_stale(self):
+        """[G4] A withdrawn release is refused by the engineers' check after a refresh."""
         _, data = build_receipt(self.files, state="withdrawn")
         self.write_receipt(self.pub, self.rid, data)
         self.publish("withdraw")
@@ -436,6 +440,7 @@ class FreshnessTests(OriginTests):
         self.assertEqual(self.cache()["request_id"], new_rid)
 
     def test_a_replacement_with_changed_bytes_makes_the_checkout_stale(self):
+        """[G4] A replacement with other bytes supersedes the release the checkout holds, which is then stale."""
         changed = dict(self.files)
         changed["docs/context/wi-06.md"] += b"\nA new rule.\n"
         new_rid, new_data = build_receipt(changed, nonce="b2" * 16, supersedes=self.rid)
@@ -473,6 +478,7 @@ class FreshnessTests(OriginTests):
             self.assertIsNone(CC.default_branch(self.eng))
 
     def test_an_expired_release_is_stale_on_the_local_clock(self):
+        """[G4] Local expiry: the check refuses an expired release on the local clock."""
         rid, data = build_receipt(self.files, expires_at="2027-02-01T12:00:00Z", nonce="c3" * 16)
         (self.pub / "docs" / "release" / f"{self.rid}.receipt.json").unlink()
         self.write_receipt(self.pub, rid, data)
@@ -495,6 +501,7 @@ class FreshnessTests(OriginTests):
 
 class OfflineGraceTests(OriginTests):
     def test_origin_unreachable_inside_the_grace_period_passes_with_a_warning(self):
+        """[G4] Offline grace: with the origin unreachable inside the declared grace period, the check passes with a warning."""
         self.refresh_once()
         self.take_origin_away()
         for days in (0, 3, 7):
@@ -504,6 +511,7 @@ class OfflineGraceTests(OriginTests):
             self.assertIn("warning: " + OFFLINE_WARNING, lines)
 
     def test_origin_unreachable_outside_the_grace_period_is_stale_with_could_not_refresh(self):
+        """[G4] Offline grace: outside the declared grace period the check is stale with could-not-refresh."""
         self.refresh_once()
         self.take_origin_away()
         code, lines = self.run_check(self.eng, now=NOW + dt.timedelta(days=7, seconds=1))
@@ -538,6 +546,7 @@ class OfflineGraceTests(OriginTests):
         self.assertEqual(self.run_check(self.eng)[0], 11)
 
     def test_first_use_with_no_record_does_not_get_grace(self):
+        """[G4] Offline grace: a first use with no refresh record gets no grace."""
         self.take_origin_away()
         code, lines = self.run_check(self.eng)
         self.assertEqual((code, lines[1]), (11, reason_line("could-not-refresh")))
@@ -582,6 +591,7 @@ class OfflineGraceTests(OriginTests):
         self.assertEqual(self.run_check(self.eng, now=NOW + dt.timedelta(days=9), refresh=False)[0], 11)
 
     def test_an_expired_release_is_stale_even_inside_the_grace_period(self):
+        """[G4] Expiry and offline grace are checked separately: an expired release is stale inside the grace period."""
         (self.pub / "docs" / "release" / f"{self.rid}.receipt.json").unlink()
         rid, data = build_receipt(self.files, expires_at="2027-02-02T12:00:00Z", nonce="c3" * 16)
         self.write_receipt(self.pub, rid, data)
