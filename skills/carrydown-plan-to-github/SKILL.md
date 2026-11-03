@@ -2,7 +2,7 @@
 name: carrydown-plan-to-github
 description: Publishes an approved plan to GitHub and generates the engineers' skill. Use for "Put the plan on GitHub", "Generate the engineers' skill" or "Review and repair the published plan". External updates are previewed before approval.
 license: Apache-2.0
-compatibility: Needs Python 3.9 or later, network access to api.github.com only, and a GitHub token the user creates.
+compatibility: Needs Python 3.9 or later (the skill checks for it and offers to install it), network access to api.github.com only, and a GitHub token the user creates.
 metadata:
   author: "Will Scott, PhD"
   version: "0.1.0"
@@ -39,9 +39,13 @@ Then it generates the engineers' skill: a small folder in the Agent Skills forma
 
 ## Where the files are
 
-The scripts and templates folders sit next to this SKILL.md. In the commands below, `<skill>` stands for this folder. Run the scripts from the user's project root with `--root .`, using the Python command that `carrydown-ground-truth` found (`python3`, or often `python` on Windows).
+The scripts and templates folders sit next to this SKILL.md. In the commands below, `<skill>` stands for this folder. Run the scripts from the user's project root with `--root .`, using the Python command from the preflight in step 0. The commands below start with `python3`.
 
 ## The flow
+
+### 0. Preflight
+
+Read `references/preflight.md`. Detect the operating system, then use only that system's section from here on, and show the person only that system's commands. Run its Python check with `check_python.py` once per session. If Python 3.9 or later is missing, ask the one question on that page and install it as the page says, only after a yes. Use the Python command the page names wherever a command below starts with `python3`. If `carrydown-ground-truth` already ran in this session, the check is done.
 
 ### 1. Preconditions
 
@@ -171,7 +175,7 @@ python3 <skill>/scripts/generate_dev_skill.py --root .            # dry run
 python3 <skill>/scripts/generate_dev_skill.py --root . --apply    # write
 ```
 
-It writes `SKILL.md`, `README.md` and three references, skips files that exist unless you pass `--force`, and prints the length of the description. Go through `references/engineers-skill-review.md` with the user and add what only they know. A hand edit to the released skill's `SKILL.md` or `README.md` is kept by the next release. Then print the install line for the engineers, from the generated README, for each engineer to run in their own terminal. Do not run it yourself. For example:
+It writes `SKILL.md`, `README.md`, four references (including the Python preflight page) and the two checks the engineers run, `check_context.py` and `check_python.py`, skips files that exist unless you pass `--force`, and prints the length of the description. Go through `references/engineers-skill-review.md` with the user and add what only they know. A hand edit to the released skill's `SKILL.md` or `README.md` is kept by the next release. Then print the install line for the engineers, from the generated README, for each engineer to run in their own terminal. Do not run it yourself. For example:
 
 ```bash
 npx skills add https://github.com/<owner>/<repo>/tree/<branch>/<dev_skill_path> -a <agent>

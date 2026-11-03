@@ -18,6 +18,8 @@ The plan is built around your team's availability and target date. You can also 
 
 **Starting a new plan?** Follow [Install carrydown and start your first plan](docs/setup.md). It covers computer setup, installation and the first conversation with your agent. If you have already installed the skills, use the shortcut at the top of that guide. The agent asks one extra question before it starts: whether everyone who can read the repository may see all of your documents and staffing notes. Most teams answer yes and nothing else changes. If some documents are confidential, read [who may see your documents](docs/setup.md#before-you-add-documents-who-may-see-them) first.
 
+**Requirements.** Python 3.9 or newer, Git, and a coding agent that supports Agent Skills. You do not have to install Python first: the skills check for it and offer to install it, after your yes. The [setup guide](docs/setup.md#before-anything-python) shows the manual steps for macOS, Windows and Linux.
+
 **Have a plan to review or publish?** Continue with [Review and publish your plan](docs/plan-owner-guide.md).
 
 <br />
@@ -86,7 +88,7 @@ docs/
   release/
     <request-id>.receipt.json   the public receipt of one approval
   dev/skills/<project>-dev/
-    SKILL.md  README.md  references/  scripts/check_context.py
+    SKILL.md  README.md  references/  scripts/check_context.py  scripts/check_python.py
   ground-truth/        optional. Renderings, only when you answered yes to the one question
   source/              optional, ignored by git. Originals, only if you want a local copy
 ```

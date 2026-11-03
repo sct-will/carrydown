@@ -1,16 +1,10 @@
 # Setup checks
 
-Run these before the interview. Do not install software yourself. If something is missing, tell the user how to install it and stop until they say it is done.
+Run these before the interview. Python is handled by the preflight, which can install it after a yes. For everything else, do not install software yourself. If something is missing, tell the user how to install it and stop until they say it is done.
 
 ## Python
 
-Run `python3 --version`. On Windows the command is often `python`, so try `python --version` there. Use whichever one prints Python 3.9 or later, and use that command for every script. Word documents are read with the standard library, so no package is needed.
-
-If Python is missing or older than 3.9:
-
-- macOS. The command may open a window offering the command line developer tools. Tell the user what the window is. They can click Install and wait a few minutes, or install Python from [the Python downloads page](https://www.python.org/downloads/). Then they run the check again.
-- Windows. They install Python 3 from [the Python downloads page](https://www.python.org/downloads/) and tick "Add python.exe to PATH" on the first screen, then open a new terminal.
-- Linux. They install `python3` with the system package manager, or ask their administrator to install it.
+Follow `references/preflight.md`. It detects the system, checks for Python 3.9 or later with `check_python.py`, and offers to install Python when it is missing. It is the one place where this skill installs software, and only after the person says yes. Word documents are read with the standard library, so no package is needed.
 
 ## Node.js
 

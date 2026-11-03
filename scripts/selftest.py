@@ -980,6 +980,8 @@ def main():
     step("dry run: generate_dev_skill", [PY, "scripts/generate_dev_skill.py", "--root", SAMPLE])
     step("dry run: plan_repair", [PY, "scripts/plan_repair.py", "--root", SAMPLE], contains=["repair action(s)", "Dry run"])
     step("dry run: github_token", [PY, "scripts/github_token.py", "--dry-run"])
+    step("the Python preflight check passes on this interpreter", [PY, "scripts/check_python.py"], contains=["Python", "is ready"])
+    step("the Python preflight check answers --help", [PY, "scripts/check_python.py", "--help"], contains=["usage:"])
     plan_text = WORKING_PLAN.read_text(encoding="utf-8")
     with tempfile.TemporaryDirectory() as tmp:
         def variant(name, text):
@@ -1090,7 +1092,7 @@ def main():
              contains=["engineers' skill: expense-approvals-dev"])
         step("installed copy of carrydown-plan-to-github refreshes only the references", [PY, str(gh / "scripts/generate_dev_skill.py"), "--root", str(ROOT / SAMPLE), "--only", "references"],
              contains=["would write: references/work-items.md", "would write: references/ground-truth-map.md"], absent=("Traceback", "SKILL.md"))
-        ships = ("compile_bundles.py", "generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_repair.py", "github_sync.py", "github_token.py", "plan_repair.py", "release.py", "release_assemble.py", "release_build.py", "release_gate.py", "release_github.py", "release_inventory.py", "release_payloads.py", "release_schema.py", "release_sync.py", "release_verify.py", "scaffold_spec.py", "detectors.py", "workspace.py")
+        ships = ("compile_bundles.py", "generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_repair.py", "github_sync.py", "github_token.py", "plan_repair.py", "check_python.py", "release.py", "release_assemble.py", "release_build.py", "release_gate.py", "release_github.py", "release_inventory.py", "release_payloads.py", "release_schema.py", "release_sync.py", "release_verify.py", "scaffold_spec.py", "detectors.py", "workspace.py")
         extra = sorted(x.name for x in (gh / "scripts").glob("*.py") if x.name not in ships)
         results.append((not extra, "carrydown-plan-to-github ships only the scripts it runs"))
         print(("PASS " if not extra else "FAIL ") + "carrydown-plan-to-github ships only the scripts it runs" + (f" (remove {', '.join(extra)})" if extra else ""))

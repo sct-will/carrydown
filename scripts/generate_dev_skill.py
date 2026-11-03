@@ -8,6 +8,8 @@ Output, under project.dev_skill_path in plan.yaml
   references/contracts.md          the headings of every Contract or Protocol section, by item, and each item's approved context
   references/ground-truth-map.md   the source sections inside the approved contexts, by source id and section number
   scripts/check_context.py         the engineer's check: local validity, freshness, expiry (offline except one fetch)
+  scripts/check_python.py          the Python 3.9 check that runs first (a copy of the canonical script, offline)
+  references/preflight.md          the preflight page: detect the system, check Python, offer to install it
 
 The files are generated from plan.yaml, the specs and the approved contexts in docs/context/ (see
 compile_bundles.py). The skill holds no original filename, no rendering path and no source text:
@@ -305,6 +307,13 @@ def skill_target(plan):
     return skill_name, skill_path
 
 
+def preflight_page():
+    """The preflight page, as written in templates/ (the repository) or carried in references/ (an installed skill)."""
+    here = Path(__file__).resolve().parent
+    carried = here.parent / "references" / "preflight.md"
+    return L.read_text(carried if carried.is_file() else L.templates_dir() / "preflight.md")
+
+
 def skill_makers(plan, root, bundles=None, engineer_edits=None):
     """{relative path: function that returns the file's text} for the engineers' skill. root is the folder
     that holds the specification and, unless bundles is given, docs/context. bundles maps a path such as
@@ -339,6 +348,9 @@ def skill_makers(plan, root, bundles=None, engineer_edits=None):
         "references/contracts.md": lambda: contracts_md(plan, root),
         "references/ground-truth-map.md": lambda: ground_truth_map_md(plan, root, bundles=bundles),
         "scripts/check_context.py": lambda: L.fill(L.read_template("dev-skill", "scripts", "check_context.py"), values),
+        # the preflight: the page and the checker are copies of the canonical ones, not templates
+        "references/preflight.md": preflight_page,
+        "scripts/check_python.py": lambda: L.read_text(Path(__file__).resolve().parent / "check_python.py"),
     }
 
 

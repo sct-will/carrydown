@@ -16,6 +16,10 @@ You use one to install and check the skills. After installation, you work in you
 
 Use a coding agent that supports Agent Skills and can read and edit project files and run commands. The [agent install list](setup.md#choose-a-coding-agent) provides setup links and supported choices.
 
+## Do I need to install anything?
+
+You need a coding agent, and the agent can do the rest. The first thing each skill does is check for Python 3.9 or newer. If Python is missing, it asks once whether to install it, and installs it from the official source after your yes. You still install Node.js and Git yourself, as the [computer preparation steps](setup.md#prepare-your-computer) show. If you would rather install Python yourself, [follow your system's steps](setup.md#before-anything-python).
+
 ## What do I need installed?
 
 A coding agent, Node.js for the installer, Python for the scripts and Git. The [computer preparation steps](setup.md#prepare-your-computer) list versions and checks. Manual installation is available on the same page if you cannot use Node.js.

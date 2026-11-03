@@ -6,6 +6,9 @@ So each of the two skills carries the scripts and templates it runs. carrydown-p
 also carries the generator of the engineers' skill and its templates. The canonical copies are
 in scripts/ and templates/ at the top of the repository. This script refreshes the copies.
 
+Shared reference pages (preflight.md) are written once in templates/ and carried into each skill's
+references/ folder. The generator of the engineers' skill reads the carried copy (or templates/, in the repository).
+
 The sample project carries the checker copy that `scaffold_spec.py --ci` writes, in
 sample/expense-approvals/tools/carrydown/. It is refreshed and checked here too.
 
@@ -29,11 +32,13 @@ REPO = Path(__file__).resolve().parent.parent
 
 NEEDS = {
     "carrydown-ground-truth": {
-        "scripts": ["render_ground_truth.py", "scaffold_spec.py", "check_specs.py", "plan_repair.py", "release_schema.py", "workspace.py", "compile_bundles.py"],
+        "scripts": ["render_ground_truth.py", "scaffold_spec.py", "check_specs.py", "plan_repair.py", "release_schema.py", "workspace.py", "compile_bundles.py", "check_python.py"],
+        "references": ["preflight.md"],
         "templates": ["plan.yaml", "spec.md", "milestone.md", "spec-README.md", "closing-comment.md", "checkpoint-comment.md", "check-specs-workflow.yml", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md", "staging/open-release-request.yml", "staging/ruleset.json"],
     },
     "carrydown-plan-to-github": {
-        "scripts": ["github_token.py", "github_sync.py", "github_project.py", "github_repair.py", "github_client.py", "check_specs.py", "generate_dev_skill.py", "plan_repair.py", "release_schema.py", "compile_bundles.py", "release.py", "release_github.py"],
+        "scripts": ["github_token.py", "github_sync.py", "github_project.py", "github_repair.py", "github_client.py", "check_specs.py", "generate_dev_skill.py", "plan_repair.py", "release_schema.py", "compile_bundles.py", "release.py", "release_github.py", "check_python.py"],
+        "references": ["preflight.md"],
         "templates": ["issue-body.md", "projections.yaml", "closing-comment.md", "checkpoint-comment.md", "dev-skill/SKILL.md.tmpl", "dev-skill/README.md.tmpl", "dev-skill/scripts/check_context.py", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md", "plan.yaml", "spec.md", "milestone.md", "spec-README.md", "check-specs-workflow.yml"],
     },
 }
@@ -71,6 +76,9 @@ def plan():
             out.append((REPO / "scripts" / n, REPO / "skills" / skill / "scripts" / n))
         for t in need["templates"]:
             out.append((REPO / "templates" / t, REPO / "skills" / skill / "templates" / t))
+        # shared reference pages: written once in templates/, carried into the skill's references/
+        for r in need.get("references", []):
+            out.append((REPO / "templates" / r, REPO / "skills" / skill / "references" / r))
     out += [(REPO / src, REPO / dst) for src, dst in SAMPLE_COPIES]
     return out
 

@@ -6,9 +6,53 @@ Follow this page from computer setup through your first conversation with carryd
 
 **The skills are already installed:** skip to [who may see your documents](#before-you-add-documents-who-may-see-them), then [start your plan](#start-your-plan).
 
-[Choose an agent](#choose-a-coding-agent) | [Prepare your computer](#prepare-your-computer) | [Open a project](#open-your-project-folder) | [Install](#install-the-two-skills) | [Check](#check-the-installation) | [Who may see your documents](#before-you-add-documents-who-may-see-them) | [Start a plan](#start-your-plan) | [Other options](#other-installation-options) | [Organization setup](#organization-setup-for-private-drafting) | [Get help](#when-something-does-not-work)
+[Python](#before-anything-python) | [Choose an agent](#choose-a-coding-agent) | [Prepare your computer](#prepare-your-computer) | [Open a project](#open-your-project-folder) | [Install](#install-the-two-skills) | [Check](#check-the-installation) | [Who may see your documents](#before-you-add-documents-who-may-see-them) | [Start a plan](#start-your-plan) | [Other options](#other-installation-options) | [Organization setup](#organization-setup-for-private-drafting) | [Get help](#when-something-does-not-work)
 
 **Documents that are confidential?** Read [who may see your documents](#before-you-add-documents-who-may-see-them) before you copy anything into a project.
+
+## Before anything: Python
+
+The carrydown scripts need Python 3.9 or newer. You do not have to install it first. When you start a skill, your agent checks for Python and, if it is missing or too old, asks once: "Python is needed to run the carrydown scripts. Install it now?" Say yes and it installs Python with the official installer for your system, and tells you each step to click. Say no and it stops and explains what cannot run without Python.
+
+If you prefer to do it yourself, or your agent is not set up yet, follow the heading for your system. The links go to python.org, the official Python site.
+
+### Python on macOS
+
+1. **Open Terminal.** Press Command and Space together, type `Terminal`, then press Return.
+2. **Check for Python.** Type this and press Return:
+
+   ```bash
+   python3 --version
+   ```
+
+   If it prints `Python 3.9` or later, such as `Python 3.12.4`, you are done. If a window offers developer tools, a message says the command is not found, or the version is older than 3.9, continue.
+3. **Install it.** If you use Homebrew, run `brew install python`. Otherwise [download the official installer](https://www.python.org/ftp/python/3.15.2/python-3.15.2-macos11.pkg), double-click the downloaded file, follow the prompts and enter the computer password when it asks. The [macOS downloads page](https://www.python.org/downloads/macos/) always lists the newest version. If the installer will not open, run `xcode-select --install` and follow Apple's window.
+4. **Check again in a new window.** Close Terminal, open it again and run the check from step 2.
+
+### Python on Windows
+
+1. **Open PowerShell.** Click the Start button, type `PowerShell`, then click Windows PowerShell.
+2. **Check for Python.** Type this and press Enter:
+
+   ```powershell
+   py -3 --version
+   ```
+
+   If it prints `Python 3.9` or later, you are done. If it says the command is not found, opens the Microsoft Store or shows an older version, continue.
+3. **Install it.** Windows 10 and 11 include a tool called winget. Run:
+
+   ```powershell
+   winget install --id Python.Python.3.12 -e --source winget
+   ```
+
+   If winget is not available, [download the official installer](https://www.python.org/ftp/python/3.15.2/python-3.15.2-amd64.exe) (on an ARM processor, [use this one](https://www.python.org/ftp/python/3.15.2/python-3.15.2-arm64.exe)), double-click it and tick the box "Add python.exe to PATH" on the first screen before you click Install Now. If your computer blocks the installer, send the [Windows downloads page](https://www.python.org/downloads/windows/) to your administrator and ask them to install Python 3.9 or newer.
+4. **Check again in a new window.** Close PowerShell, open it again and run the check from step 2.
+
+### Python on Linux
+
+Open Terminal from your application menu and run `python3 --version`. If it is missing or older than 3.9, install it with your package manager, for example `sudo apt install python3` on Debian or Ubuntu or `sudo dnf install python3` on Fedora, or ask your administrator. The [release page](https://www.python.org/downloads/release/python-3152/) lists every official file.
+
+The commands in this documentation are written for macOS and Linux. On Windows, your agent uses the Windows form of each command from its preflight, so you never have to translate them.
 
 ## Choose a coding agent
 
@@ -49,13 +93,7 @@ Run the commands below in your terminal, one line at a time. For missing command
    ```
 
    Confirm Node.js is version 22.20 or later. If the command is missing or the version is too old, open the [Node.js download page](https://nodejs.org/en/download). Choose an LTS release and the macOS Installer (`.pkg`). Open the downloaded file and follow its installer. Close Terminal and reopen it, then run the check again.
-3. **Check for Python.** Run:
-
-   ```bash
-   python3 --version
-   ```
-
-   Look for `Python 3.9` or later; `3.10`, `3.11` and later versions also qualify. If it is missing or too old, install a current Python 3 release from the [Python macOS downloads](https://www.python.org/downloads/macos/). Open the downloaded `.pkg` and follow its installer. If macOS offers command line developer tools when you run the check, you can install those, then check the Python version again.
+3. **Check for Python.** Follow [Python on macOS](#python-on-macos) above.
 4. **Check for Git.** Run:
 
    ```bash
@@ -82,13 +120,7 @@ Close and reopen your coding agent after installing software so it can find the 
    ```
 
    Look for version 22.20 or later, such as `v24.0.0`. If it is missing or too old, open the [Node.js download page](https://nodejs.org/en/download). Choose an LTS release and the Windows Installer (`.msi`). Open the download and follow its installer. Close PowerShell and reopen it, then check again.
-3. **Check for Python.** Run:
-
-   ```powershell
-   python --version
-   ```
-
-   Look for `Python 3.9` or later. If Python is missing, opens a store page or reports an older version, install the Python install manager from the [Python Windows downloads](https://www.python.org/downloads/windows/). Then close and reopen PowerShell and run the check again. The manager can install a current Python release on first use. If you already have a working Python 3.9 or later, keep using it. [Python's Windows guide](https://docs.python.org/3/using/windows.html) covers installation and command problems.
+3. **Check for Python.** Follow [Python on Windows](#python-on-windows) above.
 4. **Check for Git.** Run:
 
    ```powershell

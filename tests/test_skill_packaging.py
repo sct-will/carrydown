@@ -57,6 +57,8 @@ SMOKE = [
     (PLAN_TO_GITHUB, "release.py", ["prepare", "--root", "{owner}", "--repository-id", "4200"], ("DRY RUN", "Dry run: nothing was written")),
     (PLAN_TO_GITHUB, "release.py", ["diff", "--root", "{owner}", "--repository-id", "4200"], ("This is the first release",)),
     (PLAN_TO_GITHUB, "release.py", ["inventory", "--root", "{sample}"], ("carrydown release inventory", "Nothing was changed.")),
+    (GROUND_TRUTH, "check_python.py", [], ("is ready",)),
+    (PLAN_TO_GITHUB, "check_python.py", [], ("is ready",)),
     (GROUND_TRUTH, "release_gate.py", ["--help"], ("The release gate",)),
     (GROUND_TRUTH, "release_verify.py", ["--help"], ("Verification of releases",)),
     (PLAN_TO_GITHUB, "release_verify.py", ["--help"], ("Verification of releases",)),

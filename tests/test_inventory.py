@@ -81,7 +81,8 @@ class ReleaseInventoryTests(unittest.TestCase):
         self.assertIn("  people:tamsin:name in docs/spec/plan.yaml", out)
         self.assertIn("  people:tamsin:allocation in docs/spec/plan.yaml", out)
         self.assertIn("  people:idris:skills in docs/spec/plan.yaml", out)
-        self.assertRegex(out, r"Generated references of the engineers' skill: 3\n  docs/dev/skills/expense-approvals-dev/references/contracts\.md")
+        # three generated from the plan, plus the static preflight page every engineers' skill carries
+        self.assertRegex(out, r"Generated references of the engineers' skill: 4\n  docs/dev/skills/expense-approvals-dev/references/contracts\.md")
 
     def test_it_says_which_of_them_are_in_history_including_a_file_removed_since(self):
         code, out, err = self.run_inventory()

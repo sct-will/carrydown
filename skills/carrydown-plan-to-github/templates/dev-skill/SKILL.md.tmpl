@@ -16,6 +16,7 @@ The specification folder `{{spec_dir}}/` is canonical. Where the skill and the f
 
 ## Orient on a work item
 
+0. Before anything, read `references/preflight.md`. Detect the operating system, then use only that system's section for every command. Run its Python check, `scripts/check_python.py` in this skill folder, once per session. If Python 3.9 or newer is missing, ask once before you install it, as that page says. Use the Python command it names wherever a command below starts with `python3`.
 1. Take the id from the GitHub issue or the branch name, for example `{{example_id}}` or `{{example_stem}}`.
 2. Find the file with `find {{spec_dir}} -name '<id in lower case>-*.md'`. For `{{example_id}}` that is `{{example_path}}`. Do not read `references/work-items.md` to find it.
 3. Read the whole work item file: the header table, the acceptance criteria, "Evidence of completion" (what the closing comment carries) and "Integration points" (the counterpart items and the joint check).
