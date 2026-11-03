@@ -246,9 +246,11 @@ def main(argv=None):
     if not a.apply:
         L.say(f"{len(actions)} repair action(s). Dry run; use --apply after review.")
         return 0
+    shown = Path(path).resolve().relative_to(root.resolve()).as_posix() if root.resolve() in Path(path).resolve().parents else str(path)
+    # the gate is asked for the plan on every --apply, whether or not the repair changes it, so that an
+    # enrolled project without an approved release, or a plan that no longer holds the approved bytes, stops here
+    RG.require(RG.maintenance_class(root), shown, L.sha256_text(after), "engineering-repo", root)
     if proposed != raw:
-        shown = Path(path).resolve().relative_to(root.resolve()).as_posix() if root.resolve() in Path(path).resolve().parents else str(path)
-        RG.require(RG.maintenance_class(root), shown, L.sha256_text(after), "engineering-repo", root)
         L.write_text(path, after)
     _, problems = L.load_plan(path, root)
     if problems:

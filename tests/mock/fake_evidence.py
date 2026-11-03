@@ -404,23 +404,23 @@ class World:
         entry["policy_sha256"] = V.policy_sha256_of(entry)
         return entry
 
-    def publish_policy(self):
+    def publish_policy(self, keep_verifier=False):
         """Write the current entry to enrollment.yaml in the tooling repository (as JSON, which the
         default parser reads) and make an earlier code commit the pinned verifier."""
         r = self.reader
         self.entry["policy_sha256"] = V.policy_sha256_of(self.entry)
         doc = {"format": 1, "host": "github.com", "tooling_repository_id": TOOLING_ID, "repositories": [self.entry]}
-        if self.entry["verifier_sha"] not in r.repos[TOOLING_ID]["commits"]:
+        if not keep_verifier and self.entry["verifier_sha"] not in r.repos[TOOLING_ID]["commits"]:
             code = r.set_file(TOOLING_ID, "verifier/verify_release.py", b"# verifier code\n")
             self.entry["verifier_sha"] = code
             self.entry["policy_sha256"] = V.policy_sha256_of(self.entry)
             doc["repositories"] = [self.entry]
         return r.set_file(TOOLING_ID, "enrollment.yaml", json.dumps(doc, sort_keys=True).encode("utf-8"))
 
-    def update_policy(self, mutate):
+    def update_policy(self, mutate, keep_verifier=False):
         """Change the enrollment entry (mutate receives it), publish it and return the new Enrollment."""
         mutate(self.entry)
-        self.publish_policy()
+        self.publish_policy(keep_verifier)
         return self.enrollment()
 
     def enrollment(self):
@@ -436,3 +436,58 @@ class World:
         if merge:
             r.merge(STAGING_ID, n)
         return n
+
+
+class Candidate:
+    """A release candidate built for the World: snapshot files, manifest, request and activation event."""
+
+    def __init__(self, world, request, manifest, snapshot, event):
+        self.world, self.request, self.manifest, self.snapshot, self.event = world, request, manifest, snapshot, event
+
+    @property
+    def rid(self):
+        return self.request["request_sha256"]
+
+    @property
+    def release_id(self):
+        return self.request["release_id"]
+
+    @property
+    def branch(self):
+        return f"request/{self.rid}"
+
+    def files(self):
+        import release_build as B
+        return B.request_branch_files(self.request, self.manifest, self.snapshot, self.event)
+
+    def land(self, **kw):
+        return self.world.land(self.files(), self.branch, **kw)
+
+
+def tip_of(world):
+    """The id of the last event merged into the staging repository, or None."""
+    import release_verify as V2
+    return V2.replay_staging(world.reader, world.enrollment()).replay.tip
+
+
+def make_candidate(world, files=None, audience="repo-readers", supersedes=None, tip="auto", nonce=None, expires=None,
+                   targets=None, destinations=("engineering-repo", "issue"), enrollment=None):
+    """Build a candidate for the World's enrolled project. files maps a snapshot path to bytes (default: a
+    plan, a bundle and one payload). tip is the predecessor event id the activation batch names; "auto"
+    reads it from the staging repository now."""
+    import release_build as B
+    enrollment = enrollment or world.enrollment()
+    files = dict(files or {"repo/docs/spec/plan.yaml": b"plan\n", "repo/docs/context/wi-01.md": b"context\n",
+                           "payloads/issue/WI-01.json": b"{}\n"})
+    manifest, release_id, entries = B.build_manifest(files)
+    created = world.reader.tick()
+    targets = targets or [dict(id="engineering", **world.entry["allowed_targets"]["engineering"])]
+    template = B.build_template(release_id, entries, created=created, expires_at=expires, audience=audience, destinations=list(destinations),
+                                targets=targets, sources=[{"id": "architecture", "version": "0.3"}],
+                                downstream={"assignees": False, "capacity_summary": False, "evidence": "synthetic-only"},
+                                offline_grace_days=7, enrollment_id=enrollment.enrollment_id)
+    request = B.build_request(template, release_id, enrollment, created=created, nonce=nonce or B.new_nonce(), supersedes=supersedes,
+                              preview={"What will be shared": ["fixture"]})
+    tip_id = tip_of(world) if tip == "auto" else tip
+    event = B.activation_event(request, enrollment, tip_id, created=created, nonce=B.derived_nonce(request["request_nonce"], "activation"))
+    return Candidate(world, request, manifest, files, event)

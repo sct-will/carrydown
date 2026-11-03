@@ -369,6 +369,11 @@ def release_check(pub, s, gh, skip_comment):
     L.say("\nVerification (read only)")
     labels = {x["name"].lower() for x in gh.paged(f"{s.base}/labels")}
     for (kind, key), (path, payload, sha) in sorted(pub.payloads.items()):
+        if kind in ("issue", "subepic", "epic"):
+            found = s.find(key, payload["title"])      # every number is known before any body is compared
+            if found:
+                s.remember(key, found)
+    for (kind, key), (path, payload, sha) in sorted(pub.payloads.items()):
         if kind == "label":
             present = payload["name"].lower() in labels
             L.say(f"  label {payload['name']}: " + ("present" if present else "MISSING"))

@@ -151,3 +151,104 @@ def strip_handling(root):
     text = re.sub(r"(?m)^plan_(format|view):.*\n", "", text)
     text = re.sub(r"(?m)^  - id: (\w+)\n    track: (\w+)\n", lambda m: f'  - id: {m.group(1)}\n    name: "{m.group(1).title()}"\n    track: {m.group(2)}\n', text)
     path.write_text(text, encoding="utf-8")
+
+
+class NoProject:
+    """The confidential fixture on the "no" path: nothing but a pointer and a readme in the engineering
+    repository, the drafts and renderings in a private workspace, a fake enrolled organization, a local
+    bare repository as the engineering origin and another as the staging repository."""
+
+    def __init__(self, base, world=None):
+        import fake_evidence as FE
+        self.base = Path(base)
+        self.world = world or FE.World()
+        self.reader = self.world.reader
+        self.root = self.base / "project"
+        self.origin = bare_origin(self.base, "origin", {"README.md": b"engineering repository\n", ".gitignore": b".carrydown/local.yaml\n"})
+        sh(["git", "clone", "-q", str(self.origin), str(self.root)], self.base)
+        sh(["git", "config", "user.name", "Test Owner"], self.root)
+        sh(["git", "config", "user.email", "owner@example.com"], self.root)
+        enrollment = self.world.enrollment()
+        (self.root / ".carrydown").mkdir()
+        (self.root / ".carrydown" / "release-policy.yaml").write_text(
+            f"format: 1\ntooling_repository: acme/carrydown-tooling\nenrollment_id: {enrollment.enrollment_id}\n", encoding="utf-8")
+        sh(["git", "add", ".carrydown/release-policy.yaml"], self.root)
+        sh(["git", "commit", "-q", "-m", "Add the policy pointer"], self.root)
+        sh(["git", "push", "-q", "origin", "main"], self.root)
+        self.staging = bare_origin(self.base, "staging", {"README.md": b"staging\n"})
+        self.workspace = self.base / "workspace"
+        code, out, err = run(W.main, ["init", "--root", str(self.root), "--slug", "expense-approvals", "--workspace", str(self.workspace),
+                                      "--answer", "no", "--staging-repository", "acme/expense-approvals-releases", "--apply"])
+        assert code == 0, out + err
+        text = (FIXTURE / "docs" / "spec" / "plan.yaml").read_text(encoding="utf-8").replace("repo: sct-will/carrydown-sample", "repo: acme/expense-approvals")
+        (self.workspace / "drafts").mkdir(exist_ok=True)
+        (self.workspace / "drafts" / "plan.yaml").write_text(text, encoding="utf-8")
+        shutil.copytree(FIXTURE / "docs" / "spec", self.workspace / "drafts" / "docs" / "spec", ignore=shutil.ignore_patterns("plan.yaml"))
+        shutil.copytree(FIXTURE / "docs" / "ground-truth", self.workspace / "renderings", dirs_exist_ok=True)
+        self.request_id = None
+        self.patches = []
+        self.dispatches = []
+
+    def start(self):
+        """Replace the seams: the reader, the staging remote, the token check, the workflow dispatch and the wait."""
+        pairs = [(R, "make_reader", lambda args: self.reader), (R, "token_available", lambda args: True),
+                 (R, "staging_remote_url", lambda repo, host="github.com", like="": str(self.staging)),
+                 (R, "dispatch_request_workflow", lambda args, repo, branch: self.dispatches.append(branch) or True),
+                 (R, "sleep", lambda seconds: None)]
+        for module, name, value in pairs:
+            p = mock.patch.object(module, name, value)
+            p.start()
+            self.patches.append(p)
+        return self
+
+    def stop(self):
+        for p in self.patches:
+            p.stop()
+        self.patches = []
+
+    def common(self):
+        return ["--root", str(self.root)]
+
+    def prepare(self, *extra, apply=True, nonce=NONCE, created=CREATED):
+        argv = ["prepare"] + self.common()
+        if nonce:
+            argv += ["--nonce", nonce]
+        if created:
+            argv += ["--created", created]
+        argv += list(extra)
+        if apply:
+            argv.append("--apply")
+        code, out, err = run(R.main, argv)
+        if code == 0 and apply:
+            for line in out.splitlines():
+                if line.startswith("request id (permission):"):
+                    self.request_id = line.split(":", 1)[1].split()[0]
+        return code, out, err
+
+    def approve(self, request_id=None, apply=True, poll=0):
+        argv = ["approve"] + self.common() + ["--request", request_id or self.request_id, "--github", "--poll-seconds", str(poll),
+                                              "--created", "2027-01-20T14:10:00Z"]
+        if apply:
+            argv.append("--apply")
+        return run(R.main, argv)
+
+    def candidate_files(self, request_id=None):
+        """The files the staging branch carries, rebuilt from the workspace records."""
+        import release_build as B
+        import release_schema as RS
+        rid = request_id or self.request_id
+        request = R.load_request(self.workspace, rid)
+        manifest, entries, files = R.load_release(self.workspace, request["release_id"])
+        event = RS.loads_strict((self.workspace / "requests" / rid / "activation-candidate.json").read_bytes())
+        return B.request_branch_files(request, manifest, files, event)
+
+    def land(self, request_id=None, **kw):
+        """The staging workflow opens the pull request, the owner reviews the final head, and it merges."""
+        rid = request_id or self.request_id
+        return self.world.land(self.candidate_files(rid), f"request/{rid}", **kw)
+
+    def export(self, request_id=None, apply=True):
+        argv = ["export"] + self.common() + ["--request", request_id or self.request_id]
+        if apply:
+            argv.append("--apply")
+        return run(R.main, argv)

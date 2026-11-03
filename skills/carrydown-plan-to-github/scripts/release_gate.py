@@ -102,7 +102,62 @@ def _raw_plan(lib, path):
     return data if isinstance(data, dict) else None
 
 
+_STATE_CACHE = {}
+
+
+def _signature(base):
+    """What the project state is read from, as (name, size, modification time) of each file and folder, so a
+    cached state is reused only while none of them has changed."""
+    names = [os.path.join(base, POINTER_FILE), os.path.join(base, ".carrydown", "local.yaml"), os.path.join(base, "docs", "spec", "plan.yaml"),
+             os.path.join(base, "plan.yaml")]
+    out = []
+    pointer = os.path.join(base, ".carrydown", "local.yaml")
+    if os.path.isfile(pointer):
+        try:
+            with open(pointer, "r", encoding="utf-8") as handle:
+                names.append(handle.read())
+        except OSError:
+            pass
+    for path in names:
+        try:
+            st = os.lstat(path)
+            out.append((path if len(path) < 400 else path[:400], st.st_size, st.st_mtime_ns))
+        except OSError:
+            out.append((path if len(path) < 400 else path[:400], None, None))
+    return tuple(out)
+
+
 def project_state(root):
+    """The ProjectState of root, read again whenever a file it depends on has changed. See _read_state."""
+    base = os.path.abspath(str(root))
+    sig = _signature(base)
+    cached = _STATE_CACHE.get(base)
+    state = cached[1] if cached and cached[0] == sig else None
+    if state is not None:
+        ws = state.workspace
+        if ws:
+            extra = tuple((p, *_stat_pair(p)) for p in (os.path.join(ws, "workspace.yaml"), os.path.join(ws, "drafts", "plan.yaml"),
+                                                          os.path.join(ws, "requests"), os.path.join(ws, "events")))
+            if cached[2] == extra:
+                return state
+        else:
+            return state
+    state = _read_state(root)
+    extra = tuple((p, *_stat_pair(p)) for p in (os.path.join(state.workspace, "workspace.yaml"), os.path.join(state.workspace, "drafts", "plan.yaml"),
+                                                 os.path.join(state.workspace, "requests"), os.path.join(state.workspace, "events"))) if state.workspace else ()
+    _STATE_CACHE[base] = (sig, state, extra)
+    return state
+
+
+def _stat_pair(path):
+    try:
+        st = os.lstat(path)
+        return st.st_size, st.st_mtime_ns
+    except OSError:
+        return None, None
+
+
+def _read_state(root):
     """Read, offline, what decides the gate: the policy pointer, the private workspace and the handling
     block. The workspace plan (drafts/plan.yaml) wins over the project plan, because on the "no" path
     the answer is recorded in the workspace first. A workspace that names a staging repository, or that

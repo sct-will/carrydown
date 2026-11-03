@@ -52,6 +52,7 @@ class State:
         self.repos = {"o/r"}   # the repositories that exist; any other answers 404
         self.repo_ids = {"o/r": 4200}   # numeric id of each repository; one not listed gets the next free id
         self.orgs = set()       # logins that are organizations; any other login is a user
+        self.missing_users = set()   # logins that answer 404, as a login that does not exist does
         self.fail = {}
         self.redirect = {}
         self.log = []
@@ -175,6 +176,8 @@ class H(BaseHTTPRequestHandler):
         if p == "/user":
             return self.send(200, {"login": LOGIN})
         m = re.fullmatch(rf"/users/({NAME})", p)
+        if m and m.group(1) in S.missing_users:
+            return self.send(404, {"message": "Not Found"})
         if m:
             org = m.group(1) in S.orgs
             return self.send(200, {"login": m.group(1), "type": "Organization" if org else "User", "node_id": "O_1" if org else "U_1"})
