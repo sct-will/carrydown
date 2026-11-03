@@ -373,6 +373,153 @@ For the usual installation, use the default route above.
 
 </details>
 
+## Organization setup for private drafting
+
+Read this section only when the answer to "Can everyone who can read this repository see all of these documents and your staffing notes?" is no. The "yes" path needs none of it. The private path adds three pieces that an organization administrator installs once, and a short enrollment for each project:
+
+- **A tooling repository.** It holds the independent verifier and the enrollment file. Only release owners and administrators can write to it.
+- **A staging repository for each project.** It holds release candidates while the plan owner approves them, before anything reaches the engineering repository.
+- **A verifier App.** A GitHub App that reports two required checks. It has its own credential, which only the tooling repository holds.
+
+The plan owner then runs two checks, the offline and the live doctor, and reads one short table. Engineers see one required check on their pull requests.
+
+### What the administrator needs first
+
+- Permission to create repositories and a GitHub App in the organization, and to manage rulesets and Actions settings on the engineering and staging repositories.
+- A plan that supports the features below. Before you offer this path, prove on your plan that App-specific required checks, repository rulesets, the up-to-date branch requirement, pull requests opened by Actions and the App permissions work. GitHub.com and GitHub Enterprise Cloud can use this setup when verified. GitHub Enterprise Server is unverified until you test it on your server version.
+- The numeric ids of the repositories and accounts. For a repository, `gh api repos/OWNER/NAME --jq .id`. For an account, `gh api users/LOGIN --jq .id`. Logins are hints. The numeric id is the authority.
+- Time to read what you install. This section links no code that you should install unread.
+
+### Step 1: create the tooling repository
+
+1. Create a private repository, by default `carrydown-tooling`: `gh repo create OWNER/carrydown-tooling --private`.
+2. Limit write access to the release owners and administrators. Protect the default branch with a ruleset that requires a pull request review, blocks force pushes and deletion, and allows no bypass. Changes to the verifier or to the enrollment then go through review.
+3. Copy these folders from the carrydown repository into the tooling repository: `scripts/` and `verifier/`. They are the pinned verifier code. Copy `verifier/carrydown-release-verify.yml` to `.github/workflows/carrydown-release-verify.yml` in the tooling repository. Merge that commit first. It is the commit that the enrollment pins as the verifier code, and the enrollment goes in a later commit.
+4. Read `.github/workflows/carrydown-release-verify.yml` before you merge it. It checks out the policy and the code into separate folders, proves the code checkout is exactly the pinned commit, and runs the verifier with `python3 -I`. Its actions are pinned by full commit SHA (Secure Hash Algorithm). Confirm each pinned commit against the action's release page.
+
+### Step 2: create the verifier App
+
+1. Create a GitHub App owned by the organization. Turn webhooks off. Grant only these repository permissions: Contents read, Pull requests read, Checks write and Metadata read.
+2. Install it on the tooling repository and on each engineering and staging repository you enroll. Grant no other repository.
+3. Write down the App's numeric id. It becomes `verifier_app_id` in the enrollment, and both required checks must come from this App.
+4. Generate a private key. Store the App id and the key as two repository secrets of the tooling repository only, named `CARRYDOWN_APP_ID` and `CARRYDOWN_APP_PRIVATE_KEY`. Never use an organization secret, and never store them in an engineering or staging repository. With the GitHub command line, `gh secret set CARRYDOWN_APP_PRIVATE_KEY --repo OWNER/carrydown-tooling < key.pem` reads the key from the file, so it never appears on a command line. Delete the file afterward.
+
+The verifier mints a short-lived installation token from these two secrets at the start of every run. It never prints the token.
+
+### Step 3: create the staging repository and its rules
+
+For each engineering repository:
+
+1. Create a private repository for release candidates. The plan owner's `python3 scripts/workspace.py init --root . --answer no --apply` prints the exact commands. The staging repository receives snapshots and manifests only, never originals or staffing records.
+2. Copy `templates/staging/open-release-request.yml` to `.github/workflows/open-release-request.yml` on its default branch. Another administrator reviews it, and nobody edits it afterward, because the enrollment pins its digest: `shasum -a 256 .github/workflows/open-release-request.yml`.
+3. Under Settings, Actions, General, allow GitHub Actions to create pull requests. This is how the owner is not the author of the request.
+4. Allow merge commits only. Squash and rebase would stop the verifier from comparing the reviewed head with the merged tree.
+5. Create the rulesets. Print them with the App's id filled in, then import each JSON file under Settings, Rules, Rulesets:
+
+   ```bash
+   python3 verifier/verify_release.py ruleset --kind staging --app-id <app id> > staging-ruleset.json
+   python3 verifier/verify_release.py ruleset --kind engineering --app-id <app id> > engineering-ruleset.json
+   ```
+
+   The staging ruleset requires one approving review, dismisses stale approvals when new commits arrive, restricts force pushes and deletion, allows no bypass, requires the `carrydown-staging-verifier` check from the App, and requires branches to be up to date before merging. It sets `require_last_push_approval` to false on purpose. The plan owner pushes the candidate and may be the only authorized human. Do not turn that setting on. The engineering ruleset requires `carrydown-release-verifier` from the same App, blocks force pushes and deletion, and allows no bypass.
+6. Check who can read the staging repository. The permitted set is the plan owner, the approved disclosure reviewers, the necessary organization administrators and specifically approved services. Include organization base permissions, teams, outside collaborators, repository administrators, installed Apps and deploy keys. Private visibility alone is not evidence of that set.
+
+### Step 4: enroll the project
+
+1. Add an entry to `enrollment.yaml` in the tooling repository. [The enrollment reference](../verifier/enrollment.schema.md) lists every field with a worked example. Set `verifier_sha` to the commit from step 1 and `verifier_app_id` to the App id.
+2. Fill in the two digests. `python3 verifier/verify_release.py digests --policy-file enrollment.yaml` prints the `enrollment_id` and `policy_sha256` each entry should carry, and says whether the file already holds them. Run it again after every edit. Any change to a permission changes the policy digest, and that forces reassessment of every earlier approval.
+3. Merge the enrollment through a reviewed pull request. The merge commit is the policy commit. It must be later than the verifier commit.
+4. In the engineering repository, add the pointer `.carrydown/release-policy.yaml`:
+
+   ```yaml
+   format: 1
+   tooling_repository: OWNER/carrydown-tooling
+   enrollment_id: <the enrollment_id of the entry>
+   ```
+
+   The pointer is only a pointer. The verifier resolves the project by the repository's numeric id and compares the pointer with the enrollment. Deleting the pointer or the handling block fails the check. It never turns an enrolled project into a legacy one.
+
+### Step 5: attest what the plan owner cannot inspect
+
+Some facts cannot be read with an ordinary token: the Apps installed on the staging repository, the readers of a project board, the engineering rulesets when the owner lacks administrative read access, the secret names of a repository, and the organization's agent environment. An administrator can vouch for each fact with a scoped attestation in the enrollment, [described in the reference](../verifier/enrollment.schema.md#attestations). Rules that always hold:
+
+- The author must be one of the enrollment's administrators, by numeric id, and the attestation must sit in the protected history of `enrollment.yaml`. Record the tooling pull request review that approved it in `note`.
+- The subject must match the exact component. A change to the reader set, the repository or the App makes the old attestation stop matching.
+- It has an expiry. Choose a lifetime you will keep renewing. Carrydown supplies no attestation that never expires.
+- It never replaces a live content hash, an approval identity, an event state, an expiry or the verifier's scan health.
+
+An expired or missing attestation blocks the first upload to staging, not the later audit. Renew it before it lapses.
+
+### Step 6: run the doctor
+
+The doctor has two forms. Both print a short table of components with a status of verified, not verifiable or missing.
+
+```bash
+python3 scripts/workspace.py doctor --root .
+python3 scripts/release.py doctor --root .
+```
+
+- **The offline doctor** (`workspace.py doctor`) checks the workspace permissions, that the workspace is outside the repository, the ignore rules and the local plan schema. It makes no network call. It lists every remote component as not verifiable, because the first skill holds no token code.
+- **The live doctor** (`release.py doctor`) adds the remote components, read with the owner's token: the enrollment found by the repository's numeric id, the pinned verifier commit and the absence of a verifier credential in the engineering and staging repositories, the staging repository's identity, privacy and effective readers, the installed request workflow against its enrolled digest, both rulesets (including the App that owns each required check), the approver and administrator accounts, the destinations, the verifier's scan health and the runtime-isolation attestation. It ends with two lines that say whether a private upload to staging is allowed and whether export and publication are allowed. The same checks run again before every upload, export and publication.
+
+On the private path every mandatory component must be verified before anything is uploaded or released. A not verifiable or missing component blocks the step that needs it and names the reason code. On the "yes" path the remote checks are informational.
+
+The owner's token needs read access only for the doctor: Metadata, Contents, Pull requests and Administration (read) on the engineering and staging repositories, and Actions (read) on the tooling repository. It reads rulesets, collaborators, deploy keys and the verifier's last completed run.
+
+### Who holds which credential
+
+| Credential | Held by | Can do |
+| --- | --- | --- |
+| The plan owner's token | The owner's machine, never a repository | Read the facts above. The owner's git credentials push candidate branches to staging. |
+| The verifier App's key | Secrets of the tooling repository only | Read contents and pull requests of enrolled repositories and write checks. |
+| The staging workflow's `GITHUB_TOKEN` | The staging repository's Actions run | Read contents and write pull requests, so it can open a request. Nothing else. |
+| Engineering repositories | Nothing | They hold no verifier workflow and no verifier secret. The doctor checks this. |
+
+### Limits to state to your reviewers
+
+- **Five minutes is a requested interval, not a deadline.** GitHub documents that scheduled runs can be delayed or dropped. An administrator can run the workflow by hand with Run workflow, and an optional webhook hosted by the organization can request an earlier run. Neither removes queueing or the race below.
+- **A successful check can outlive its inputs.** GitHub does not expire an old success. If the scheduler stops, an old success can stay mergeable. The scan health check makes owner-side writes refuse when the verifier is stale. It does not invalidate a success that already exists.
+- **State can change between a poll and a merge.** The reference deployment promises verification at the observed revisions. It does not promise continuous authorization or immediate revocation at the moment of merge. An organization that needs fresh authorization enforced at the exact merge must supply its own trusted merge controller. This deployment does not claim to be one.
+- **Withdrawal reaches engineers only after the receipt update merges.** Staging state is authoritative at once for owner-side writes. Engineers learn it from the receipts on their fetched default branch.
+- **Runtime isolation is attested, not proven.** The tests prove that an engineering clone carries no workspace locator or withheld text. They do not prove that an engineer's agent cannot read an owner-only folder. The runtime-isolation attestation records an administrator's claim about the real environment.
+
+### Acceptance on real GitHub
+
+Status: **not yet performed.** The fake-API tests cover the logic of every item below. They cannot show how GitHub counts reviews or which identity authored the request, so this run is a release prerequisite. The plan owner runs it only after explicitly authorizing it. Use a dedicated test organization, a fictional candidate, one human owner, the real App and the exported rulesets. Do not delete any resource the run creates.
+
+Run these steps in order, and record the outcome of each in the table.
+
+1. Install the tooling repository, the App, the staging repository and the engineering repository as above. Run the live doctor. Every component must be verified.
+2. Prepare a fictional candidate, approve it with `release.py approve --github --request <id> --apply`, and confirm that the request pull request was opened by the Actions identity, not by the owner.
+3. As the owner, approve the final head. Push another commit and confirm the approval is dismissed as stale. Approve the new head again.
+4. Confirm that `require_last_push_approval` is off and that the owner, who pushed the branch, can approve it.
+5. Confirm that `carrydown-staging-verifier` passes only after the authorized review of the final head, and fails before it.
+6. Merge with a merge commit. Confirm that activation happened: the request is active and `release.py export` accepts it.
+7. Export, open the engineering pull request, and confirm that `carrydown-release-verifier` passes. Then change one byte of an exported file and confirm the check fails.
+8. Prepare a replacement, approve and merge it, and confirm the first request becomes superseded in one batch and the engineering receipts update.
+9. Withdraw the active request. Confirm the receipt-only pull request passes and that a content publication stays refused.
+10. Stop the scheduled workflow, wait past `check_health_max_age_seconds`, and confirm the doctor reports the scan health as missing. Restart it.
+
+Record the results here when the run is done.
+
+| Item | Record |
+| --- | --- |
+| Date of the run | Not yet performed |
+| Platform and plan | Not yet performed |
+| Repository ids (tooling, engineering, staging) | Not yet performed |
+| App id and permissions | Not yet performed |
+| Ruleset ids and the settings they hold | Not yet performed |
+| Request opened by the Actions identity (step 2) | Not yet performed |
+| Owner approval and stale-review dismissal (step 3) | Not yet performed |
+| Last-pusher setting off (step 4) | Not yet performed |
+| Staging check outcomes (step 5) | Not yet performed |
+| Merge activation (step 6) | Not yet performed |
+| Engineering check outcomes (step 7) | Not yet performed |
+| Replacement (step 8) | Not yet performed |
+| Receipt-only withdrawal (step 9) | Not yet performed |
+| Scan health and scheduler behavior (step 10) | Not yet performed |
+| Sanitized check outcomes (ids and reason codes only) | Not yet performed |
+
 ## When something does not work
 
 ### The install command is missing or blocked
