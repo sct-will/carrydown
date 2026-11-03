@@ -559,8 +559,13 @@ def release_run(a, root, gh):
             pub.journal.start(f"{kind}/{key}", github_id=iss["id"], number=iss["number"], node_id=iss.get("node_id"),
                               payload_sha256=pub.payload(kind, key)[2])
     if not a.apply:
+        kinds = [kind for kind, _ in order]
+        new = [kind for kind, key in order if key in s.planned]
         L.say("\nSummary")
-        L.say(f"  to create now: {len(s.planned)} of {len(order)} issue(s). The rest are on GitHub already.")
+        L.say(f"{kinds.count('epic') + (1 if epic_number and 'epic' not in kinds else 0)} Epic, {kinds.count('subepic')} sub-epics, "
+              f"{kinds.count('issue')} work item issues")
+        L.say(f"  to create now: {new.count('epic')} Epic, {new.count('subepic')} sub-epics, {new.count('issue')} work item issues. "
+              "Already on GitHub: the rest.")
         L.say("\nDry run complete. Read it, then add --apply to write.")
         return 0
     L.say("\nLinks")

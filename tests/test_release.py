@@ -24,6 +24,7 @@ sys.path.insert(0, str(ROOT / "tests" / "mock"))
 from sample_tree import copy_sample  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests" / "mock"))
+import carrydown_lib as L  # noqa: E402
 import fake_evidence as FE  # noqa: E402
 import generate_dev_skill as GD  # noqa: E402
 import plan_repair as PR  # noqa: E402
@@ -306,10 +307,15 @@ class YesPathTests(Temp):
         self.assertEqual(len(list((self.ws / "events").iterdir())), 1)
         self.assertEqual(len(list((self.ws / "requests").iterdir())), 1)
 
-    def test_the_working_plan_that_is_the_draft_of_the_released_plan_is_left_in_place(self):
+    def test_the_export_writes_the_released_plan_and_moves_the_working_plan_to_the_workspace(self):
         before = (self.root / "docs/spec/plan.yaml").read_bytes()
-        self.yp.release()
-        self.assertEqual((self.root / "docs/spec/plan.yaml").read_bytes(), before)
+        rid = self.yp.release()
+        request = R.load_request(self.ws, rid)
+        released = (self.ws / "releases" / request["release_id"] / "snapshot" / "repo" / "docs/spec/plan.yaml").read_bytes()
+        self.assertEqual((self.root / "docs/spec/plan.yaml").read_bytes(), released)       # a clean clone holds the released plan
+        self.assertEqual((self.ws / "drafts" / "plan.yaml").read_bytes(), before)          # nothing of the working plan is lost
+        self.assertEqual(L.owner_plan(self.root).resolve(), (self.ws / "drafts" / "plan.yaml").resolve())   # the owner's commands find it there
+        self.assertEqual(L.find_plan(self.root), self.root / "docs/spec/plan.yaml")
 
     # --- lifecycle ---
     def test_replacement_supersedes_and_the_old_receipt_is_regenerated_as_superseded(self):

@@ -418,7 +418,7 @@ class YesFlow:
     workspace for the staffing records, and a bare repository standing in for the origin."""
     path = "yes"
 
-    def __init__(self, base, public=()):
+    def __init__(self, base, public=(), modern=True):
         self.base = Path(base)
         self.root = self.base / "project"
         self.ws = self.base / "workspace"
@@ -439,7 +439,8 @@ class YesFlow:
         for source in self.public:
             text = re.sub(r"(id: %s\n(?:.*\n)*?    classification: )repo-readers" % re.escape(source), r"\1public", text, count=1)
         plan.write_text(text, encoding="utf-8")
-        modernize_citations(plan, self.root / "docs" / "spec")
+        if modern:
+            modernize_citations(plan, self.root / "docs" / "spec")
         F.init_git(self.root)
         git(self.root, "add", "-A")
         git(self.root, "commit", "-q", "-m", "Sources and drafts")
@@ -844,14 +845,14 @@ def _():
 
 
 def swap_released_plan(y, clone):
-    """What an engineer gets when the owner adopts the released plan: the snapshot's plan.yaml."""
+    """The clone already holds the snapshot's released plan, because the yes-path export writes it (and moves the owner's
+    working plan to the private workspace). Check that instead of copying it in."""
     request = R.load_request(y.ws, y.rid)
-    shutil.copy(y.ws / "releases" / request["release_id"] / "snapshot" / "repo" / "docs/spec/plan.yaml", Path(clone) / "docs/spec/plan.yaml")
+    released = (y.ws / "releases" / request["release_id"] / "snapshot" / "repo" / "docs/spec/plan.yaml").read_bytes()
+    need((Path(clone) / "docs/spec/plan.yaml").read_bytes() == released, "the clone does not hold the released plan of the snapshot")
 
 
-@step("A3.3", "the released-view checker passes on the exported tree of the clone, which has no original and no full rendering",
-      xfail="the yes-path export keeps the owner's working plan.yaml (workspace view, with source paths, classifications and digests) when its projection equals the snapshot's, "
-            "so a clean clone holds no released plan: check_specs.py --view released reports schema-view-mismatch and the workspace-view check wants the renderings (WP6 judgment call 5)")
+@step("A3.3", "the released-view checker passes on the exported tree of the clone, which has no original and no full rendering")
 def _():
     y = yes()
     clone = stage("yes.clone")
@@ -890,7 +891,7 @@ def _():
         swap_released_plan(y, clone)
         return y, clone
     y, clone = S.once("yes.public", build)
-    plan, _p = L.load_plan(y.root / "docs/spec/plan.yaml", y.root)
+    plan, _p = L.load_plan(y.ws / "drafts" / "plan.yaml", y.root)     # the working plan: the project holds the released one
     equal({s["id"]: s["classification"] for s in plan["sources"]}, {"architecture": "public", "company-governance": "repo-readers"}, "classes")
     r = run_script("check_specs.py", "--root", clone, "--view", "released", cwd=clone)
     need(r.returncode == 0, r.stdout[-400:])
@@ -900,19 +901,25 @@ def _():
     need(not (clone / "docs/ground-truth").exists() and not (clone / "ground-truth").exists(), "an original or a rendering is in the clone")
 
 
-@step("A3.6", "the released-view checker also accepts a release whose specifications keep the older one-line text citation",
-      xfail="the released plan turns the older ground_truth text of an item into structured source_refs and drops the text, so check_specs.py --view released reports "
-            "'Ground truth row does not match plan.yaml' for every such item (8 of the 9 fixture items). The exported specification header and the released plan disagree. "
-            "WP8 and WP9 reported the same mismatch on the sample")
+@step("A3.6", "a release whose plan and specifications keep the older one-line text citation passes the released-view checker in a clean clone")
 def _():
-    y = yes()
-    clone = stage("yes.clone")
-    copy_ = S.tmp / "clone-legacy"
-    shutil.copytree(clone, copy_)
-    swap_released_plan(y, copy_)
-    legacy_citations(copy_ / "docs" / "spec")
-    r = run_script("check_specs.py", "--root", copy_, "--view", "released", cwd=copy_)
+    def build():
+        y = YesFlow(S.tmp / "yes-text", modern=False)
+        y.init_workspace()
+        y.put_staffing()
+        for source, code, text in y.render_all():
+            need(code == 0, text[-300:])
+        for call in (y.prepare, y.approve, y.export):
+            code, out, err = call()
+            need(code == 0, out + err)
+        return y, clean_clone(y, "clone-text")
+    y, clone = S.once("yes.text", build)
+    plan, _p = L.load_plan(y.ws / "drafts" / "plan.yaml", y.root)
+    texts = [it["id"] for it in plan["items"] if it.get("ground_truth") and not it.get("source_refs")]
+    need(len(texts) == 8, f"the working plan should keep 8 text citations, has {len(texts)}")
+    r = run_script("check_specs.py", "--root", clone, "--view", "released", cwd=clone)
     need(r.returncode == 0, last(r.stdout, 2))
+    return f"{len(texts)} items cited as text; " + last(r.stdout)
 
 
 @step("A3.7", "the whole path ran without enterprise infrastructure: no token, no enrollment, no staging repository, no network attempt")
@@ -2029,13 +2036,8 @@ def c3_state_export(f):
         except OSError:
             interrupted = True
     events_interrupted = len(events_of(f))
-    resume = f.export_state(second)
-    if resume[0] != 0 and f.path == "no":
-        # the owner removes the empty branch the interrupted run left, then repeats the command
-        git(f.root, "branch", "-q", "-D", f"carrydown/state-{second}")
-        final = f.export_state(second)
-    else:
-        final = resume
+    resume = f.export_state(second)       # the repeated command finishes the branch the interrupted run left, by itself
+    final = resume
     return {"second": second, "dry": dry, "before": before, "after_dry": after_dry, "interrupted": interrupted, "resume": resume,
             "apply": final, "after": tree_state(f.root), "events_before": events_before, "events_interrupted": events_interrupted,
             "events_after": len(events_of(f)), "pending": pending, "pending_check": pending_check}
@@ -2117,9 +2119,7 @@ def _(f):
 
 
 @step("C3.6", "the interrupted receipt update resumes without a new event, and once it reaches the default branch engineers see the withdrawal",
-      flows=("yes", "no"),
-      xfail={"no": "an interrupted release.py export-state leaves the branch carrydown/state-<id> at the base commit, and the repeated command refuses it with approval-scope-mismatch "
-                   "('a branch ... exists with different content') instead of finishing it, as export does for its own leftover branch; the owner must delete the branch by hand"})
+      flows=("yes", "no"))
 def _(f):
     r = cstage(f, "c3.state", lambda: c3_state_export(f))
     try:

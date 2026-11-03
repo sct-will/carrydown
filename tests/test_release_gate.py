@@ -225,7 +225,9 @@ class GateDecisionTests(TempCase):
 
     def test_a_changed_handling_policy_refuses_the_release_write(self):
         ctx = self.context()
-        path = self.root / "docs/spec/plan.yaml"
+        # the handling policy lives in the owner's working plan: after a yes-path release that is
+        # drafts/plan.yaml in the private workspace, and the project holds the released copy
+        path = L.owner_plan(self.root)
         path.write_text(path.read_text(encoding="utf-8").replace("policy_version: 1", "policy_version: 2", 1), encoding="utf-8")
         d = self.check("release", "docs/spec/README.md", self.digest_of("docs/spec/README.md"), verified_context=ctx)
         self.assertEqual(d.code, "policy-revision-mismatch")

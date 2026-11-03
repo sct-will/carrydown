@@ -53,6 +53,7 @@ class State:
         self.repo_ids = {"o/r": 4200}   # numeric id of each repository; one not listed gets the next free id
         self.orgs = set()       # logins that are organizations; any other login is a user
         self.missing_users = set()   # logins that answer 404, as a login that does not exist does
+        self.owner_ids = {}          # numeric id of each user or organization login; one not listed answers 4400
         self.fail = {}
         self.redirect = {}
         self.log = []
@@ -180,7 +181,8 @@ class H(BaseHTTPRequestHandler):
             return self.send(404, {"message": "Not Found"})
         if m:
             org = m.group(1) in S.orgs
-            return self.send(200, {"login": m.group(1), "type": "Organization" if org else "User", "node_id": "O_1" if org else "U_1"})
+            return self.send(200, {"login": m.group(1), "type": "Organization" if org else "User", "node_id": "O_1" if org else "U_1",
+                                   "id": S.owner_ids.get(m.group(1), 4400)})
         if p == "/graphql":
             b = self.body()
             return self.send(200, graphql(b.get("query") or "", b.get("variables") or {}))
@@ -190,14 +192,14 @@ class H(BaseHTTPRequestHandler):
             if name is None:
                 return self.send(404, {"message": "Not Found"})
             return self.send(200, {"id": int(m.group(1)), "full_name": name, "private": S.private, "visibility": "private" if S.private else "public",
-                                   "default_branch": "main", "permissions": {"push": True}, "node_id": "R_1"})
+                                   "default_branch": "main", "permissions": {"push": True}, "node_id": f"R_{int(m.group(1))}"})
         m = re.match(rf"/repos/({NAME})/({NAME})(/|$)", p)
         if m and f"{m.group(1)}/{m.group(2)}" not in S.repos:
             return self.send(404, {"message": "Not Found"})
         if re.fullmatch(rf"/repos/{NAME}/{NAME}", p):
             full = "/".join(p.split("/")[2:4])
             return self.send(200, {"id": S.repo_id(full), "full_name": full, "private": S.private, "visibility": "private" if S.private else "public",
-                                   "default_branch": "main", "permissions": {"push": True}, "node_id": "R_1"})
+                                   "default_branch": "main", "permissions": {"push": True}, "node_id": f"R_{S.repo_id(full)}"})
         base = rf"/repos/{NAME}/{NAME}"
         if re.fullmatch(base + "/labels", p):
             if method == "GET":
@@ -352,8 +354,16 @@ def graphql(query, v):
             return {"errors": [{"message": "Could not resolve to a node"}]}
         return ok({"node": dict(_public(pr), fields={"nodes": pr["fields"]}, views={"nodes": [_view_out(x) for x in pr["views"]]})})
     if op == "createProjectV2":
-        return ok({op: {"projectV2": _public(add_project(v["t"]))}})
+        pr = add_project(v["t"])
+        if str(v.get("r") or "").startswith("R_"):
+            pr["repo_ids"] = [int(v["r"][2:])]
+        return ok({op: {"projectV2": _public(pr)}})
     if op == "linkProjectV2ToRepository":
+        pr = _project(v.get("p"))
+        if pr is not None and str(v.get("r") or "").startswith("R_"):
+            ids = pr.setdefault("repo_ids", [])
+            if int(v["r"][2:]) not in ids:
+                ids.append(int(v["r"][2:]))
         return ok({op: {"repository": {"id": v.get("r")}}})
     if op == "createProjectV2Field":
         pr = _project(v["p"])

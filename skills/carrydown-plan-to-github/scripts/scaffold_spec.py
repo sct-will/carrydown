@@ -637,7 +637,7 @@ def main(argv=None):
     if a.init:
         return init_plan(root, a, git_top)
 
-    plan_path = L.find_plan(root, a.plan)
+    plan_path = L.owner_plan(root, a.plan)
     if not L.exists(plan_path):
         print(f"error: no plan at {plan_path}. Run with --init first.", file=sys.stderr)
         return 2

@@ -224,8 +224,10 @@ def main(argv=None):
     ap.add_argument("--apply", action="store_true")
     a = ap.parse_args(argv)
     root = L.project_root(a.root)
-    path = L.find_plan(root, a.plan)
-    L.inside(root, path, "plan")
+    path = L.owner_plan(root, a.plan)          # after a yes-path release: the working plan in the private workspace
+    in_workspace = a.plan is None and root.resolve() not in Path(path).resolve().parents
+    if not in_workspace:
+        L.inside(root, path, "plan")
     raw = L.load_file(path)
     shape = L.type_problems(raw)
     if shape:
@@ -249,7 +251,7 @@ def main(argv=None):
     shown = Path(path).resolve().relative_to(root.resolve()).as_posix() if root.resolve() in Path(path).resolve().parents else str(path)
     # the gate is asked for the plan on every --apply, whether or not the repair changes it, so that an
     # enrolled project without an approved release, or a plan that no longer holds the approved bytes, stops here
-    RG.require(RG.maintenance_class(root), shown, L.sha256_text(after), "engineering-repo", root)
+    RG.require("candidate" if in_workspace else RG.maintenance_class(root), shown, L.sha256_text(after), "workspace" if in_workspace else "engineering-repo", root)
     if proposed != raw:
         L.write_text(path, after)
     _, problems = L.load_plan(path, root)

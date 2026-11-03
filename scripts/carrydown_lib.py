@@ -658,6 +658,46 @@ def find_plan(root, explicit=None):
     return Path(root) / "docs/spec/plan.yaml"
 
 
+def owner_plan(root, explicit=None):
+    """The plan the owner works on: --plan when given, else the working plan in the private workspace when
+    the project holds only its released copy, else find_plan.
+
+    After the first release on the "yes" path, docs/spec/plan.yaml in the project is the released plan,
+    exactly as approved, and the owner's working plan (with its comments, source paths, classifications and
+    digests) is <workspace>/drafts/plan.yaml, while the specifications stay in the project. The owner-side
+    commands (the checker, the scaffold, the skill generator) then read the working plan, as the release
+    commands, the renderer and the gate already do. A clean clone has no workspace pointer and reads the
+    released plan. On the "no" path the drafts folder also holds the specifications, and the commands are
+    run with --root <workspace>/drafts, so nothing changes there."""
+    if explicit is not None:
+        return find_plan(root, explicit)
+    project_plan = find_plan(root, None)
+    try:
+        ws, _why = workspace_root(root)
+    except Exception:
+        ws = None
+    if ws is None:
+        return project_plan
+    drafts = Path(ws) / "drafts" / "plan.yaml"
+    if not exists(drafts):
+        return project_plan
+    try:
+        raw = load_file(drafts)
+        spec_dir = str(((raw.get("project") or {}).get("spec_dir")) or "docs/spec") if isinstance(raw, dict) else "docs/spec"
+    except (YamlError, TextError, OSError, ValueError):
+        return project_plan
+    if (Path(ws) / "drafts" / spec_dir).is_dir():
+        return project_plan
+    if exists(project_plan):
+        try:
+            mine = load_file(project_plan)
+        except (YamlError, TextError, OSError, ValueError):
+            return project_plan
+        if not (isinstance(mine, dict) and mine.get("plan_view") == "released"):
+            return project_plan
+    return drafts
+
+
 RATIONALE_MILESTONE_KEYS = ("rationale", "joint_demonstration", "single_track_reason")
 
 
@@ -1390,15 +1430,20 @@ def _restricted_hook(workspace_plan, projected, omitted):
 def _released_item(plan, item, omitted=()):
     """One work item of the released plan. A citation written as text (the older ground_truth line) is
     resolved here, against the workspace plan's sources, into structured source_refs, because the
-    released plan is checked against the approved bundle of each item and has no source paths to read."""
+    released plan is checked against the approved bundle of each item and has no source paths to read.
+    The owner's text stays beside them, so the Ground truth row of the exported specification, which
+    shows that text, still matches the released plan (ground_truth_citation). An item that has its own
+    source_refs keeps only those, because its Ground truth row was written from them."""
     import copy
     out = {k: copy.deepcopy(item[k]) for k in RELEASED_ITEM_KEYS if k in item}
     if out.get("unblocks"):
         out["unblocks"] = [u for u in out["unblocks"] if u not in omitted]   # no trace of an omitted item
     refs = item_source_refs(plan, item)
-    if refs and not item.get("source_refs"):
+    if item.get("source_refs"):
+        if out.get("ground_truth"):
+            out["ground_truth"] = ""           # its row shows the source_refs, never this text
+    elif refs:
         out["source_refs"] = copy.deepcopy(refs)
-        out.pop("ground_truth", None)
     return out
 
 
@@ -2280,8 +2325,10 @@ def ground_truth_citation(plan, it):
     refs = item_source_refs(plan, it)
     if not refs:
         return ""
-    if not it.get("source_refs"):
-        return it.get("ground_truth") or ""
+    if it.get("ground_truth") and (not it.get("source_refs") or (plan.get("_view") or plan.get("plan_view")) == "released"):
+        # the owner's own words. In a released plan an item holds both only when the release resolved
+        # that text into source_refs (_released_item), and its specification still shows the text
+        return it["ground_truth"]
     sources = source_by_id(plan)
     parts = []
     for ref in refs:

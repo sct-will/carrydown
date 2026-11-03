@@ -234,9 +234,12 @@ def yaml_text(value):
     return json.dumps(str(value), ensure_ascii=False)
 
 
-def workspace_yaml_text(slug, root, remote, staging):
+def workspace_yaml_text(slug, root, remote, staging, answer="yes"):
+    """workspace.yaml. repo_audience_approved records the owner's answer to the one question, so that the
+    release gate knows a "no" project from its first write, before any plan carries the handling block."""
     lines = [f"format: {WORKSPACE_FORMAT}", f"slug: {slug}", "engineering_repo:",
-             f"  path: {yaml_text(Path(root).as_posix())}", f"  remote: {yaml_text(remote)}"]
+             f"  path: {yaml_text(Path(root).as_posix())}", f"  remote: {yaml_text(remote)}",
+             f"repo_audience_approved: {'false' if answer == 'no' else 'true'}"]
     if staging:
         lines.append(f"staging_repository: {staging}")
     lines += ["policy_version: 1", "state: drafting"]
@@ -423,7 +426,7 @@ def cmd_init(a):
     for sub in SUBFOLDERS:
         (ws / sub).mkdir(exist_ok=True)
     if not reuse:
-        L.write_text(ws / "workspace.yaml", workspace_yaml_text(slug, root, remote, staging))
+        L.write_text(ws / "workspace.yaml", workspace_yaml_text(slug, root, remote, staging, answer))
         L.write_text(ws / "retention.yaml", retention_yaml_text(retain))
     if not (ws / "people.yaml").exists():
         L.write_text(ws / "people.yaml", PEOPLE_STARTER)

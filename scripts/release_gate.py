@@ -198,8 +198,10 @@ def _read_state(root):
         info = _raw_plan(lib, os.path.join(workspace, "workspace.yaml")) or {}
         has_history = bool(info.get("staging_repository")) or any(
             os.path.isdir(os.path.join(workspace, d)) and os.listdir(os.path.join(workspace, d)) for d in ("requests", "events"))
-        if handling is None and info.get("staging_repository"):
-            handling = {"repo_audience_approved": False, "state": "migrated"}   # fail closed: a staging repository means the "no" path
+        if handling is None and (info.get("staging_repository") or info.get("repo_audience_approved") is False):
+            # fail closed: a staging repository, or the owner's recorded "no" answer, means the "no" path even
+            # before a plan carries the handling block, so a draft cannot be written into the repository by mistake
+            handling = {"repo_audience_approved": False, "state": "migrated"}
     return ProjectState(handling, enrolled, pointer, pointer_ok, workspace, repository, spec_dir, has_history)
 
 
@@ -394,7 +396,10 @@ def check(write_class, artifact_path, content_digest, destination, root, *,
             return Decision(True, "legacy", "no-handling-policy", request_id)
         return _allow(state, request_id, write_class, artifact_path)
     if _is_legacy(state):
-        legacy_notice(write_class)
+        if not state.workspace and str(artifact_path).replace("\\", "/") not in UNSOURCED_DRAFTS:
+            # a project with a workspace, or one that is creating its workspace pointer, is answering step 0
+            # and has no plan yet: no line telling it to migrate
+            legacy_notice(write_class)
         return Decision(True, "legacy", "no-handling-policy", request_id)
     if state.enrolled and not state.pointer_ok:
         return _deny(state, request_id, write_class, artifact_path, "policy-pointer-mismatch")

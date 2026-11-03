@@ -1193,7 +1193,7 @@ def main(argv=None):
         return fail(why)
     root = Path(a.root).expanduser().resolve()
     try:
-        plan_path = L.find_plan(root, a.plan)
+        plan_path = L.find_plan(root, a.plan) if a.view == "released" else L.owner_plan(root, a.plan)
     except L.PlanError as e:
         return fail(e.msg)
     if not L.exists(plan_path):

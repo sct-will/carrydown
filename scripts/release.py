@@ -8,23 +8,31 @@ A release is approved content plus one permission decision. Two identities keep 
                and approving one never approves another.
 
 Commands (every one that writes is a dry run unless you pass --apply)
+  release   --root . [--apply]        the "yes" path in one step: the preview and the lines to ask, then, with
+                                      --apply after the owner's yes, prepare, the local approval and the export
   preview   --root .                  the four-question preview and the changes since the last release
   prepare   --root . [--apply]        build the snapshot, the manifest and the approval request
-  approve   --request ID --local      the "yes" path: record your own approval and an activation event
-  approve   --request ID --github     the "no" path: upload the candidate to the private staging repository
-  export    --request ID              copy the approved files and the receipt into the engineering repository
-  export-state --request ID           write only the regenerated receipt of a superseded or withdrawn request
-  withdraw  --request ID --reason CODE   prepare the terminal event that ends a request
+  approve   --local | --github        the "yes" path: record your own approval and an activation event, or
+                                      the "no" path: upload the candidate to the private staging repository
+  export                              copy the approved files and the receipt into the engineering repository
+  export-state                        write only the regenerated receipt of a superseded or withdrawn request
+  withdraw  --reason CODE             prepare the terminal event that ends a request
   diff      --root .                  what changed since the active release, and which work items it touches
   inventory --root .                  what a legacy project tracks and has in git history. The first step of migrating. Writes nothing
   doctor    --root .                  the offline workspace checks, and the live checks when a token is set
 
+--request ID names the request. Without it, approve takes the request prepare saved last, export and
+withdraw the active request, and export-state the request the most recent state change ended.
+
 How a decision is made (specification D6, D10, D13)
-  "Yes" path (everyone who can read the repository may see all the documents). approve --local prints the
-  four-question preview from the request, then records your approval. When a person runs it in a terminal
-  it asks you to type yes. An agent that runs it passes --preview-shown after it has shown you the
-  preview and you answered the disclosure line of the three approvals; without a terminal and without
-  --preview-shown the command refuses. The evidence is a local owner approval, labeled
+  "Yes" path (everyone who can read the repository may see all the documents). release shows the
+  four-question preview and the lines to ask; release --apply, run after the owner's yes, prepares the
+  request, records the local approval and exports, in one step. The audience is derived: everyone who
+  can read the repository, which is the public when the repository is public. With a token the board is
+  looked up by the plan's project_title and, when missing, created empty by the --apply run. The
+  separate commands remain: approve --local prints the preview from the request, then records your
+  approval; in a terminal it asks you to type yes, and an agent passes --preview-shown after it has shown
+  you the preview and you answered the disclosure line. The evidence is a local owner approval, labeled
   authenticated false. A project enrolled in the tooling repository refuses it.
   "No" path. approve --github verifies the staging repository first (numeric identity, privacy, effective
   readers, workflow, ruleset) and uploads nothing until every one is verified. It pushes a branch
@@ -326,19 +334,195 @@ def resolve_targets(project, args, asm, enrollment, reader):
     rid = getattr(args, "repository_id", None)
     if rid is None and token_available(args):
         info = (reader or make_reader(args)).repository(repo)
-        rid = info["id"] if info else None
+        if info is None:
+            refuse("target-identity-mismatch", f"{repo} cannot be found with the stored token. Check project.repo in the plan and the token's repository access")
+        rid = info["id"]
+    if rid is None:
+        rid = known_repository_id(project)
     if rid is None:
         refuse("target-identity-mismatch",
-               f"prepare needs the numeric id of {repo}. Pass --repository-id N (gh api repos/{repo} --jq .id), or set a token so it can be read")
+               f"the numeric id of {repo} is not known yet. It is read with the GitHub token of carrydown-plan-to-github "
+               "(step 2, the token), so set the token up first and run this again")
     out.append({"id": "engineering", "host": "github.com", "repository_id": int(rid), "repository": repo})
     if wants_board:
         owner_id, project_id = getattr(args, "board_owner_id", None), getattr(args, "board_project_id", None)
+        if (owner_id is None or not project_id) and getattr(args, "board_pending", False):
+            return sorted(out, key=lambda t: t["id"])     # a dry run of release: the board is created before prepare
         if owner_id is None or not project_id:
             refuse("destination-not-allowed",
                    "the board is a destination, but its identity is not known. Pass --board-owner-id and --board-project-id, "
                    "or leave the board out with --destinations")
         out.append({"id": "board", "host": "github.com", "repository_id": int(rid), "owner_id": int(owner_id), "project_id": str(project_id)})
     return sorted(out, key=lambda t: t["id"])
+
+
+def plan_project_block(project):
+    """The project block of the owner's plan, read as plain data: the workspace plan when it exists, else
+    the project's. An empty dict when neither can be read."""
+    ws = project.workspace
+    candidates = ([Path(ws) / "drafts" / "plan.yaml"] if ws is not None else []) + [L.find_plan(project.root)]
+    for path in candidates:
+        if L.exists(path):
+            try:
+                raw = L.load_file(path)
+            except (L.YamlError, L.TextError, OSError, ValueError):
+                return {}
+            block = raw.get("project") if isinstance(raw, dict) else None
+            return block if isinstance(block, dict) else {}
+    return {}
+
+
+def board_owner_login(project, a):
+    """The account that owns the board: --board-owner, else the owner of the repository, as on main."""
+    return getattr(a, "board_owner", None) or str(project.repository).split("/", 1)[0]
+
+
+def _draft_board_guard(project):
+    """A client write guard for setting up an empty board on the "yes" path. Every write asks the gate as a
+    draft write first: allowed when everyone who can read the repository may see the documents, refused
+    (drafting-is-private) on the "no" path, where an administrator provisions boards."""
+    def guard(method, path, data=None):
+        RG.require("draft", "github:board", RS.sha256_text(f"{method} {path.split('?')[0]}"), "board", project.root)
+    return guard
+
+
+def yes_board(project, a, reader, create=False):
+    """Find the board of a "yes" path release with the owner's token, and with create make it, empty.
+
+    The release names the board by its node id (D4), so the board must exist before prepare. On main the
+    board script created it; here the "yes" path keeps that: the board is looked up by the plan's
+    project_title under its owner and, after the owner's yes to the external-write line, created empty and
+    linked to the repository. Its fields, views and items are written later, from the approved release.
+    Returns (status, text). status is given, found, created, missing (create would make it) or unknown (no
+    token). On found and created it sets a.board_owner_id and a.board_project_id."""
+    if getattr(a, "board_owner_id", None) is not None and getattr(a, "board_project_id", None):
+        return "given", "the board given by its ids"
+    title = str(plan_project_block(project).get("project_title") or "").strip()
+    if not title:
+        return "unknown", "the plan has no project_title, so the board is left out of the release"
+    if reader is None:
+        return "unknown", "no GitHub token is set up, so the board cannot be looked up and the release leaves it out"
+    import github_project as GP   # lazily: it imports the publishing modules
+    import github_client as G
+    gh = getattr(reader, "gh", None)
+    if gh is None:
+        return "unknown", "the board cannot be looked up with this reader"
+    owner = board_owner_login(project, a)
+    try:
+        st, user = gh.rest_status("GET", f"/users/{owner}")
+        if st != 200 or not isinstance(user, dict):
+            refuse("target-identity-mismatch", f"the board owner {owner} cannot be found")
+        found = GP.find_project(gh, owner, user.get("type"), title)
+        repo = gh.rest("GET", f"/repos/{project.repository}")
+    except G.GitHubError:
+        refuse("evidence-unavailable", "the board cannot be looked up on GitHub")
+    status = "found"
+    if found is None:
+        if not create:
+            return "missing", f"the board {title!r} does not exist yet under {owner}. The run with --apply creates it empty, linked to {project.repository}, before it prepares the release"
+        gh.write_guard = _draft_board_guard(project)
+        try:
+            made = gh.graphql("mutation($o: ID!, $t: String!, $r: ID) { createProjectV2(input: {ownerId: $o, title: $t, repositoryId: $r}) "
+                              "{ projectV2 { id title number url } } }", {"o": user.get("node_id"), "t": title, "r": repo.get("node_id")})
+            found = made["createProjectV2"]["projectV2"]
+            gh.graphql("mutation($p: ID!, $r: ID!) { linkProjectV2ToRepository(input: {projectId: $p, repositoryId: $r}) { repository { id } } }",
+                       {"p": found["id"], "r": repo.get("node_id")})
+        except G.GitHubError:
+            refuse("evidence-unavailable", "the empty board could not be created on GitHub. Nothing else was written")
+        finally:
+            gh.write_guard = None
+        status = "created"
+        say(f"Created the empty board {title!r} for {owner}, linked to {project.repository}. It holds nothing until the release is published.")
+    info = reader.project(found["id"])
+    if info is None or not info.get("owner_id"):
+        refuse("target-identity-mismatch", "the board cannot be read back by its node id")
+    if repo.get("id") not in (info.get("repository_ids") or []):
+        if not create:
+            return "missing", f"the board {title!r} is not linked to {project.repository} yet. The run with --apply links it"
+        gh.write_guard = _draft_board_guard(project)
+        try:
+            gh.graphql("mutation($p: ID!, $r: ID!) { linkProjectV2ToRepository(input: {projectId: $p, repositoryId: $r}) { repository { id } } }",
+                       {"p": found["id"], "r": repo.get("node_id")})
+        except G.GitHubError:
+            refuse("evidence-unavailable", "the board could not be linked to the repository")
+        finally:
+            gh.write_guard = None
+    a.board_owner_id, a.board_project_id = int(info["owner_id"]), str(info["id"])
+    return status, f"the board {title!r} of {owner}" + (", created empty just now" if status == "created" else "")
+
+
+def derived_audience(project, reader):
+    """The audience of a "yes" path release, derived and never asked (A2 item 1): everyone who can read
+    the repository, which for a public repository is the public. repo-readers when it cannot be read."""
+    if reader is None:
+        return "repo-readers"
+    try:
+        info = reader.repository(project.repository)
+    except V.EvidenceUnavailable:
+        return "repo-readers"
+    if info and (info.get("visibility") == "public" or info.get("private") is False):
+        return "public"
+    return "repo-readers"
+
+
+def known_repository_id(project):
+    """The numeric id of the engineering repository as an earlier request of this workspace recorded it, when
+    every earlier request that names this repository agrees on one id. None otherwise. Publication checks the
+    id against the API again before any GitHub write, so a stale value is refused there, never trusted."""
+    ws = project.workspace
+    if ws is None or not (Path(ws) / "requests").is_dir():
+        return None
+    name = str(project.repository).casefold()
+    seen = set()
+    for path in sorted((Path(ws) / "requests").glob("*/approval-request.json")):
+        try:
+            request = RS.loads_strict(read_bytes(path) or b"")
+            RS.validate_request(request)
+        except (RS.SchemaError, Refused, ValueError):
+            continue
+        for t in request["receipt_template"]["targets"]:
+            if t.get("id") == "engineering" and str(t.get("repository", "")).casefold() == name:
+                seen.add(t["repository_id"])
+    return seen.pop() if len(seen) == 1 else None
+
+
+def chosen_request(project, a, purpose):
+    """The request a command acts on: --request when given, otherwise the one the command implies, so an
+    agent never has to carry an id between commands. approve: the request prepare saved last. export and
+    withdraw: the active request. export-state: the request that the most recent state change ended.
+    The id is always printed, and a command that cannot tell refuses instead of guessing."""
+    rid = getattr(a, "request", None)
+    if rid:
+        return rid
+    ws = project.need_workspace()
+    if purpose == "approve":
+        record = None
+        try:
+            record = json.loads((ws / "candidate" / "record.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            record = None
+        rid = record.get("request_id") if isinstance(record, dict) else None
+        if not rid:
+            refuse("approval-not-found", "no prepared request is saved in the workspace. Run prepare --apply first")
+        say(f"request {rid} (the one prepare saved last)")
+        return rid
+    policy, enrollment, reader = current_policy(project, a) if project.enrolled else (None, None, None)
+    if purpose in ("export", "withdraw"):
+        replay = current_replay(project, enrollment, reader)
+        rid = replay.active if replay else None
+        if not rid:
+            refuse("not-approved", "no request is active. Prepare and approve a release first")
+        say(f"request {rid} (the active request)")
+        return rid
+    history = local_or_staging_history(project, enrollment, reader)
+    for batch in reversed(history.events):
+        ended = [t["request_id"] for t in batch["transitions"] if t["to"] in RS.TERMINAL_STATES]
+        if len(ended) == 1:
+            say(f"request {ended[0]} (the one the most recent state change ended)")
+            return ended[0]
+        if ended:
+            break
+    refuse("approval-not-found", "the most recent state change does not name exactly one ended request. Pass --request")
 
 
 def current_replay(project, enrollment, reader):
@@ -536,7 +720,7 @@ def build_assembly(project, a, enrollment=None):
         destinations = [d for d in (explicit or keep) if d in keep]
     board_known = (getattr(a, "board_owner_id", None) is not None and bool(getattr(a, "board_project_id", None))) or \
         (enrollment is not None and "board" in enrollment.entry["allowed_targets"])
-    with_board = board_known or (explicit is not None and "board" in explicit)
+    with_board = board_known or (explicit is not None and "board" in explicit) or bool(getattr(a, "board_pending", False))
     overrides = {"assignees": yes_no(getattr(a, "assignees", None)), "capacity_summary": yes_no(getattr(a, "capacity_summary", None)),
                  "evidence": getattr(a, "evidence", None)}
     asm = A.assemble(project.root, with_github=not getattr(a, "no_github", False), exceptions=read_exceptions(getattr(a, "exceptions", None)),
@@ -605,10 +789,22 @@ def preview_inputs(project, a):
 def cmd_preview(a):
     project = Project(a.root)
     policy, enrollment, reader = preview_inputs(project, a)
-    asm = build_assembly(project, a, enrollment)
     say("carrydown release preview (reads your working files; writes nothing)")
-    if report_assembly_problems(asm):
+    shown = show_preview(project, a, policy, enrollment, reader)
+    if shown is None:
         return 1
+    say("")
+    say("Nothing was written. Run prepare --apply to build the snapshot and the approval request.")
+    return 0
+
+
+def show_preview(project, a, policy, enrollment, reader, quiet=False):
+    """Print the release id and the four-question preview of the working files. Returns (asm, params,
+    release id), or None when the assembly has problems (they are printed). quiet computes the same
+    without printing the preview."""
+    asm = build_assembly(project, a, enrollment)
+    if report_assembly_problems(asm):
+        return None
     manifest, release_id, entries = B.build_manifest(asm.files)
     replay = None
     try:
@@ -622,13 +818,45 @@ def cmd_preview(a):
         targets = []
         asm = asm._replace(notes=asm.notes + [f"Targets not resolved yet: {e.text}"])
     params = request_params_for(project, a, asm, entries, release_id, policy, targets, previous_id)
+    if quiet:
+        return asm, params, release_id
     preview = build_preview(project, asm, params, entries, previous_id)
     say("")
     say(f"release id (the content): {release_id}")
     print_preview(preview, header="")
-    say("")
-    say("Nothing was written. Run prepare --apply to build the snapshot and the approval request.")
-    return 0
+    return asm, params, release_id
+
+
+SHOWN_RECORD = "candidate/shown.json"
+
+
+def shown_binding(release_id, scope, exceptions):
+    """The digest of what the owner was shown and answered: the content (release id) and every part of the
+    scope except the board's node id, which the --apply run of release may create after the preview. The
+    approval of release --apply is bound to it: a file or a scope that changed after the preview is refused."""
+    body = {"release_id": release_id, "exceptions": exceptions,
+            "scope": {k: scope[k] for k in ("audience", "destinations", "sources", "downstream", "offline_grace_days", "expires_at", "policy_sha256")},
+            "targets": [t for t in scope["targets"] if t.get("id") != "board"]}
+    return RS.sha256_bytes(RS.canonical_json(body))
+
+
+def binding_of_request(request):
+    t = request["receipt_template"]
+    scope = {"audience": t["audience"], "destinations": t["destinations"], "targets": t["targets"], "sources": t["sources"],
+             "downstream": t["downstream"], "offline_grace_days": t["offline_grace_days"], "expires_at": t["expires_at"],
+             "policy_sha256": request["policy_sha256"]}
+    return shown_binding(request["release_id"], scope, request["detector_exceptions"])
+
+
+def require_shown(project, binding):
+    """Refuse (not-approved) unless the last preview recorded by the dry run of release is this one."""
+    try:
+        record = json.loads((project.need_workspace() / SHOWN_RECORD).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        record = None
+    if not isinstance(record, dict) or record.get("binding") != binding:
+        refuse("not-approved", "the files or the scope differ from the last preview the owner saw, or no preview was shown. Nothing was "
+                               "written. Run release without --apply, show the new preview and ask again")
 
 
 def cmd_diff(a):
@@ -690,6 +918,7 @@ def cmd_prepare(a):
             if same_scope(load_request(project.workspace, previous_id), release_id, params, exceptions):
                 say(f"This content and scope are already approved and active as request {previous_id}. Nothing to prepare. "
                     "Use --new-request to start a new approval anyway.")
+                a.prepared_request = previous_id
                 return 0
         except (Refused, RS.SchemaError):
             pass
@@ -722,6 +951,7 @@ def cmd_prepare(a):
     state = replay.requests.get(rid) if replay else None
     if state is not None and state.state == "active":
         say(f"This request is already approved and active: {rid}")
+        a.prepared_request = rid
         return 0
     if state is not None and state.state in RS.TERMINAL_STATES and not getattr(a, "nonce", None):
         nonce = B.new_nonce()
@@ -770,10 +1000,133 @@ def cmd_prepare(a):
             refuse("approval-scope-mismatch", "a request with this id exists but differs")
     else:
         workspace_put(project, f"requests/{rid}/approval-request.json", RS.canonical_json(request))
-    record = {"release_id": release_id, "scope_sha256": scope, "request_nonce": nonce, "created": created}
+    record = {"release_id": release_id, "scope_sha256": scope, "request_nonce": nonce, "created": created, "request_id": rid}
     workspace_put(project, "candidate/record.json", (json.dumps(record, sort_keys=True) + "\n").encode("utf-8"))
-    say(f"Prepared. Next: python3 {Path(__file__).resolve()} approve --root . --request {rid} "
-        + ("--github --apply" if project.mode == "no" else "--local --apply"))
+    a.prepared_request = rid
+    if not getattr(a, "quiet_next", False):
+        say(f"Prepared. Next: python3 {Path(__file__).resolve()} approve --root . "
+            + ("--github --apply" if project.mode == "no" else "--local --apply"))
+    return 0
+
+
+# ---------------------------------------------------------------------------
+# release: the "yes" path in one step
+# ---------------------------------------------------------------------------
+
+GITHUB_KINDS = (("epic", "Epic", "Epic"), ("subepic", "sub-epic", "sub-epics"), ("issue", "work item issue", "work item issues"),
+                ("epic-comment", "Epic comment", "Epic comments"), ("label", "label", "labels"))
+
+
+def github_items_line(asm, board_text):
+    """The external-write scope of a release in plain words: the GitHub items its payloads create or update."""
+    counts = {}
+    for path in asm.payload_paths:
+        kind = path.split("/")[1]
+        counts[kind] = counts.get(kind, 0) + 1
+    parts = [f"{counts[k]} {one if counts[k] == 1 else many}" for k, one, many in GITHUB_KINDS if counts.get(k)]
+    if counts.get("board"):
+        parts.append(board_text)
+    return ", ".join(parts)
+
+
+def cmd_release(a):
+    """The "yes" path in one command (A2, C2, D6). Without --apply: the four-question preview, the GitHub
+    items the release would create or update, and the lines to ask the owner. With --apply, after the
+    owner's yes to the disclosure line (and to the external-write line, unless --no-github): the empty
+    board when it is missing, prepare, the local approval and the export into the working tree. The owner
+    types no id, flag, audience or destination; the audience is derived from the repository."""
+    project = Project(a.root)
+    say("carrydown release  " + ("APPLY" if a.apply else "DRY RUN (nothing will be written)"))
+    if project.enrolled or project.mode != "yes":
+        refuse("unauthenticated-release", "release is the \"yes\" path in one step, with your local approval. This project drafts privately, "
+                                          "so it needs prepare, approve --github and export")
+    reader = make_reader(a) if token_available(a) else None
+    if getattr(a, "audience", None) is None:
+        a.audience = derived_audience(project, reader)
+    board_status, board_text = ("none", "")
+    if not getattr(a, "no_github", False):
+        board_status, board_text = yes_board(project, a, reader, create=False)
+        # the dry run previews the board as it will be; the run with --apply creates it before prepare names it
+        a.board_pending = board_status == "missing"
+    repo = project.repository
+    audience_words = "published publicly" if a.audience == "public" else f"shared with everyone who can read {repo}"
+    policy = V.local_policy(project.released_handling(), repo)
+    if not a.apply:
+        shown = show_preview(project, a, policy, None, reader)
+        if shown is None:
+            return 1
+        asm, params, release_id = shown
+        binding = shown_binding(release_id, params, used_exceptions(asm))
+        workspace_put(project, SHOWN_RECORD, (json.dumps({"binding": binding, "release_id": release_id}, sort_keys=True) + "\n").encode("utf-8"))
+        if board_status == "missing":
+            board_line = f"the board {str(plan_project_block(project).get('project_title'))!r} (created empty first, then filled)"
+            board_payload = True
+        else:
+            board_line = "the board with its fields and items"
+            board_payload = any(p.startswith("payloads/board/") for p in asm.payload_paths)
+        items = github_items_line(asm, board_line)
+        if board_status == "missing" and not board_payload:
+            items = (items + ", " if items else "") + board_line
+        say("")
+        say(f"Board: {board_text}." if board_text else "Board: not part of this release.")
+        say("")
+        active = None
+        try:
+            replay = current_replay(project, None, reader)
+            if replay and replay.active and same_scope(load_request(project.need_workspace(), replay.active), release_id, params, used_exceptions(asm)):
+                active = replay.active
+        except (Refused, RS.SchemaError):
+            active = None
+        if active:
+            say(f"This content and scope are already approved and active as request {active}. There is nothing new to approve: "
+                "--apply only exports the approved files again where they are missing.")
+            if items and not getattr(a, "no_github", False):
+                say("Ask the owner the external-write line before the GitHub step, as for any rerun:")
+                say(f"  3. \"Carrydown may create or update these GitHub items: {items}.\"")
+            return 0
+        say("Ask the owner in one prompt, with the preview above it. Each line is answered on its own:")
+        say("  1. \"The plan and specifications are correct.\" (only if not already approved in this session)")
+        say(f"  2. \"These exact outputs may be {audience_words}.\"")
+        if items and not getattr(a, "no_github", False):
+            say(f"  3. \"Carrydown may create or update these GitHub items: {items}.\"")
+        say("")
+        say("Dry run: nothing was written to the project or to GitHub. The private workspace keeps a digest of this preview, so the "
+            "approval of --apply covers exactly what is shown here. After a yes to line 2, run this command again with --apply. "
+            "If line 3 was not a yes, add --no-github to both runs: the release then carries no GitHub items.")
+        return 0
+    computed = show_preview(project, a, policy, None, reader, quiet=True)
+    if computed is None:
+        return 1
+    asm, params, release_id = computed
+    require_shown(project, shown_binding(release_id, params, used_exceptions(asm)))
+    if board_status == "missing":
+        a.board_pending = False
+        board_status, board_text = yes_board(project, a, reader, create=True)
+    a.new_request = getattr(a, "new_request", False)
+    a.quiet_next = True
+    rc = cmd_prepare(a)
+    if rc:
+        return rc
+    rid = getattr(a, "prepared_request", None)
+    if not rid:
+        refuse("approval-not-found", "prepare did not save a request")
+    a.request = rid
+    ws = project.need_workspace()
+    request = load_request(ws, rid)
+    require_shown(project, binding_of_request(request))
+    say("")
+    # The owner saw this preview in the dry run and answered the disclosure line, and the request carries
+    # exactly what that preview showed (require_shown): this --apply is the recorded approval.
+    a.preview_shown = True
+    rc = approve_local(a, project, ws, request, quiet_next=True)
+    if rc:
+        return rc
+    say("")
+    rc = cmd_export(a)
+    if rc:
+        return rc
+    say("")
+    say("Released. Ask the owner to commit and push these files as they do today. Then the GitHub step publishes from this release.")
     return 0
 
 
@@ -804,14 +1157,14 @@ def cmd_approve(a):
         refuse("approval-mechanism-unsupported", "signed-tag approval is not available in version 1. Nothing was uploaded. Use --github")
     project = Project(a.root)
     ws = project.need_workspace()
-    request = load_request(ws, a.request)
+    request = load_request(ws, chosen_request(project, a, "approve"))
     manifest, entries, files = load_release(ws, request["release_id"])
     if a.local:
         return approve_local(a, project, ws, request)
     return approve_github(a, project, ws, request, entries, files, manifest)
 
 
-def approve_local(a, project, ws, request):
+def approve_local(a, project, ws, request, quiet_next=False):
     rid = request["request_sha256"]
     if project.enrolled or project.mode != "yes":
         refuse("unauthenticated-release", "local approval is for projects whose readers may see everything. This project needs --github")
@@ -830,7 +1183,9 @@ def approve_local(a, project, ws, request):
             refuse("mixed-release", "another request is active and this one does not replace it. Prepare again")
         refuse("state-history-invalid", "the active request changed since this request was prepared. Prepare again")
     say("carrydown release approve --local  " + ("APPLY" if a.apply else "DRY RUN (nothing will be written)"))
-    if a.apply:
+    if a.apply and quiet_next:
+        say("The owner approved this preview in the dry run of release: " + rid)
+    elif a.apply:
         if not confirm_preview(a, request):
             refuse("not-approved", "the disclosure was not approved")
     else:
@@ -848,7 +1203,8 @@ def approve_local(a, project, ws, request):
     workspace_put(project, f"requests/{rid}/approval.json", RS.canonical_json(approval))
     write_state_cache(project, V.local_replay(str(ws)).replay)
     say(f"Approved locally. The request {rid} is active. This approval is labeled not authenticated.")
-    say(f"Next: python3 {Path(__file__).resolve()} export --root . --request {rid} --apply")
+    if not quiet_next:
+        say(f"Next: python3 {Path(__file__).resolve()} export --root . --apply")
     return 0
 
 
@@ -1184,8 +1540,8 @@ def dest_for(ev, rel):
 
 def cmd_export(a):
     project = Project(a.root)
-    rid = a.request
     say("carrydown release export  " + ("APPLY" if a.apply else "DRY RUN (nothing will be written)"))
+    rid = chosen_request(project, a, "export")
     root = project.root
     ev = gather(project, a, rid, content=True, check_existing=root if project.mode == "yes" else None)
     spec_plan = f"repo/{project.state.spec_dir}/plan.yaml"
@@ -1207,31 +1563,49 @@ def cmd_export(a):
 
 
 def export_yes(a, project, ev, items, previous, plan_rel):
+    """The "yes" path export: copy the approved files into the working tree and write the receipts.
+
+    The project then holds exactly what was approved, the released plan included (E1: the plan in the
+    engineering repository lists each source by id, name and version only). When docs/spec/plan.yaml is
+    still the owner's working plan, its bytes move first to the private workspace as drafts/plan.yaml,
+    where the owner-side commands find it from then on (carrydown_lib.owner_plan); nothing of it is lost."""
     root = project.root
     conflicts = check_conflicts(ev, root, items, previous, plan_rel)
     if conflicts:
         for rel in conflicts[:30]:
             say(f"  differs: {rel}")
+        if plan_rel in conflicts and project.workspace is not None and (Path(project.workspace) / "drafts" / "plan.yaml").is_file():
+            say(f"  {plan_rel} is the released copy. Your working plan is drafts/plan.yaml in the private workspace: edit that one.")
         refuse("working-copy-differs", "working copy differs from released snapshot; run release.py preview to see what changed, then prepare")
-    writes, keep = [], []
+    writes, working_plan = [], None
     for rel, data, mode in items:
         target = root / rel
         if target.is_file() and target.read_bytes() == data:
             continue
         if rel == plan_rel and target.is_file() and plan_projection_matches(root, rel, data):
-            keep.append(rel)
-            continue
+            working_plan = target.read_bytes()
         writes.append((rel, data, mode))
-    for rel in keep:
-        say(f"  {rel}: your working plan is the draft of the released plan, so it is left in place")
+    drafts = (Path(project.workspace) / "drafts" / "plan.yaml") if project.workspace is not None else None
+    keep_copy = None
+    if working_plan is not None:
+        if drafts is None:
+            refuse("workspace-unavailable", "the working plan has to move to the private workspace first, and there is none. Create it with workspace.py init")
+        if drafts.is_file() and drafts.read_bytes() != working_plan:
+            keep_copy = "drafts/plan.from-repository.yaml"
     receipts = {p: b for p, b in ev.receipts.items() if not (root / p).is_file() or (root / p).read_bytes() != b}
-    say(f"{len(writes)} file(s) and {len(receipts)} receipt(s) would be written; {len(items) - len(writes) - len(keep)} already match.")
+    say(f"{len(writes)} file(s) and {len(receipts)} receipt(s) would be written; {len(items) - len(writes)} already match.")
+    if working_plan is not None:
+        say(f"  {plan_rel} becomes the released plan. Your working plan, with its comments, "
+            + (f"is kept in the private workspace as {keep_copy}, beside the working plan there." if keep_copy else
+               "moves to the private workspace as drafts/plan.yaml, where the scripts find it from now on."))
     if not a.apply:
         for rel, _, _ in writes[:30]:
             say(f"  would write: {rel}")
         say("")
         say("Dry run: nothing was written. Add --apply.")
         return 0
+    if working_plan is not None and (keep_copy or not drafts.is_file()):
+        workspace_put(project, keep_copy or "drafts/plan.yaml", working_plan)
     for rel, data, mode in writes:
         write_file(root, rel, data, mode, ev, "release", dest_for(ev, rel))
     for rel, data in sorted(receipts.items()):
@@ -1338,8 +1712,8 @@ def write_workspace_evidence(project, ev):
 
 def cmd_export_state(a):
     project = Project(a.root)
-    rid = a.request
     say("carrydown release export-state  " + ("APPLY" if a.apply else "DRY RUN (nothing will be written)"))
+    rid = chosen_request(project, a, "export-state")
     root = project.root
     ev = gather(project, a, rid, content=False)
     own_path = f"{PUBLIC_RECEIPT_DIR}/{rid}.receipt.json"
@@ -1380,6 +1754,13 @@ def cmd_export_state(a):
     wt = ws / "exports" / ("state-" + rid)
     if wt.exists():
         shutil.rmtree(wt, ignore_errors=True)
+    git(["worktree", "prune"], root, check=False)
+    if git(["rev-parse", "--verify", "--quiet", f"refs/heads/{branch}"], root, check=False).returncode == 0:
+        tip = git(["rev-parse", f"refs/heads/{branch}"], root, check=False).stdout.strip()
+        empty = git(["merge-base", "--is-ancestor", f"refs/heads/{branch}", f"refs/remotes/origin/{base}"], root, check=False)
+        if tip and empty.returncode == 0:
+            # an earlier run created the branch and stopped before committing: it holds no commit of its own, so it is redone
+            git(["branch", "-D", branch], root, check=False)
     if git(["rev-parse", "--verify", "--quiet", f"refs/heads/{branch}"], root, check=False).returncode == 0:
         existing = subprocess.run(["git", "show", f"{branch}:{own_path}"], cwd=str(root), capture_output=True, timeout=60)
         if existing.stdout != ev.receipts[own_path]:
@@ -1408,7 +1789,7 @@ def cmd_withdraw(a):
     say("carrydown release withdraw  " + ("APPLY" if a.apply else "DRY RUN (nothing will be written)"))
     if a.reason not in B.WITHDRAW_REASONS:
         L.die("--reason must be one of: " + ", ".join(B.WITHDRAW_REASONS))
-    rid = a.request
+    rid = chosen_request(project, a, "withdraw")
     request = load_request(ws, rid)
     policy, enrollment, reader = current_policy(project, a)
     history = local_or_staging_history(project, enrollment, reader)
@@ -1543,6 +1924,7 @@ def add_shape(p):
     p.add_argument("--repository-id", type=int, help="numeric id of the engineering repository, when no token can look it up")
     p.add_argument("--board-owner-id", type=int, help="numeric id of the board's owner")
     p.add_argument("--board-project-id", help="node id of the board project (PVT_...)")
+    p.add_argument("--board-owner", metavar="LOGIN", help="the account that owns the board on the \"yes\" path (default: the owner of the repository)")
 
 
 def main(argv=None):
@@ -1558,9 +1940,16 @@ def main(argv=None):
     p.add_argument("--new-request", action="store_true", help="start a new approval with a fresh nonce even for unchanged content and scope")
     p.add_argument("--created", metavar="ISO-8601-UTC", help="test and reproduction aid: the UTC time of the request, such as 2027-01-20T14:03:00Z")
     p.add_argument("--nonce", metavar="HEX32", help="test and reproduction aid: the request nonce, 32 lowercase hexadecimal characters")
+    p = sub.add_parser("release", help="the \"yes\" path in one step: preview (dry run), then with --apply prepare, approve locally and export")
+    add_common(p)
+    add_shape(p)
+    p.add_argument("--apply", action="store_true", help="after the owner's yes: create the empty board if missing, prepare, approve locally, export")
+    p.add_argument("--new-request", action="store_true", help="start a new approval with a fresh nonce even for unchanged content and scope")
+    p.add_argument("--created", metavar="ISO-8601-UTC", help="test and reproduction aid: the UTC time of the request and the approval")
+    p.add_argument("--nonce", metavar="HEX32", help="test and reproduction aid: the request nonce, 32 lowercase hexadecimal characters")
     p = sub.add_parser("approve", help="approve a prepared request: --local for the \"yes\" path, --github for the \"no\" path")
     add_common(p)
-    p.add_argument("--request", required=True, help="the request id that prepare printed")
+    p.add_argument("--request", help="the request id (default: the request prepare saved last)")
     p.add_argument("--local", action="store_true", help="record your own approval (evidence: local owner, not authenticated)")
     p.add_argument("--github", action="store_true", help="upload the candidate to the private staging repository and wait for the request")
     p.add_argument("--signed-tag", action="store_true", help="not available in version 1; refuses before uploading anything")
@@ -1570,15 +1959,15 @@ def main(argv=None):
     p.add_argument("--poll-seconds", type=int, default=POLL_SECONDS, help=f"how long to wait for the staging workflow's pull request (default {POLL_SECONDS})")
     p = sub.add_parser("export", help="copy the approved files and the receipt into the engineering repository")
     add_common(p)
-    p.add_argument("--request", required=True)
+    p.add_argument("--request", help="the request id (default: the active request)")
     p.add_argument("--apply", action="store_true")
     p = sub.add_parser("export-state", help="write only the regenerated receipt of a superseded or withdrawn request")
     add_common(p)
-    p.add_argument("--request", required=True)
+    p.add_argument("--request", help="the request id (default: the request the most recent state change ended)")
     p.add_argument("--apply", action="store_true")
     p = sub.add_parser("withdraw", help="prepare the terminal event that ends an active request")
     add_common(p)
-    p.add_argument("--request", required=True)
+    p.add_argument("--request", help="the request id (default: the active request)")
     p.add_argument("--reason", required=True, help="one of: " + ", ".join(B.WITHDRAW_REASONS))
     p.add_argument("--apply", action="store_true")
     p.add_argument("--created", metavar="ISO-8601-UTC")
@@ -1591,7 +1980,7 @@ def main(argv=None):
     p = sub.add_parser("doctor", help="the offline workspace checks, and the live checks when a token is set")
     add_common(p)
     a = ap.parse_args(argv)
-    commands = {"preview": cmd_preview, "prepare": cmd_prepare, "approve": cmd_approve, "export": cmd_export,
+    commands = {"preview": cmd_preview, "prepare": cmd_prepare, "release": cmd_release, "approve": cmd_approve, "export": cmd_export,
                 "export-state": cmd_export_state, "withdraw": cmd_withdraw, "diff": cmd_diff, "inventory": cmd_inventory,
                 "doctor": cmd_doctor}
     try:

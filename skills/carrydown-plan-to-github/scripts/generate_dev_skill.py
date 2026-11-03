@@ -361,7 +361,7 @@ def main(argv=None):
                     "Use it after plan.yaml or a specification changes; SKILL.md and README.md keep their hand edits")
     a = ap.parse_args(argv)
     root = L.project_root(a.root)
-    plan_path = L.find_plan(root, a.plan)
+    plan_path = L.owner_plan(root, a.plan)
     if not L.exists(plan_path):
         L.die(f"no plan at {plan_path}")
     plan, problems = L.load_plan(plan_path, root)
