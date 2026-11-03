@@ -17,7 +17,8 @@ FAIL, then the line it observed. It exits 0 only when every claim passes. It cla
   3. a stub that is not a real Python (no executable) exits 2 and prints the same single-system answer
   4. the preflight page is in both skills and in a freshly generated engineers' skill, and each copy is
      the canonical templates/preflight.md, byte for byte; so is check_python.py in all three places
-  5. every SKILL.md of the three skills starts with the preflight step
+  5. both installed skills start with the preflight step; the engineers' skill starts with one command,
+     check_context.py, and sends the agent to the preflight only when that command cannot run
   6. no Markdown, template or skill file shows the macOS and Linux command form and the Windows command
      form on one line
   7. the six official links are present verbatim in check_python.py, in the preflight page and in
@@ -241,21 +242,32 @@ def _():
     return "; ".join(places)
 
 
-@claim("each of the three SKILL.md files starts with the preflight step")
+@claim("both installed skills start with the preflight step; the engineers' skill starts with check_context.py and falls back to the preflight")
 def _():
     seen = []
     with tempfile.TemporaryDirectory() as tmp:
-        files = [ROOT / "skills" / "carrydown-ground-truth" / "SKILL.md", ROOT / "skills" / "carrydown-plan-to-github" / "SKILL.md",
-                 generated_skill(tmp) / "SKILL.md"]
+        engineers = generated_skill(tmp) / "SKILL.md"
+        files = [ROOT / "skills" / "carrydown-ground-truth" / "SKILL.md", ROOT / "skills" / "carrydown-plan-to-github" / "SKILL.md", engineers]
         for f in files:
             text = f.read_text(encoding="utf-8")
             assert "references/preflight.md" in text, f"{f}: does not name references/preflight.md"
             assert "check_python.py" in text, f"{f}: does not name check_python.py"
             assert "only that system's" in text, f"{f}: does not say to show only that system's commands"
-            # the preflight comes before the first script command of the flow
-            assert text.index("references/preflight.md") < min(i for i in (text.find("scripts/check_specs.py"), text.find("scripts/check_context.py")) if i >= 0), f
-            seen.append(f.parent.name if f.name == "SKILL.md" else f.name)
-    return ", ".join(seen)
+            first_script = min(i for i in (text.find("scripts/check_specs.py"), text.find("scripts/check_context.py")) if i >= 0)
+            if f == engineers:
+                steps = text.split("## Orient on a work item", 1)[1].split("\n## ", 1)[0]
+                numbered = re.findall(r"(?m)^(\d+)\. ", steps)
+                assert numbered[0] == "1" and "0" not in numbered, f"engineers' steps: {numbered}"
+                commands = re.findall(r"`((?:python3|find|grep|py) [^`]*)`", steps)
+                assert commands and "scripts/check_context.py" in commands[0], f"the first command is {commands[:1]}"
+                step2 = re.search(r"(?ms)^2\. (.*?)^3\. ", steps).group(1)
+                assert step2.index("check_context.py") < step2.index("references/preflight.md"), "the preflight is not the fallback of the check"
+                assert "If no line starts with `carrydown:`" in step2, "the fallback condition is missing"
+                seen.append(f"engineers' skill: first command {commands[0]!r}, preflight only when no carrydown: line")
+            else:
+                assert text.index("references/preflight.md") < first_script, f
+                seen.append(f.parent.name + ": preflight first")
+    return "; ".join(seen)
 
 
 @claim("no document shows both command forms on one line")

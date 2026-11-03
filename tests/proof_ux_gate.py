@@ -288,9 +288,19 @@ try:
     r = sh([sys.executable, ROOT / "scripts" / "check_specs.py", "--root", clone, "--view", "released"], clone, check=False)
     claim(r.returncode == 0, "A clean clone holds a released plan: check_specs --view released passes with no workspace and no originals",
           last(r.stdout + r.stderr))
+    steps = (clone / SKILL / "SKILL.md").read_text(encoding="utf-8").split("## Orient on a work item", 1)[1].split("\n## ", 1)[0]
+    commands = re.findall(r"`((?:python3|find|grep|py) [^`]*)`", steps)
     r = sh([sys.executable, clone / SKILL / "scripts" / "check_context.py", "WI-03"], clone, check=False)
-    claim(r.returncode == 0 and r.stdout.startswith("carrydown: approved context for WI-03 is ready"),
-          "The engineers' first step is one command, and it passes in a fresh clone", last(r.stdout, 2))
+    claim(r.returncode == 0 and r.stdout.startswith("carrydown: approved context for WI-03 is ready")
+          and commands and "scripts/check_context.py" in commands[0] and not re.search(r"(?m)^0\. ", steps),
+          "The engineers' first step is one command, check_context.py, and it passes in a fresh clone",
+          f"first command in the skill: {commands[0] if commands else None} || " + last(r.stdout, 2))
+    old = sh([sys.executable, "-c", "import runpy, sys; sys.version_info = (3, 8, 18, 'final', 0); sys.argv = sys.argv[1:]; "
+                                    "runpy.run_path(sys.argv[0], run_name='__main__')", clone / SKILL / "scripts" / "check_context.py", "WI-03"],
+             clone, check=False)
+    claim(old.returncode == 3 and "carrydown:" not in old.stdout + old.stderr and "references/preflight.md" in old.stderr,
+          "Under a Python older than 3.9 the check prints no carrydown: line and names the preflight, the skill's fallback",
+          f"exit {old.returncode}: {old.stderr.strip()}")
     r = sh([sys.executable, clone / SKILL / "scripts" / "check_context.py", "WI-77"], clone, check=False)
     claim(r.returncode == 10 and r.stdout.splitlines()[0] == "carrydown: no approved context for WI-77"
           and "Ask the plan owner to release the item." in r.stdout,

@@ -41,7 +41,8 @@ Options
   --root DIR      the repository (default: the top of the git repository you are in)
   --no-refresh    do not fetch; follow the offline grace rule
 
-Exit status is 0, 10, 11, 12 or 13 as above, and 2 for a wrong argument.
+Exit status is 0, 10, 11, 12 or 13 as above, 2 for a wrong argument, and 3 when the Python that runs it is
+older than 3.9. Neither 2 nor 3 prints a line that starts with "carrydown:".
 """
 import argparse
 import datetime as dt
@@ -505,4 +506,8 @@ def main(argv=None, now=None):
 
 
 if __name__ == "__main__":
+    if tuple(sys.version_info)[:2] < (3, 9):
+        # no line starts with "carrydown:", so the skill sends the agent to references/preflight.md
+        print("error: this check needs Python 3.9 or newer. Follow references/preflight.md in the skill folder", file=sys.stderr)
+        sys.exit(3)
     sys.exit(main())

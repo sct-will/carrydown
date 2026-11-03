@@ -71,7 +71,7 @@ Ask your agent: "Read docs/dev/skills/expense-approvals-dev/SKILL.md and follow 
 
 Each work item has a bundle in `docs/context/`: `<id>.md` for the agent and `<id>.bundle.json` beside it. The Markdown holds the verbatim text of the source sections the item cites, the decisions that settle a conflict between them, the other items that cite the same sections and what the text may be used for. The plan owner approved this text for everyone who can read this repository. Anyone with read access can read every bundle, so nothing is hidden from a teammate by leaving it out of an item's bundle.
 
-Your agent first checks that Python 3.9 or newer is installed and offers to install it if it is missing (see `references/preflight.md` in the skill folder). Before the agent reads a bundle it then runs the check:
+The first command your agent runs for a work item is the check, before it reads anything:
 
 ```bash
 python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-01
@@ -82,6 +82,8 @@ On Windows, from a Command Prompt or PowerShell in the repository:
 ```bat
 py -3 docs\dev\skills\expense-approvals-dev\scripts\check_context.py WI-01
 ```
+
+If the command is not found, or Python is older than 3.9, the agent follows `references/preflight.md` in the skill folder: it checks Python, offers to install it, and runs the check again.
 
 The check works in this order. It reads only this repository, and its one network use is a `git fetch` of the default branch with the Git credentials you already have.
 

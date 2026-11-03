@@ -14,6 +14,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -660,6 +661,29 @@ class CommandLineTests(OriginTests):
         self.assertIn("not a security control", run.stdout)
         self.assertEqual(self.run_script().returncode, 2)
         self.assertEqual(self.run_script("WI-06", "--root", str(self.base / "nowhere")).returncode, 2)
+
+    def test_an_older_python_prints_no_carrydown_line_and_names_the_preflight(self):
+        """The skill's first command is this check; the preflight is its fallback when no line starts with carrydown:."""
+        code = ("import runpy, sys; sys.version_info = (3, 8, 18, 'final', 0); sys.argv = sys.argv[1:]; "
+                "runpy.run_path(sys.argv[0], run_name='__main__')")
+        run = subprocess.run([sys.executable, "-c", code, str(GENERATED), "WI-06"], cwd=str(self.eng), capture_output=True, text=True, timeout=120,
+                             env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1", HOME=str(self.home)))
+        self.assertEqual(run.returncode, 3, run.stdout + run.stderr)
+        self.assertNotIn("carrydown:", run.stdout + run.stderr)
+        self.assertEqual(run.stderr.strip(), "error: this check needs Python 3.9 or newer. Follow references/preflight.md in the skill folder")
+        self.assertFalse((self.eng / ".carrydown").exists(), "the check ran past the version guard")
+
+    def test_the_skill_runs_this_check_first_and_the_preflight_only_as_its_fallback(self):
+        text = (GENERATED.parent.parent / "SKILL.md").read_text(encoding="utf-8")
+        steps = text.split("## Orient on a work item", 1)[1].split("\n## ", 1)[0]
+        self.assertEqual(re.findall(r"(?m)^(\d+)\. ", steps), [str(n) for n in range(1, 9)])
+        commands = re.findall(r"`((?:python3|find|grep|py) [^`]*)`", steps)
+        self.assertEqual(commands[0], "python3 <skill folder>/scripts/check_context.py <ID>")
+        step2 = re.search(r"(?ms)^2\. (.*?)^3\. ", steps).group(1)
+        self.assertIn("This is the first command for every work item.", step2)
+        self.assertIn("If no line starts with `carrydown:`", step2)
+        self.assertLess(step2.index("check_context.py"), step2.index("references/preflight.md"))
+        self.assertNotIn("references/preflight.md", text.split("## Orient on a work item", 1)[0])
 
     def test_the_generated_copy_in_the_sample_is_the_template_with_two_constants_filled(self):
         expected = TEMPLATE.read_text(encoding="utf-8").replace("{{id_prefix}}", "WI").replace("{{spec_dir}}", "docs/spec")
