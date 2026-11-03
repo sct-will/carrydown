@@ -49,6 +49,8 @@ SMOKE = [
      ["{sample}/ground-truth/architecture.md", "--root", "{sample}", "--version", "0.3", "--dry-run"], ()),
     (GROUND_TRUTH, "workspace.py", ["init", "--root", "{sample}", "--slug", "sample-check"], ("DRY RUN", "would create the folder with owner-only permissions")),
     (GROUND_TRUTH, "check_specs.py", ["--root", "{sample}", "--report", "--people", "{sample}/people.yaml"], ("Alloc", "18 of 54d (33%)")),
+    (GROUND_TRUTH, "compile_bundles.py", ["--root", "{sample}"], ("WI-06  obligations present: 3 of 3", "18 file(s) would be written")),
+    (PLAN_TO_GITHUB, "compile_bundles.py", ["--root", "{sample}"], ("WI-06  obligations present: 3 of 3", "18 file(s) would be written")),
 ]
 
 LIBRARIES = ("carrydown_lib.py",)
@@ -128,6 +130,27 @@ class SkillPackagingTests(unittest.TestCase):
         for skill in SKILLS:
             with self.subTest(skill=skill):
                 self.assertEqual((self.copy[skill] / "scripts" / "release_schema.py").read_bytes(), canonical)
+
+    def test_the_engineers_check_ships_as_a_template_and_runs_once_generated(self):
+        template = self.copy[PLAN_TO_GITHUB] / "templates" / "dev-skill" / "scripts" / "check_context.py"
+        self.assertTrue(template.is_file())
+        self.assertEqual(template.read_bytes(), (ROOT / "templates" / "dev-skill" / "scripts" / "check_context.py").read_bytes())
+        self.assertFalse((self.copy[GROUND_TRUTH] / "templates" / "dev-skill").exists(), "the first skill does not generate the engineers' skill")
+        project = self.base / "generated-project"
+        shutil.copytree(SAMPLE, project, ignore=shutil.ignore_patterns("dev"))
+        run = self.run_script(PLAN_TO_GITHUB, "generate_dev_skill.py", ["--root", str(project), "--apply"])
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        self.assertIn("write: scripts/check_context.py", run.stdout)
+        generated = project / "docs" / "dev" / "skills" / "expense-approvals-dev" / "scripts" / "check_context.py"
+        text = generated.read_text(encoding="utf-8")
+        self.assertIn('ID_PREFIX = "WI"', text)
+        self.assertNotIn("{{", text)
+        for args, want, code in ((["--help"], "usage:", 0), (["WI-06", "--root", str(project)], "carrydown: no approved context for WI-06", 10)):
+            check = subprocess.run([sys.executable, str(generated)] + args, cwd=str(self.work), env=self.env,
+                                   capture_output=True, text=True, timeout=60)
+            self.assertEqual(check.returncode, code, check.stdout + check.stderr)
+            self.assertIn(want, check.stdout.lower() if want == "usage:" else check.stdout)
+            self.assertNotIn("Traceback", check.stdout + check.stderr)
 
     def test_the_helpers_in_the_shared_library_work_from_the_copy(self):
         code = ("import sys; sys.path.insert(0, sys.argv[1]); import carrydown_lib as L; "

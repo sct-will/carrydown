@@ -529,6 +529,57 @@ def confidentiality(tmp):
          contains=["Track Workflow: 1 person, 100 percent allocated", "Track Experience: 1 person, 60 percent allocated"])
 
 
+def bundles(tmp):
+    """Bundles (work package 5): the compiler, the sample's committed bundles and regenerated skill, the
+    content-free map, and the engineers' check."""
+    fixture = ROOT / "tests/fixtures/confidential-project"
+    comp = [PY, "scripts/compile_bundles.py"]
+    step("compile_bundles dry run on the sample lists every item and writes nothing", comp + ["--root", SAMPLE],
+         contains=["WI-06  obligations present: 3 of 3", "WI-11  obligations present: 2 of 2", "18 file(s) would be written"])
+    out = tmp / "bundles-out"
+    step("compile_bundles --out --apply writes two files per work item", comp + ["--root", SAMPLE, "--out", str(out), "--apply"], contains=["18 file(s) written"])
+    same = ("import sys\nfrom pathlib import Path\n"
+            "a, b = Path(sys.argv[1]), Path(sys.argv[2])\n"
+            "fa = {p.relative_to(a).as_posix(): p.read_bytes() for p in a.rglob('*') if p.is_file()}\n"
+            "fb = {p.relative_to(b).as_posix(): p.read_bytes() for p in b.rglob('*') if p.is_file()}\n"
+            "diff = sorted(k for k in set(fa) | set(fb) if fa.get(k) != fb.get(k))\n"
+            "print('files', len(fa), len(fb), 'differ', diff)\nsys.exit(0 if fa and not diff else 1)")
+    step("the sample's committed bundles are what the compiler writes", [PY, "-c", same, str(out / "docs/context"), str(ROOT / SAMPLE / "docs/context")],
+         contains=["files 18 18 differ []"])
+    step("the fixture, with a restricted source, compiles", comp + ["--root", str(fixture), "--renderings", str(fixture / "docs/ground-truth")],
+         contains=["WI-06  obligations present: 5 of 5", "Whether each bundle is enough to do the work is your review."])
+    broken = tmp / "bundles-broken"
+    shutil.copytree(fixture, broken)
+    arch = broken / "docs/ground-truth/architecture.md"
+    arch.write_text(arch.read_text(encoding="utf-8").replace("### 3.5 Routing", "### Routing"), encoding="utf-8")
+    step("a cited section that is not in the rendering stops the compile", comp + ["--root", str(broken), "--renderings", str(arch.parent), "--out", str(tmp / "bundles-none"), "--apply"],
+         expect=1, contains=["obligation not found: architecture 3.5 (cited by WI-06)", "WI-06  obligations present: 4 of 5", "No bundle was compiled."])
+    nothing = not (tmp / "bundles-none").exists()
+    results.append((nothing, "nothing was written when an obligation was missing"))
+    print(("PASS " if nothing else "FAIL ") + "nothing was written when an obligation was missing")
+
+    # the sample's engineers' skill is what the generator and the templates make
+    regen = tmp / "bundles-sample"
+    shutil.copytree(ROOT / SAMPLE, regen, ignore=shutil.ignore_patterns("dev"))
+    step("the engineers' skill is generated with its check", [PY, "scripts/generate_dev_skill.py", "--root", str(regen), "--apply"],
+         contains=["write: scripts/check_context.py", "approved contexts found in docs/context/: 9 of 9 work items"])
+    step("the sample's engineers' skill matches the templates", [PY, "-c", same, str(regen / "docs/dev/skills/expense-approvals-dev"), str(ROOT / SAMPLE / "docs/dev/skills/expense-approvals-dev")],
+         contains=["differ []"])
+    skill = ROOT / SAMPLE / "docs/dev/skills/expense-approvals-dev"
+    gone = ("import sys; bad = [(f[-24:], w) for f in sys.argv[1:3] for w in sys.argv[3:] if w in open(f, encoding='utf-8').read()]; "
+            "print('forbidden', bad); sys.exit(1 if bad else 0)")
+    step("the generated map names no original file and the skill has no grep or sed instruction",
+         [PY, "-c", gone, str(skill / "references/ground-truth-map.md"), str(skill / "SKILL.md"), "architecture.md", "Original file", "grep -n -A1", "sed -n 'START"],
+         contains=["forbidden []"])
+    check = [PY, str(skill / "scripts/check_context.py")]
+    step("the engineers' check answers --help", check + ["--help"], contains=["not a security control"])
+    step("the engineers' check on the sample, which has no receipt yet, prints the first message", check + ["WI-06", "--root", str(ROOT / SAMPLE)], expect=10,
+         contains=["carrydown: no approved context for WI-06", "Ask the plan owner to release the item."], absent=("Traceback", "Routing"))
+    step("the engineers' check on an id the project does not have prints the same first message", check + ["WI-99", "--root", str(ROOT / SAMPLE)], expect=10,
+         contains=["carrydown: no approved context for WI-99"])
+    step("the engineers' check with a wrong argument is a usage error", check + ["--bogus"], expect=2)
+
+
 def lint_spelling(tmp):
     """The prose lint flags British spellings and leaves real words that end in -ise alone. The words are built
     from parts so that this file does not spell them."""
@@ -639,7 +690,9 @@ def regressions(tmp, plan_text):
     gt = project("latin-gt")
     (gt / "docs/ground-truth/architecture.md").write_bytes(b"# Archi\xe9\n")
     step("a ground truth that is not UTF-8 is reported by the checker", chk + ["--root", str(gt)], expect=1, contains=["ground truth citations not checked:", "is not UTF-8 text"])
-    step("a ground truth that is not UTF-8: the skill generator is one line", gen + ["--root", str(gt)], expect=1, contains=["error:", "is not UTF-8 text"])
+    step("a ground truth that is not UTF-8: the skill generator reads no rendering, so it is not affected", gen + ["--root", str(gt)], contains=["engineers' skill: expense-approvals-dev"])
+    step("a ground truth that is not UTF-8: the bundle compiler says so in one line and compiles nothing", [PY, "scripts/compile_bundles.py", "--root", str(gt)], expect=1,
+         contains=["the rendering of source architecture cannot be read as UTF-8 text", "No bundle was compiled."], absent=("Traceback", "Archi"))
     bad_plan = project("latin-plan")
     (bad_plan / "docs/spec/plan.yaml").write_bytes(plan_text.encode("utf-8").replace(b"Expense approvals", b"Expense approv\xe9ls", 1))
     step("a plan that is not UTF-8: --json is JSON and exit 2", chk + ["--root", str(bad_plan), "--json"], expect=2, contains=["is not UTF-8 text"], json_out=True)
@@ -1021,7 +1074,7 @@ def main():
              contains=["engineers' skill: expense-approvals-dev"])
         step("installed copy of carrydown-plan-to-github refreshes only the references", [PY, str(gh / "scripts/generate_dev_skill.py"), "--root", str(ROOT / SAMPLE), "--only", "references"],
              contains=["would write: references/work-items.md", "would write: references/ground-truth-map.md"], absent=("Traceback", "SKILL.md"))
-        ships = ("generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_repair.py", "github_sync.py", "github_token.py", "plan_repair.py", "release_schema.py", "scaffold_spec.py")
+        ships = ("compile_bundles.py", "generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_repair.py", "github_sync.py", "github_token.py", "plan_repair.py", "release_gate.py", "release_schema.py", "scaffold_spec.py")
         extra = sorted(x.name for x in (gh / "scripts").glob("*.py") if x.name not in ships)
         results.append((not extra, "carrydown-plan-to-github ships only the scripts it runs"))
         print(("PASS " if not extra else "FAIL ") + "carrydown-plan-to-github ships only the scripts it runs" + (f" (remove {', '.join(extra)})" if extra else ""))
@@ -1034,6 +1087,7 @@ def main():
         path_safety(Path(tmp), plan_text)
         names(Path(tmp), plan_text)
         confidentiality(Path(tmp))
+        bundles(Path(tmp))
         lint_spelling(Path(tmp))
         regressions(Path(tmp), plan_text)
         round_two(Path(tmp), plan_text)
