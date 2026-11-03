@@ -34,7 +34,7 @@ NEEDS = {
     },
     "carrydown-plan-to-github": {
         "scripts": ["github_token.py", "github_sync.py", "github_project.py", "github_repair.py", "github_client.py", "check_specs.py", "generate_dev_skill.py", "plan_repair.py", "release_schema.py", "compile_bundles.py", "release.py", "release_github.py"],
-        "templates": ["issue-body.md", "closing-comment.md", "checkpoint-comment.md", "dev-skill/SKILL.md.tmpl", "dev-skill/README.md.tmpl", "dev-skill/scripts/check_context.py", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md", "plan.yaml", "spec.md", "milestone.md", "spec-README.md", "check-specs-workflow.yml"],
+        "templates": ["issue-body.md", "projections.yaml", "closing-comment.md", "checkpoint-comment.md", "dev-skill/SKILL.md.tmpl", "dev-skill/README.md.tmpl", "dev-skill/scripts/check_context.py", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md", "plan.yaml", "spec.md", "milestone.md", "spec-README.md", "check-specs-workflow.yml"],
     },
 }
 

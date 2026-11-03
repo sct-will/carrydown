@@ -1,0 +1,87 @@
+# Destination projections (specification WP8).
+#
+# A projection is the subset of fields that may flow to one destination. Each GitHub destination has a
+# default projection, and the default for a release whose items cite only repo-readers sources is the
+# layout every release had before projections existed, so those bodies do not change by a single byte.
+#
+# For each projection
+#   payload_fields   the keys a payload file of this destination may hold. A builder that adds another
+#                    key fails, so a new field cannot reach a destination by accident.
+#   plan_fields      the plan fields the payload reads. A field not listed here is not read.
+#   sections         the specification sections that may flow into the body, and how:
+#                      text   the section text, copied
+#                      link   a link to the section in the specification, no text
+#                      (a section not listed does not flow at all)
+#   applies          when a non-default projection is chosen
+#                      bundle-has-restricted-source   the approved context of the work item holds a
+#                                                     section of a source classified restricted
+#
+# Payload builders read this file when a release is prepared. github_sync.py at publication time only
+# substitutes the permitted placeholders and sends the payload; it reads no projection.
+#
+# Do not add a destination or a projection here without the matching test in tests/test_projections.py.
+format: 1
+destinations:
+  issue:
+    default: full
+    projections:
+      full:
+        payload_fields: [destination_id, target, title, body, labels, assignees, relationships, substitutions, state]
+        plan_fields: [label, track, milestone, depends, external_input, complete_by, checkpoint, state, source_refs, owner]
+        sections:
+          Why this work item exists: text
+          Outcome: text
+          Acceptance criteria: text
+          Evidence of completion: text
+          Integration points: text
+      links:
+        applies: bundle-has-restricted-source
+        payload_fields: [destination_id, target, title, body, labels, assignees, relationships, substitutions, state]
+        plan_fields: [label, track, milestone, depends, external_input, complete_by, checkpoint, state, source_refs, owner]
+        sections:
+          Why this work item exists: text
+          Outcome: text
+          Acceptance criteria: link
+          Evidence of completion: link
+          Integration points: link
+  subepic:
+    default: full
+    projections:
+      full:
+        payload_fields: [destination_id, target, title, body, labels, assignees, relationships, substitutions]
+        plan_fields: [name, number, gate, end, demo, label, complete_by, owner, milestone]
+        sections:
+          Purpose: text
+          Why these items form this milestone: text
+          Expected outcomes: text
+          Joint demonstration: text
+          Acceptance criteria: text
+          Demonstration expectations: text
+  epic:
+    default: full
+    projections:
+      full:
+        payload_fields: [destination_id, target, title, body, labels, assignees, relationships, substitutions]
+        plan_fields: [name, epic_title, milestones]
+        sections: {}
+  epic-comment:
+    default: full
+    projections:
+      full:
+        payload_fields: [destination_id, target, body, substitutions]
+        plan_fields: [name, spec_dir, milestones, items, tracks, people, target]
+        sections: {}
+  label:
+    default: full
+    projections:
+      full:
+        payload_fields: [destination_id, target, name, color, description]
+        plan_fields: [slug, name, tracks]
+        sections: {}
+  board:
+    default: full
+    projections:
+      full:
+        payload_fields: [destination_id, target, fields, views, items]
+        plan_fields: [project_title, milestones, tracks, items, breaks]
+        sections: {}
