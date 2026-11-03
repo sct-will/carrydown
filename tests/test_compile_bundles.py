@@ -554,7 +554,7 @@ def released_project(base, source, edit=lambda text: text):
     that lists the plan and the bundles. It holds no original, no rendering and no overlay."""
     base = Path(base)
     root = base / "released"
-    shutil.copytree(source, root, ignore=shutil.ignore_patterns(".gitignore", "people.yaml", "__pycache__", "ground-truth", "dev", "tools", ".github"))
+    shutil.copytree(source, root, ignore=shutil.ignore_patterns(".gitignore", "people.yaml", "__pycache__", "ground-truth", "dev", "tools", ".github", "release"))
     stored_path = base / "workspace-plan.yaml"
     stored_path.write_text(edit((source / "docs" / "spec" / "plan.yaml").read_text(encoding="utf-8")), encoding="utf-8")
     stored, problems = L.load_plan(stored_path, source)

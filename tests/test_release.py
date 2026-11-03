@@ -269,7 +269,6 @@ class YesPathTests(Temp):
         self.assertEqual(code, 1)
         self.assertIn("unsafe-artifact-path", err)
         self.assertEqual(tree_state(self.root), before)
-        self.assertFalse(Path(self.root / "docs" / "release").exists())
 
     def test_export_refuses_to_write_through_a_symlinked_folder(self):
         self.yp.prepare()
@@ -651,6 +650,89 @@ class NoPathTests(Temp):
         self.assertEqual(changed, [f"docs/release/{second}.receipt.json"])
         receipt = RS.loads_strict(F.sh(["git", "show", f"{sbranch}:docs/release/{second}.receipt.json"], self.root).stdout.encode())
         self.assertEqual(receipt["state"], "withdrawn")
+
+
+class SampleReleaseTests(Temp):
+    """The sample's own release: a fixture workspace, a receipt in the sample, and a deterministic rebuild."""
+    FIXTURE = ROOT / "tests" / "fixtures" / "sample-workspace"
+    DOCS = ROOT / "sample" / "expense-approvals" / "docs" / "release"
+
+    def receipt_path(self):
+        found = sorted(self.DOCS.glob("*.receipt.json"))
+        self.assertEqual(len(found), 1)
+        return found[0]
+
+    def test_the_release_is_rebuilt_byte_for_byte_from_the_sample(self):
+        run = subprocess.run([sys.executable, str(ROOT / "tests" / "rebuild_sample_release.py"), "--check"], capture_output=True, text=True, timeout=300)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        self.assertIn("PASS the sample's release is reproducible", run.stdout)
+
+    def test_a_changed_sample_file_is_caught_as_drift(self):
+        sample = self.base / "sample"
+        shutil.copytree(ROOT / "sample" / "expense-approvals", sample)
+        spec = sample / SPEC
+        spec.write_text(spec.read_text(encoding="utf-8").rstrip("\n") + " A drifting sentence.\n", encoding="utf-8")
+        run = subprocess.run([sys.executable, str(ROOT / "tests" / "rebuild_sample_release.py"), "--check", "--sample", str(sample)],
+                             capture_output=True, text=True, timeout=300)
+        self.assertEqual(run.returncode, 1, run.stdout + run.stderr)
+        self.assertIn("FAIL the sample's release is not reproducible", run.stdout)
+
+    def test_the_fixture_holds_no_staffing_record_and_the_receipt_is_the_local_owner_receipt(self):
+        self.assertFalse((self.FIXTURE / "people.yaml").exists())
+        self.assertEqual(sorted(p.name for p in self.FIXTURE.iterdir()), ["events", "releases", "requests", "retention.yaml", "workspace.yaml"])
+        receipt = RS.validate_receipt(self.receipt_path().read_bytes())
+        self.assertEqual(self.receipt_path().name, receipt["request_id"] + ".receipt.json")
+        self.assertEqual((receipt["approval"]["type"], receipt["approval"]["authenticated"], receipt["state"]), ("local-owner", False, "active"))
+        for name in (self.FIXTURE / "workspace.yaml", self.FIXTURE / "retention.yaml"):
+            self.assertNotIn(str(Path.home()), name.read_text(encoding="utf-8"))
+        request_dir = self.FIXTURE / "requests" / receipt["request_id"]
+        self.assertEqual(sorted(p.name for p in request_dir.iterdir()), ["approval-request.json", "approval.json", "state.json"])
+        approval = json.loads((request_dir / "approval.json").read_text(encoding="utf-8"))
+        self.assertEqual((approval["type"], approval["authenticated"]), ("local-owner", False))
+
+    def test_the_receipt_equals_the_projection_of_the_fixture_records(self):
+        receipt_bytes = self.receipt_path().read_bytes()
+        rid = RS.loads_strict(receipt_bytes)["request_id"]
+        record = V.verify_local_request(V.load_local_evidence(str(self.FIXTURE), rid), rid)
+        replay = V.local_replay(str(self.FIXTURE)).replay
+        RS.verify_receipt_bytes(receipt_bytes, record.request, record.manifest_bytes, replay.requests[rid], record.approval)
+        manifest_entries = RS.validate_manifest(record.manifest_bytes)
+        for entry in manifest_entries:
+            if entry["path"].startswith("repo/"):
+                path = ROOT / "sample" / "expense-approvals" / entry["path"][len("repo/"):]
+                if entry["path"].endswith("docs/spec/plan.yaml"):
+                    continue      # the working plan is the owner's draft of the released plan
+                self.assertEqual(RS.sha256_file(path), entry["sha256"], entry["path"])
+
+    def test_the_engineers_check_exits_zero_on_the_sample_once_the_clone_has_an_origin(self):
+        project = self.base / "clone"
+        shutil.copytree(ROOT / "sample" / "expense-approvals", project)
+        F.init_git(project)
+        F.sh(["git", "add", "-A"], project)
+        F.sh(["git", "commit", "-q", "-m", "sample"], project)
+        origin = self.base / "origin.git"
+        F.sh(["git", "clone", "-q", "--bare", str(project), str(origin)], self.base)
+        F.sh(["git", "remote", "add", "origin", str(origin)], project)
+        F.sh(["git", "fetch", "-q", "origin"], project)
+        F.sh(["git", "remote", "set-head", "origin", "main"], project)
+        script = project / "docs/dev/skills/expense-approvals-dev/scripts/check_context.py"
+        run = subprocess.run([sys.executable, str(script), "WI-06"], cwd=str(project), capture_output=True, text=True, timeout=120)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        # a receipt that reports the release withdrawn, on the fetched default branch, makes the context stale
+        path = next((project / "docs" / "release").glob("*.receipt.json"))
+        rid = path.name.split(".")[0]
+        record = V.verify_local_request(V.load_local_evidence(str(self.FIXTURE), rid), rid)
+        withdrawn = B.withdrawal_event(rid, V.local_policy({k: v for k, v in R.Project(project).handling.items() if k in R.L.RELEASED_HANDLING_KEYS}, "sct-will/carrydown-sample"),
+                                       V.local_replay(str(self.FIXTURE)).replay.tip, "other", created="2027-02-01T00:00:00Z", nonce="2" * 32)
+        replay = RS.replay_state(list(V.local_events(str(self.FIXTURE))) + [withdrawn])
+        path.write_bytes(RS.project_receipt(record.request, record.manifest_bytes, replay.requests[rid], record.approval))
+        F.sh(["git", "add", "-A"], project)
+        F.sh(["git", "commit", "-q", "-m", "withdrawn"], project)
+        F.sh(["git", "push", "-q", "origin", "main"], project)
+        F.sh(["git", "reset", "-q", "--hard", "HEAD~1"], project)
+        run = subprocess.run([sys.executable, str(script), "WI-06"], cwd=str(project), capture_output=True, text=True, timeout=120)
+        self.assertEqual(run.returncode, 11, run.stdout + run.stderr)
+        self.assertIn("is stale", run.stdout)
 
 
 if __name__ == "__main__":

@@ -573,8 +573,9 @@ def bundles(tmp):
          contains=["forbidden []"])
     check = [PY, str(skill / "scripts/check_context.py")]
     step("the engineers' check answers --help", check + ["--help"], contains=["not a security control"])
-    step("the engineers' check on the sample, which has no receipt yet, prints the first message", check + ["WI-06", "--root", str(ROOT / SAMPLE)], expect=10,
-         contains=["carrydown: no approved context for WI-06", "Ask the plan owner to release the item."], absent=("Traceback", "Routing"))
+    step("the engineers' check on the sample, whose own receipt is valid but cannot be refreshed offline, says the context is stale",
+         check + ["WI-06", "--root", str(ROOT / SAMPLE), "--no-refresh"], expect=11,
+         contains=["carrydown: the approved context for WI-06 is stale", "could-not-refresh"], absent=("Traceback", "Routing"))
     step("the engineers' check on an id the project does not have prints the same first message", check + ["WI-99", "--root", str(ROOT / SAMPLE)], expect=10,
          contains=["carrydown: no approved context for WI-99"])
     step("the engineers' check with a wrong argument is a usage error", check + ["--bogus"], expect=2)
@@ -1125,6 +1126,9 @@ def main():
     for scenario, name in mock:
         step(name, [PY, "tests/mock/scenarios.py", scenario], contains=[f"{scenario}: all checks passed"], timeout=120)
     step("isolated issue metadata repairs preserve history and recover safely", [PY, "tests/test_github_repair.py"], contains=["OK"], timeout=120)
+    step("the release gate is asked before every write outside the workspace", [PY, "tests/test_release_gate.py"], contains=["OK"], timeout=300)
+    step("the sample's own release is rebuilt byte for byte from the sample", [PY, "tests/rebuild_sample_release.py", "--check"],
+         contains=["PASS the sample's release is reproducible"], timeout=300)
     failed = [n for ok, n in results if not ok]
     print(f"\n{len(results) - len(failed)} of {len(results)} steps passed")
     return 1 if failed else 0
