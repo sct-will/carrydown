@@ -961,8 +961,9 @@ def _(base):
     for name in ("architecture.md", "ground-truth/", ".docx"):
         check(name not in mapping, f"original filename {name} in the map")
     text = (skill / "SKILL.md").read_text(encoding="utf-8")
-    step4 = next(x for x in text.splitlines() if x.startswith("4. "))
-    check("check_context.py" in step4 and "grep" not in step4 and "sed " not in step4 and "docs/ground-truth/" in step4, step4[:200])
+    # the check is step 2, the first command for a work item; the step runs to the next numbered line
+    step = re.search(r"(?ms)^2\. (.*?)^3\. ", text).group(1)
+    check("check_context.py" in step and "grep" not in step and "sed " not in step and "docs/ground-truth/" in step, step[:200])
     readme = (skill / "README.md").read_text(encoding="utf-8")
     check("If you are blocked" in readme and "Windows" in readme and "Requesting a change to a rule" in readme, "README sections")
     return f"{len(listed)} map entries, all in bundles; SKILL.md uses check_context.py; README has blocked, change request and Windows sections"
