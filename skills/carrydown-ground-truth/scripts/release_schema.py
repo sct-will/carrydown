@@ -279,6 +279,12 @@ def _text(v, field, words=False, limit=200):
         _fail(field, "must be lowercase words joined by hyphens")
 
 
+def is_format(value, expected=1):
+    """True when value is the integer expected. A format field is an integer (Part H1): 1.0, true and "1"
+    are not format 1, even though 1.0 == 1 and True == 1 in Python."""
+    return type(value) is int and value == expected
+
+
 def _bool(v, field, want=None):
     if not isinstance(v, bool) or (want is not None and v is not want):
         _fail(field, "must be " + ("true or false" if want is None else str(want).lower()))
@@ -511,7 +517,7 @@ def validate_receipt_template(template):
     specification. The template cannot carry release_id, request_id, state, event_id, supersedes,
     superseded_by or approval: those come only from verified records."""
     _exact_keys(template, TEMPLATE_KEYS, "receipt_template")
-    if template["receipt_format"] != 1 or isinstance(template["receipt_format"], bool):
+    if not is_format(template["receipt_format"]):
         _fail("receipt_template.receipt_format", "must be 1")
     _sha(template["content_manifest_sha256"], "receipt_template.content_manifest_sha256")
     _public_common(template, "receipt_template")
@@ -538,7 +544,7 @@ def _preview_ok(v, field, depth=0):
 
 def _request_fields(request, with_digest):
     _exact_keys(request, REQUEST_KEYS, "request", allow_missing=() if with_digest else ("request_sha256",))
-    if request["request_format"] != 1 or isinstance(request["request_format"], bool):
+    if not is_format(request["request_format"]):
         _fail("request.request_format", "must be 1")
     _sha(request["release_id"], "request.release_id")
     _nonce(request["request_nonce"], "request.request_nonce")
@@ -587,7 +593,7 @@ def validate_request(request, check_digest=True):
 
 def _event_fields(batch, with_digest):
     _exact_keys(batch, EVENT_KEYS, "event", allow_missing=() if with_digest else ("event_id",))
-    if batch["event_format"] != 1 or isinstance(batch["event_format"], bool):
+    if not is_format(batch["event_format"]):
         _fail("event.event_format", "must be 1")
     _nonce(batch["event_nonce"], "event.event_nonce")
     _git_sha(batch["policy_commit_sha"], "event.policy_commit_sha")
@@ -646,7 +652,7 @@ def validate_receipt(receipt):
         _canonical_bytes_match(receipt, parsed, "receipt")
         return parsed
     _exact_keys(receipt, RECEIPT_KEYS, "receipt")
-    if receipt["receipt_format"] != 1 or isinstance(receipt["receipt_format"], bool):
+    if not is_format(receipt["receipt_format"]):
         _fail("receipt.receipt_format", "must be 1")
     _sha(receipt["request_id"], "receipt.request_id")
     _sha(receipt["release_id"], "receipt.release_id")

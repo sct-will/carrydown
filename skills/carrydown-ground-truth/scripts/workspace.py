@@ -526,7 +526,7 @@ def doctor_rows(root):
         data = read_workspace_yaml(ws)
         if data is None:
             add("FAIL", "workspace.yaml", "missing or unreadable")
-        elif data.get("format") != WORKSPACE_FORMAT:
+        elif type(data.get("format")) is not int or data.get("format") != WORKSPACE_FORMAT:
             add("FAIL", "workspace.yaml", f"format {data.get('format')!r} is not {WORKSPACE_FORMAT}")
         else:
             repo = data.get("engineering_repo")

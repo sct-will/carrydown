@@ -239,7 +239,7 @@ def parse_receipt(raw, name=None):
         r = parse_json(raw)
     except (ValueError, UnicodeDecodeError, RecursionError):
         return None
-    if not isinstance(r, dict) or r.get("receipt_format") != 1 or r.get("state") not in STATES:
+    if not isinstance(r, dict) or not is_int(r.get("receipt_format")) or r["receipt_format"] != 1 or r.get("state") not in STATES:
         return None
     rid = r.get("request_id")
     if not isinstance(rid, str) or not _SHA256.match(rid) or (name is not None and name != rid + ".receipt.json"):
@@ -413,7 +413,7 @@ def grace_allows(root, identity, receipt, now):
     if not isinstance(record, dict) or set(record) != {"cache_format", "repository", "commit", "request_id", "time"}:
         return False
     when = parse_time(record["time"])
-    if record["cache_format"] != 1 or when is None or identity is None or record["repository"] != identity:
+    if not is_int(record["cache_format"]) or record["cache_format"] != 1 or when is None or identity is None or record["repository"] != identity:
         return False
     if record["request_id"] != receipt["request_id"] or not isinstance(record["commit"], str) or not _GIT_SHA.match(record["commit"]):
         return False

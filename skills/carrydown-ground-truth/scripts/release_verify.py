@@ -423,7 +423,7 @@ def _parse_enrollment(parse, data):
         refuse("policy-pointer-mismatch", "enrollment", "enrollment.yaml cannot be read")
     except Exception:   # a YAML reader raises its own error type; none of its text is repeated
         refuse("policy-pointer-mismatch", "enrollment", "enrollment.yaml cannot be read")
-    if not isinstance(value, dict) or value.get("format") != 1 or not isinstance(value.get("repositories"), list):
+    if not isinstance(value, dict) or not RS.is_format(value.get("format")) or not isinstance(value.get("repositories"), list):
         refuse("policy-pointer-mismatch", "enrollment", "enrollment.yaml has an unknown format")
     return value
 

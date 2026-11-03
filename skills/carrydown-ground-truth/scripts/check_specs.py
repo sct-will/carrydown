@@ -335,7 +335,7 @@ def _sidecar_problem(side, tag):
     """A fixed reason why a parsed sidecar is not a bundle sidecar, or None."""
     if not isinstance(side, dict):
         return "it is not an object"
-    if side.get("bundle_format") != 1 or isinstance(side.get("bundle_format"), bool):
+    if type(side.get("bundle_format")) is not int or side.get("bundle_format") != 1:
         return "bundle_format is not 1"
     if side.get("work_item") != tag:
         return "work_item is not this work item"

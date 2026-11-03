@@ -64,7 +64,7 @@ def load_projections():
 
 
 def _check_projections(doc):
-    if not isinstance(doc, dict) or doc.get("format") != 1 or not isinstance(doc.get("destinations"), dict):
+    if not isinstance(doc, dict) or not RS.is_format(doc.get("format")) or not isinstance(doc.get("destinations"), dict):
         raise ValueError("projections.yaml: format 1 and a destinations mapping are required")
     if set(doc["destinations"]) != set(PAYLOAD_KINDS):
         raise ValueError("projections.yaml: the destinations must be " + ", ".join(PAYLOAD_KINDS))

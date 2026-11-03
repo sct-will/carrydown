@@ -170,7 +170,7 @@ def _read_state(root):
     enrolled = os.path.lexists(pointer_path)
     if enrolled:
         data = _raw_plan(lib, pointer_path)
-        if isinstance(data, dict) and set(data) == set(POINTER_KEYS) and data.get("format") == 1 \
+        if isinstance(data, dict) and set(data) == set(POINTER_KEYS) and RS.is_format(data.get("format")) \
                 and isinstance(data.get("tooling_repository"), str) and isinstance(data.get("enrollment_id"), str):
             pointer, pointer_ok = data, True
     workspace, _ = lib.workspace_root(base)
