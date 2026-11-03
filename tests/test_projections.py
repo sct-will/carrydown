@@ -16,6 +16,8 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample, WORKING_PLAN  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests" / "mock"))
 import carrydown_lib as L  # noqa: E402
@@ -25,7 +27,10 @@ import release_fixture as F  # noqa: E402
 import release_payloads as RP  # noqa: E402
 
 SAMPLE = ROOT / "sample" / "expense-approvals"
-GOLDEN_BODIES = "11e4320d8460658ccbf26787509e3812705a00c318b4f930d47cd4b2f933836c"
+# The digest of the 14 offline bodies of the sample. It was 11e4320d8460658c... until the sample cited its sections in
+# source_refs: the only change is the "Ground truth:" line of the nine issues, which now names the source
+# ("Architecture document: Sections 3.1, ..."). Every other line of every body is unchanged.
+GOLDEN_BODIES = "ed60a4b5f2221d26b341806ba6f96c470255ab75d57ec03f261aa39891cc0a7b"
 
 
 def headings(body):
@@ -89,7 +94,7 @@ class ProjectionFileTests(unittest.TestCase):
             RP.check_payload_fields("label", {"destination_id": "engineering", "target": {}, "name": "a", "assignees": ["x"]}, proj)
 
     def test_every_payload_the_sample_builds_stays_inside_its_projection(self):
-        plan, _ = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
         files = RP.build_payloads(plan, SAMPLE, flags={"assignees": True, "capacity_summary": True})
         self.assertGreater(len(files), 15)
         for path, data in files.items():
@@ -101,7 +106,7 @@ class DefaultBodiesTests(unittest.TestCase):
     """A release for repository readers whose items cite only repository-readers sources yields today's bodies."""
 
     def test_the_offline_show_body_output_of_the_sample_is_byte_for_byte_what_it_was(self):
-        plan, _ = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
         h = hashlib.sha256()
         for it in plan["items"]:
             code, out, err = F.run(GS.run, ["--root", str(SAMPLE), "--offline", "--show-body", str(it["id"])])
@@ -114,18 +119,20 @@ class DefaultBodiesTests(unittest.TestCase):
         self.assertEqual(h.hexdigest(), GOLDEN_BODIES)
 
     def test_the_payload_bodies_of_a_release_of_the_sample_are_the_legacy_bodies_and_no_issue_uses_links(self):
-        asm = A.assemble(SAMPLE, with_board=False)
-        self.assertEqual(asm.problems, [])
-        self.assertEqual(asm.link_items, ())
-        plan, _ = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
-        for it in plan["items"]:
-            key = L.tag(plan, it["id"])
-            payload = json.loads(asm.files[f"payloads/issue/{key}.json"])
-            spec_url = L.github_blob_url(plan, L.spec_path(plan, SAMPLE, it).relative_to(SAMPLE).as_posix())
-            sent = RP.substitute(payload["body"], {}, spec_url, L.github_tree_url(plan, plan["project"]["dev_skill_path"]))
-            self.assertEqual(sent, GS.build_item_body(plan, SAMPLE, it, mark=False))
-            self.assertNotIn("](" + "{{spec_url}}#acceptance-criteria)", payload["body"])
-            self.assertEqual(headings(payload["body"]), RP.SEVEN)
+        with tempfile.TemporaryDirectory(prefix="carrydown-projection-") as tmp:
+            root = copy_sample(Path(tmp) / "owner")        # the owner's working tree: a release is prepared from its workspace plan
+            asm = A.assemble(root, with_board=False)
+            self.assertEqual(asm.problems, [])
+            self.assertEqual(asm.link_items, ())
+            plan, _ = L.load_plan(WORKING_PLAN, root)
+            for it in plan["items"]:
+                key = L.tag(plan, it["id"])
+                payload = json.loads(asm.files[f"payloads/issue/{key}.json"])
+                spec_url = L.github_blob_url(plan, L.spec_path(plan, root, it).relative_to(root).as_posix())
+                sent = RP.substitute(payload["body"], {}, spec_url, L.github_tree_url(plan, plan["project"]["dev_skill_path"]))
+                self.assertEqual(sent, GS.build_item_body(plan, root, it, mark=False))
+                self.assertNotIn("](" + "{{spec_url}}#acceptance-criteria)", payload["body"])
+                self.assertEqual(headings(payload["body"]), RP.SEVEN)
 
 
 class RestrictedSourceTests(unittest.TestCase):

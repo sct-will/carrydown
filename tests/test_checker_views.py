@@ -18,6 +18,8 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample, WORKING_PLAN  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests"))
 import carrydown_lib as L  # noqa: E402
@@ -320,15 +322,18 @@ class ReleasedViewTests(WithTemp):
         self.assertEqual(code, 1)
         self.assertIn("schema-view-mismatch", out)
         code, out = check("--root", SAMPLE, "--view", "released")
+        self.assertEqual(code, 0, out)                          # the committed sample is a released project: a clean clone passes
+        self.assertIn("0 with findings", out)
+        code, out = check("--root", SAMPLE, "--view", "workspace")
         self.assertEqual(code, 1)
         self.assertIn("schema-view-mismatch", out)
-        self.assertIn("plan_view is workspace", out)           # the released rules ran: the sample plan is still the owner's workspace plan
+        self.assertIn("plan_view is released", out)             # the workspace rules ran: the sample plan is the released plan
 
 
 class WorkspaceViewTests(WithTemp):
     def sample(self, name="sample"):
         proj = self.base / name
-        shutil.copytree(SAMPLE, proj)
+        copy_sample(proj)
         return proj
 
     def test_the_sample_still_passes_with_no_findings(self):
@@ -374,7 +379,7 @@ class WorkspaceViewTests(WithTemp):
         self.assertIn("References cites architecture section 99.9 at line", out)
 
     def test_the_legacy_rules_keep_requiring_the_original(self):
-        plan, _ = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
         proj = self.sample()
         shutil.rmtree(proj / "ground-truth")
         heads = CS.ground_truth_headings(plan, proj)
@@ -479,7 +484,7 @@ class TrackedSourceTests(WithTemp):
 class LogHygieneTests(WithTemp):
     def sample(self):
         proj = self.base / "sample"
-        shutil.copytree(SAMPLE, proj)
+        copy_sample(proj)
         return proj
 
     def test_a_banned_name_prints_the_file_and_line_and_no_excerpt(self):
@@ -492,7 +497,7 @@ class LogHygieneTests(WithTemp):
             self.assertRegex(out, r"person name or handle from the plan at docs/spec/m1-submit-report/wi-01-service-scaffold\.md:\d+")
             self.assertNotIn("tamsin before", out)
             self.assertNotIn("Questions go", out)
-        pats = CS.banned_patterns(L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)[0])
+        pats = CS.banned_patterns(L.load_plan(WORKING_PLAN, SAMPLE)[0])
         hits = CS.banned_hits(pats, "Ask tamsin.\n")
         self.assertEqual([(why, ln, text) for why, ln, text in hits], [("person name or handle from the plan", 1, "")])
         self.assertEqual(CS.banned_issue("person name or handle from the plan", Path("docs/a.md"), 4), "person name or handle from the plan at docs/a.md:4")
@@ -531,7 +536,7 @@ class LogHygieneTests(WithTemp):
 
     def test_validate_plan_does_not_dump_a_track_checkpoint_or_external_record(self):
         secret = "ZZ-secret-text"
-        text = (SAMPLE / "docs/spec/plan.yaml").read_text(encoding="utf-8")
+        text = WORKING_PLAN.read_text(encoding="utf-8")
         proj = self.sample()
         plan_path = proj / "docs/spec/plan.yaml"
         broken = text.replace("  - id: workflow\n    label: Workflow\n", f"  - id: workflow\n    note: {secret}\n", 1)
@@ -675,7 +680,7 @@ class TemplateAndCopyTests(WithTemp):
 
     def test_the_ci_copy_carries_every_module_the_checker_imports_and_runs(self):
         proj = self.base / "ci"
-        shutil.copytree(SAMPLE, proj, ignore=shutil.ignore_patterns("tools", ".github"))
+        copy_sample(proj, ignore=shutil.ignore_patterns("tools", ".github"))
         code, out = run(SCAFFOLD, "--root", proj, "--apply", "--ci", "--allow-no-git")
         self.assertEqual(code, 0, out)
         copied = sorted(p.name for p in (proj / "tools/carrydown").glob("*.py"))

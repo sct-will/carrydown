@@ -31,6 +31,8 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample, WORKING_PLAN  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests" / "mock"))
 os.environ.pop("CARRYDOWN_GITHUB_TOKEN", None)
@@ -54,7 +56,8 @@ PY = sys.executable
 RESULTS = []
 CLAIMS = []
 TMP = Path(tempfile.mkdtemp(prefix="carrydown-proof89-"))
-GOLDEN = "11e4320d8460658ccbf26787509e3812705a00c318b4f930d47cd4b2f933836c"
+# 11e4320d8460658c... until the sample cited its sections in source_refs. The only change is the "Ground truth:" line of nine issues.
+GOLDEN = "ed60a4b5f2221d26b341806ba6f96c470255ab75d57ec03f261aa39891cc0a7b"
 REPO = "sct-will/carrydown-sample"
 ENGINEERING = {"id": "engineering", "host": "github.com", "repository_id": 4200, "repository": "acme/expense-approvals"}
 BOARD = {"id": "board", "host": "github.com", "repository_id": 4200, "owner_id": 4400, "project_id": "PVT_example"}
@@ -147,7 +150,7 @@ def exported(base, **kw):
 
 @claim("WP8 a repo-readers-only release yields today's issue and sub-epic bodies byte for byte (the sample's --show-body output)")
 def _(base):
-    plan, _ = L.load_plan(F.SAMPLE / "docs/spec/plan.yaml", F.SAMPLE)
+    plan, _ = L.load_plan(WORKING_PLAN, F.SAMPLE)
     h = hashlib.sha256()
     for key in [str(it["id"]) for it in plan["items"]] + [f"M{m['number']}" for m in plan["milestones"]]:
         out = script("github_sync.py", "--root", F.SAMPLE, "--offline", "--show-body", key)
@@ -302,7 +305,7 @@ def _(base):
     m = Mock(base)
     try:
         root = base / "legacy"
-        shutil.copytree(F.SAMPLE, root)
+        copy_sample(root)
         F.strip_handling(root)
         args = ["--root", str(root), "--repo", REPO, "--skip-check"]
         code, out, err = F.run(GS.run, args + ["--apply", "--create-epic"])
@@ -327,7 +330,7 @@ def _(base):
     m = Mock(base)
     try:
         root = base / "legacy"
-        shutil.copytree(F.SAMPLE, root)
+        copy_sample(root)
         F.strip_handling(root)
         args = ["--root", str(root), "--repo", REPO, "--skip-check"]
         check(F.run(GS.run, args + ["--apply", "--create-epic"])[0] == 0)
@@ -350,7 +353,7 @@ def _(base):
 @claim("WP8 release.py inventory lists tracked originals, staffing fields and history, says history cannot be rewritten, and writes nothing")
 def _(base):
     root = base / "legacy"
-    shutil.copytree(F.SAMPLE, root)
+    copy_sample(root)
     F.strip_handling(root)
     (root / "docs" / "source").mkdir(parents=True)
     (root / "docs" / "source" / "architecture.docx").write_bytes(b"original")
@@ -462,7 +465,7 @@ def _(base):
     seen = []
     for mode in ("allowed", "request-only"):
         root = base / mode
-        shutil.copytree(F.SAMPLE, root)
+        copy_sample(root)
         shutil.rmtree(root / "docs/dev")
         plan = root / "docs/spec/plan.yaml"
         text = plan.read_text(encoding="utf-8").replace("    state: migrated\n", f"    state: migrated\n    engineer_edits: {mode}\n", 1)

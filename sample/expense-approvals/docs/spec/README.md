@@ -1,6 +1,6 @@
 # Work item specifications for Expense approvals
 
-One file per development work item, plus `milestone.md` per milestone folder. The GitHub issue for a work item links to its file here, and the milestone sub-epic links to `milestone.md`. Each file gives the engineer, and the coding agent in their editor, the context needed to complete the item without opening the original ground truth documents. Where a file excerpts a contract, the excerpt is normative for the item. Where it conflicts with the ground truth, the ground truth wins and the file is corrected in the same pull request.
+One file per development work item, plus `milestone.md` per milestone folder. The GitHub issue for a work item links to its file here, and the milestone sub-epic links to `milestone.md`. Each file gives the engineer, and the coding agent in their editor, the context needed to complete the item without opening the original ground truth documents. Where a file excerpts a contract, the excerpt is normative for the item. Where it conflicts with the approved context of the item, the approved context wins. Correct the file in the same pull request, or ask the plan owner.
 
 ## What is in this folder
 
@@ -10,13 +10,13 @@ One file per development work item, plus `milestone.md` per milestone folder. Th
 | `plan.yaml` | The schedule as data: milestones, work items, owners, dates, dependencies, checkpoints. The checker and the GitHub scripts read it. |
 | `m1-.../` and the other milestone folders | The work item files, one per item, and `milestone.md` for each milestone. |
 
-The rendered ground truth lives at `docs/ground-truth/architecture.md`. The engineers' skill that loads these conventions into a coding agent lives at `docs/dev/skills/expense-approvals-dev`. Its README has the install steps.
+The exact text of the source sections each work item cites is in its approved context, `docs/context/<id>.md`. The engineers' skill that loads these conventions into a coding agent lives at `docs/dev/skills/expense-approvals-dev`. Its README has the install steps.
 
 ## How to use a specification
 
-The shortest route is the engineers' skill. It makes a coding agent read the right specification, the ground truth sections it cites and these conventions before it changes code. You do not paste that context by hand.
+The shortest route is the engineers' skill. It makes a coding agent read the right specification, the source sections it cites and these conventions before it changes code. You do not paste that context by hand.
 
-1. Read the whole file, then the code it points to. Open the ground truth only for the sections the file cites.
+1. Read the whole file, then the code it points to. Read the approved context of the item for the exact text of the sections the file cites. Do not look for the original documents. If a rule seems to be missing, ask the plan owner.
 2. Propose the change in a short plan in the pull request description before writing code. Name the files you will touch.
 3. Work in small pull requests on `main`.
 4. Prove each acceptance criterion with a test or a recorded check. The pull request lists them.
@@ -24,9 +24,11 @@ The shortest route is the engineers' skill. It makes a coding agent read the rig
 
 ## Source documents
 
-| Document | Path | Use |
-| --- | --- | --- |
-| Architecture document, version 0.3 | `ground-truth/architecture.md (source), docs/ground-truth/architecture.md (rendering)` | Full specification. Section numbers in the work item files refer to it. |
+| Precedence | Source id | Document | Version |
+| --- | --- | --- | --- |
+| 1 | `architecture` | Architecture document | 0.3 |
+
+The documents are not part of this folder. The exact text of the sections a work item cites is in its approved context, `docs/context/<id>.md`, which the plan owner approved for everyone who can read this repository.
 
 ## Project conventions
 

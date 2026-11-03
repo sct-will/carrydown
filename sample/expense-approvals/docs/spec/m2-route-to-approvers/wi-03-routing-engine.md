@@ -10,7 +10,7 @@
 | Size | Large, about 5 days |
 | Depends on | WI-01 |
 | Unblocks | WI-04, WI-06, WI-07 |
-| Ground truth | Sections 3.4, 3.5, 7.1 |
+| Ground truth | Architecture document: Sections 3.4, 3.5, 7.1 |
 
 ## Why this work item exists
 
@@ -137,9 +137,10 @@ The counterpart on the Experience track is WI-04, Approver inbox and decisions, 
 
 ## References
 
-- Sections [3.4, Report lifecycle](../../ground-truth/architecture.md#34-report-lifecycle) and [3.5, Routing](../../ground-truth/architecture.md#35-routing)
-- [Section 7.1, REST API](../../ground-truth/architecture.md#71-rest-api)
-- [Section 6.2, Edge cases](../../ground-truth/architecture.md#62-edge-cases-the-interviews-surfaced)
+- architecture section 3.4, Report lifecycle
+- architecture section 3.5, Routing
+- architecture section 7.1, REST API
+- architecture section 6.2, Edge cases the interviews surfaced
 - [WI-01 Service scaffold, flag and API contract](../m1-submit-report/wi-01-service-scaffold.md)
 - [WI-04 Approver inbox and decisions](wi-04-approver-inbox.md)
 - [WI-06 Approval limits and separation of duties](../m3-enforce-policy/wi-06-limits-and-duties.md)

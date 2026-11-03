@@ -15,6 +15,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 import carrydown_lib as L  # noqa: E402
 import detectors as D  # noqa: E402
@@ -273,7 +275,7 @@ class DetectorTests(unittest.TestCase):
         code, out = self.run_cli("--root", SAMPLE)
         self.assertEqual((code, out.strip()), (0, D.CLEAN_LINE))
         proj = self.base / "sample"
-        shutil.copytree(SAMPLE, proj)
+        copy_sample(proj)
         spec = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
         spec.write_text(spec.read_text(encoding="utf-8") + f"\nKey: {FAKE_TOKEN}\n", encoding="utf-8")
         code, out = self.run_cli("--root", proj)

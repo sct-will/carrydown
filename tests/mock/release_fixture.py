@@ -22,6 +22,7 @@ sys.path.insert(0, str(ROOT / "tests" / "mock"))
 import carrydown_lib as L  # noqa: E402
 import release as R  # noqa: E402
 import workspace as W  # noqa: E402
+from sample_tree import copy_sample  # noqa: E402
 
 SAMPLE = ROOT / "sample" / "expense-approvals"
 FIXTURE = ROOT / "tests" / "fixtures" / "confidential-project"
@@ -85,7 +86,7 @@ class YesProject:
     def __init__(self, base, repository_id=4200, board=False, git=True, board_project_id="PVT_example"):
         self.base = Path(base)
         self.root = self.base / "project"
-        shutil.copytree(SAMPLE, self.root)
+        copy_sample(self.root)
         if git:
             init_git(self.root)
         self.workspace = self.base / "workspace"

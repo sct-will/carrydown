@@ -67,7 +67,7 @@ The joint check for that date, Pilot readout: The nightly file for the pilot tea
 ## References
 
 - `wi-09-ledger-export.md`
-- The ground truth, `docs/ground-truth/architecture.md`
+- The approved context of each item, in `docs/context/`
 - The schedule and checkpoint tables in `../README.md`
 
 ## Decisions recorded

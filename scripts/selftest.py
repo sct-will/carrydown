@@ -56,6 +56,17 @@ atexit.register(shutil.rmtree, HOME, True)
 ENV = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1", "HOME": HOME, "USERPROFILE": HOME}
 ENV.pop("CARRYDOWN_GITHUB_TOKEN", None)
 SAMPLE = "sample/expense-approvals"
+# The committed sample is a project after its release: its plan is the released plan. The steps that exercise the
+# owner's side work on a copy that holds the owner's working plan, which is how the sample looked while it was drafted.
+WORKING_PLAN = ROOT / "tests" / "fixtures" / "sample-workspace" / "drafts" / "plan.yaml"
+
+
+def copy_sample(dst, **kw):
+    shutil.copytree(ROOT / SAMPLE, dst, **kw)
+    shutil.copyfile(WORKING_PLAN, Path(dst) / "docs" / "spec" / "plan.yaml")
+    return dst
+
+
 results = []
 
 
@@ -139,11 +150,13 @@ def fixtures(tmp):
 def citations(tmp):
     """The checker checks section citations, and says so when it cannot."""
     proj = tmp / "citations"
-    shutil.copytree(ROOT / SAMPLE, proj)
+    copy_sample(proj)
     spec = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
-    spec.write_text(spec.read_text(encoding="utf-8").replace("| Ground truth | Sections 3.1, 3.2, 5.1, 7.1 |", "| Ground truth | Sections 3.1, 9.9 |"), encoding="utf-8")
+    spec.write_text(spec.read_text(encoding="utf-8").replace("| Ground truth | Architecture document: Sections 3.1, 3.2, 5.1, 7.1 |", "| Ground truth | Architecture document: Sections 3.1, 9.9 |"), encoding="utf-8")
+    cplan = proj / "docs/spec/plan.yaml"
+    cplan.write_text(cplan.read_text(encoding="utf-8").replace('        sections: "3.1, 3.2, 5.1, 7.1"', '        sections: "3.1, 9.9"', 1), encoding="utf-8")
     chk = [PY, "scripts/check_specs.py", "--root", str(proj)]
-    step("a specification citing a section that does not exist fails", chk, expect=1, contains=["Ground truth cites section 9.9, which is not a heading in the rendered document"])
+    step("a specification citing a section that does not exist fails", chk, expect=1, contains=["Ground truth cites Architecture document section 9.9, which is not a heading in docs/ground-truth/architecture.md"])
     gt = proj / "docs/ground-truth/architecture.md"
     import re
     gt.write_text(re.sub(r"(?m)^(#{2,6}) \d+(?:\.\d+)*\.? ", r"\1 ", gt.read_text(encoding="utf-8")), encoding="utf-8")
@@ -152,7 +165,7 @@ def citations(tmp):
     step("a missing ground truth is reported, not passed", chk, expect=1, contains=["ground truth citations not checked: the rendered document docs/ground-truth/architecture.md was not found"])
 
     multi = tmp / "multiple-sources"
-    shutil.copytree(ROOT / SAMPLE, multi)
+    copy_sample(multi)
     gov = multi / "docs/ground-truth/governance.md"
     gov.write_text("# Company governance\n\n## 1 Security\n\nNever log secrets.\n\n## 2 Accessibility\n\nMeet the company standard.\n", encoding="utf-8")
     (multi / "docs/source").mkdir()
@@ -160,14 +173,11 @@ def citations(tmp):
     (gov.parent / "governance.index.txt").write_text("3:## 1 Security\n7:## 2 Accessibility\n", encoding="utf-8")
     plan = multi / "docs/spec/plan.yaml"
     body = plan.read_text(encoding="utf-8")
-    body = body.replace('    use: "Full specification. Section numbers in the work item files refer to it."\n    classification: repo-readers',
-                        '    use: "Full specification. Section numbers in the work item files refer to it."\n    classification: repo-readers\n'
-                        '  - id: governance\n    name: "Company governance"\n    source_path: docs/source/governance.pdf\n'
-                        '    path: docs/ground-truth/governance.md\n    version: "1"\n    status: reviewed\n    limit: ""\n'
-                        '    use: "Company rules."\n    classification: repo-readers')
-    body = body.replace('    ground_truth: "Sections 3.1, 3.2, 5.1, 7.1"',
-                        '    source_refs:\n      - source: architecture\n        sections: "3.1, 3.2, 5.1, 7.1"\n'
-                        '      - source: governance\n        sections: "1, 2"')
+    body = re.sub(r'(    rendering_sha256: "[0-9a-f]+"\n)',
+                  lambda m: m.group(1) + '  - id: governance\n    name: "Company governance"\n    source_path: docs/source/governance.pdf\n'
+                  '    path: docs/ground-truth/governance.md\n    version: "1"\n    status: reviewed\n    limit: ""\n'
+                  '    use: "Company rules."\n    classification: repo-readers\n', body, count=1)
+    body = body.replace('        sections: "3.1, 3.2, 5.1, 7.1"', '        sections: "3.1, 3.2, 5.1, 7.1"\n      - source: governance\n        sections: "1, 2"', 1)
     plan.write_text(body, encoding="utf-8")
     step("multiple sources: refresh writes source-specific citations", [PY, "scripts/scaffold_spec.py", "--root", str(multi), "--refresh-headers", "--apply", "--allow-no-git"],
          files={multi / "docs/spec/m1-submit-report/wi-01-service-scaffold.md": ["Architecture document: Sections 3.1, 3.2, 5.1, 7.1; Company governance: Sections 1, 2"]})
@@ -180,14 +190,14 @@ def citations(tmp):
          contains=["Ground truth cites Company governance section 9.9, which is not a heading in docs/ground-truth/governance.md"])
 
     partial = tmp / "partial-sources"
-    shutil.copytree(ROOT / SAMPLE, partial)
+    copy_sample(partial)
     pplan = partial / "docs/spec/plan.yaml"
     (partial / "docs/source").mkdir()
     (partial / "docs/source/regional.png").write_bytes(b"unreadable fixture")
-    pbody = pplan.read_text(encoding="utf-8").replace('    use: "Full specification. Section numbers in the work item files refer to it."\n    classification: repo-readers',
-        '    use: "Full specification. Section numbers in the work item files refer to it."\n    classification: repo-readers\n'
-        '  - id: regional-addendum\n    name: "Regional addendum"\n    source_path: docs/source/regional.png\n'
-        '    version: "unknown"\n    status: unreadable\n    limit: "Image text could not be read reliably."\n    use: "Regional exceptions."\n    classification: repo-readers')
+    pbody = re.sub(r'(    rendering_sha256: "[0-9a-f]+"\n)',
+        lambda m: m.group(1) + '  - id: regional-addendum\n    name: "Regional addendum"\n    source_path: docs/source/regional.png\n'
+        '    version: "unknown"\n    status: unreadable\n    limit: "Image text could not be read reliably."\n    use: "Regional exceptions."\n    classification: repo-readers\n',
+        pplan.read_text(encoding="utf-8"), count=1)
     pplan.write_text(pbody, encoding="utf-8")
     step("an unreadable source is recorded while readable sources continue", [PY, "scripts/check_specs.py", "--root", str(partial)], contains=["15 files clean, 0 with findings"])
 
@@ -263,7 +273,7 @@ def error_paths(tmp, plan_text):
 def maintenance(tmp):
     """--refresh-headers follows plan.yaml and keeps what a person wrote."""
     proj = tmp / "maintenance"
-    shutil.copytree(ROOT / SAMPLE, proj)
+    copy_sample(proj)
     plan = proj / "docs/spec/plan.yaml"
     text = plan.read_text(encoding="utf-8")
     text = text.replace('    size: "Medium, about 3 days"\n    depends: []\n', "    depends: []\n")      # WI-01 loses its size in the plan
@@ -285,7 +295,7 @@ def maintenance(tmp):
          files={wi1: ["| Size | Medium, about 3 days |", "| Reviewer | Security review booked |"], ms3: [custom]})
     step("--refresh-headers is stable on a second run", run, contains=["0 file(s) written"])
     legacy = tmp / "legacy-header"
-    shutil.copytree(ROOT / SAMPLE, legacy)
+    copy_sample(legacy)
     wi3 = legacy / "docs/spec/m2-route-to-approvers/wi-03-routing-engine.md"
     wi3.write_text(wi3.read_text(encoding="utf-8").replace("| Field | Value |\n", "| | |\n", 1), encoding="utf-8")
     step("a header table with the older blank header row passes the checker", [PY, "scripts/check_specs.py", "--root", str(legacy)], contains=["0 with findings"])
@@ -297,7 +307,7 @@ def maintenance(tmp):
 def composition(tmp, plan_text):
     """The sections written from the plan's rationale follow plan.yaml and leave hand edits alone."""
     proj = tmp / "composition"
-    shutil.copytree(ROOT / SAMPLE, proj)
+    copy_sample(proj)
     plan = proj / "docs/spec/plan.yaml"
     old = 'rationale: "Routing and the inbox are the two halves of one capability'
     plan.write_text(plan_text.replace(old, 'rationale: "Changed reason for milestone two. Routing and the inbox are the two halves of one capability'), encoding="utf-8")
@@ -371,7 +381,7 @@ def planning_review(chk, variant, plan_text, people_text):
 def frontmatter(tmp, plan_text):
     """The generated SKILL.md frontmatter parses whatever the project is called."""
     proj = tmp / "frontmatter"
-    shutil.copytree(ROOT / SAMPLE, proj, ignore=shutil.ignore_patterns("dev"))
+    copy_sample(proj, ignore=shutil.ignore_patterns("dev"))
     plan = proj / "docs/spec/plan.yaml"
     gen = [PY, "scripts/generate_dev_skill.py", "--root", str(proj)]
     plan.write_text(plan_text.replace('name: "Expense approvals"', 'name: "Payments: phase 2 #core"'), encoding="utf-8")
@@ -429,7 +439,7 @@ def path_safety(tmp, plan_text):
     results.append((ok, "the refused source is unchanged and no index was written"))
     print(("PASS " if ok else "FAIL ") + "the refused source is unchanged and no index was written")
     proj = d / "proj"
-    shutil.copytree(ROOT / SAMPLE, proj)
+    copy_sample(proj)
     plan = proj / "docs/spec/plan.yaml"
     plan.write_text(plan_text.replace("folder: m4-pilot", "folder: ../../../m4-pilot"), encoding="utf-8")
     step("a milestone folder outside the project is refused", [PY, "scripts/scaffold_spec.py", "--root", str(proj), "--allow-no-git"], expect=2, contains=["outside the project folder"])
@@ -443,7 +453,7 @@ def path_safety(tmp, plan_text):
 def names(tmp, plan_text):
     """Names come from the plan; ordinary words that happen to be names are not findings."""
     proj = tmp / "names"
-    shutil.copytree(ROOT / SAMPLE, proj)
+    copy_sample(proj)
     plan = proj / "docs/spec/plan.yaml"
     plan.write_text(plan_text.replace("tamsin", "will"), encoding="utf-8")
     people = proj / "people.yaml"
@@ -510,7 +520,7 @@ def confidentiality(tmp):
 
     # staffing: the sample's fictional overlay, loaded from a temporary private workspace
     sample = d / "sample-project"
-    shutil.copytree(ROOT / SAMPLE, sample)
+    copy_sample(sample)
     step("a workspace for the sample", ws + ["init", "--root", str(sample), "--slug", "sample-staffing", "--answer", "yes", "--apply"],
          contains=["carrydown: private workspace ready at"], absent=("Traceback", "gh repo create"))
     shutil.copyfile(ROOT / SAMPLE / "people.yaml", Path(HOME) / ".carrydown" / "workspaces" / "sample-staffing" / "people.yaml")
@@ -534,10 +544,11 @@ def bundles(tmp):
     content-free map, and the engineers' check."""
     fixture = ROOT / "tests/fixtures/confidential-project"
     comp = [PY, "scripts/compile_bundles.py"]
-    step("compile_bundles dry run on the sample lists every item and writes nothing", comp + ["--root", SAMPLE],
+    owner = copy_sample(tmp / "bundles-owner")       # the owner compiles from the working plan: the committed sample is a released project
+    step("compile_bundles dry run on the sample lists every item and writes nothing", comp + ["--root", str(owner)],
          contains=["WI-06  obligations present: 3 of 3", "WI-11  obligations present: 7 of 7", "18 file(s) would be written"])
     out = tmp / "bundles-out"
-    step("compile_bundles --out --apply writes two files per work item", comp + ["--root", SAMPLE, "--out", str(out), "--apply"], contains=["18 file(s) written"])
+    step("compile_bundles --out --apply writes two files per work item", comp + ["--root", str(owner), "--out", str(out), "--apply"], contains=["18 file(s) written"])
     same = ("import sys\nfrom pathlib import Path\n"
             "a, b = Path(sys.argv[1]), Path(sys.argv[2])\n"
             "fa = {p.relative_to(a).as_posix(): p.read_bytes() for p in a.rglob('*') if p.is_file()}\n"
@@ -560,7 +571,7 @@ def bundles(tmp):
 
     # the sample's engineers' skill is what the generator and the templates make
     regen = tmp / "bundles-sample"
-    shutil.copytree(ROOT / SAMPLE, regen, ignore=shutil.ignore_patterns("dev"))
+    copy_sample(regen, ignore=shutil.ignore_patterns("dev"))
     step("the engineers' skill is generated with its check", [PY, "scripts/generate_dev_skill.py", "--root", str(regen), "--apply"],
          contains=["write: scripts/check_context.py", "approved contexts found in docs/context/: 9 of 9 work items"])
     step("the sample's engineers' skill matches the templates", [PY, "-c", same, str(regen / "docs/dev/skills/expense-approvals-dev"), str(ROOT / SAMPLE / "docs/dev/skills/expense-approvals-dev")],
@@ -605,7 +616,7 @@ def regressions(tmp, plan_text):
 
     def project(name, plan=None):
         proj = d / name
-        shutil.copytree(ROOT / SAMPLE, proj)
+        copy_sample(proj)
         if plan is not None:
             (proj / "docs/spec/plan.yaml").write_text(plan, encoding="utf-8")
         return proj
@@ -713,9 +724,9 @@ def regressions(tmp, plan_text):
     empty = d / "empty-plan.yaml"
     empty.write_text("", encoding="utf-8")
     step("--json with an empty plan is JSON and exit 2", chk + s + ["--plan", str(empty), "--json"], expect=2, json_out=True)
-    cited = project("plan-cite", plan_text.replace('ground_truth: "Sections 3.1, 3.2, 5.1, 7.1"', 'ground_truth: "Sections 3.1, 9.9"'))
+    cited = project("plan-cite", plan_text.replace('sections: "3.1, 3.2, 5.1, 7.1"', 'sections: "3.1, 9.9"', 1))
     step("a plan.yaml citation of a missing section is a finding", chk + ["--root", str(cited)], expect=1,
-         contains=["plan.yaml ground_truth of this item cites section 9.9"])
+         contains=["Ground truth cites Architecture document section 9.9, which is not a heading in docs/ground-truth/architecture.md"])
     named = project("named")
     spec = named / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
     spec.write_text(spec.read_text(encoding="utf-8") + "\nReviewed by Tamsin Hale.\n", encoding="utf-8")
@@ -969,7 +980,7 @@ def main():
     step("dry run: generate_dev_skill", [PY, "scripts/generate_dev_skill.py", "--root", SAMPLE])
     step("dry run: plan_repair", [PY, "scripts/plan_repair.py", "--root", SAMPLE], contains=["repair action(s)", "Dry run"])
     step("dry run: github_token", [PY, "scripts/github_token.py", "--dry-run"])
-    plan_text = (ROOT / SAMPLE / "docs/spec/plan.yaml").read_text(encoding="utf-8")
+    plan_text = WORKING_PLAN.read_text(encoding="utf-8")
     with tempfile.TemporaryDirectory() as tmp:
         def variant(name, text):
             path = Path(tmp) / f"{name}.yaml"
@@ -1023,7 +1034,8 @@ def main():
         nobody = plan_text[:i0] + "people: []\n" + plan_text[i1:]
         nobody = nobody.replace("    owner: tamsin\n", "").replace("    owner: idris\n", "")
         step("a plan without people passes and says so", chk + ["--report", "--plan", variant("nobody", nobody)], contains=["No people in the plan yet"])
-        sync = [PY, "scripts/github_sync.py", "--root", SAMPLE, "--offline"]
+        owner_root = copy_sample(Path(tmp) / "owner-sample")    # the owner's working tree: its plan holds the downstream defaults
+        sync = [PY, "scripts/github_sync.py", "--root", str(owner_root), "--offline"]
         step("dry run prints the constraints, target given", sync + overlay, contains=["Target delivery: 2027-04-23 (given)", "Track Workflow: 1 person, 100 percent allocated", "Track Experience: 1 person, 60 percent allocated"])
         step("without the overlay the capacity summary says how many people, not how many percent", sync, contains=["Track Workflow: 1 person", "Track Experience: 1 person"], absent=("Traceback", "percent allocated"))
         no_summary = plan_text.replace("      capacity_summary: true", "      capacity_summary: false")
@@ -1035,14 +1047,14 @@ def main():
         code = ("import sys; sys.path.insert(0, 'scripts'); import carrydown_lib as L, github_sync as S; "
                 "plan, _ = L.load_plan(sys.argv[1]); "
                 "print(S.build_rollup(plan, {}, 1)); print(S.build_subepic_body(plan, sys.argv[2], plan['milestones'][0]))")
-        step("the Epic comment and a sub-epic body carry the constraints", [PY, "-c", code, str(ROOT / SAMPLE / "docs/spec/plan.yaml"), str(ROOT / SAMPLE)],
+        step("the Epic comment and a sub-epic body carry the constraints", [PY, "-c", code, str(WORKING_PLAN), str(ROOT / SAMPLE)],
              contains=["**Constraints**", "- Target delivery: 2027-04-23 (given)", "Target delivery for the plan: 2027-04-23 (given)"])
         code = ("import sys; sys.path.insert(0, 'scripts'); import carrydown_lib as L, github_sync as S; "
                 "plan, _ = L.load_plan(sys.argv[1]); "
                 "b = S.build_subepic_body(plan, sys.argv[2], [m for m in plan['milestones'] if m['number'] == 2][0]); print(b); "
                 "i = [b.index(h) for h in ('Target delivery for the plan:', '### Why these items form this milestone', '### Joint demonstration', '### Acceptance criteria')]; "
                 "sys.exit(0 if i == sorted(i) and b.count('<!-- carrydown-managed:start -->') == 1 and b.count('<!-- carrydown-managed:end -->') == 1 and b.rstrip().rsplit(chr(10), 1)[1].startswith('<!-- carrydown:') else 1)")
-        step("the sub-epic body carries the milestone rationale and joint demonstration", [PY, "-c", code, str(ROOT / SAMPLE / "docs/spec/plan.yaml"), str(ROOT / SAMPLE)],
+        step("the sub-epic body carries the milestone rationale and joint demonstration", [PY, "-c", code, str(WORKING_PLAN), str(ROOT / SAMPLE)],
              contains=["### Why these items form this milestone", "Routing and the inbox are the two halves of one capability",
                        "### Joint demonstration", "The Experience engineer approves one report as two approvers in turn from the inbox",
                        "Target delivery for the plan: 2027-04-23 (given)"])

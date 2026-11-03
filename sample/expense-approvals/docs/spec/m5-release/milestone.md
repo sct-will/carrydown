@@ -67,7 +67,7 @@ The joint check for that date, Release: The release rehearsal passes with the fl
 ## References
 
 - `wi-11-release-readiness.md`
-- The ground truth, `docs/ground-truth/architecture.md`
+- The approved context of each item, in `docs/context/`
 - The schedule and checkpoint tables in `../README.md`
 
 ## Decisions recorded

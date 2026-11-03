@@ -13,6 +13,8 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 import carrydown_lib as L
 import github_client as G
@@ -33,10 +35,19 @@ class PlanRecoveryTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix="carrydown-plan-regression-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name) / "project with spaces"
-        shutil.copytree(ROOT / "sample/expense-approvals", self.root)
+        copy_sample(self.root)
         subprocess.run(["git", "init", str(self.root)], capture_output=True, check=True)
         self.path = self.root / "docs/spec/plan.yaml"
         self.raw = L.load_file(self.path)
+        # These tests recover a plan written before source_refs existed: each item cites its sections in the
+        # legacy ground_truth text. The sample now cites them in source_refs, so convert it back.
+        for item in self.raw["items"]:
+            refs = item.pop("source_refs", None)
+            if refs:
+                item["ground_truth"] = "Sections " + refs[0]["sections"]
+        self.path.write_text(R.dump(self.raw), encoding="utf-8")
+        for spec in (self.root / "docs/spec").glob("m*/wi-*.md"):    # and the specifications name no source in their Ground truth row
+            spec.write_text(spec.read_text(encoding="utf-8").replace("| Ground truth | Architecture document: Sections", "| Ground truth | Sections"), encoding="utf-8")
 
     def recover(self, raw=None, decisions=None):
         return R.recover(raw or self.raw, self.root, decisions)

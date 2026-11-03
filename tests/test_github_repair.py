@@ -11,6 +11,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests/mock"))
 import carrydown_lib as L
@@ -36,7 +38,7 @@ class RepairTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix="carrydown-metadata-regression-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name) / "project"
-        shutil.copytree(ROOT / "sample/expense-approvals", self.root)
+        copy_sample(self.root)
         strip_handling(self.root)       # a legacy project: these tests are about the GitHub scripts, not releases
         self.before, problems = L.load_plan(self.root / "docs/spec/plan.yaml", self.root)
         self.assertFalse(problems)
@@ -178,7 +180,7 @@ class PublicationRecoveryTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory(prefix="carrydown-publication-regression-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name) / "project"
-        shutil.copytree(ROOT / "sample/expense-approvals", self.root)
+        copy_sample(self.root)
         strip_handling(self.root)       # a legacy project: these tests are about the GitHub scripts, not releases
         self.plan, _ = L.load_plan(self.root / "docs/spec/plan.yaml", self.root)
         mockgh.S = mockgh.State()

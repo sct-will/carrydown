@@ -68,7 +68,7 @@ The joint check for that date, Milestone 2 demonstration: A report is approved b
 
 - `wi-03-routing-engine.md`
 - `wi-04-approver-inbox.md`
-- The ground truth, `docs/ground-truth/architecture.md`
+- The approved context of each item, in `docs/context/`
 - The schedule and checkpoint tables in `../README.md`
 
 ## Decisions recorded

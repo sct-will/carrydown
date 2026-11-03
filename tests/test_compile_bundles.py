@@ -30,6 +30,8 @@ import plan_repair as PR  # noqa: E402
 import release_gate as RG  # noqa: E402
 import release_schema as RS  # noqa: E402
 import test_release_schema as T  # noqa: E402  (its helpers build a manifest, a request and a receipt)
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import WORKING_PLAN  # noqa: E402
 
 FIXTURE = ROOT / "tests" / "fixtures" / "confidential-project"
 SAMPLE = ROOT / "sample" / "expense-approvals"
@@ -543,7 +545,7 @@ class GroundTruthMapTests(unittest.TestCase):
         self.assertNotIn("Section", text.split("\n", 3)[3])
 
     def test_the_sample_map_is_the_one_the_generator_makes(self):
-        plan, _ = L.load_plan(SAMPLE / "docs" / "spec" / "plan.yaml", SAMPLE)
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
         committed = (SAMPLE / "docs" / "dev" / "skills" / "expense-approvals-dev" / "references" / "ground-truth-map.md").read_text(encoding="utf-8")
         self.assertEqual(committed, GD.ground_truth_map_md(plan, SAMPLE))
 
@@ -556,7 +558,8 @@ def released_project(base, source, edit=lambda text: text):
     root = base / "released"
     shutil.copytree(source, root, ignore=shutil.ignore_patterns(".gitignore", "people.yaml", "__pycache__", "ground-truth", "dev", "tools", ".github", "release"))
     stored_path = base / "workspace-plan.yaml"
-    stored_path.write_text(edit((source / "docs" / "spec" / "plan.yaml").read_text(encoding="utf-8")), encoding="utf-8")
+    owner_plan = WORKING_PLAN if Path(source).resolve() == SAMPLE.resolve() else source / "docs" / "spec" / "plan.yaml"   # the sample is committed as a released project
+    stored_path.write_text(edit(owner_plan.read_text(encoding="utf-8")), encoding="utf-8")
     stored, problems = L.load_plan(stored_path, source)
     assert not problems, problems
     plan_path = root / "docs" / "spec" / "plan.yaml"
@@ -688,7 +691,7 @@ class SpecCitationTests(unittest.TestCase):
 
 class ContractsPointToBundlesTests(unittest.TestCase):
     def test_each_contract_row_names_the_approved_context(self):
-        plan, _ = L.load_plan(SAMPLE / "docs" / "spec" / "plan.yaml", SAMPLE)
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
         text = GD.contracts_md(plan, SAMPLE)
         self.assertIn("| Id | Work item | Section | File | Approved context |", text)
         self.assertIn("`docs/context/wi-06.md`", text)
