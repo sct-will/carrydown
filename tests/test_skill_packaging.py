@@ -54,7 +54,7 @@ SMOKE = [
     (PLAN_TO_GITHUB, "release.py", ["preview", "--root", "{sample}", "--repository-id", "4200"], ("What will be shared?", "With whom?", "Where?", "What remains private?")),
     (PLAN_TO_GITHUB, "release.py", ["prepare", "--root", "{sample}", "--repository-id", "4200"], ("DRY RUN", "Dry run: nothing was written")),
     (PLAN_TO_GITHUB, "release.py", ["diff", "--root", "{sample}", "--repository-id", "4200"], ("This is the first release",)),
-    (PLAN_TO_GITHUB, "release.py", ["inventory", "--root", "{sample}"], ("not implemented until WP8",)),
+    (PLAN_TO_GITHUB, "release.py", ["inventory", "--root", "{sample}"], ("carrydown release inventory", "Nothing was changed.")),
     (GROUND_TRUTH, "release_gate.py", ["--help"], ("The release gate",)),
     (GROUND_TRUTH, "release_verify.py", ["--help"], ("Verification of releases",)),
     (PLAN_TO_GITHUB, "release_verify.py", ["--help"], ("Verification of releases",)),

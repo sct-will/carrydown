@@ -28,6 +28,12 @@ into a rendering (docs/ground-truth/<source id>.md#<anchor>). A whole-document r
 obligation with the section "whole document", whose text is the whole rendering without its generated
 header comment. The version of an obligation is the version of the source in the plan.
 
+Restricted items. A work item marked restricted in the workspace plan gets no bundle and appears in no
+other bundle. When the owner also wrote a restricted_placeholder for it, it gets a placeholder bundle
+instead: no source section, only its id, the owner's restricted_summary and the owner's instruction, and
+`"restricted_destination": true` in the sidecar. That is what makes the engineers' check print the fourth
+message. An item without a placeholder is unknown to the engineers' check, which says "no approved context".
+
 Completeness. The compiler stops if a section a work item cites is not in the rendering of its
 source, and says `obligation not found: <source id> <n>`. It prints for each item "obligations
 present: n of n". Presence is checked by the machine. Whether the text is enough to do the work is
@@ -68,7 +74,7 @@ UNVERSIONED = "unversioned"
 # owner added, such as decisions) is read for conflict notes.
 _STRUCTURAL_ITEM_KEYS = frozenset("""id slug label milestone track owner theme complete_by size depends unblocks
 checkpoint external_input source_refs ground_truth skill_needs state downstream restricted restricted_summary
-program_input""".split())
+restricted_placeholder restricted_evidence program_input""".split())
 
 _NUMBER = r"\d+(?:\.\d+)*"
 _HEADING_NUMBER = re.compile(r"^(" + _NUMBER + r")\.?\s+(\S.*)$")
@@ -335,6 +341,33 @@ def _bundle_markdown(tag, item, obligations, flags, source_versions, sources, co
     return "\n".join(out).rstrip("\n") + "\n"
 
 
+def placeholder_files(plan, item, defaults=None):
+    """{path: bytes} of the bundle of a restricted item that has a published placeholder (WP9). It holds
+    no source section: only the item's id, the owner's restricted_summary and the owner's
+    restricted_placeholder instruction, plus fixed words. The sidecar says restricted_destination, which
+    makes the engineers' check print the fourth message. Nothing else of the item is used."""
+    tag = L.tag(plan, item["id"])
+    flags = dict(DEFAULT_DOWNSTREAM)
+    flags.update(defaults or {})
+    handling = (plan.get("project") or {}).get("handling")
+    plan_down = handling.get("downstream") if isinstance(handling, dict) else None
+    if "evidence" not in (defaults or {}) and isinstance(plan_down, dict) and plan_down.get("evidence") in EVIDENCE_VALUES:
+        flags["evidence"] = plan_down["evidence"]
+    flags.update({"code": False, "tests": False, "issues": False})
+    out = [f"# Approved context for {tag}, {L.restricted_summary(item)}", "",
+           f"Bundle format {BUNDLE_FORMAT}. Sources: none.",
+           "Downstream use: none. This work item has a restricted destination that this project does not publish.", "",
+           "## Obligations", "", "This work item cites no source sections.", "",
+           "## Conflict resolution that applies", "", "None recorded.", "",
+           "## Shared obligations", "", "None.", "",
+           "## Instruction from the plan owner", "", L.restricted_placeholder(item), ""]
+    markdown = "\n".join(out).rstrip("\n") + "\n"
+    sidecar = {"bundle_format": BUNDLE_FORMAT, "work_item": tag, "obligations": [], "conflicts": [], "shared_with": [],
+               "downstream": flags, "content_sha256": L.sha256_text(markdown), "extensions": {}, "restricted_destination": True}
+    base = f"{CONTEXT_DIR}/{tag.lower()}"
+    return {base + ".md": markdown.encode("utf-8"), base + ".bundle.json": L.canonical_json(sidecar)}
+
+
 def compile_report(plan, renderings_dir, spec_dir, defaults=None):
     """Compile every work item of plan. Returns a Result(files, rows, problems). files is empty when
     there are problems. Nothing is written. plan is the loaded workspace plan; renderings_dir holds
@@ -452,6 +485,9 @@ def compile_report(plan, renderings_dir, spec_dir, defaults=None):
         base = f"{CONTEXT_DIR}/{tag.lower()}"
         files[base + ".md"] = markdown
         files[base + ".bundle.json"] = L.canonical_json(sidecar)
+    for it in plan["items"]:
+        if L.restricted_placeholder(it):
+            files.update(placeholder_files(plan, it, defaults))
     return Result(files, rows, [])
 
 
