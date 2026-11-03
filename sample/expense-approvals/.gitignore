@@ -1,5 +1,8 @@
 __pycache__/
 *.pyc
+# The four lines scaffold_spec.py --init writes. This sample still tracks its people.yaml: it is a public,
+# fictional fixture added before the line, so git keeps it. A real project keeps people.yaml in the
+# private workspace, and the line stops a copy being added to git by mistake. See README.md.
 docs/source/
 people.yaml
 .carrydown/local.yaml

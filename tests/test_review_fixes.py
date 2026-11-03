@@ -240,5 +240,17 @@ class RetentionTests(unittest.TestCase):
         self.assertEqual(W.retention_choice(ws), "keep")
 
 
+class SampleIgnoreTests(unittest.TestCase):
+    """WP10 defect 7: the sample's .gitignore lists people.yaml while git tracks the sample's fictional
+    people.yaml. The file itself now says why, next to the line, as the sample README does."""
+
+    def test_the_ignore_file_explains_the_tracked_fixture_next_to_the_line(self):
+        lines = (SAMPLE / ".gitignore").read_text(encoding="utf-8").splitlines()
+        self.assertIn("people.yaml", lines)
+        comment = " ".join(x for x in lines[:lines.index("people.yaml")] if x.startswith("#"))
+        for words in ("still tracks its people.yaml", "fictional fixture", "private workspace", "README.md"):
+            self.assertIn(words, comment)
+
+
 if __name__ == "__main__":
     unittest.main()
