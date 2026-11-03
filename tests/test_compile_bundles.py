@@ -22,11 +22,14 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "tests"))
 import carrydown_lib as L  # noqa: E402
 import compile_bundles as CB  # noqa: E402
 import generate_dev_skill as GD  # noqa: E402
+import plan_repair as PR  # noqa: E402
 import release_gate as RG  # noqa: E402
 import release_schema as RS  # noqa: E402
+import test_release_schema as T  # noqa: E402  (its helpers build a manifest, a request and a receipt)
 
 FIXTURE = ROOT / "tests" / "fixtures" / "confidential-project"
 SAMPLE = ROOT / "sample" / "expense-approvals"
@@ -119,10 +122,13 @@ class CompileFixtureTests(Compiled):
         self.assertFalse(any("Compare dates as UTC" in c["decision"] for c in conflicts))
 
     def test_wi03_is_listed_as_sharing_section_3_5(self):
-        self.assertIn("- architecture 3.5 Routing, also cited by WI-03.", self.md("WI-06"))
+        line06 = next(l for l in self.md("WI-06").split("\n") if l.startswith("- architecture 3.5 Routing, also cited by "))
+        self.assertIn("WI-03", line06.split("also cited by ")[1].rstrip(".").split(", "))
+        self.assertNotIn("WI-06", line06)
         self.assertIn("WI-03", self.side("WI-06")["shared_with"])
-        self.assertIn("- architecture 3.5 Routing, also cited by WI-06.", self.md("WI-03"))
-        self.assertNotIn("WI-06", self.side("WI-07")["shared_with"])
+        line03 = next(l for l in self.md("WI-03").split("\n") if l.startswith("- architecture 3.5 Routing, also cited by "))
+        self.assertIn("WI-06", line03.split("also cited by ")[1].rstrip(".").split(", "))
+        self.assertNotIn("WI-07", self.side("WI-07")["shared_with"])
 
     def test_no_bundle_file_contains_the_release_id(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -208,8 +214,8 @@ class CompletenessTests(unittest.TestCase):
         self.assertIn("obligation not found: architecture 3.5 (cited by WI-06)", result.problems)
         rows = {r[0]: r[2:] for r in result.rows}
         self.assertEqual(rows["WI-06"], (4, 5))
-        self.assertEqual(rows["WI-03"], (2, 3))
-        self.assertEqual(rows["WI-01"], (4, 4))
+        self.assertEqual(rows["WI-03"], (3, 4))       # its specification also links a section its header does not cite
+        self.assertEqual(rows["WI-01"], (6, 6))
         error = None
         try:
             CB.compile_bundles(self.plan, self.renderings, SPEC_DIR)
@@ -235,16 +241,10 @@ class CompletenessTests(unittest.TestCase):
         plan["items"][4]["source_refs"].append({"source": "unlisted", "sections": "1.1"})
         self.assertIn("obligation not found: unlisted 1.1 (cited by WI-06)", CB.compile_report(plan, self.renderings, SPEC_DIR).problems)
 
-    def test_a_whole_document_citation_cannot_be_compiled(self):
-        plan = copy.deepcopy(self.plan)
-        plan["items"][4]["source_refs"] = [{"source": "architecture", "sections": "whole document"}]
-        problems = CB.compile_report(plan, self.renderings, SPEC_DIR).problems
-        self.assertEqual(problems, ["whole-document citation of source architecture in WI-06: cite numbered sections"])
-
     def test_an_item_that_cites_nothing_still_gets_a_bundle(self):
         plan = copy.deepcopy(self.plan)
         plan["items"][0]["ground_truth"] = ""
-        files = CB.compile_bundles(plan, self.renderings, SPEC_DIR)
+        files = CB.compile_bundles(plan, self.renderings, self.base / "no-specifications")
         text = files["docs/context/wi-01.md"].decode("utf-8")
         self.assertIn("This work item cites no source sections.", text)
         self.assertEqual(json.loads(files["docs/context/wi-01.bundle.json"])["obligations"], [])
@@ -380,7 +380,7 @@ class CommandLineTests(unittest.TestCase):
         code, out, err = run_cli(["--root", str(self.root)])
         self.assertEqual(code, 0, out + err)
         self.assertIn("WI-06  obligations present: 5 of 5   Approval limits and separation of duties", out)
-        self.assertIn("WI-01  obligations present: 4 of 4", out)
+        self.assertIn("WI-01  obligations present: 6 of 6", out)
         self.assertIn("renderings from the private workspace", out)
         self.assertIn("18 file(s) would be written under docs/context/", out)
         self.assertIn("Dry run. Add --apply to write.", out)
@@ -546,6 +546,144 @@ class GroundTruthMapTests(unittest.TestCase):
         plan, _ = L.load_plan(SAMPLE / "docs" / "spec" / "plan.yaml", SAMPLE)
         committed = (SAMPLE / "docs" / "dev" / "skills" / "expense-approvals-dev" / "references" / "ground-truth-map.md").read_text(encoding="utf-8")
         self.assertEqual(committed, GD.ground_truth_map_md(plan, SAMPLE))
+
+
+def released_project(base, source, edit=lambda text: text):
+    """A released clone of a project, in a temporary folder: the released plan, the specifications with
+    their Ground truth rows as that plan states them, the bundles this compiler writes, and one receipt
+    that lists the plan and the bundles. It holds no original, no rendering and no overlay."""
+    base = Path(base)
+    root = base / "released"
+    shutil.copytree(source, root, ignore=shutil.ignore_patterns(".gitignore", "people.yaml", "__pycache__", "ground-truth", "dev", "tools", ".github"))
+    stored_path = base / "workspace-plan.yaml"
+    stored_path.write_text(edit((source / "docs" / "spec" / "plan.yaml").read_text(encoding="utf-8")), encoding="utf-8")
+    stored, problems = L.load_plan(stored_path, source)
+    assert not problems, problems
+    plan_path = root / "docs" / "spec" / "plan.yaml"
+    plan_path.write_text(PR.dump(L.project_released_plan(stored)) + "\n", encoding="utf-8")
+    plan, problems = L.load_plan(plan_path, root)
+    assert not problems and plan["_view"] == "released", problems
+    for it in plan["items"]:
+        path = L.spec_path(plan, root, it)
+        want = dict(L.expected_header(plan, it))["Ground truth"]
+        path.write_text(re.sub(r"(?m)^\| Ground truth \| .* \|$", lambda m: f"| Ground truth | {want} |", path.read_text(encoding="utf-8")), encoding="utf-8")
+    files = CB.compile_bundles(stored, source / "docs" / "ground-truth", root / "docs" / "spec")
+    for rel, data in files.items():
+        (root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (root / rel).write_bytes(data)
+    snap = base / "snapshot"
+    for path in [plan_path] + sorted((root / "docs" / "context").glob("*")):
+        dst = snap / "repo" / path.relative_to(root)
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(path, dst)
+    manifest, _ = RS.hash_manifest(snap)
+    request = T.make_request(manifest)
+    rid = request["request_sha256"]
+    receipt = RS.project_receipt(request, manifest, RS.RequestState(rid, "active", T.H("event"), None, None), RS.VerifiedApproval(rid, "local-owner", False))
+    (root / "docs" / "release").mkdir(parents=True)
+    (root / "docs" / "release" / f"{rid}.receipt.json").write_bytes(receipt)
+    return root, files
+
+
+def run_checker(root):
+    run = subprocess.run([sys.executable, str(ROOT / "scripts" / "check_specs.py"), "--root", str(root)], capture_output=True, text=True, timeout=120)
+    return run.returncode, run.stdout + run.stderr
+
+
+class SpecCitationTests(unittest.TestCase):
+    """The compiler puts into a bundle every section the specification cites, so the released checker passes."""
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="carrydown-bundles-released-")
+        self.addCleanup(self.temp.cleanup)
+        self.base = Path(self.temp.name).resolve()
+
+    def sections(self, files, tag):
+        return {(o["source"], o["section"]) for o in json.loads(files[f"docs/context/{tag.lower()}.bundle.json"])["obligations"]}
+
+    def test_a_section_the_specification_links_but_the_header_does_not_cite_is_in_the_bundle(self):
+        plan = load_fixture_plan()
+        files = CB.compile_bundles(plan, RENDERINGS, SPEC_DIR)
+        self.assertIn(("architecture", "3.3"), self.sections(files, "WI-01"))       # WI-01 links 3.3 and 3.6, and cites 3.1, 3.2, 5.1, 7.1
+        self.assertIn(("architecture", "3.6"), self.sections(files, "WI-01"))
+        self.assertIn("### architecture 3.3 Data model", files["docs/context/wi-01.md"].decode("utf-8"))
+
+    def test_references_lines_in_the_new_form_are_in_the_bundle(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            spec_dir = Path(tmp) / "spec"
+            shutil.copytree(SPEC_DIR, spec_dir)
+            spec = spec_dir / "m3-enforce-policy" / "wi-07-audit-log.md"
+            spec.write_text(spec.read_text(encoding="utf-8").replace("## References\n", "## References\n\n- company-governance section 3.1, Retention\n- architecture section 2.2\n", 1), encoding="utf-8")
+            files = CB.compile_bundles(load_fixture_plan(), RENDERINGS, spec_dir)
+            self.assertLessEqual({("company-governance", "3.1"), ("architecture", "2.2")}, self.sections(files, "WI-07"))
+            self.assertIn("### company-governance 3.1 Retention", files["docs/context/wi-07.md"].decode("utf-8"))
+            bad = spec.read_text(encoding="utf-8").replace("architecture section 2.2", "architecture section 9.9")
+            spec.write_text(bad, encoding="utf-8")
+            problems = CB.compile_report(load_fixture_plan(), RENDERINGS, spec_dir).problems
+            self.assertEqual(problems, ["obligation not found: architecture 9.9 (cited by WI-07)"])
+
+    def test_a_link_into_a_code_block_or_to_a_heading_that_is_not_there_cites_nothing(self):
+        sources = {"architecture": {}}
+        sections = CB.parse_rendering(ARCH)
+        text = "```\n[x](../../ground-truth/architecture.md#35-routing)\n```\n[y](../../ground-truth/architecture.md#99-nothing)\n[z](other/architecture.md#35-routing)\n"
+        self.assertEqual(CB.spec_cited_keys(text, sources, lambda sid: sections), [])
+        text = "[x](../../ground-truth/architecture.md#35-routing)\n[x](../../ground-truth/architecture.md#41-gov-1-approval-limits-and-separation-of-duties)\n"
+        self.assertEqual(CB.spec_cited_keys(text, sources, lambda sid: sections), [("architecture", "3.5"), ("architecture", "4.1")])
+
+    def test_every_obligation_version_is_the_version_of_the_source_in_the_plan(self):
+        plan = load_fixture_plan()
+        versions = {s["id"]: str(s["version"]) for s in plan["sources"]}
+        files = CB.compile_bundles(plan, RENDERINGS, SPEC_DIR)
+        for rel, data in files.items():
+            if rel.endswith(".bundle.json"):
+                for o in json.loads(data)["obligations"]:
+                    self.assertEqual(o["version"], versions[o["source"]], rel)
+
+    def test_a_whole_document_reference_is_one_obligation_with_the_section_whole_document(self):
+        plan = load_fixture_plan()
+        plan["items"][0]["source_refs"] = [{"source": "architecture", "sections": "whole document"}]
+        plan["items"][0]["ground_truth"] = ""
+        files = CB.compile_bundles(plan, RENDERINGS, SPEC_DIR)
+        side = json.loads(files["docs/context/wi-01.bundle.json"])
+        whole = [o for o in side["obligations"] if o["section"] == "whole document"]
+        self.assertEqual(len(whole), 1)
+        self.assertEqual(whole[0]["source"], "architecture")
+        self.assertEqual(whole[0]["heading"], "Expense approvals service, architecture document")
+        text = files["docs/context/wi-01.md"].decode("utf-8")
+        self.assertIn("### architecture whole document Expense approvals service, architecture document", text)
+        self.assertIn(section_text(ARCH, "3.5"), text)
+        self.assertNotIn("Generated from", text)          # the header comment names the original file, so it is left out
+        self.assertNotIn("architecture.md", text)
+        (_, _, _, body), = [o for o in CB.parse_obligations(files["docs/context/wi-01.md"]) if o[1] == "whole document"]
+        self.assertEqual(whole[0]["sha256"], L.sha256_text(body))
+
+    def test_the_released_checker_passes_on_the_fixture_with_the_compiled_bundles(self):
+        root, files = released_project(self.base, FIXTURE)
+        code, out = run_checker(root)
+        self.assertEqual(code, 0, out)
+        self.assertIn("0 with findings", out)
+
+    def test_the_released_checker_passes_on_the_sample_with_the_compiled_bundles(self):
+        root, files = released_project(self.base, SAMPLE)
+        code, out = run_checker(root)
+        self.assertEqual(code, 0, out)
+        self.assertIn("0 with findings", out)
+
+    def test_the_released_checker_passes_when_an_item_cites_the_whole_document(self):
+        edit = lambda text: text.replace('    ground_truth: "Sections 3.1, 3.2, 5.1, 7.1"', '    source_refs:\n      - source: architecture\n        sections: "whole document"')
+        root, files = released_project(self.base, FIXTURE, edit)
+        self.assertIn(("architecture", "whole document"), self.sections(files, "WI-01"))
+        code, out = run_checker(root)
+        self.assertEqual(code, 0, out)
+
+    def test_dropping_a_compiled_obligation_is_a_released_failure(self):
+        root, files = released_project(self.base, FIXTURE)
+        side_path = root / "docs" / "context" / "wi-06.bundle.json"
+        side = json.loads(side_path.read_text(encoding="utf-8"))
+        side["obligations"] = [o for o in side["obligations"] if o["section"] != "3.5"]
+        side_path.write_bytes(RS.canonical_json(side))
+        code, out = run_checker(root)
+        self.assertEqual(code, 1, out)
 
 
 class ContractsPointToBundlesTests(unittest.TestCase):

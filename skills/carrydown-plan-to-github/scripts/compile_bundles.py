@@ -22,6 +22,12 @@ Where things are read from
   specs      the folder named by project.spec_dir, under <workspace>/drafts/ when that exists, else
              the project (--spec-dir overrides both)
 
+What a work item cites. Its bundle holds every section named in its source_refs, in the References lines of
+its specification (`- <source id> section <n.n>, <heading>`) and in relative links from the specification
+into a rendering (docs/ground-truth/<source id>.md#<anchor>). A whole-document reference becomes one
+obligation with the section "whole document", whose text is the whole rendering without its generated
+header comment. The version of an obligation is the version of the source in the plan.
+
 Completeness. The compiler stops if a section a work item cites is not in the rendering of its
 source, and says `obligation not found: <source id> <n>`. It prints for each item "obligations
 present: n of n". Presence is checked by the machine. Whether the text is enough to do the work is
@@ -70,6 +76,10 @@ _HEADER_VERSION = re.compile(r"<!-- Generated from .*? version (.+?) on \d{4}-\d
 _DATE = re.compile(r"\b\d{4}-\d\d-\d\d\b")
 _IDENT = re.compile(r"\b[A-Z][A-Z0-9]*-\d+(?:\.\d+)*\b")
 _STRUCTURE = ("## Obligations", "## Conflict resolution that applies", "## Shared obligations")
+WHOLE = "whole document"
+_CITATION_LINE = re.compile(r"^\s*[-*]\s+([a-z0-9]+(?:-[a-z0-9]+)*)\s+[Ss]ection\s+(" + _NUMBER + r")\s*(?:,\s*(.*?))?\s*$")
+_LINK = re.compile(r"\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
+_FENCE = re.compile(r"(?ms)^(`{3,}|~{3,}).*?^\1[ \t]*$")
 
 
 class CompileError(ValueError):
@@ -93,7 +103,8 @@ class Result(NamedTuple):
 
 
 def section_key(number):
-    return tuple(int(part) for part in number.split("."))
+    """Sort key of a section number. The whole document sorts before every numbered section."""
+    return (-1,) if number == WHOLE else tuple(int(part) for part in number.split("."))
 
 
 def parse_rendering(text):
@@ -118,6 +129,14 @@ def parse_rendering(text):
     return found
 
 
+def whole_document(text, fallback_title):
+    """The Section that stands for a whole rendering: its text without the generated header comment,
+    normalized, headed by the title of the document."""
+    body = "\n".join(l for l in text.replace("\r\n", "\n").split("\n") if not l.startswith("<!-- Generated from")).strip("\n")
+    title = next((t for _, level, t in L.collect_headings(body.split("\n")) if level == 1), "") or fallback_title
+    return Section(WHOLE, re.sub(r"[`*_]", "", title).strip() or fallback_title, L.normalize_section_text(body) if body.strip() else "\n")
+
+
 def rendering_version(text):
     """The version the renderer recorded in the header comment, or "" when there is none."""
     m = _HEADER_VERSION.search(text)
@@ -126,23 +145,55 @@ def rendering_version(text):
 
 
 def cited_sections(ref):
-    """The section numbers of one source_refs entry, in the order written, without repeats. The
-    text "whole document" yields None: a bundle holds numbered sections."""
+    """The section numbers of one source_refs entry, in the order written, without repeats. The text
+    "whole document" yields ["whole document"]: one obligation that holds the whole rendering."""
     sections = str(ref.get("sections") or "")
-    if sections.strip().casefold() == "whole document":
-        return None
-    return list(dict.fromkeys(re.findall(_NUMBER, sections)))
+    numbers = list(dict.fromkeys(re.findall(r"\b" + _NUMBER + r"\b", sections)))
+    if not numbers and sections.strip().casefold() == WHOLE:
+        return [WHOLE]
+    return numbers
 
 
-def item_obligation_keys(plan, item):
-    """[(source id, section number)] that item cites, sorted by source precedence and section."""
+def spec_cited_keys(text, sources, sections_of):
+    """[(source id, section)] that a specification cites beyond its header: the lines of its References
+    section written `- <source id> section <n.n>, <heading>`, and relative links into a rendering
+    (.../ground-truth/<source id>.md#<anchor>), where the anchor names a heading of that rendering. A
+    link to a heading the rendering does not have cites nothing. Code blocks are not read.
+    sections_of(source id) returns the {number: Section} of its rendering, or None."""
+    keys = []
+    marker = "\n## References\n"
+    start = text.find(marker)
+    if start >= 0:
+        for line in text[start + len(marker):].split("\n"):
+            if line.startswith("## "):
+                break
+            m = _CITATION_LINE.match(line)
+            if m and (m.group(1), m.group(2)) not in keys:
+                keys.append((m.group(1), m.group(2)))
+    for m in _LINK.finditer(_FENCE.sub("", text)):
+        path, _, anchor = m.group(1).partition("#")
+        parts = Path(path).parts
+        if not anchor or not path.endswith(".md") or len(parts) < 2 or parts[-2] != "ground-truth" or Path(path).stem not in sources:
+            continue
+        sid = Path(path).stem
+        sections = sections_of(sid) or {}
+        for number, section in sections.items():
+            if number != WHOLE and L.anchor_slug(f"{number} {section.heading}") == anchor and (sid, number) not in keys:
+                keys.append((sid, number))
+    return keys
+
+
+def item_obligation_keys(plan, item, extra=()):
+    """[(source id, section number)] that item cites in its source_refs, plus extra (what its specification
+    cites), sorted by source precedence and section."""
     order = {s["id"]: n for n, s in enumerate(L.ground_truth_sources(plan))}
     keys = []
     for ref in L.item_source_refs(plan, item):
         sid = ref.get("source")
-        for number in cited_sections(ref) or []:
+        for number in cited_sections(ref):
             if (sid, number) not in keys:
                 keys.append((sid, number))
+    keys += [k for k in extra if k not in keys]
     return sorted(keys, key=lambda k: (order.get(k[0], len(order)), section_key(k[1])))
 
 
@@ -313,14 +364,28 @@ def compile_report(plan, renderings_dir, spec_dir, defaults=None):
             problems.append(f"the rendering of source {sid} cannot be read as UTF-8 text")
             return None
         version = str(source.get("version") or "").strip() or rendering_version(text) or UNVERSIONED
-        rendered[sid] = (parse_rendering(text), version)
+        found = parse_rendering(text)
+        found[WHOLE] = whole_document(text, str(source.get("name") or sid))
+        rendered[sid] = (found, version)
         return rendered[sid]
 
-    keys_of = {it["id"]: item_obligation_keys(plan, it) for it in items}
-    for it in items:                                  # a whole-document citation cannot be compiled
-        for ref in L.item_source_refs(plan, it):
-            if cited_sections(ref) is None:
-                problems.append(f"whole-document citation of source {ref.get('source')} in {L.tag(plan, it['id'])}: cite numbered sections")
+    def sections_of(sid):
+        got = load(sid)
+        return got[0] if got else None
+
+    def spec_file_of(it):
+        folder = next((m["folder"] for m in plan["milestones"] if m["number"] == it["milestone"]), "")
+        return Path(spec_dir) / folder / f"{L.tag(plan, it['id']).lower()}-{it['slug']}.md"
+
+    spec_text = {}               # item id -> text of its specification, when there is one
+    for it in items:
+        spec_file = spec_file_of(it)
+        if L.exists(spec_file):
+            try:
+                spec_text[it["id"]] = L.read_text(spec_file)
+            except L.TextError:
+                problems.append(f"the specification of {L.tag(plan, it['id'])} cannot be read as UTF-8 text")
+    keys_of = {it["id"]: item_obligation_keys(plan, it, spec_cited_keys(spec_text.get(it["id"], ""), sources, sections_of)) for it in items}
     cited_by = {}
     for it in items:
         for key in keys_of[it["id"]]:
@@ -345,14 +410,7 @@ def compile_report(plan, renderings_dir, spec_dir, defaults=None):
         rows.append((tag, it["label"], len(obligations), len(keys_of[it["id"]])))
         flags, down_problems = downstream_for(plan, it, defaults)
         problems += down_problems
-        notes = []
-        spec_file = Path(spec_dir) / next((m["folder"] for m in plan["milestones"] if m["number"] == it["milestone"]), "") / \
-            f"{tag.lower()}-{it['slug']}.md"
-        if L.exists(spec_file):
-            try:
-                notes += watch_out_notes(L.read_text(spec_file))
-            except L.TextError:
-                problems.append(f"the specification of {tag} cannot be read as UTF-8 text")
+        notes = watch_out_notes(spec_text[it["id"]]) if it["id"] in spec_text else []
         notes += plan_notes(it)
         conflicts, seen = [], set()
         for note in notes:
@@ -413,7 +471,7 @@ def parse_obligations(markdown):
     m = re.search(r"(?ms)^## Obligations\n\n(.*?)(?=^## Conflict resolution that applies\n)", text)
     if not m:
         return []
-    heads = list(re.finditer(rf"(?m)^### (\S+) ({_NUMBER}) (.+)$", m.group(1)))
+    heads = list(re.finditer(rf"(?m)^### (\S+) ({_NUMBER}|{WHOLE}) (.+)$", m.group(1)))
     out = []
     for n, h in enumerate(heads):
         end = heads[n + 1].start() if n + 1 < len(heads) else len(m.group(1))

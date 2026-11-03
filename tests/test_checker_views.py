@@ -322,7 +322,7 @@ class ReleasedViewTests(WithTemp):
         code, out = check("--root", SAMPLE, "--view", "released")
         self.assertEqual(code, 1)
         self.assertIn("schema-view-mismatch", out)
-        self.assertIn("approved context missing", out)   # the released rules ran, and the sample has no bundles
+        self.assertIn("no active receipt in docs/release/ lists docs/context/wi-01.md", out)   # the released rules ran: the sample has bundles and no receipt yet
 
 
 class WorkspaceViewTests(WithTemp):

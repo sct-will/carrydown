@@ -535,7 +535,7 @@ def bundles(tmp):
     fixture = ROOT / "tests/fixtures/confidential-project"
     comp = [PY, "scripts/compile_bundles.py"]
     step("compile_bundles dry run on the sample lists every item and writes nothing", comp + ["--root", SAMPLE],
-         contains=["WI-06  obligations present: 3 of 3", "WI-11  obligations present: 2 of 2", "18 file(s) would be written"])
+         contains=["WI-06  obligations present: 3 of 3", "WI-11  obligations present: 7 of 7", "18 file(s) would be written"])
     out = tmp / "bundles-out"
     step("compile_bundles --out --apply writes two files per work item", comp + ["--root", SAMPLE, "--out", str(out), "--apply"], contains=["18 file(s) written"])
     same = ("import sys\nfrom pathlib import Path\n"
