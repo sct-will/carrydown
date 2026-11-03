@@ -1442,29 +1442,59 @@ def cmd_inventory(a):
     return 0
 
 
+def doctor_components(project, a, reader=None):
+    """(components, problem). The live components of an enrolled project, read with the owner's token:
+    release_verify.verify_prerequisites plus the destinations. problem is a fixed reason code when the
+    enrollment itself could not be read, and components is then empty."""
+    try:
+        policy, enrollment, reader = current_policy(project, a, reader)
+        components = V.verify_prerequisites(reader, enrollment, workspace_access=workspace_ok(project.workspace) if project.workspace else None)
+        components.append(V.verify_destinations(reader, enrollment))
+        return components, None
+    except (RS.SchemaError, Refused) as e:
+        return [], getattr(e, "code", "evidence-unavailable")
+
+
 def cmd_doctor(a):
+    """The setup check (WP7 item 7): the offline workspace checks, then the live components. On the "no"
+    path every mandatory component must be verified before a private upload or a release write, and the
+    exit status is 1 until they are. On the "yes" path the remote checks are informational."""
     project = Project(a.root)
     import workspace as W
     say("carrydown release doctor")
+    say("offline checks (nothing is sent):")
     rows = W.doctor_rows(project.root)
     for level, name, detail in rows:
         say(f"  {level:<4}  {name}: {detail}")
     failed = sum(1 for r in rows if r[0] == "FAIL")
-    say("remote components:")
+    say("")
+    say("remote components (live):")
     if not project.enrolled:
-        say("  not enrolled: no tooling repository, staging repository or verifier applies to this project (the \"yes\" path needs none).")
-    elif not token_available(a):
+        say("  not enrolled: no tooling repository, staging repository or verifier applies to this project. The \"yes\" path needs none, and these checks are informational.")
+        return 1 if failed else 0
+    if not token_available(a):
+        components, problem = [], "no token"
         for name in V.EXPORT_COMPONENTS:
             if name != "workspace-access":
-                say(f"  {name}: not verifiable (no token)")
+                say(f"  {'not verifiable':<14}  {name}: no token. Set CARRYDOWN_GITHUB_TOKEN or pass --token-file")
     else:
-        try:
-            policy, enrollment, reader = current_policy(project, a)
-            for c in V.verify_prerequisites(reader, enrollment, workspace_access=workspace_ok(project.workspace) if project.workspace else None):
-                say(f"  {c.status:<14} {c.name}: {c.evidence}")
-        except (RS.SchemaError, Refused) as e:
-            say(f"  not verifiable: {getattr(e, 'code', 'evidence-unavailable')}")
-    return 1 if failed else 0
+        components, problem = doctor_components(project, a)
+        if problem:
+            say(f"  {'not verifiable':<14}  enrollment: {problem}")
+        for c in components:
+            say(f"  {c.status:<14}  {c.name}: {c.evidence}")
+            if c.status != V.VERIFIED:
+                hint = V.ATTESTATION_FOR.get(c.name)
+                say(f"  {'':<14}  needed: {c.code}" + (f". A current administrator attestation named {hint} for this exact subject also satisfies it" if hint else ""))
+    by = {c.name: c for c in components}
+    upload = [n for n in V.UPLOAD_COMPONENTS if not (n in by and by[n].status == V.VERIFIED)]
+    export = [n for n in V.EXPORT_COMPONENTS if not (n in by and by[n].status == V.VERIFIED)]
+    say("")
+    say("private upload to the staging repository: " + ("allowed" if not upload else "blocked until verified: " + ", ".join(upload)))
+    say("export and publication: " + ("allowed" if not export else "blocked until verified: " + ", ".join(export)))
+    say("Limits: a verified scan health does not expire an old GitHub success, and state can change between a scheduled poll and a merge. "
+        "Five minutes is a requested interval, not a deadline.")
+    return 1 if failed or export else 0
 
 
 # ---------------------------------------------------------------------------

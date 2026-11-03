@@ -22,7 +22,8 @@ Commands (every one reads files only; init writes only with --apply)
   python3 scripts/workspace.py init --root . --slug my-project --answer no --apply
                                                                               also print the staging repository commands
   python3 scripts/workspace.py status --root .                               paths and state, no names
-  python3 scripts/workspace.py doctor --root .                               permissions, path separation, ignore rules, plan schema
+  python3 scripts/workspace.py doctor --root .                               permissions, path separation, ignore rules, plan schema,
+                                                                              and the remote components, labeled not verifiable (offline)
 
 --answer is your answer to the one question of the interview: "Can everyone who can read this
 repository see all of these documents and your staffing notes?" On no, init prints the commands
@@ -566,13 +567,36 @@ def doctor_rows(root):
     return rows
 
 
+# The components that live on GitHub and in the tooling repository. The offline doctor cannot read them
+# and says so; release.py doctor reads them with the owner's token (release_verify.EXPORT_COMPONENTS).
+REMOTE_COMPONENTS = ("enrollment", "staging-identity", "staging-readers", "staging-workflow", "staging-ruleset", "verifier-code",
+                     "engineering-ruleset", "approvers", "scan-health", "runtime-isolation", "destinations")
+
+
+def remote_rows(root):
+    """(level, name, detail) for the remote components. The level is info: an offline check never turns
+    a fact it cannot read into a pass or a failure. A project that names no staging or tooling repository
+    and has no policy pointer is on the "yes" path, where none of them applies."""
+    ws, _ = L.workspace_root(root)
+    data = read_workspace_yaml(ws) if ws is not None else None
+    named = bool(data and (data.get("staging_repository") or data.get("tooling_repository")))
+    pointer = (Path(root) / ".carrydown" / "release-policy.yaml").is_file()
+    if not (named or pointer):
+        return [("info", "remote components", "none apply. The \"yes\" path needs no staging repository, verifier or enrollment")]
+    return [("info", name, "not verifiable offline. Run release.py doctor with your token to check it live") for name in REMOTE_COMPONENTS]
+
+
 def cmd_doctor(a):
     root = L.project_root(a.root)
     rows = doctor_rows(root)
+    remote = remote_rows(root)
     L.say("carrydown workspace doctor (offline: nothing is sent, nothing is changed)")
     width = max(len(r[1]) for r in rows)
     for level, name, detail in rows:
         L.say(f"  {level:<4}  {name.ljust(width)}  {detail}")
+    wide = max(len(r[1]) for r in remote)
+    for level, name, detail in remote:
+        L.say(f"  {level:<4}  {name.ljust(wide)}  {detail}")
     failed = sum(1 for r in rows if r[0] == "FAIL")
     warned = sum(1 for r in rows if r[0] == "warn")
     L.say(f"{len(rows) - failed - warned} ok, {warned} warning(s), {failed} failure(s)")

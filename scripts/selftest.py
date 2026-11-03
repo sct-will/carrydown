@@ -951,6 +951,9 @@ def main():
     for s in scripts:
         if s.name not in ("carrydown_lib.py", "github_client.py", "selftest.py"):
             step(f"--help {s.name}", [PY, f"scripts/{s.name}", "--help"])
+    step("--help verifier/verify_release.py", [PY, "-I", "verifier/verify_release.py", "--help"], contains=["cannot modify"])
+    step("dry run: the verifier prints a reference ruleset", [PY, "-I", "verifier/verify_release.py", "ruleset", "--kind", "staging", "--app-id", "1"],
+         contains=["carrydown-staging-verifier"])
     step("dry run: render_ground_truth", [PY, "scripts/render_ground_truth.py", f"{SAMPLE}/ground-truth/architecture.md", "--root", SAMPLE, "--version", "0.3", "--dry-run"])
     step("dry run: scaffold_spec", [PY, "scripts/scaffold_spec.py", "--root", SAMPLE, "--stubs"])
     step("dry run: github_sync (offline)", [PY, "scripts/github_sync.py", "--root", SAMPLE, "--offline"])
