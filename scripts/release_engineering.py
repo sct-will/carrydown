@@ -200,7 +200,10 @@ def _classify(files, patterns):
         names = [f["filename"]] + ([f["previous_filename"]] if f.get("previous_filename") else [])
         for name in names:
             if name.casefold() == POINTER_PATH:
-                if status in ("removed", "renamed"):
+                if name != POINTER_PATH:
+                    # another spelling of the pointer is a second pointer on a disk that ignores case
+                    refused.append(("policy-pointer-mismatch", name))
+                elif status in ("removed", "renamed"):
                     refused.append(("policy-pointer-mismatch", name))
                 else:
                     pointer = status
@@ -248,7 +251,7 @@ def _check_pointer(run, status, base_has):
         run.fail("policy-pointer-mismatch", POINTER_PATH)
         return
     e = run.enrollment
-    if not isinstance(doc, dict) or set(doc) != set(POINTER_KEYS) or doc.get("format") != 1 \
+    if not isinstance(doc, dict) or set(doc) != set(POINTER_KEYS) or not RS.is_format(doc.get("format")) \
             or str(doc.get("tooling_repository", "")).casefold() != e.tooling_repository.casefold() \
             or doc.get("enrollment_id") != e.enrollment_id:
         run.fail("policy-pointer-mismatch", POINTER_PATH)
@@ -477,7 +480,7 @@ def _check_bundle(run, path):
     except SchemaError:
         run.fail("schema-view-mismatch", side_path)
         return
-    if not isinstance(side, dict) or side.get("bundle_format") != 1 or not isinstance(side.get("content_sha256"), str):
+    if not isinstance(side, dict) or not RS.is_format(side.get("bundle_format")) or not isinstance(side.get("content_sha256"), str):
         run.fail("schema-view-mismatch", side_path)
         return
     if side["content_sha256"] != sha256_bytes(run.blob(md_path)):

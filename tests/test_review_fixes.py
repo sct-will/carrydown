@@ -107,5 +107,44 @@ class FormatFieldTests(unittest.TestCase):
             self.assertIn("is not a valid receipt", run.stdout + run.stderr)
 
 
+class PointerSpellingTests(unittest.TestCase):
+    """Before the fix the verifier matched the policy pointer without regard to case, then read only the
+    exact path, so a pull request from an approver that added .CARRYDOWN/release-policy.yaml naming
+    another enrollment passed with "content". On a disk that ignores case that file replaces the real
+    pointer in the clone."""
+
+    @classmethod
+    def setUpClass(cls):
+        import engineering_fixture as EF
+        import fake_evidence as FE
+        cls.tmp = tempfile.mkdtemp(prefix="carrydown-review-")
+        cls.ex = EF.Exported(Path(cls.tmp), world=FE.World())
+
+    @classmethod
+    def tearDownClass(cls):
+        shutil.rmtree(cls.tmp, ignore_errors=True)
+
+    def verify(self, files, user):
+        import engineering_fixture as EF
+        import release_engineering as RE
+        case = EF.Case(self.ex)
+        number = case.open(edit=files, only={"src/app.py": b"print(1)\n"}, user=user)
+        return RE.verify_engineering(case.reader, case.enrollment(), number)
+
+    def test_another_spelling_of_the_pointer_fails_even_from_an_approver(self):
+        import fake_evidence as FE
+        evil = b"format: 1\ntooling_repository: evil/tooling\nenrollment_id: " + b"0" * 64 + b"\n"
+        for name in (".CARRYDOWN/release-policy.yaml", ".carrydown/Release-Policy.yaml"):
+            report = self.verify({name: evil}, FE.OWNER)
+            self.assertFalse(report.ok, name)
+            self.assertIn(("policy-pointer-mismatch", name), [(f.code, f.where) for f in report.findings])
+
+    def test_an_unrelated_change_still_has_no_governed_changes(self):
+        import fake_evidence as FE
+        report = self.verify({"src/other.py": b"x = 1\n"}, FE.OWNER)
+        self.assertTrue(report.ok, report.findings)
+        self.assertEqual(report.kind, "no-governed-changes")
+
+
 if __name__ == "__main__":
     unittest.main()
