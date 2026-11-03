@@ -275,7 +275,6 @@ def _run(argv=None):
     ap.add_argument("--project-number", type=int, help="configure this existing project instead of finding or creating one by title")
     ap.add_argument("--token-file", help="file that holds the GitHub token")
     ap.add_argument("--apply", action="store_true", help="write to GitHub. Without it nothing is written")
-    ap.add_argument("--allow-public", action="store_true", help="allow approved publication of a public repository's project")
     ap.add_argument("--verify", action="store_true", help="read the project and report fields, views and filled values, then exit")
     ap.add_argument("--reconfigure-iterations", action="store_true", help="replace the Work unit iterations if they differ from the plan")
     ap.add_argument("--offline", action="store_true", help="do not call GitHub; print the intended configuration only")
@@ -305,7 +304,7 @@ def _run(argv=None):
         for p in problems:
             L.say("  - " + p)
         return 1
-    pub, early = None, None
+    pub, early, pf = None, None, None
     if not a.offline and S.release_mode(root):
         # a project with a handling policy builds the board from an approved release, never from its working files
         token = G.read_token(a.token_file, required=a.apply or a.verify)
@@ -321,6 +320,7 @@ def _run(argv=None):
                 L.say("target-identity-mismatch: --repo names another repository than the one this release approved")
                 return 1
             a.repo = pub.repository
+            pf = RSY.preflight_for(pub)           # reads only; refuses before any write
     owner_repo, name = L.repo_parts(plan, a.repo)
     plan["project"]["repo"] = f"{owner_repo}/{name}"
     owner = a.owner or owner_repo
@@ -337,6 +337,17 @@ def _run(argv=None):
     L.say("")
     L.say(f"carrydown github_project  {'APPLY' if a.apply else 'VERIFY' if a.verify else 'DRY RUN (nothing will be written)'}")
     L.say(f"project: {title!r}  owner: {owner}  repository: {owner_repo}/{name}")
+    if pf is not None:
+        for line in pf.lines:
+            L.say(line)
+        if a.verify:
+            report, changed = RSY.visibility_report(pub.journal.visibility, pf.visibility)
+            for line in report:
+                L.say(line)
+            if changed:
+                return 1
+        elif a.apply:
+            pub.journal.record_visibility(pf.visibility)
     L.say("fields to ensure:")
     L.say("  Work unit (iteration): " + "; ".join(f"{i['title']} {i['startDate']} +{i['duration']}d" for i in iterations))
     for name_, bs, be in break_ranges(plan):
@@ -362,8 +373,8 @@ def _run(argv=None):
         L.say(f"repository {owner_repo}/{name} not found, or the token cannot see it")
         return 1
     repo_node = rjs["node_id"]
-    if a.apply and rjs.get("private") is False and not a.allow_public:
-        L.die("public repository: confirm publication and preview again with --allow-public", 1)
+    if pub is None:
+        L.say(f"visibility: {owner_repo}/{name} " + ("public. This project has no release policy, so no audience was checked" if rjs.get("private") is False else "private"))
     base = f"/repos/{owner_repo}/{name}"
 
     # issues to place: only issues with the project label, matched by marker, then by title.

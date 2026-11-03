@@ -194,6 +194,52 @@ def ground_truth_map_md(plan, root, bundles=None):
     return "\n".join(out).rstrip() + "\n"
 
 
+DECISIONS_ALLOWED = ('If the implementation departs from the file, append a short entry under "Decisions recorded" at the end of the file, '
+                     'with the pull request number, in the same pull request.')
+DECISIONS_REQUEST_ONLY = (
+    'Do not edit "Decisions recorded" or any other part of an approved work item file: this project takes changes to a rule as requests, '
+    'and the independent check on pull requests fails an edit that no release covers. If the implementation departs from the file, '
+    'or a rule looks wrong, unclear or missing, draft a comment for the work item issue titled `Rule clarification request`. It names the '
+    'section, states the question and says what you did meanwhile. Show it to the user, and post it only after the user gives permission '
+    'and has authorized a tool that can post: this skill holds no token and cannot post by itself. Then continue only with what the '
+    'approved context permits.')
+
+CHANGES_ALLOWED = """Do not edit a bundle, a receipt or a source. If you think a rule in the approved context is wrong, unclear or missing, say so to the plan owner and carry on only with what the bundle permits.
+
+- Ask your agent to draft a comment on the work item issue titled `Rule clarification request`, with the section number and your question. The agent posts it only after you give permission, and only with a tool you have authorized. The generated skill holds no token and cannot post by itself.
+- This project allows engineers to append a dated entry under "Decisions recorded" in the work item file, in your pull request. The next release reassesses it.
+- The plan owner updates the sources, prepares and approves a new release, and exports it. A new release supersedes the old one, and your next check picks it up."""
+
+CHANGES_REQUEST_ONLY = """Do not edit a bundle, a receipt, a source or an approved work item file. This project takes changes to a rule as requests. A pull request that edits "Decisions recorded" or any other part of an approved specification fails the independent check on pull requests unless a release covers it. If you think a rule in the approved context is wrong, unclear or missing, say so to the plan owner and carry on only with what the bundle permits.
+
+- Ask your agent to draft a comment on the work item issue titled `Rule clarification request`, with the section number and your question. The agent shows it to you and posts it only after you give permission, and only with a tool you have authorized. The generated skill holds no token and cannot post by itself.
+- The plan owner decides, updates the workspace and runs the release steps again: preview, prepare, approve and export. A reviewed activation batch supersedes the previous release, and the new receipt names the request it replaces. The reasons stay with the plan owner and are not in the receipt.
+- Your next check picks up the new release."""
+
+
+def align_edits(rel, text, engineer_edits):
+    """text of a kept (hand-edited) SKILL.md or README.md with the generated wording of the other mode
+    swapped for the wording of engineer_edits, where the generated wording is still there word for word.
+    A sentence the owner rewrote is left alone. Other files and an unknown mode are returned unchanged."""
+    if engineer_edits not in L.ENGINEER_EDITS:
+        return text
+    pairs = {"SKILL.md": (DECISIONS_ALLOWED, DECISIONS_REQUEST_ONLY), "README.md": (CHANGES_ALLOWED, CHANGES_REQUEST_ONLY)}.get(rel)
+    if pairs is None:
+        return text
+    allowed, request_only = pairs
+    old, new = (allowed, request_only) if engineer_edits == "request-only" else (request_only, allowed)
+    return text.replace(old, new)
+
+
+def engineer_edits_of(plan, override=None):
+    """allowed or request-only for the specification files. override (the enrollment's value, which the
+    release command passes) wins over project.handling.engineer_edits. With neither, engineers may append
+    to "Decisions recorded", which is how a project works before it is released."""
+    handling = (plan.get("project") or {}).get("handling")
+    value = override or (handling.get("engineer_edits") if isinstance(handling, dict) else None)
+    return value if value in L.ENGINEER_EDITS else "allowed"
+
+
 DESCRIPTION_TARGET = 250
 DESCRIPTION_WARN = 300
 
@@ -259,10 +305,13 @@ def skill_target(plan):
     return skill_name, skill_path
 
 
-def skill_makers(plan, root, bundles=None):
+def skill_makers(plan, root, bundles=None, engineer_edits=None):
     """{relative path: function that returns the file's text} for the engineers' skill. root is the folder
     that holds the specification and, unless bundles is given, docs/context. bundles maps a path such as
-    docs/context/wi-06.bundle.json to its bytes (what compile_bundles returns)."""
+    docs/context/wi-06.bundle.json to its bytes (what compile_bundles returns). engineer_edits is allowed
+    or request-only (engineer_edits_of): it decides the wording of step 8 and of the change-request
+    section of the README."""
+    request_only = engineer_edits_of(plan, engineer_edits) == "request-only"
     proj = plan["project"]
     skill_name, skill_path = skill_target(plan)
     first = plan["items"][0]
@@ -280,6 +329,8 @@ def skill_makers(plan, root, bundles=None):
         "definition_of_done": dod_checkboxes(plan), "tests": tests_text(plan),
         "item_count": len(plan["items"]), "skill_path": skill_path, "skill_path_win": skill_path.replace("/", "\\"),
         "tree_url": L.github_tree_url(plan, skill_path) if proj.get("repo") else "<repository tree url for this folder>",
+        "decisions_step": DECISIONS_REQUEST_ONLY if request_only else DECISIONS_ALLOWED,
+        "change_requests": CHANGES_REQUEST_ONLY if request_only else CHANGES_ALLOWED,
     }
     return {
         "SKILL.md": lambda: L.fill(L.read_template("dev-skill", "SKILL.md.tmpl"), values),
@@ -291,11 +342,11 @@ def skill_makers(plan, root, bundles=None):
     }
 
 
-def skill_files(plan, root, bundles=None):
+def skill_files(plan, root, bundles=None, engineer_edits=None):
     """{relative path: text} of every file of the engineers' skill, built from the plan, the
     specifications under root and the bundles (see skill_makers). Nothing is read from or written to
     docs/dev."""
-    return {rel: make() for rel, make in skill_makers(plan, root, bundles).items()}
+    return {rel: make() for rel, make in skill_makers(plan, root, bundles, engineer_edits).items()}
 
 
 def main(argv=None):

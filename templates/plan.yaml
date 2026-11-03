@@ -144,6 +144,12 @@ items:                                   # the work items
       - source: architecture
         sections: "1.1"                 # section numbers only. The source name is added to the rendered citation.
     skill_needs: ["Service APIs"]       # OPTIONAL. Add only when the item needs more detail than its track.
+    # A work item that must not be published is marked restricted. It gets no specification, no approved
+    # context, no issue and no entry in the exported plan. Only the lines you write below leave the workspace.
+    # restricted: true
+    # restricted_summary: "Retention rules are decided outside this project."   # required, one line. Shown as an external item, wherever another item depends on this one
+    # restricted_placeholder: "Ask the records office."   # OPTIONAL. Told to an engineer who names this item. Without it the engineer is told there is no approved context
+    # restricted_evidence: "Signed off, note kept in the vault."   # OPTIONAL. Your private note that it is done. Never published
   - id: 2
     slug: second-item
     label: "Second item"

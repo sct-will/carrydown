@@ -477,6 +477,56 @@ def refreshed_readme(plan, old):
     return text, skipped
 
 
+def refreshed_spec(plan, it, old):
+    """The text of a work item file after --refresh-headers: its header table from the plan."""
+    return replace_first_table(old, refreshed_header(plan, it, old))
+
+
+def refreshed_milestone(plan, ms, old):
+    """The text of a milestone file after --refresh-headers: header, work item table and the sections
+    written from the plan's rationale."""
+    new = replace_first_table(old, refreshed_milestone_header(plan, ms, old))
+    new = replace_section_table(new, "Work items", work_table(plan, ms))
+    for heading, body, before in MILESTONE_SECTIONS:
+        new = put_section(new, heading, body(plan, ms), before)
+    return new
+
+
+def without_unlisted_item_files(plan, text):
+    """text without the bullets "- `wi-07-slug.md`" of a milestone file's References section that name the
+    specification of a work item that is not in the plan. A release of a plan without its restricted
+    items uses it: the file name of a restricted item holds its id and its slug."""
+    live = {f"{L.tag(plan, it['id']).lower()}-{it['slug']}.md" for it in plan["items"]}
+    prefix = re.escape(plan["project"]["id_prefix"].lower())
+    keep = []
+    for line in text.split("\n"):
+        m = re.fullmatch(rf"- `({prefix}-\d+-[a-z0-9-]+\.md)`", line)
+        if not (m and m.group(1) not in live):
+            keep.append(line)
+    return "\n".join(keep)
+
+
+def refreshed_files(plan, texts):
+    """{path: new text} for the files whose generated parts differ from the plan, in memory. texts maps
+    a path relative to the spec folder's parent (the repository path, such as docs/spec/README.md) to its
+    text. Nothing is read or written. A release uses it to bring the specification files of a plan with
+    restricted items in line with the plan that is exported (release_assemble.py)."""
+    spec_dir = plan["project"]["spec_dir"]
+    out = {}
+    for it in plan["items"]:
+        rel = f"{spec_dir}/{next(m['folder'] for m in plan['milestones'] if m['number'] == it['milestone'])}/{L.tag(plan, it['id']).lower()}-{it['slug']}.md"
+        if rel in texts:
+            out[rel] = refreshed_spec(plan, it, texts[rel])
+    for ms in plan["milestones"]:
+        rel = f"{spec_dir}/{ms['folder']}/milestone.md"
+        if rel in texts:
+            out[rel] = without_unlisted_item_files(plan, refreshed_milestone(plan, ms, texts[rel]))
+    rel = f"{spec_dir}/README.md"
+    if rel in texts:
+        out[rel] = refreshed_readme(plan, texts[rel])[0]
+    return out
+
+
 def refresh(plan, root, a, actions):
     if a.apply:
         # Ask the gate about every file in scope before any is changed, so an edited approved file or a
@@ -496,16 +546,12 @@ def refresh(plan, root, a, actions):
         p = L.spec_path(plan, root, it)
         if p.exists():
             old = L.read_text(p)
-            put(p, old, replace_first_table(old, refreshed_header(plan, it, old)), "spec")
+            put(p, old, refreshed_spec(plan, it, old), "spec")
     for ms in plan["milestones"]:
         p = L.milestone_path(plan, root, ms)
         if p.exists():
             old = L.read_text(p)
-            new = replace_first_table(old, refreshed_milestone_header(plan, ms, old))
-            new = replace_section_table(new, "Work items", work_table(plan, ms))
-            for heading, body, before in MILESTONE_SECTIONS:
-                new = put_section(new, heading, body(plan, ms), before)
-            put(p, old, new, "milestone")
+            put(p, old, refreshed_milestone(plan, ms, old), "milestone")
     p = root / plan["project"]["spec_dir"] / "README.md"
     if p.exists():
         old = L.read_text(p)

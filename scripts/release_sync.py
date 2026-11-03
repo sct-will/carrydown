@@ -18,6 +18,11 @@ returns a Publication that
 If the request is withdrawn, superseded, expired, under another policy or has no approval, opening
 the publication refuses with the fixed reason code and nothing has been written.
 
+publication_preflight() is the check every publishing command runs before its first write, and
+github_sync.py --preflight runs on its own (specification WP8). It resolves the approved targets by
+numeric identity, and refuses a release for repository readers on a public destination and a board
+that more accounts can read than the repository. No flag overrides it.
+
 This module is imported by the other scripts. Run with --help to see this text.
 """
 import argparse
@@ -25,6 +30,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import NamedTuple
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import carrydown_lib as L  # noqa: E402
@@ -62,6 +68,7 @@ class Journal:
         self.rel = f"publication/{request_id}.journal.json"
         self.path = Path(project.workspace) / self.rel
         self.targets = {}
+        self.visibility = {}      # target id -> "public" or "private" as last seen by a publishing run
         if self.path.is_file():
             data = RS.loads_strict(self.path.read_bytes())
             if data.get("journal_format") != JOURNAL_FORMAT or data.get("request_id") != request_id:
@@ -69,6 +76,7 @@ class Journal:
             if data.get("repository_id") not in (None, repository_id):
                 raise PublicationRefused("target-identity-mismatch", "the journal names another repository id than the approved one")
             self.targets = data.get("targets", {})
+            self.visibility = data.get("visibility") if isinstance(data.get("visibility"), dict) else {}
 
     def others(self):
         out = {}
@@ -87,7 +95,15 @@ class Journal:
     def save(self):
         doc = {"journal_format": JOURNAL_FORMAT, "request_id": self.rid, "release_id": self.release_id,
                "repository_id": self.repository_id, "targets": self.targets}
+        if self.visibility:
+            doc["visibility"] = self.visibility
         R.workspace_put(self.project, self.rel, RS.canonical_json(doc))
+
+    def record_visibility(self, visibility):
+        """Keep what the preflight of this run saw, so --verify can report a change."""
+        if dict(visibility) != self.visibility:
+            self.visibility = dict(visibility)
+            self.save()
 
     def get(self, key):
         return self.targets.get(key)
@@ -224,6 +240,178 @@ def open_publication(root, args, gh, request_id=None):
         raise PublicationRefused(project.why or "workspace-unavailable", "there is no private workspace, so no approved release can be found. "
                                                                      "Create it with workspace.py init, then prepare and approve a release")
     return Publication(project, args, gh, request_id)
+
+
+# ---------------------------------------------------------------------------
+# Publication preflight (specification WP8, item 2)
+# ---------------------------------------------------------------------------
+
+class Preflight(NamedTuple):
+    lines: tuple          # what to print, one visibility line per target
+    visibility: dict      # target id -> "public" or "private" as seen now
+    targets: dict         # target id -> release_verify.ResolvedTarget
+
+
+def _try(fn, *args):
+    """(value, None), or (None, reason) when the fact cannot be read completely."""
+    try:
+        return fn(*args), None
+    except V.EvidenceUnavailable as e:
+        return None, e.detail or "unavailable"
+
+
+def _attested(entry, component, subject):
+    """True when a current administrator attestation covers this component and every key of subject (D9).
+    The author must be an administrator of the enrollment and the dates must be valid now. A key the
+    attestation does not carry, or carries with another value, means it does not cover this subject, so a
+    changed visibility, a changed link between board and repository or a changed reader set ends it."""
+    admins = {a["id"] for a in entry.get("administrators") or []}
+    now = V.clock()
+    for att in entry.get("attestations") or []:
+        if not isinstance(att, dict) or att.get("component") != component or att.get("by_id") not in admins:
+            continue
+        try:
+            at, expires = V.to_epoch(att.get("at"), "at"), V.to_epoch(att.get("expires_at"), "expires_at")
+        except RS.SchemaError:
+            continue
+        subj = att.get("subject")
+        if isinstance(subj, dict) and all(subj.get(k) == v for k, v in subject.items()) and at <= now < expires:
+            return True
+    return False
+
+
+def _visibility_name(public):
+    return "public" if public else "private"
+
+
+def board_subject(target, repository_ids, repo_reader_ids, public):
+    """What a destination-readers attestation must carry to cover the board as it is now."""
+    subject = {"project_id": target["project_id"], "owner_id": target["owner_id"], "repository_id": target["repository_id"],
+               "public": bool(public), "repository_ids": sorted(repository_ids)}
+    if repo_reader_ids is not None:
+        subject["repository_reader_ids"] = sorted(repo_reader_ids)
+    return subject
+
+
+def _board_line(reader, policy, target, resolved, audience):
+    """The visibility line of a board, or PublicationRefused. For a repository-readers release the board's
+    readers must be a subset of the repository's. When the board's readers cannot be listed, an enrolled
+    project needs a current destination-readers attestation (subject: board, link and reader set), and a
+    project that is not enrolled has no administrator to supply one, so it proceeds and says so."""
+    shown = f"board {target['project_id']}"
+    if audience == "public":
+        return f"visibility: {shown} {_visibility_name(resolved.public)} (a public release: no reader check)"
+    proj, why = _try(reader.project, target["project_id"])
+    if proj is None:
+        raise PublicationRefused("destination-access-not-verified", "the board cannot be read again, so its readers cannot be checked")
+    people, people_why = _try(reader.collaborators, target["repository_id"])
+    readers = proj.get("reader_ids")
+    if readers is not None and people is not None:
+        extra = set(readers) - {x["id"] for x in people}
+        if extra:
+            raise PublicationRefused("audience-visibility-mismatch", f"the board can be read by {len(extra)} account(s) that cannot read the repository")
+        return f"visibility: {shown} {_visibility_name(resolved.public)}; {len(readers)} reader(s), all of them readers of the repository"
+    if people is None and readers is not None:
+        why = "the repository's readers cannot be listed"
+    reason = "the board's readers cannot be listed" if readers is None else why
+    if getattr(policy, "enrolled", False):
+        subject = board_subject(target, proj.get("repository_ids") or [], [x["id"] for x in people] if people is not None else None, proj.get("public"))
+        if _attested(policy.entry, "destination-readers", subject):
+            return f"visibility: {shown} {_visibility_name(resolved.public)}; readers not listed, covered by a current destination-readers attestation"
+        raise PublicationRefused("destination-access-not-verified", f"{reason} and no current destination-readers attestation covers the board as it is now")
+    return (f"visibility: {shown} {_visibility_name(resolved.public)}; readers not listed ({reason}). This project has no administrator "
+            "attestation, so the board's readers are the ones you approved by naming it in the request")
+
+
+def publication_preflight(gh, plan, enrollment, request, reader=None, resolved=None):
+    """The check every publishing command runs before its first write. It reads and writes nothing.
+
+    gh          the GitHub client (used only to build the evidence reader when none is given)
+    plan        the released plan, or None
+    enrollment  the Enrollment, or the LocalPolicy of a project that is not enrolled (release_verify)
+    request     the approval request, whose receipt_template names the audience and the targets
+    reader      an EvidenceReader; a test supplies a fake
+    resolved    verify_targets output from a moment ago, to avoid reading it twice
+
+    It resolves every approved target by numeric identity (host, repository id, and for a board the owner
+    id, the node id and the link to the repository), then refuses
+      * a repository-readers release to a public repository or board (audience-visibility-mismatch);
+      * a board that more accounts can read than the repository, even when both are private
+        (audience-visibility-mismatch), and a board whose readers cannot be listed and that no current
+        destination-readers attestation covers (destination-access-not-verified);
+      * a repository or board whose identity is not the approved one (target-identity-mismatch).
+    A public release proceeds at its approved identities, whatever the visibility of the sources. There is
+    no flag to override any of this. Returns a Preflight, or raises PublicationRefused."""
+    template = request["receipt_template"]
+    audience, wanted = template["audience"], template["targets"]
+    reader = reader or RGH.GitHubEvidenceReader(gh)
+    try:
+        targets = resolved if resolved is not None else V.verify_targets(reader, enrollment, wanted, audience)
+        lines, visibility = [], {}
+        for t in wanted:
+            r = targets[t["id"]]
+            visibility[t["id"]] = _visibility_name(r.public)
+            if "project_id" in t:
+                lines.append(_board_line(reader, enrollment, t, r, audience))
+            else:
+                lines.append(f"visibility: {t['repository']} {_visibility_name(r.public)} (numeric id {t['repository_id']})"
+                             + (", a public release" if audience == "public" and r.public else ""))
+    except (RS.SchemaError, R.Refused) as e:
+        raise PublicationRefused(getattr(e, "code", "evidence-unavailable"), str(getattr(e, "text", None) or e))
+    return Preflight(tuple(lines), visibility, targets)
+
+
+def relationship_problems(payloads):
+    """One-line problems for an issue relationship (parent, children, depends on) that names a key which is
+    not a target of the release. The Epic may be an issue that already exists, so EPIC is always allowed as
+    a parent. payloads maps (kind, key) to (path, payload, sha256), as Publication.payloads does."""
+    keys = {key for (_kind, key) in payloads}
+    problems = []
+    for (kind, key), (_path, payload, _sha) in sorted(payloads.items()):
+        rel = payload.get("relationships") or {}
+        parent = rel.get("parent")
+        if parent and parent != "EPIC" and parent not in keys:
+            problems.append(f"{kind} {key} names the parent {parent}, which is not in this release")
+        for name in ("children", "depends_on"):
+            for other in rel.get(name) or []:
+                if other not in keys:
+                    problems.append(f"{kind} {key} names {other} in {name}, which is not in this release")
+    return problems
+
+
+def preflight_for(pub):
+    """The preflight of an opened Publication: its targets were resolved a moment ago, so they are reused,
+    and the relationships of its issues must stay inside the release. Prints nothing; the caller prints
+    the lines."""
+    problems = relationship_problems(pub.payloads)
+    if problems:
+        raise PublicationRefused("destination-not-allowed", f"{len(problems)} issue relationship(s) point outside this release: " + "; ".join(problems[:3]))
+    return publication_preflight(pub.gh, pub.plan, pub.policy, pub.record.request, reader=pub.reader, resolved=pub.targets_resolved)
+
+
+def visibility_report(recorded, current):
+    """(lines, changed) comparing the visibility recorded at publication with what the targets show now."""
+    lines, changed = [], False
+    for name in sorted(current):
+        before = (recorded or {}).get(name)
+        if before is None:
+            lines.append(f"  visibility of {name}: {current[name]} (no earlier record)")
+        elif before != current[name]:
+            changed = True
+            lines.append(f"  visibility of {name} CHANGED since publication: was {before}, now {current[name]}. Reassess the release before anything more is published")
+        else:
+            lines.append(f"  visibility of {name}: {current[name]} (unchanged since publication)")
+    return lines, changed
+
+
+def legacy_visibility(gh, base):
+    """(visibility, line) of a repository for a project that has no release policy. A project with no
+    policy has no approved audience to compare with, so the line is information, not a refusal."""
+    status, js = gh.rest_status("GET", base)
+    if status != 200 or not isinstance(js, dict):
+        return None, None
+    vis = "public" if js.get("private") is False else "private"
+    return vis, f"visibility: {base[len('/repos/'):]} {vis}" + (". This project has no release policy, so no audience was checked" if vis == "public" else "")
 
 
 # ---------------------------------------------------------------------------

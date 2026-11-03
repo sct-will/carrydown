@@ -144,7 +144,7 @@ class RepairTests(unittest.TestCase):
         self.assertEqual(len(self.m.issues), count)
         self.assertEqual(self.repair(verify=True), 0)
 
-    def test_public_apply_guard_prevents_writes(self):
+    def test_public_repository_prints_a_visibility_line_and_the_flag_is_gone(self):
         self.m.private = False
         with tempfile.TemporaryDirectory() as tmp:
             before = Path(tmp) / "before.yaml"
@@ -152,10 +152,15 @@ class RepairTests(unittest.TestCase):
             original_init = G.GitHub.__init__
             def init(obj, token, **kwargs):
                 original_init(obj, token, api=self.url, pause=0)
+            out = io.StringIO()
             with patch.object(G, "read_token", return_value="test-credential"), patch.object(G.GitHub, "__init__", init):
-                with contextlib.redirect_stdout(io.StringIO()), self.assertRaisesRegex(SystemExit, "^1$") as raised:
-                    R.main(["--root", str(self.root), "--before", str(before), "--repo", "o/r", "--apply"])
-            self.assertEqual(raised.exception.code, 1)
+                with contextlib.redirect_stdout(out):
+                    R.main(["--root", str(self.root), "--before", str(before), "--repo", "o/r"])
+                with contextlib.redirect_stderr(io.StringIO()), self.assertRaisesRegex(SystemExit, "") as raised:
+                    R.main(["--root", str(self.root), "--before", str(before), "--repo", "o/r", "--allow-public"])
+            self.assertEqual(raised.exception.code, 2)
+        self.assertIn("visibility: o/r public", out.getvalue())
+        self.assertNotIn("--allow-public", out.getvalue())
         self.assertEqual(self.writes(), [])
 
 

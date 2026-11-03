@@ -16,6 +16,14 @@ artifacts:
   {{skill_url}}   the tree URL of the payload's skill_path
 Any other difference between a payload and the text sent is deny(unapproved-substitution).
 
+Projections (specification WP8). templates/projections.yaml lists, for each destination, the keys a payload
+may hold, the plan fields it reads and the specification sections that may flow into its body, as text or
+as a link. The builders read it when a release is prepared. An issue whose approved context holds a
+section of a restricted source gets the "links" projection: its seven headings stay, and Acceptance
+criteria, Evidence of completion and Integration points become links to the specification. Any other
+issue gets the "full" projection, which is the layout every release had before projections existed.
+Publication reads no projection: it only substitutes and sends.
+
 The body builders here are the ones github_sync.py used to hold. github_sync.py and github_project.py
 import them again, so a dry run, a show-body and a publication print the same text.
 
@@ -40,6 +48,68 @@ SEVEN = ["Work item", "AI engineering notes", "Depends on", "Acceptance criteria
 PAYLOAD_KINDS = ("issue", "subepic", "epic", "epic-comment", "label", "board")
 ENGINEERING = "engineering"
 BOARD = "board"
+
+PROJECTIONS_FILE = "projections.yaml"
+SECTION_MODES = ("text", "link")
+_PROJECTIONS = {}
+
+
+def load_projections():
+    """The parsed and checked templates/projections.yaml. A malformed file raises ValueError."""
+    if "doc" not in _PROJECTIONS:
+        doc = L.loads(L.read_template(PROJECTIONS_FILE))
+        _check_projections(doc)
+        _PROJECTIONS["doc"] = doc
+    return _PROJECTIONS["doc"]
+
+
+def _check_projections(doc):
+    if not isinstance(doc, dict) or doc.get("format") != 1 or not isinstance(doc.get("destinations"), dict):
+        raise ValueError("projections.yaml: format 1 and a destinations mapping are required")
+    if set(doc["destinations"]) != set(PAYLOAD_KINDS):
+        raise ValueError("projections.yaml: the destinations must be " + ", ".join(PAYLOAD_KINDS))
+    for name, dest in doc["destinations"].items():
+        projections = dest.get("projections") if isinstance(dest, dict) else None
+        if not isinstance(projections, dict) or dest.get("default") not in projections:
+            raise ValueError(f"projections.yaml: {name} needs projections and a default that exists")
+        for pname, proj in projections.items():
+            ok = isinstance(proj, dict) and all(isinstance(proj.get(k), list) and proj[k] for k in ("payload_fields",)) \
+                and isinstance(proj.get("plan_fields"), list) and isinstance(proj.get("sections"), dict)
+            if not ok or any(m not in SECTION_MODES for m in proj["sections"].values()):
+                raise ValueError(f"projections.yaml: {name}/{pname} is malformed")
+            if pname != dest["default"] and proj.get("applies") not in ("bundle-has-restricted-source",):
+                raise ValueError(f"projections.yaml: {name}/{pname} needs a known applies value")
+
+
+def projection(destination, restricted_bundle=False):
+    """The projection for a destination: (name, definition). restricted_bundle is True when the approved
+    context of the item holds a section of a restricted source. The definition has payload_fields,
+    plan_fields and sections."""
+    dest = load_projections()["destinations"][destination]
+    chosen = dest["default"]
+    if restricted_bundle:
+        chosen = next((n for n, p in dest["projections"].items() if p.get("applies") == "bundle-has-restricted-source"), chosen)
+    return chosen, dest["projections"][chosen]
+
+
+def check_payload_fields(destination, payload, proj):
+    """Raise ValueError when a payload holds a key its projection does not allow."""
+    extra = sorted(set(payload) - set(proj["payload_fields"]))
+    if extra:
+        raise ValueError(f"the {destination} projection does not allow the payload field(s): {', '.join(extra)}")
+
+
+def section_text(spec, name, proj, url=None):
+    """What a specification section contributes to a body under a projection: its text (mode text), a
+    link to it in the specification (mode link, needs url, which may be the placeholder {{spec_url}}),
+    or nothing when the projection does not list the section."""
+    mode = proj["sections"].get(name)
+    if mode == "text":
+        return L.section_text(spec, name)
+    if mode == "link":
+        return f"[{name}]({url}#{L.anchor_slug(name)})"
+    return ""
+
 
 _INLINE = re.compile(r" \(\{\{issue:([A-Za-z0-9_-]+)\}\}\)")
 _PREFIX = re.compile(r"\{\{issue:([A-Za-z0-9_-]+)\}\} ")
@@ -227,17 +297,19 @@ def item_keys(plan):
     return {L.tag(plan, it["id"]) for it in plan["items"]}
 
 
-def _item_values(plan, root, it, urls):
+def _item_values(plan, root, it, urls, proj=None):
     """The template values of an issue body. urls is True to resolve the spec and skill links now, False
-    to leave {{spec_url}} and {{skill_url}} for publication."""
+    to leave {{spec_url}} and {{skill_url}} for publication. proj is the issue projection (default: full)."""
+    proj = proj or projection("issue")[1]
     sp = L.spec_path(plan, root, it)
     spec = L.read_spec(sp)
     rel = sp.relative_to(root).as_posix()
     cp = L.checkpoint_of(plan, it) or {"date": it["checkpoint"], "name": ""}
-    proj = plan["project"]
+    pr = plan["project"]
+    spec_url = L.github_blob_url(plan, rel) if urls else "{{spec_url}}"
     skill = ""
-    if proj.get("dev_skill_path") and proj.get("repo"):
-        skill_url = L.github_tree_url(plan, proj["dev_skill_path"]) if urls else "{{skill_url}}"
+    if pr.get("dev_skill_path") and pr.get("repo"):
+        skill_url = L.github_tree_url(plan, pr["dev_skill_path"]) if urls else "{{skill_url}}"
         skill = (
             f"Engineers' skill: {skill_url}\n\n"
             f"Install it once following its README, then start this item by asking your coding agent to work on {L.tag(plan, it['id'])}. "
@@ -250,22 +322,22 @@ def _item_values(plan, root, it, urls):
     return {
         "complete_by": it["complete_by"],
         "checkpoint": f"{cp['date']}, {cp['name']}",
-        "description": first_paragraph(L.section_text(spec, "Why this work item exists")) or first_paragraph(L.section_text(spec, "Outcome")),
-        "spec_url": L.github_blob_url(plan, rel) if urls else "{{spec_url}}",
+        "description": first_paragraph(section_text(spec, "Why this work item exists", proj, spec_url)) or first_paragraph(section_text(spec, "Outcome", proj, spec_url)),
+        "spec_url": spec_url,
         "skill_line": skill,
         "ground_truth": L.ground_truth_citation(plan, it) or spec["rows"].get("Ground truth", ""),
         "depends": "\n".join(deps) if deps else "None.",
-        "acceptance": L.section_text(spec, "Acceptance criteria"),
-        "evidence": L.section_text(spec, "Evidence of completion"),
-        "integration": L.section_text(spec, "Integration points"),
+        "acceptance": section_text(spec, "Acceptance criteria", proj, spec_url),
+        "evidence": section_text(spec, "Evidence of completion", proj, spec_url),
+        "integration": section_text(spec, "Integration points", proj, spec_url),
         "definition_of_done": definition_of_done(plan),
     }, skill, rel
 
 
-def item_body_raw(plan, root, it):
+def item_body_raw(plan, root, it, proj=None):
     """The managed body of a work item with placeholders: {{spec_url}}, {{skill_url}} and an
-    {{issue:KEY}} after every work item id. No wrapper and no marker."""
-    values, skill, rel = _item_values(plan, root, it, urls=False)
+    {{issue:KEY}} after every work item id. No wrapper and no marker. proj is the issue projection."""
+    values, skill, rel = _item_values(plan, root, it, urls=False, proj=proj)
     body = L.fill(L.read_template("issue-body.md"), values)
     body = re.sub(r"\n{3,}", "\n\n", body)
     if not skill:
@@ -273,12 +345,14 @@ def item_body_raw(plan, root, it):
     return placeholderize(plan, body.rstrip() + "\n", item_keys(plan))
 
 
-def build_item_body(plan, root, it, numbers=None, mark=True):
+def build_item_body(plan, root, it, numbers=None, mark=True, restricted_bundle=False):
     """The issue body of a work item: item_body_raw with the links to the issues in numbers, and the
-    spec and skill links of the plan's own repository. mark wraps it in the managed region."""
+    spec and skill links of the plan's own repository. mark wraps it in the managed region.
+    restricted_bundle selects the "links" projection."""
     numbers = numbers or {}
-    values, skill, rel = _item_values(plan, root, it, urls=True)
-    raw = item_body_raw(plan, root, it)
+    proj = projection("issue", restricted_bundle)[1]
+    values, skill, rel = _item_values(plan, root, it, urls=True, proj=proj)
+    raw = item_body_raw(plan, root, it, proj)
     spec_url = values["spec_url"]
     skill_url = L.github_tree_url(plan, plan["project"]["dev_skill_path"]) if skill else None
     body = substitute(raw, numbers, spec_url, skill_url)
@@ -290,25 +364,29 @@ def link_ids(plan, text, numbers):
     return substitute(placeholderize(plan, text, set(numbers)), numbers)
 
 
-def optional_section(spec, name):
+def optional_section(spec, name, proj=None, url=None):
     """A heading and the section text, without the HTML comments scaffold_spec.py writes into
-    generated sections. Nothing when the milestone file has no such section."""
-    text = re.sub(r"<!--.*?-->", "", L.section_text(spec, name), flags=re.S).strip()
+    generated sections. Nothing when the milestone file has no such section, or when the projection does
+    not let it flow."""
+    proj = proj or projection("subepic")[1]
+    text = re.sub(r"<!--.*?-->", "", section_text(spec, name, proj, url), flags=re.S).strip()
     return [f"### {name}", "", text, ""] if text else []
 
 
 def subepic_body_raw(plan, root, ms, staffed=None, flags=None):
     """The managed body of a sub-epic with {{spec_url}} and {{issue:KEY}} placeholders."""
+    proj = projection("subepic")[1]
     p = L.milestone_path(plan, root, ms)
     spec = L.read_spec(p)
-    lines = [L.section_text(spec, "Purpose"), "", f"**Exit gate.** {ms['gate']}", "",
+    url = "{{spec_url}}"
+    lines = [section_text(spec, "Purpose", proj, url), "", f"**Exit gate.** {ms['gate']}", "",
              f"**Due.** {ms['end']}. **Demonstration.** {ms['demo']}.", "",
              f"Target delivery for the plan: {target_phrase(plan)[0]} ({target_phrase(plan)[1]})", ""]
-    lines += optional_section(spec, "Why these items form this milestone")
-    lines += ["### Expected outcomes", "", L.section_text(spec, "Expected outcomes"), ""]
-    lines += optional_section(spec, "Joint demonstration")
-    lines += ["### Acceptance criteria", "", L.section_text(spec, "Acceptance criteria"), "",
-              "### Demonstration expectations", "", L.section_text(spec, "Demonstration expectations"), "",
+    lines += optional_section(spec, "Why these items form this milestone", proj, url)
+    lines += ["### Expected outcomes", "", section_text(spec, "Expected outcomes", proj, url), ""]
+    lines += optional_section(spec, "Joint demonstration", proj, url)
+    lines += ["### Acceptance criteria", "", section_text(spec, "Acceptance criteria", proj, url), "",
+              "### Demonstration expectations", "", section_text(spec, "Demonstration expectations", proj, url), "",
               "### Work items", ""]
     for it in plan["items"]:
         if it["milestone"] != ms["number"]:
@@ -401,21 +479,23 @@ def payload_path(kind, key):
     return f"payloads/{kind}/{key}.json"
 
 
-def item_payload(plan, root, it, staffed=None, flags=None):
+def item_payload(plan, root, it, staffed=None, flags=None, restricted_bundle=False):
     key = L.tag(plan, it["id"])
     slug = plan["project"]["slug"]
     login = login_for(plan, staffed, it, flags)
     rel = L.spec_path(plan, root, it).relative_to(root).as_posix()
+    name, proj = projection("issue", restricted_bundle)
     payload = {
         "destination_id": ENGINEERING,
         "target": {"kind": "issue", "key": key, "marker": marker(key)},
-        "title": item_title(plan, it), "body": item_body_raw(plan, root, it),
+        "title": item_title(plan, it), "body": item_body_raw(plan, root, it, proj),
         "labels": [slug, it["track"]], "assignees": [login] if login else [],
         "relationships": {"parent": f"M{it['milestone']}", "depends_on": [L.tag(plan, d) for d in it["depends"]]},
         "substitutions": {"spec_path": rel, "skill_path": plan["project"].get("dev_skill_path") or None},
     }
     if it.get("state"):
         payload["state"] = it["state"]
+    check_payload_fields("issue", payload, proj)
     return payload
 
 
@@ -480,15 +560,18 @@ def board_payload(plan):
     }
 
 
-def build_payloads(plan, root, *, staffed=None, flags=None, with_board=True, with_epic=None):
+def build_payloads(plan, root, *, staffed=None, flags=None, with_board=True, with_epic=None, link_items=()):
     """{snapshot path: canonical JSON bytes} for every GitHub target of the plan: one payload per issue,
     sub-epic, label, the Epic (when the plan names none), the roll-up comment and the board. root is the
-    folder that holds the specification (the project, or the workspace drafts folder)."""
+    folder that holds the specification (the project, or the workspace drafts folder). link_items holds
+    the tags of the work items whose approved context holds a section of a restricted source: their
+    issues get the "links" projection."""
     root = Path(root).resolve()
     epic = (not plan["project"].get("epic")) if with_epic is None else with_epic
     out = {}
 
     def put(kind, key, payload):
+        check_payload_fields(kind, payload, projection(kind)[1])
         out[payload_path(kind, key)] = RS.canonical_json(payload)
 
     for name, color, desc in desired_labels(plan):
@@ -498,7 +581,7 @@ def build_payloads(plan, root, *, staffed=None, flags=None, with_board=True, wit
     for ms in plan["milestones"]:
         put("subepic", f"M{ms['number']}", subepic_payload(plan, root, ms, staffed, flags, epic=bool(epic or plan["project"].get("epic"))))
     for it in plan["items"]:
-        put("issue", L.tag(plan, it["id"]), item_payload(plan, root, it, staffed, flags))
+        put("issue", L.tag(plan, it["id"]), item_payload(plan, root, it, staffed, flags, restricted_bundle=L.tag(plan, it["id"]) in link_items))
     put("epic-comment", "rollup", rollup_payload(plan, staffed, flags))
     if with_board:
         put("board", "project", board_payload(plan))

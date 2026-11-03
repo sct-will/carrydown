@@ -10,7 +10,7 @@ Scenarios
   unlinked      --verify fails when an issue body holds a dependency id that is not a link
   sso           single sign-on 403: one-line messages with the fix, no traceback
   timeout       GitHub does not answer: one-line message, no traceback
-  public        --apply to a public repository is refused unless --allow-public is passed
+  public        a public repository gets a visibility line, no flag is asked for and --allow-public no longer exists
   ownership     only issues with the project label and only the token owner's comments count
   project       github_project.py finds every plan issue by its marker, prints plan titles only
   tokenfile     --from-file: a file with a byte order mark works, the file is kept, and text
@@ -211,14 +211,17 @@ def scenario_timeout():
 
 def scenario_public():
     M.private = False
-    rc, out = sync("--apply")
-    check(rc not in (0, None) and "is public. Issue bodies carry text from your ground truth. Rerun with --allow-public if that is intended." in out,
-          f"--apply to a public repository is refused (got {rc})")
-    check(not [x for x in M.log if x[0] != "GET"], "nothing was written to the public repository")
     rc, out = sync()
-    check(rc == 0 and "--allow-public" in out, "the dry run warns that the repository is public")
+    check(rc == 0 and "visibility: o/r public" in out, "the dry run prints one visibility line that says public")
+    check("--allow-public" not in out, "the dry run asks for no flag")
+    check(not [x for x in M.log if x[0] != "GET"], "the dry run wrote nothing to the public repository")
+    rc, out = sync("--apply")
+    check(rc == 0 and len(M.issues) == 14, f"a project with no release policy is not asked anything new for a public repository (got {rc}, {len(M.issues)} issues)")
     rc, out = sync("--apply", "--allow-public")
-    check(rc == 0 and len(M.issues) == 14, f"--allow-public lets the run go ahead (got {rc}, {len(M.issues)} issues)")
+    check(rc == 2 and "unrecognized arguments: --allow-public" in out, f"--allow-public is gone (got {rc})")
+    M.private = True
+    rc, out = sync("--verify")
+    check("visibility CHANGED since the last apply: was public, now private" in out and rc == 1, "--verify reports a change of visibility since the last apply")
 
 
 def scenario_ownership():

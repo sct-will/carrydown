@@ -110,7 +110,7 @@ Exit codes: 0 means ready, 10, 11, 12 and 13 are the four messages in the order 
 Do not edit a bundle, a receipt or a source. If you think a rule in the approved context is wrong, unclear or missing, say so to the plan owner and carry on only with what the bundle permits.
 
 - Ask your agent to draft a comment on the work item issue titled `Rule clarification request`, with the section number and your question. The agent posts it only after you give permission, and only with a tool you have authorized. The generated skill holds no token and cannot post by itself.
-- When the project allows engineers to append to "Decisions recorded" in the work item file, add a dated entry in your pull request. The next release reassesses it.
+- This project allows engineers to append a dated entry under "Decisions recorded" in the work item file, in your pull request. The next release reassesses it.
 - The plan owner updates the sources, prepares and approves a new release, and exports it. A new release supersedes the old one, and your next check picks it up.
 
 ## How the skill relates to the specification folder

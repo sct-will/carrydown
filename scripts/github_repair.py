@@ -187,7 +187,6 @@ def main(argv=None):
     ap.add_argument("--token-file")
     ap.add_argument("--offline", action="store_true", help="show intended metadata without a token or network")
     ap.add_argument("--apply", action="store_true", help="apply the previewed repairs")
-    ap.add_argument("--allow-public", action="store_true", help="allow approved repairs in a public repository")
     ap.add_argument("--verify", action="store_true", help="read and compare metadata; never write")
     ap.add_argument("--select-issue", action="append", default=[], metavar="KEY=NUMBER", help="choose a canonical issue after the ambiguity preview")
     a = ap.parse_args(argv)
@@ -237,8 +236,20 @@ def main(argv=None):
     status, repository = gh.rest_status("GET", f"/repos/{owner}/{repo}")
     if status != 200:
         L.die("repository not found or inaccessible", 1)
-    if a.apply and not repository.get("private") and not a.allow_public:
-        L.die("public repository: explicit publication approval and --allow-public are required", 1)
+    if pub is not None:
+        pf = RSY.preflight_for(pub)           # reads only; refuses before any write
+        for line in pf.lines:
+            L.say(line)
+        if a.verify:
+            report, changed = RSY.visibility_report(pub.journal.visibility, pf.visibility)
+            for line in report:
+                L.say(line)
+            if changed:
+                return 1
+        elif a.apply:
+            pub.journal.record_visibility(pf.visibility)
+    else:
+        L.say(f"visibility: {owner}/{repo} " + ("public. This project has no release policy, so no audience was checked" if repository.get("private") is False else "private"))
     selections = {}
     for selection in a.select_issue:
         key, sep, number = selection.partition("=")
