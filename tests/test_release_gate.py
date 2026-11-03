@@ -48,6 +48,41 @@ ZERO = "0" * 64
 
 strip_handling = F.strip_handling
 
+# Part G of the specification: the reason codes and the additional codes of revision 3.
+PART_G = frozenset("""
+not-approved approval-not-found approval-not-on-final-revision approver-not-authorized approval-scope-mismatch
+unauthenticated-release sha256-mismatch working-copy-differs destination-not-allowed audience-visibility-mismatch
+superseded withdrawn expired could-not-refresh mixed-release unapproved-substitution assignee-unresolved
+drafting-is-private no-handling-policy enrolled-project-missing-handling policy-pointer-mismatch
+workspace-unavailable workspace-inside-repository setup-not-verified restricted-destination-unsupported
+governed-file-without-release exception-not-permitted
+approval-mechanism-unsupported staging-access-not-verified destination-access-not-verified target-identity-mismatch
+receipt-projection-mismatch state-history-invalid state-only-content-write policy-revision-mismatch
+verifier-code-mismatch verifier-unhealthy evidence-unavailable inputs-changed-during-verification
+unsafe-artifact-path artifact-operation-unsupported schema-view-mismatch
+""".split())
+REFUSAL_CALLS = {"refuse", "fail", "_fail", "_deny", "deny", "Decision", "SchemaError", "PublicationRefused", "Refused"}
+KEBAB = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)+")
+
+
+def refusal_codes():
+    """{code: [file:line, ...]} for every kebab-case string literal passed to a refusal call (refuse, fail,
+    deny, Decision, SchemaError, PublicationRefused) in scripts/ and verifier/."""
+    used = {}
+    for folder in ("scripts", "verifier"):
+        for path in sorted((ROOT / folder).rglob("*.py")):
+            for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+                if not isinstance(node, ast.Call):
+                    continue
+                func = node.func
+                name = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", "")
+                if name not in REFUSAL_CALLS:
+                    continue
+                for arg in list(node.args) + [k.value for k in node.keywords]:
+                    if isinstance(arg, ast.Constant) and isinstance(arg.value, str) and KEBAB.fullmatch(arg.value):
+                        used.setdefault(arg.value, []).append(f"{path.relative_to(ROOT).as_posix()}:{node.lineno}")
+    return used
+
 
 class TempCase(unittest.TestCase):
     def fails(self, exc_type, call, *args, **kwargs):
@@ -102,11 +137,26 @@ class GateLegacyTests(TempCase):
 
     def test_decision_codes_and_outcomes_are_fixed_vocabularies(self):
         self.assertEqual(RG.OUTCOMES, ("legacy", "allow", "deny"))
-        self.assertIn("no-handling-policy", RG.REASON_CODES)
-        self.assertEqual(len(RG.REASON_CODES), 42)
-        for code in ("not-approved", "drafting-is-private", "working-copy-differs", "mixed-release", "state-only-content-write",
-                     "enrolled-project-missing-handling", "schema-view-mismatch"):
-            self.assertIn(code, RG.REASON_CODES)
+        # Part G of the specification, its two lists, copied here so that a change to either side fails
+        self.assertEqual(RG.PART_G_CODES, PART_G)
+        self.assertEqual(RG.ADDED_CODES, {"schema-invalid"})
+        self.assertEqual(RG.REASON_CODES, PART_G | {"schema-invalid"})
+        self.assertEqual(len(RG.REASON_CODES), 43)
+
+    def test_every_code_a_refusal_names_in_the_source_is_a_fixed_reason_code(self):
+        used = refusal_codes()
+        self.assertTrue({"schema-invalid", "not-approved", "sha256-mismatch", "evidence-unavailable"} <= set(used), sorted(used))
+        stray = {code: sites[:3] for code, sites in used.items() if code not in RG.REASON_CODES}
+        self.assertEqual(stray, {})
+
+    def test_the_security_guide_lists_every_reason_code_and_marks_the_addition(self):
+        text = (ROOT / "docs" / "security.md").read_text(encoding="utf-8")
+        para = next(p for p in text.split("\n\n") if p.startswith("**Reason codes.**"))
+        listed = set(re.findall(r"`([a-z0-9-]+)`", para))
+        self.assertEqual(listed, set(RG.REASON_CODES))
+        self.assertIn("addition to the specification's list: `schema-invalid`, which means a record does not match its schema", para)
+        page = (ROOT / "docs" / "enterprise-security.md").read_text(encoding="utf-8")
+        self.assertIn("`schema-invalid`, an addition to the specification's list that means a record does not match its schema", page)
 
     def test_the_gate_has_no_command_line_bypass(self):
         run = subprocess.run([sys.executable, str(GATE), "--help"], capture_output=True, text=True)

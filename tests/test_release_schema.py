@@ -739,7 +739,7 @@ class MessagesHoldNoValuesTests(Base):
                      lambda: RS.loads_strict('{"%s":1,"%s":2}' % (secret, secret))):
             error = self.fails(RS.SchemaError, call)
             self.assertNotIn(secret, str(error))
-            self.assertIn(error.code, RG.REASON_CODES | {"schema-invalid"})
+            self.assertIn(error.code, RG.REASON_CODES)
 
     def test_every_code_the_schema_raises_is_a_fixed_reason_code(self):
         import re
@@ -747,7 +747,7 @@ class MessagesHoldNoValuesTests(Base):
         used = set(re.findall(r'(?:code = |SchemaError\(|_fail\([^\n]*?, )"([a-z0-9]+(?:-[a-z0-9]+)+)"', source))
         used |= set(re.findall(r'^\s+code = "([a-z-]+)"', source, re.M))
         self.assertTrue({"unsafe-artifact-path", "sha256-mismatch", "state-history-invalid", "receipt-projection-mismatch"} <= used, used)
-        self.assertLessEqual(used - {"schema-invalid"}, RG.REASON_CODES)
+        self.assertLessEqual(used, RG.REASON_CODES)
 
 
 class LibraryWrapperTests(Base):

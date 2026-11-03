@@ -860,6 +860,27 @@ def _(base):
     return "; ".join(seen) + "; no gate.log"
 
 
+@claim("WP0 reason codes: a malformed record is refused with schema-invalid, which the gate's fixed list and the security guide carry as the one addition to Part G")
+def _(base):
+    project = copy_sample(base)
+    git(base, project, "init", "-q", "-b", "main")
+    ws = Path(base) / "ws"
+    code, out = run(base, ["workspace.py", "init", "--root", project, "--slug", "proof", "--workspace", ws, "--apply"], cwd=project)
+    check(code == 0, out[-300:])
+    shutil.move(str(project / "people.yaml"), str(ws / "people.yaml"))
+    bad = Path(base) / "exceptions.json"
+    bad.write_text("{ not json", encoding="utf-8")
+    code, out = run(base, ["release.py", "prepare", "--root", project, "--repository-id", "4200", "--exceptions", bad], cwd=project)
+    shown = line_with(out, "schema-invalid")
+    check(code != 0 and "not json" not in out, f"exit {code}: {out[-300:]}")
+    code, listing = run(base, [PY, "-c", "import sys; sys.path.insert(0, sys.argv[1]); import release_gate as RG; "
+                                         "print(sorted(RG.ADDED_CODES), len(RG.PART_G_CODES), 'schema-invalid' in RG.REASON_CODES)", SCRIPTS])
+    check(code == 0 and listing.strip() == "['schema-invalid'] 42 True", listing)
+    guide = (ROOT / "docs" / "security.md").read_text(encoding="utf-8")
+    check("addition to the specification's list: `schema-invalid`" in guide, "the security guide does not mark the addition")
+    return f"{shown} || gate list: {listing.strip()}"
+
+
 @claim("WP5 prepare refuses no bundle containing the release id, and the committed sample release has none")
 def _(base):
     _, ws, release_id, out = prepare_sample(base)

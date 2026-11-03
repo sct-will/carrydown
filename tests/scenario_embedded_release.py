@@ -2301,7 +2301,7 @@ def _(f):
                 seen[name] = e.code
         V.verify_request(rid, f.reader, enrollment)
     need(len(seen) >= len(RS.TEMPLATE_KEYS) + len(RS.REQUEST_KEYS), f"only {len(seen)} mutations were tried")
-    need(set(seen.values()) <= RG.REASON_CODES | {"schema-invalid"}, "a code outside the fixed set: " + str(sorted(set(seen.values()))))
+    need(set(seen.values()) <= RG.REASON_CODES, "a code outside the fixed set: " + str(sorted(set(seen.values()))))
     return f"{len(seen)} one-field mutations of the request, its template and its first target all refused; codes: {sorted(set(seen.values()))}"
 
 

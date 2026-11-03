@@ -47,8 +47,9 @@ POINTER_FILE = ".carrydown/release-policy.yaml"
 POINTER_KEYS = ("format", "tooling_repository", "enrollment_id")
 MAX_CONTEXT_AGE = V.CONTEXT_MAX_AGE_SECONDS
 
-# The fixed reason codes. The gate and the verifier print these and never attach content.
-REASON_CODES = frozenset("""
+# The fixed reason codes of the specification's Part G. The gate and the verifier print these and never
+# attach content.
+PART_G_CODES = frozenset("""
 not-approved approval-not-found approval-not-on-final-revision approver-not-authorized approval-scope-mismatch
 unauthenticated-release sha256-mismatch working-copy-differs destination-not-allowed audience-visibility-mismatch
 superseded withdrawn expired could-not-refresh mixed-release unapproved-substitution assignee-unresolved
@@ -60,6 +61,11 @@ receipt-projection-mismatch state-history-invalid state-only-content-write polic
 verifier-code-mismatch verifier-unhealthy evidence-unavailable inputs-changed-during-verification
 unsafe-artifact-path artifact-operation-unsupported schema-view-mismatch
 """.split())
+# An addition to Part G: schema-invalid, a record (request, receipt, manifest, event, payload) does not match
+# its schema. The schema, release, build, payload, verifier and detector modules raise it; the message names
+# the field, never the value.
+ADDED_CODES = frozenset({"schema-invalid"})
+REASON_CODES = PART_G_CODES | ADDED_CODES
 
 
 class Decision(NamedTuple):
