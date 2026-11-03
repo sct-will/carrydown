@@ -337,7 +337,8 @@ class BannedNamesTests(unittest.TestCase):
         self.assertEqual(code, 0, out + err)
         code, out, err = check(["--root", root / "p", "--people", PEOPLE])
         self.assertEqual(code, 1, out + err)
-        self.assertIn("person name or handle from the plan at line", out)
+        self.assertIn("person name or handle from the plan at docs/spec/m1-submit-report/wi-01-service-scaffold.md:", out)
+        self.assertNotIn("Reviewed by Tamsin Hale", out)   # the line is not quoted
 
 
 class CheckerTests(WithTemp):

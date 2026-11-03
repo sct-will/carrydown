@@ -9,12 +9,16 @@ on:
     paths:
       - "docs/spec/**"
       - "docs/ground-truth/**"
+      - "docs/context/**"
+      - "docs/release/**"
       - "tools/carrydown/**"
   push:
     branches: [main]
     paths:
       - "docs/spec/**"
       - "docs/ground-truth/**"
+      - "docs/context/**"
+      - "docs/release/**"
       - "tools/carrydown/**"
 
 permissions:

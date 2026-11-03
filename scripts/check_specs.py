@@ -27,6 +27,23 @@ percent allocation of each person (1 to 100), that nobody is over 100 percent of
 capacity in a work unit, and, when a target exists, that the last work item meets it. People and the
 target are optional. Without a target the report prints the critical path end date as derived.
 
+Views. The check follows the plan_view the plan declares. A plan with no plan_format is legacy and keeps the
+original rules: every original and rendering named in the plan must be there. --view workspace or --view released
+forces one. In the workspace view the cited sections must exist in the renderings (in the project or in the
+renderings folder of the private workspace) and an original is optional unless you pass --check-originals. In the
+released view there is no source, no rendering and no path to either: every section a work item cites, in source_refs
+or in a line `- <source id> section <n.n>, <heading>` of its References section, must be listed in its approved
+context, docs/context/<id>.bundle.json, whose content_sha256 equals the digest of docs/context/<id>.md and whose
+two files an active receipt in docs/release/ lists with their digests. A missing or altered obligation fails. A
+relative link into docs/ground-truth/ is not broken when the approved context holds the section it points to.
+
+Owner side. Where .carrydown/local.yaml names the private workspace, the check also reports a restricted source
+that the repository tracks (by source id, never by path). The detectors of detectors.py run over the specification
+folder, docs/context, docs/release and the engineers' skill folder. Findings name a file and a line, never the text.
+
+Log hygiene. A finding about a person's name, a header row or a malformed record never quotes the file. It names the
+row, the file and the line, or the person's id and the key.
+
 Staffing. A migrated plan (plan_format 2) names people by id and track only. Names, allocation, start
 dates, days off, skills and preferences are in people.yaml in the private workspace, found through
 .carrydown/local.yaml, or named with --people. With that file the capacity, dates and names checks run as
@@ -44,6 +61,7 @@ Usage
   python3 scripts/check_specs.py --root . --report   print the schedule, load table and critical path
   python3 scripts/check_specs.py --root . --people ~/.carrydown/workspaces/my-project/people.yaml   load the staffing overlay by path
   python3 scripts/check_specs.py --root . --item 3   check one item (3, WI-03 and wi-3 all work)
+  python3 scripts/check_specs.py --root . --view released   check the exported plan against its approved context
 Exit status is 0 when clean, and 1 when there are findings, including problems with the values in
 plan.yaml, which are listed first. It is 2 when the plan cannot be read at all (a missing file, a
 syntax error, a value of the wrong shape) or an argument is wrong. With --json the output on
@@ -51,14 +69,19 @@ standard output is always one JSON object, also on an error. The script never wr
 """
 import argparse
 import contextlib
+import datetime
 import io
 import json
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
+import detectors as D  # noqa: E402
+import release_schema as RS  # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 
@@ -102,10 +125,14 @@ def banned_patterns(plan):
     return pats
 
 
+NAME_WHY = "person name or handle from the plan"
+
+
 def banned_hits(pats, text):
     """(why, line number, line text) for each banned match. A match inside a longer match of the same
     kind is not counted again, so "Tamsin Hale" is one finding, not one for the full name and one
-    for each part."""
+    for each part. The line text of a person's name or handle is empty: it is never carried, so it
+    cannot be printed."""
     out, spans = [], []
     for pat, why in pats:
         for m in pat.finditer(text):
@@ -113,8 +140,13 @@ def banned_hits(pats, text):
                 continue
             spans.append((why, m.start(), m.end()))
             ln = text.count("\n", 0, m.start()) + 1
-            out.append((why, ln, text.split("\n")[ln - 1].strip()[:90]))
+            out.append((why, ln, "" if why == NAME_WHY else text.split("\n")[ln - 1].strip()[:90]))
     return out
+
+
+def banned_issue(why, rel, ln):
+    """The finding for one banned match: what kind, the file and the line. Never the text of the line."""
+    return f"{why} at {Path(str(rel)).as_posix()}:{ln}"
 
 
 def citation_numbers(text):
@@ -127,12 +159,34 @@ def cited_missing(numbered, cite):
             if not any(h.startswith(num + " ") or h.startswith(num + ". ") for h in numbered)]
 
 
-def ground_truth_headings(plan, root):
+def view_of(plan):
+    """legacy, workspace or released: the view the plan was loaded in."""
+    return plan.get("_view") or L.plan_mode(plan)
+
+
+def rendering_file(source, root, workspace=None):
+    """Where the rendering of a source is, or None. It is the path in the plan, under the project, or, when
+    that file is not there, the same file name in the renderings folder of the private workspace, where the
+    renderer puts the rendering of a source the repository must not hold."""
+    rel = source.get("path")
+    if not isinstance(rel, str) or not rel.strip():
+        return None
+    p = Path(root) / rel
+    if L.exists(p):
+        return p
+    if workspace:
+        alt = Path(workspace) / "renderings" / Path(rel).name
+        if L.exists(alt):
+            return alt
+    return p
+
+
+def ground_truth_headings(plan, root, workspace=None):
     """Headings by source id. None marks a rendered source that is missing."""
     found = {}
     for source in L.rendered_sources(plan):
-        p = Path(root) / source["path"]
-        if not L.exists(p):
+        p = rendering_file(source, root, workspace)
+        if p is None or not L.exists(p):
             found[source["id"]] = None
             continue
         heads = []
@@ -153,32 +207,323 @@ def numbered_headings(gt_heads):
     return [h for h in (gt_heads or []) if re.match(r"^\d+(\.\d+)*\.?\s", h)]
 
 
-def citation_findings(plan, root, gt_heads):
-    """Say when the section citations could not be checked, instead of passing silently."""
-    if not plan["items"]:
+def citation_findings(plan, root, gt_heads, view=None, check_originals=False):
+    """Say when the section citations could not be checked, instead of passing silently.
+
+    The view decides what is read. legacy keeps the original behavior: every original and every
+    rendering named in the plan must be there. workspace checks the cited rendering sections, and an
+    original only when the owner asks (check_originals): a retained rendering is enough to prepare.
+    released reads no source and no rendering. Its citations are checked per work item against the
+    approved context bundles and the receipts (see released_item_findings), so nothing is checked here
+    and a missing original or full rendering is never a finding."""
+    view = view or view_of(plan)
+    if view == "released" or not plan["items"]:
         return []
     findings = []
-    for source in L.ground_truth_sources(plan):
-        original = source.get("source_path")
-        if original and not L.exists(Path(root) / original):
-            findings.append(f"ground truth source not found: {original} ({source['name']})")
+    if view == "legacy" or check_originals:
+        for source in L.ground_truth_sources(plan):
+            original = source.get("source_path")
+            if original and not L.exists(Path(root) / original):
+                findings.append(f"ground truth source not found: {original} ({source['name']})")
     sources = L.rendered_sources(plan)
     for source in sources:
         heads = gt_heads.get(source["id"])
         label = "the rendered document" if len(sources) == 1 else f"the rendered source {source['name']}"
         if heads is None:
-            findings.append(f"ground truth citations not checked: {label} {source['path']} was not found. Render it with {_script_hint('render_ground_truth.py', '')}")
+            findings.append(f"ground truth citations not checked: {label} {source.get('path') or source['id']} was not found. Render it with {_script_hint('render_ground_truth.py', '')}")
         elif not numbered_headings(heads):
             findings.append(f"ground truth citations not checked: {label} has no numbered headings. "
                             "Specifications cite sections by number, so number the headings in the source document and render it again")
     return findings
 
 
-def check_item(plan, root, it, banned, gt_heads):
+# ---------------------------------------------------------------------------
+# Released view: citations are satisfied by the approved context bundle of the work item
+# ---------------------------------------------------------------------------
+
+CITATION_LINE = re.compile(r"^\s*[-*]\s+([a-z0-9]+(?:-[a-z0-9]+)*)\s+[Ss]ection\s+(\d+(?:\.\d+)*)\s*(?:,\s*(.*?))?\s*$")
+WHOLE_DOCUMENT = "whole document"
+_UTC = datetime.timezone.utc
+BUNDLE_PROBLEM_LEADS = ("approved context", "bundle ", "no active receipt")
+
+
+def reference_citations(text):
+    """[(source id, section, line)] for each citation line of the ## References section of a
+    specification: `- <source id> section <n.n>, <heading>`, the heading optional."""
+    marker = "\n## References\n"
+    start = text.find(marker)
+    if start < 0:
+        return []
+    first = text.count("\n", 0, start) + 2
+    out = []
+    for offset, line in enumerate(text[start + len(marker):].split("\n")):
+        if line.startswith("## "):
+            break
+        m = CITATION_LINE.match(line)
+        if m:
+            out.append((m.group(1), m.group(2), first + offset))
+    return out
+
+
+def needed_obligations(plan, it):
+    """[(source id, section)] that the plan's source_refs of an item require, in order. A reference to
+    the whole document needs a bundle obligation for the whole document."""
+    out = []
+    for ref in L.item_source_refs(plan, it):
+        sid, sections = ref.get("source"), str(ref.get("sections") or "")
+        nums = citation_numbers(sections)
+        wanted = [(sid, n) for n in nums] if nums else ([(sid, WHOLE_DOCUMENT)] if sections.strip().casefold() == WHOLE_DOCUMENT else [])
+        for pair in wanted:
+            if pair not in out:
+                out.append(pair)
+    return out
+
+
+class Release:
+    """What the released view reads from the project: the receipts under docs/release/ that are valid,
+    active and not expired, and the problems found in the others. Built once per run."""
+
+    def __init__(self, root, now=None):
+        self.root = Path(root)
+        self.now = now or datetime.datetime.now(_UTC)
+        self.receipts = []     # (file name, parsed receipt) of each active receipt
+        self.problems = []
+        folder = self.root / "docs" / "release"
+        if not folder.is_dir():
+            return
+        for path in sorted(folder.glob("*.receipt.json")):
+            name = f"docs/release/{path.name}"
+            if L.regular_file_problem(path):
+                self.problems.append(f"{name} cannot be read as a receipt")
+                continue
+            try:
+                receipt = RS.validate_receipt(path.read_bytes())
+            except RS.SchemaError as e:
+                self.problems.append(f"{name} is not a valid receipt ({e.code})")
+                continue
+            except OSError:
+                self.problems.append(f"{name} cannot be read as a receipt")
+                continue
+            if path.name != f"{receipt['request_id']}.receipt.json":
+                self.problems.append(f"{name} is not named after its request id (receipt-projection-mismatch)")
+                continue
+            if receipt["state"] != "active":
+                continue
+            if receipt["expires_at"] and self._expired(receipt["expires_at"]):
+                self.problems.append(f"{name} has expired")
+                continue
+            self.receipts.append((path.name, receipt))
+
+    def _expired(self, stamp):
+        try:
+            when = datetime.datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=_UTC)
+        except ValueError:
+            return True
+        return when <= self.now
+
+    def covers(self, rel, data):
+        """True when an active receipt lists the project file rel with the digest and length of data."""
+        digest, size = RS.sha256_bytes(data), len(data)
+        for _, receipt in self.receipts:
+            for art in receipt["artifacts"]:
+                if art["path"] == rel and art["sha256"] == digest and art["bytes"] == size:
+                    return True
+        return False
+
+
+def _sidecar_problem(side, tag):
+    """A fixed reason why a parsed sidecar is not a bundle sidecar, or None."""
+    if not isinstance(side, dict):
+        return "it is not an object"
+    if side.get("bundle_format") != 1 or isinstance(side.get("bundle_format"), bool):
+        return "bundle_format is not 1"
+    if side.get("work_item") != tag:
+        return "work_item is not this work item"
+    obligations = side.get("obligations")
+    if not isinstance(obligations, list):
+        return "obligations is not a list"
+    keys = {"source", "version", "section", "heading", "sha256"}
+    for o in obligations:
+        if not isinstance(o, dict) or set(o) != keys or not all(isinstance(o[k], str) for k in keys):
+            return "an obligation is malformed"
+        if not re.fullmatch(r"[0-9a-f]{64}", o["sha256"]):
+            return "an obligation digest is malformed"
+    digest = side.get("content_sha256")
+    if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+        return "content_sha256 is malformed"
+    return None
+
+
+def bundle_coverage(plan, root, it, release):
+    """What the approved context of a work item covers: (covered, problems). covered maps each
+    (source id, section) pair that the item's bundle lists and that is intact to its heading: the sidecar parses,
+    its content_sha256 equals the digest of the Markdown file, and an active receipt lists both files
+    with the digests of the files as they are. A broken bundle covers nothing. problems are one-line
+    findings and never carry bundle text."""
+    tag = L.tag(plan, it["id"])
+    low = tag.lower()
+    md_rel, js_rel = f"docs/context/{low}.md", f"docs/context/{low}.bundle.json"
+    problems = []
+    data = {}
+    for rel in (md_rel, js_rel):
+        path = Path(root) / rel
+        if L.regular_file_problem(path) or not path.is_file():
+            problems.append(f"approved context missing: {rel}")
+        else:
+            try:
+                data[rel] = path.read_bytes()
+            except OSError:
+                problems.append(f"approved context cannot be read: {rel}")
+    if problems:
+        return {}, problems
+    try:
+        side = RS.loads_strict(data[js_rel])
+    except RS.SchemaError:
+        return {}, [f"bundle {js_rel} is not strict JSON (duplicate keys and invalid JSON are refused)"]
+    why = _sidecar_problem(side, tag)
+    if why:
+        return {}, [f"bundle {js_rel} is not a bundle sidecar: {why}"]
+    if side["content_sha256"] != RS.sha256_bytes(data[md_rel]):
+        return {}, [f"bundle {md_rel} does not match content_sha256 in {js_rel}"]
+    missing = [rel for rel in (md_rel, js_rel) if not release.covers(rel, data[rel])]
+    if missing:
+        return {}, [f"no active receipt in docs/release/ lists {rel} with its current digest" for rel in missing]
+    versions = {s.get("id"): str(s.get("version") or "") for s in plan.get("sources") or []}
+    covered = {}
+    for o in side["obligations"]:
+        if versions.get(o["source"]) is not None and versions[o["source"]] != o["version"]:
+            problems.append(f"obligation {o['source']} {o['section']} was approved for another version of the source than the plan names")
+            continue
+        covered[(o["source"], o["section"])] = o["heading"]
+    return covered, problems
+
+
+def released_item_findings(plan, root, it, text, release):
+    """Findings for one work item in the released view, and the (source id, section) pairs its bundle
+    covers. Every section the item cites, in its source_refs or in its References section, must be in
+    its approved context. A missing or altered obligation is a failure, not a skipped check."""
+    needed = needed_obligations(plan, it)
+    cites = reference_citations(text)
+    known = {s.get("id") for s in plan.get("sources") or []}
+    issues = []
+    for sid, sec, ln in cites:
+        if sid not in known:
+            issues.append(f"References cites unknown source {sid} at line {ln}")
+    wanted = list(needed) + [(sid, sec) for sid, sec, _ in cites if sid in known and (sid, sec) not in needed]
+    if not wanted:
+        return issues, {}
+    covered, problems = bundle_coverage(plan, root, it, release)
+    issues += problems
+    if not any(p.startswith(BUNDLE_PROBLEM_LEADS) for p in problems):
+        for sid, sec in wanted:
+            if (sid, sec) not in covered:
+                issues.append(f"obligation not in the approved context: {sid} {sec}")
+    return issues, covered
+
+
+def reference_findings(plan, text, gt_heads):
+    """Workspace and legacy views: a citation in the References section is satisfied when the rendering
+    has that section, the same check as source_refs. Returns one-line findings."""
+    out = []
+    sources = L.source_by_id(plan)
+    for sid, sec, ln in reference_citations(text):
+        if sid not in sources:
+            out.append(f"References cites unknown source {sid} at line {ln}")
+            continue
+        heads = numbered_headings(gt_heads.get(sid))
+        if heads and cited_missing(heads, sec):
+            out.append(f"References cites {sid} section {sec} at line {ln}, which is not a heading in the rendered source")
+    return out
+
+
+def link_is_satisfied(plan, root, target, anchor, covered, gt_heads, view):
+    """True when a relative link that points into the renderings folder (docs/ground-truth/<source id>.md)
+    cites a section the project can vouch for without the file. In the released view the section is in the
+    item's approved context (covered, which maps (source id, section) to its heading). In the workspace and
+    legacy views it is a heading of the rendering that the checker found in the private workspace. The
+    anchor is the heading as GitHub makes it. A link to a section that is in neither is still broken."""
+    try:
+        rel = Path(target).relative_to(Path(root).resolve()).as_posix()
+    except ValueError:
+        return False
+    if not rel.startswith("docs/ground-truth/") or not rel.endswith(".md") or not anchor:
+        return False
+    sid = Path(rel).stem
+    if sid not in {s.get("id") for s in plan.get("sources") or []}:
+        return False
+    if view == "released":
+        return any(source == sid and L.anchor_slug(f"{sec} {heading}") == anchor for (source, sec), heading in covered.items())
+    return anchor in {L.anchor_slug(h) for h in (gt_heads.get(sid) or [])}
+
+
+def plan_review_findings(plan, root, banned):
+    """Banned-name patterns over docs/spec/plan-review.md, which the checker did not scan before.
+    Returns (findings, relative path). No file is no finding."""
+    path = Path(root) / plan["project"]["spec_dir"] / "plan-review.md"
+    rel = path.relative_to(root) if path.is_relative_to(root) else path
+    if not L.exists(path):
+        return [], rel
+    try:
+        text = L.read_text(path)
+    except L.TextError as e:
+        return [f"cannot read: {e.msg}"], rel
+    return [banned_issue(why, rel, ln) for why, ln, _ in banned_hits(banned, text)], rel
+
+
+# ---------------------------------------------------------------------------
+# Owner side: restricted sources that git tracks
+# ---------------------------------------------------------------------------
+
+NOT_PERFORMED = "tracked source check not performed"
+
+
+def tracked_source_findings(workspace_plan, root):
+    """Owner side. For each source the workspace plan classifies restricted, ask git whether the original
+    or the rendering is tracked, and report `restricted source is tracked in git: <source id>`. The finding
+    names the source by id and never by path. Only non-empty, known paths go into the command, and an empty
+    list of paths means no command at all (an empty pathspec would list the whole project). When git is not
+    installed, or the project is not in a git repository, the one line returned starts with
+    `tracked source check not performed` and says why: nothing was verified."""
+    pending = []
+    for source in workspace_plan.get("sources") or []:
+        if not isinstance(source, dict) or source.get("classification") != "restricted":
+            continue
+        paths = []
+        for key in ("source_path", "path"):
+            v = source.get(key)
+            if isinstance(v, str) and v.strip():
+                paths.append(v.strip())
+                if key == "path" and v.strip().endswith(".md"):
+                    paths.append(v.strip()[:-3] + ".index.txt")   # the rendering's index lists its headings
+        if paths:
+            pending.append((source.get("id") or "unnamed", paths))
+    if not pending:
+        return []
+    if shutil.which("git") is None:
+        return [f"{NOT_PERFORMED}: git is not available, so nothing was verified"]
+    findings = []
+    for sid, paths in pending:
+        cmd = ["git", "-C", str(root), "ls-files", "-z", "--"] + [":(literal)" + p for p in paths]
+        try:
+            run = subprocess.run(cmd, capture_output=True, timeout=60)
+        except (OSError, subprocess.SubprocessError):
+            return [f"{NOT_PERFORMED}: git could not be run, so nothing was verified"]
+        if run.returncode != 0:
+            return [f"{NOT_PERFORMED}: the project folder is not in a git repository, so nothing was verified"]
+        if run.stdout.strip(b"\0"):
+            findings.append(f"restricted source is tracked in git: {sid}")
+    return findings
+
+
+def check_item(plan, root, it, banned, gt_heads, release=None):
+    """Findings for one work item, as (issues, relative path). A finding names the row, the line or the
+    id and never quotes the file, so a log of the check holds no text of the specification. release is
+    the Release of the project, needed in the released view."""
     issues = []
     path = L.spec_path(plan, root, it)
     tg = L.tag(plan, it["id"])
     rel = path.relative_to(root) if path.is_relative_to(root) else path
+    view = view_of(plan)
     if not L.exists(path):
         return [f"MISSING {rel}"], rel
     try:
@@ -188,7 +533,7 @@ def check_item(plan, root, it, banned, gt_heads):
     text, lines, rows = spec["text"], spec["lines"], spec["rows"]
     expected_title = f"# {tg} {it['label']}"
     if spec["title"] != expected_title:
-        issues.append(f"title is {spec['title']!r}, expected {expected_title!r}")
+        issues.append("title line does not match the plan")
     exp = L.expected_header(plan, it)
     for name, val in exp:
         got = rows.get(name)
@@ -198,25 +543,25 @@ def check_item(plan, root, it, banned, gt_heads):
         if name == "Depends on":
             for d in it["depends"]:
                 if L.tag(plan, d) not in got:
-                    issues.append(f"Depends on lacks {L.tag(plan, d)} (row: {got!r})")
+                    issues.append(f"Depends on lacks {L.tag(plan, d)}")
             if it["external_input"] and "external input" not in got.lower():
-                issues.append(f"Depends on lacks the external input note (row: {got!r})")
+                issues.append("Depends on lacks the external input note")
             if not it["external_input"] and "external input" in got.lower():
-                issues.append(f"Depends on has an external input note the plan does not (row: {got!r})")
+                issues.append("Depends on has an external input note the plan does not")
             if not it["depends"] and not it["external_input"] and got.strip().lower() not in ("none", "none."):
-                issues.append(f"Depends on should say None (row: {got!r})")
+                issues.append("Depends on should say None")
         elif name == "Unblocks":
             for u in it["unblocks"]:
                 if L.tag(plan, u) not in got:
-                    issues.append(f"Unblocks lacks {L.tag(plan, u)} (row: {got!r})")
+                    issues.append(f"Unblocks lacks {L.tag(plan, u)}")
             extra = set(re.findall(rf"{re.escape(plan['project']['id_prefix'])}-\d+", got)) - {L.tag(plan, u) for u in it["unblocks"]}
             if extra:
                 issues.append(f"Unblocks names items the plan does not: {sorted(extra)}")
         elif name in ("Size", "Ground truth"):
             if not got.strip() or "to be " in got.lower():
-                issues.append(f"{name} row is not filled in (row: {got!r})")
+                issues.append(f"{name} row is not filled in")
         elif got != val:
-            issues.append(f"{name} row is {got!r}, expected {val!r}")
+            issues.append(f"{name} row does not match plan.yaml")
     order = spec["row_order"]
     if "Target" in order and "Checkpoint" in order and order.index("Checkpoint") != order.index("Target") + 1:
         issues.append("Checkpoint row is not directly after Target")
@@ -262,7 +607,7 @@ def check_item(plan, root, it, banned, gt_heads):
         issues.append(f"length {n} lines is outside {lo} to {hi}")
     scan_text = strip_code(text) if plan["banned"].get("skip_code_blocks") else text
     for why, ln, _ in banned_hits(banned, scan_text):
-        issues.append(f"{why} at line {ln}: {lines[ln - 1].strip()[:90]}")
+        issues.append(banned_issue(why, rel, ln))
     prefix = re.escape(plan["project"]["id_prefix"])
     pids = L.external_ids(plan)
     known = {it2["id"] for it2 in plan["items"]}
@@ -273,18 +618,28 @@ def check_item(plan, root, it, banned, gt_heads):
             issues.append(f"reference to external item id {m.group(0)} at line {ln}")
         elif num not in known:
             issues.append(f"reference to unknown id {m.group(0)} at line {ln}")
+    covered = {}
+    if view == "released":
+        # The released project holds no original and no rendering. Every section the item cites is
+        # satisfied by its approved context bundle, which an active receipt covers.
+        extra, covered = released_item_findings(plan, root, it, text, release or Release(root))
+        issues += extra
+    else:
+        issues += reference_findings(plan, text, gt_heads)
     prose = strip_code(text)
-    for m in re.finditer(r"\]\(((?!https?://|mailto:|#)[^)\s]+)(?:\s+\"[^\"]*\")?\)", prose):
-        target = m.group(1).split("#")[0]
+    for m in re.finditer(r"\[([^\]]*)\]\(((?!https?://|mailto:|#)[^)\s]+)(?:\s+\"[^\"]*\")?\)", prose):
+        target, _, anchor = m.group(2).partition("#")
         if target and not L.exists((path.parent / target).resolve()):
-            issues.append(f"broken relative link {m.group(1)}")
+            if link_is_satisfied(plan, root, (path.parent / target).resolve(), anchor, covered, gt_heads, view):
+                continue   # a link into the renderings folder whose section the approved context or the workspace holds
+            issues.append(f"broken relative link {m.group(2)}")
     # ground truth citations
     cite = rows.get("Ground truth", "")
     refs = L.item_source_refs(plan, it)
     sources = L.source_by_id(plan)
     expected_cite = L.ground_truth_citation(plan, it)
     if cite and expected_cite and cite != expected_cite:
-        issues.append(f"Ground truth row is {cite!r}, expected {expected_cite!r}")
+        issues.append("Ground truth row does not match plan.yaml")
     if not it.get("source_refs") and refs:
         primary_heads = numbered_headings(gt_heads.get(refs[0].get("source")))
         if primary_heads and cite and "to be " not in cite.lower():
@@ -318,7 +673,7 @@ def check_milestone(plan, root, ms):
     first = text.split("\n", 1)[0].strip()
     expected = f"# Milestone {ms['number']}, {ms['name']}"
     if first != expected:
-        issues.append(f"title is {first!r}, expected {expected!r}")
+        issues.append("title line does not match the plan")
     spec = L.read_spec(path)
     for part in MILESTONE_PARTS:
         if part not in spec["sections"]:
@@ -328,7 +683,7 @@ def check_milestone(plan, root, ms):
         if got is None:
             issues.append(f"header lacks the {row} row")
         elif got != want:
-            issues.append(f"{row} row is {got!r}, expected {want!r}")
+            issues.append(f"{row} row does not match plan.yaml")
     demo = spec["rows"].get("Demonstration")
     if demo is None:
         issues.append("header lacks the Demonstration row")
@@ -349,8 +704,8 @@ def check_milestone(plan, root, ms):
     for m in re.finditer(rf"\b{re.escape(plan['project']['id_prefix'])}-(\d+)\b", text):
         if int(m.group(1)) in L.external_ids(plan):
             issues.append(f"reference to external item id {m.group(0)}")
-    for why, ln, line in banned_hits(banned_patterns(plan), text):
-        issues.append(f"{why} at line {ln}: {line}")
+    for why, ln, _ in banned_hits(banned_patterns(plan), text):
+        issues.append(banned_issue(why, rel, ln))
     for m in re.finditer(r"\]\(((?!https?://|mailto:|#)[^)\s]+)\)", strip_code(text)):
         if not L.exists((path.parent / m.group(1).split("#")[0]).resolve()):
             issues.append(f"broken relative link {m.group(1)}")
@@ -373,8 +728,8 @@ def check_readme(plan, root):
     for h in ("Closing comment on an issue", "Checkpoint comment on the Epic", "Index"):
         if f"## {h}" not in text and f"### {h}" not in text:
             issues.append(f"section missing: {h}")
-    for why, ln, line in banned_hits(banned_patterns(plan), text):
-        issues.append(f"{why} at line {ln}: {line}")
+    for why, ln, _ in banned_hits(banned_patterns(plan), text):
+        issues.append(banned_issue(why, rel, ln))
     return issues, rel
 
 
@@ -683,11 +1038,28 @@ def collapse_unfinished(issues):
     return [f"{todo[0]}, and {others} other finding(s) that usually go when the template text is replaced"], True
 
 
+def detector_findings(plan, root, workspace, view):
+    """Run the mechanical detectors over the files the project would publish. Returns lines. The
+    organization-phrase and copied-passage detectors run only where the private workspace is. The
+    staffing-field detector is left out: validate_plan already finds the same keys in the plan."""
+    files = D.project_scope(root, plan)
+    plan_rel = Path(plan.get("_path") or "").name
+    allow = {f for f in files if Path(f).name == plan_rel and view != "released"}
+    found = D.run_all(root, workspace, files, [], skip=("prohibited_fields",), allow_source_folder=allow,
+                      plan_path=plan.get("_path"))
+    return [D.format_finding(f) for f in found]
+
+
 def run_checks(plan, root, a):
+    """Run every check. Returns (results, clean files, files, items, unfinished, notes). notes are lines
+    for the text output that are not findings."""
     results = {}
+    notes = []
     ok = 0
     unfinished = 0
     load_issues = []
+    view = view_of(plan)
+    workspace, _ = L.workspace_root(root)   # the owner's private workspace, when this is the owner's machine
     staffed = L.staffing_loaded(plan)   # without the people overlay, capacity and dates are not checked
     for pid, mnum, sized, cap, pct in (L.load_rows(plan) if staffed else []):
         if pct is not None and pct > 100:
@@ -706,8 +1078,9 @@ def run_checks(plan, root, a):
         load_issues.append(f"from sizes and allocation the earliest finish is {L.fmt_date(times[chain[-1]][1])}, after the target {L.fmt_date(tdate)} "
                            f"(chain {' -> '.join(L.tag(plan, n) for n in chain)})")
     banned = banned_patterns(plan)
+    release = Release(root) if view == "released" else None
     try:
-        gt_heads, gt_error = ground_truth_headings(plan, root), None
+        gt_heads, gt_error = ({}, None) if view == "released" else (ground_truth_headings(plan, root, workspace), None)
     except L.TextError as e:
         gt_heads, gt_error = {}, f"ground truth citations not checked: {e.msg}"
     if load_issues:
@@ -715,12 +1088,20 @@ def run_checks(plan, root, a):
     review, _ = planning_review(plan) if not a.item else ([], [])
     if review:
         results["planning review"] = review
-    cites = [gt_error] if gt_error else citation_findings(plan, root, gt_heads)
+    cites = [gt_error] if gt_error else citation_findings(plan, root, gt_heads, view, getattr(a, "check_originals", False))
     if cites and not a.item:
         results["ground truth"] = cites
+    if release is not None and release.problems and not a.item:
+        results["release receipts"] = release.problems
+    if view == "workspace" and workspace is not None and not a.item:
+        tracked = tracked_source_findings(plan, root)
+        notes += [t for t in tracked if t.startswith(NOT_PERFORMED)]
+        tracked = [t for t in tracked if not t.startswith(NOT_PERFORMED)]
+        if tracked:
+            results["restricted sources"] = tracked
     items = [it for it in plan["items"] if not a.item or it["id"] in a.item]
     for it in items:
-        issues, rel = check_item(plan, root, it, banned, gt_heads)
+        issues, rel = check_item(plan, root, it, banned, gt_heads, release)
         issues, todo = collapse_unfinished(issues)
         unfinished += todo
         if issues:
@@ -744,8 +1125,16 @@ def run_checks(plan, root, a):
         orphans = orphan_files(plan, root)
         if orphans:
             results["orphan files"] = [f"{o} is not in plan.yaml" for o in orphans]
+        issues, rel = plan_review_findings(plan, root, banned_patterns(plan))
+        if issues:
+            results[str(rel)] = issues
+        found = detector_findings(plan, root, workspace, view)
+        if found:
+            results["detectors"] = found
+        else:
+            notes.append(D.CLEAN_LINE)
     n_files = len(items) + (0 if a.item else len(plan["milestones"]) + 1)
-    return results, ok, n_files, len(items), unfinished
+    return results, ok, n_files, len(items), unfinished, notes
 
 
 def parse_items(plan, wanted):
@@ -778,6 +1167,12 @@ def main(argv=None):
     ap.add_argument("--report", action="store_true", help="print the schedule, load table and critical path, then exit")
     ap.add_argument("--json", action="store_true", help="print the findings as JSON")
     ap.add_argument("--quiet", action="store_true", help="print only the summary line")
+    ap.add_argument("--view", choices=L.PLAN_VIEWS,
+                    help="check the plan in this view: workspace (the owner's working plan, which may hold originals and renderings) or released "
+                         "(the exported plan, which holds neither and is checked against its approved context bundles and receipts). "
+                         "Default: the plan_view the plan declares, and the original rules for a plan with no plan_format")
+    ap.add_argument("--check-originals", action="store_true",
+                    help="in the workspace view, also require every original named by source_path to be present. Without it a retained rendering is enough")
     ap.add_argument("--people", help="path to people.yaml: the staffing overlay (names, allocation, start dates, days off) for "
                                      "the capacity, dates and names checks. Default: people.yaml in the private workspace named by "
                                      ".carrydown/local.yaml. Without an overlay those checks are skipped, and the output says so")
@@ -808,7 +1203,7 @@ def main(argv=None):
     if why:
         return fail(f"the plan path {why}" if why.startswith(str(plan_path)) else why)
     try:
-        plan, plan_problems = L.load_plan_with_people(plan_path, root, people_path=a.people)
+        plan, plan_problems = L.load_plan_with_people(plan_path, root, people_path=a.people, view=a.view)
     except L.PlanError as e:
         return fail(e.msg)
     if a.item:
@@ -834,7 +1229,7 @@ def main(argv=None):
         sys.stdout.write(buf.getvalue())
         return 1 if plan_problems else 0
     try:
-        results, ok, n_files, n_items, unfinished = run_checks(plan, root, a)
+        results, ok, n_files, n_items, unfinished, notes = run_checks(plan, root, a)
     except PLAN_ERRORS as e:
         if not plan_problems:
             if isinstance(e, OSError):
@@ -849,7 +1244,7 @@ def main(argv=None):
     if plan_problems:
         results = {"plan.yaml": plan_problems, **results}
     if a.json:
-        print(json.dumps({"clean": ok, "files": n_files, "findings": results}, indent=2))
+        print(json.dumps({"clean": ok, "files": n_files, "findings": results, "notes": notes}, indent=2))
     else:
         print(f"{ok} files clean, {len(results)} with findings ({n_items} work items, {0 if a.item else len(plan['milestones'])} milestones)")
         if not L.staffing_loaded(plan):
@@ -861,6 +1256,8 @@ def main(argv=None):
         if L.derived_summary(plan):
             print(f"Derived inputs: {L.derived_summary(plan)}.")
         if not a.quiet:
+            for note in notes:
+                print(note)
             for k, v in results.items():
                 print(f"{k}:")
                 for i in v:

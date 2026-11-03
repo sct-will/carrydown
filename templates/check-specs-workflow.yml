@@ -9,12 +9,16 @@ on:
     paths:
       - "{{spec_dir}}/**"
       - "{{ground_truth_dir}}/**"
+      - "docs/context/**"
+      - "docs/release/**"
       - "tools/carrydown/**"
   push:
     branches: [{{branch}}]
     paths:
       - "{{spec_dir}}/**"
       - "{{ground_truth_dir}}/**"
+      - "docs/context/**"
+      - "docs/release/**"
       - "tools/carrydown/**"
 
 permissions:

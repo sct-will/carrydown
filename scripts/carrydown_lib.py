@@ -777,8 +777,9 @@ _PROJECT_TEXT = ("name", "slug", "id_prefix", "repo", "branch", "epic_title", "s
                  "spec_dir", "ground_truth", "project_title", "dev_skill", "dev_skill_path")
 
 
-def _as_text(row, key, where, P):
-    """Keep a text field as text: a number becomes text, empty means left out, anything else is a problem."""
+def _as_text(row, key, where, P, person=False):
+    """Keep a text field as text: a number becomes text, empty means left out, anything else is a problem.
+    person=True names the person and the key and says nothing else: a record of a person is never echoed."""
     if key not in row:
         return
     v = row[key]
@@ -787,7 +788,10 @@ def _as_text(row, key, where, P):
     elif isinstance(v, (int, float)) and not isinstance(v, bool):
         row[key] = str(v)
     elif not isinstance(v, str):
-        P.append(f"{where}.{key} must be text, got {_kind(v)}. Write it on one line, in quotes if it holds a colon and a space")
+        if person:
+            P.append(f"{where}: {key} has the wrong type")
+        else:
+            P.append(f"{where}.{key} must be text, got {_kind(v)}. Write it on one line, in quotes if it holds a colon and a space")
 
 
 def type_problems(plan):
@@ -832,14 +836,18 @@ def type_problems(plan):
     for group, lst in rows.items():
         for n, row in enumerate(lst, 1):
             if not isinstance(row, dict):
-                P.append(f"{group}: entry {n} must be a mapping such as `- id: ...`, got {_kind(row)} {row!r}"[:200])
+                P.append(f"{group}: entry {n} must be a mapping such as `- id: ...`, got {_kind(row)}")   # the entry itself is never echoed
                 continue
             where = f"{group} entry {n}"
             kept = modern and group in ("people", "advisors")   # reported by key, never converted or echoed
+            is_person = group in ("people", "advisors")
+            if is_person:   # a person is named by id, or by position when the id is missing or not text
+                who = row.get("id") if isinstance(row.get("id"), str) and row.get("id") else f"#{n}"
+                where = f"{'person' if group == 'people' else 'advisor'} {who}"
             for k in _TEXT_FIELDS.get(group, ()):
                 if kept and (group == "advisors" or k in STAFFING_KEYS):
                     continue
-                _as_text(row, k, where, P)
+                _as_text(row, k, where, P, person=is_person)
             for k in _TEXT_LIST_FIELDS.get(group, ()):
                 if kept:
                     continue
@@ -849,7 +857,10 @@ def type_problems(plan):
                 if isinstance(v, str):
                     row[k] = [v] if v.strip() else []
                 elif not isinstance(v, list) or not all(isinstance(x, str) for x in v):
-                    P.append(f"{where}.{k} must be text or a list of text, got {_kind(v)}")
+                    if is_person:
+                        P.append(f"{where}: {k} has the wrong type")
+                    else:
+                        P.append(f"{where}.{k} must be text or a list of text, got {_kind(v)}")
             for k in _INT_FIELDS.get(group, ()):
                 if row.get(k) is not None and not _is_int(row[k]):
                     P.append(f"{where}.{k} must be a whole number, got {row[k]!r}")
@@ -862,7 +873,7 @@ def type_problems(plan):
             if group == "people" and not kept and row.get("days_off") is not None:
                 v = row["days_off"]
                 if not isinstance(v, list) or not all(isinstance(d, (str, int)) and not isinstance(d, bool) for d in v):
-                    P.append(f"{where}.days_off must be a list of dates, such as [2027-02-22], got {v!r}")
+                    P.append(f"{where}: days_off has the wrong type")
             if group == "items" and row.get("source_refs") is not None:
                 refs = row["source_refs"]
                 if not isinstance(refs, list):
@@ -1802,9 +1813,9 @@ def validate_plan(plan, view=None):
             P.append(f"people: {p.get('id')} has unknown track {p.get('track')!r}")
     if not modern:
         P += staffing_problems(plan)
-    for t in plan["tracks"]:
+    for n, t in enumerate(plan["tracks"], 1):
         if not t.get("id") or not t.get("label"):
-            P.append(f"tracks: each track needs id and label ({t})"[:300])
+            P.append(f"tracks: each track needs id and label (track entry {n})")
         elif len(t["id"]) > MAX_LABEL or not _one_line(t["id"]) or "," in t["id"]:
             P.append(f"tracks: id {t['id'][:60]!r} is a GitHub label, so it is one line with no comma, at most {MAX_LABEL} characters")
         if not _one_line(t.get("label")):
@@ -1893,17 +1904,17 @@ def validate_plan(plan, view=None):
                     if parse_date(m["start"]) <= be and bs <= parse_date(m["end"]):
                         P.append(f"break {br.get('name')!r} overlaps milestone {m.get('number')}")
     cps = {}
-    for c in plan["checkpoints"]:
+    for n, c in enumerate(plan["checkpoints"], 1):
         if not c.get("date") or not _is_date(c.get("date")) or not c.get("name"):
-            P.append(f"checkpoints: need date and name ({c})")
+            P.append(f"checkpoints: need date and name (checkpoint entry {n})")
         else:
             cps[c["date"]] = c
             if _is_weekend(c["date"]):
                 P.append(f"checkpoint {c['date']} is a weekend")
     ext_ids = set()
-    for pi in plan["external"]["items"]:
+    for n, pi in enumerate(plan["external"]["items"], 1):
         if not isinstance(pi.get("id"), int) or not pi.get("label"):
-            P.append(f"external.items: each needs integer id and label ({pi})")
+            P.append(f"external.items: each needs integer id and label (external item entry {n})")
         else:
             ext_ids.add(pi["id"])
     ids = []
@@ -1912,7 +1923,7 @@ def validate_plan(plan, view=None):
     for it in plan["items"]:
         iid = it.get("id")
         if not isinstance(iid, int):
-            P.append(f"items: id must be an integer ({it.get('label')!r})")
+            P.append("items: id must be an integer (an item has none, or one that is not a whole number)")
             continue
         if iid in ids:
             P.append(f"item {iid}: duplicate id")

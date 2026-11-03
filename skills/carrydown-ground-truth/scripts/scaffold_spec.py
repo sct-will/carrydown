@@ -39,6 +39,10 @@ conventions_text = L.conventions_text
 schedule_table = L.schedule_table
 
 
+# The files the checker copy in a project carries: check_specs.py and every module it imports.
+CHECKER_COPY = ("check_specs.py", "carrydown_lib.py", "release_schema.py", "detectors.py")
+
+
 def milestone_table(plan):
     rows = []
     for m in plan["milestones"]:
@@ -243,6 +247,39 @@ PLACEHOLDERS = (
 )
 
 
+# Lines the project's .gitignore must hold so that originals, staffing records and the pointer to the
+# private workspace never reach git. --init appends each one that is missing.
+IGNORE_LINES = ("docs/source/", "people.yaml", ".carrydown/local.yaml", ".carrydown/cache/")
+
+
+def ignore_has(text, entry):
+    """True when a line of a .gitignore is exactly entry (a leading slash and trailing blanks ignored)."""
+    wanted = entry.strip("/").strip()
+    return any(line.strip().strip("/").strip() == wanted for line in text.splitlines() if not line.strip().startswith("#"))
+
+
+def ignore_additions(text):
+    """The lines of IGNORE_LINES that text does not hold yet, in order."""
+    return [line for line in IGNORE_LINES if not ignore_has(text, line)]
+
+
+def write_ignore_lines(root, apply):
+    """Append the missing lines of IGNORE_LINES to the .gitignore of the project and print each one.
+    A dry run prints `would append` instead and writes nothing. A line the file already holds is not
+    added twice, so a pointer line that workspace.py init wrote stays single."""
+    path = root / ".gitignore"
+    text = L.read_text(path) if path.is_file() else ""
+    missing = ignore_additions(text)
+    if not missing:
+        print(f"{path.name} already holds " + ", ".join(IGNORE_LINES))
+        return
+    for line in missing:
+        print(f"{'appending to' if apply else 'would append to'} {path.name}: {line}")
+    if apply:
+        new = text + ("" if not text or text.endswith("\n") else "\n") + "".join(line + "\n" for line in missing)
+        L.write_text(path, new)
+
+
 def init_plan(root, a, git_top):
     """Write a starter plan.yaml from the template, with the project name filled in."""
     target = L.find_plan(root, a.plan) if a.plan is not None else root / "docs/spec/plan.yaml"
@@ -269,6 +306,7 @@ def init_plan(root, a, git_top):
     print(f"{'writing' if a.apply else 'would write'} {rel}")
     if a.apply:
         L.write_text(target, text)
+    write_ignore_lines(root, a.apply)
     todo = []
     for key, value, what in PLACEHOLDERS:
         if re.search(rf"(?m)^  {key.split('.')[1]}: {re.escape(value)}(\s|$)", text):
@@ -517,11 +555,11 @@ def main(argv=None):
             except OSError as e:
                 L.die(f"cannot create {folder}: {e.strerror or e}")
     if a.ci:
-        gt_dirs = {str(Path(source["path"]).parent) for source in L.rendered_sources(plan)}
-        gt_dir = sorted(gt_dirs)[0]
+        gt_dirs = {str(Path(source["path"]).parent) for source in L.rendered_sources(plan) if source.get("path")}
+        gt_dir = sorted(gt_dirs)[0] if gt_dirs else "docs/ground-truth"
         wf = L.fill(L.read_template("check-specs-workflow.yml"), {"spec_dir": plan["project"]["spec_dir"], "ground_truth_dir": gt_dir, "branch": plan["project"]["branch"]})
         plan_write(root / ".github/workflows/check-specs.yml", wf, "ci workflow")
-        for name in ("check_specs.py", "carrydown_lib.py"):
+        for name in CHECKER_COPY:
             plan_write(root / "tools/carrydown" / name, (Path(__file__).resolve().parent / name).read_text(encoding="utf-8"), "checker copy")
     if a.refresh_headers:
         refresh(plan, root, a, actions)
