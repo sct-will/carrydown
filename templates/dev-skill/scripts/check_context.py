@@ -110,12 +110,22 @@ def shown_id(text, number):
     return re.sub(r"[^A-Za-z0-9._-]", "", str(text))[:40] or "(no id)"
 
 
+# The second line of a stale message, in plain words, with the fixed code in brackets for the plan owner.
+REASONS = {
+    "superseded": "a newer release replaced this one. Pull the default branch",
+    "withdrawn": "the plan owner withdrew this release",
+    "expired": "the release has passed its expiry date",
+    "could-not-refresh": "the default branch could not be fetched to confirm the context is current, and the offline grace period does not apply",
+    "sha256-mismatch": "the default branch holds a different version of this context. Pull the default branch",
+    "approval-not-found": "the default branch has no active release that lists this context",
+}
+
+
 def message(kind, item_id, reason="", extra=()):
     code, first, action = KINDS[kind]
     lines = [first.format(id=item_id)]
     if reason:
-        phrase = reason.replace("-", " ")
-        lines.append("reason: " + (reason if phrase == reason else f"{phrase} ({reason})"))
+        lines.append(f"reason: {REASONS.get(reason, reason.replace('-', ' '))} ({reason})")
     lines += list(extra)
     lines.append(action)
     return code, lines

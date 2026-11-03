@@ -41,6 +41,11 @@ NOW = dt.datetime(2027, 2, 1, 12, 0, 0, tzinfo=UTC)
 TIME = "2027-01-20T14:03:00Z"
 FIRST = "carrydown: no approved context for WI-06"
 STALE = "carrydown: the approved context for WI-06 is stale"
+
+
+def reason_line(code):
+    """The second line of a stale message: the plain words, then the fixed code."""
+    return f"reason: {CC.REASONS[code]} ({code})"
 CITES = "carrydown: WI-06 cites an obligation that is not in its approved context"
 RESTRICTED = "carrydown: WI-06 has a restricted destination that this project does not publish"
 OFFLINE_WARNING = "freshness not confirmed; within offline grace"
@@ -235,7 +240,7 @@ class LocalValidityTests(LocalProject):
             self.assertEqual(rid, self.rid)
             self.write_receipt(self.root, rid, data)
             code, lines = self.run_check(self.root)
-            self.assertEqual((code, lines[0], lines[1]), (11, STALE, f"reason: {reason}"), state)
+            self.assertEqual((code, lines[0], lines[1]), (11, STALE, reason_line(reason)), state)
 
     def test_the_spec_citing_a_section_the_bundle_lacks_is_the_third_message(self):
         spec_path = self.root / SPEC_FILE
@@ -262,7 +267,7 @@ class LocalValidityTests(LocalProject):
 
     def test_without_a_fetch_and_without_a_record_the_context_is_stale(self):
         code, lines = self.run_check(self.root, refresh=False)
-        self.assertEqual((code, lines[0], lines[1]), (11, STALE, "reason: could not refresh (could-not-refresh)"))
+        self.assertEqual((code, lines[0], lines[1]), (11, STALE, reason_line("could-not-refresh")))
         self.assertEqual(lines[2:], ["Ask the plan owner to re-release, or connect and refresh."])
         self.assertFalse((self.root / ".carrydown").exists(), "a refused check records nothing")
 
@@ -409,7 +414,7 @@ class FreshnessTests(OriginTests):
         self.write_receipt(self.pub, rid, data)
         self.publish("supersede")
         code, lines = self.run_check(self.eng)
-        self.assertEqual((code, lines[0], lines[1]), (11, STALE, "reason: superseded"))
+        self.assertEqual((code, lines[0], lines[1]), (11, STALE, reason_line("superseded")))
         self.assert_clean(lines)
         self.assertFalse((self.eng / ".carrydown").exists(), "no refresh is recorded for a stale result")
 
@@ -418,7 +423,7 @@ class FreshnessTests(OriginTests):
         self.write_receipt(self.pub, self.rid, data)
         self.publish("withdraw")
         code, lines = self.run_check(self.eng)
-        self.assertEqual((code, lines[0], lines[1]), (11, STALE, "reason: withdrawn"))
+        self.assertEqual((code, lines[0], lines[1]), (11, STALE, reason_line("withdrawn")))
 
     def test_a_replacement_that_lists_the_same_bytes_is_fresh_and_the_record_names_the_new_request(self):
         new_rid, new_data = build_receipt(self.files, nonce="b2" * 16, supersedes=self.rid)
@@ -438,7 +443,7 @@ class FreshnessTests(OriginTests):
         self.write_receipt(self.pub, self.rid, old_data)
         self.write_receipt(self.pub, new_rid, new_data)
         self.publish("replace with new text")
-        self.assertEqual(self.run_check(self.eng)[1][:2], [STALE, "reason: superseded"])
+        self.assertEqual(self.run_check(self.eng)[1][:2], [STALE, reason_line("superseded")])
 
     def test_the_default_branch_listing_other_bytes_is_a_digest_mismatch(self):
         changed = dict(self.files)
@@ -447,7 +452,7 @@ class FreshnessTests(OriginTests):
         (self.pub / "docs" / "release" / f"{self.rid}.receipt.json").unlink()
         self.write_receipt(self.pub, new_rid, new_data)
         self.publish("other bytes")
-        self.assertEqual(self.run_check(self.eng)[1][:2], [STALE, "reason: sha256 mismatch (sha256-mismatch)"])
+        self.assertEqual(self.run_check(self.eng)[1][:2], [STALE, reason_line("sha256-mismatch")])
 
     def test_fetching_another_branch_is_not_freshness(self):
         self.git(self.pub, "checkout", "-q", "-b", "feature")
@@ -456,7 +461,7 @@ class FreshnessTests(OriginTests):
         (self.pub / "docs" / "release" / f"{self.rid}.receipt.json").unlink()
         self.publish("main drops the receipt")
         code, lines = self.run_check(self.eng)
-        self.assertEqual((code, lines[0], lines[1]), (11, STALE, "reason: approval not found (approval-not-found)"))
+        self.assertEqual((code, lines[0], lines[1]), (11, STALE, reason_line("approval-not-found")))
 
     def test_the_default_branch_is_found_when_origin_head_is_not_set_locally(self):
         self.git(self.eng, "remote", "set-head", "origin", "-d")
@@ -476,9 +481,9 @@ class FreshnessTests(OriginTests):
         before = NOW - dt.timedelta(seconds=1)
         self.assertEqual(self.run_check(self.eng, now=before)[0], 0)
         code, lines = self.run_check(self.eng, now=NOW)
-        self.assertEqual((code, lines[0], lines[1]), (11, STALE, "reason: expired"))
+        self.assertEqual((code, lines[0], lines[1]), (11, STALE, reason_line("expired")))
         code, lines = self.run_check(self.eng, now=NOW + dt.timedelta(days=30))
-        self.assertEqual(lines[1], "reason: expired")
+        self.assertEqual(lines[1], reason_line("expired"))
 
     def test_the_check_writes_only_the_cache(self):
         before = {p: p.read_bytes() for p in self.eng.rglob("*") if p.is_file() and ".git" not in p.parts}
@@ -502,7 +507,7 @@ class OfflineGraceTests(OriginTests):
         self.refresh_once()
         self.take_origin_away()
         code, lines = self.run_check(self.eng, now=NOW + dt.timedelta(days=7, seconds=1))
-        self.assertEqual((code, lines[0], lines[1]), (11, STALE, "reason: could not refresh (could-not-refresh)"))
+        self.assertEqual((code, lines[0], lines[1]), (11, STALE, reason_line("could-not-refresh")))
         self.assert_clean(lines)
 
     def test_a_refusal_after_the_grace_period_does_not_extend_it(self):
@@ -535,7 +540,7 @@ class OfflineGraceTests(OriginTests):
     def test_first_use_with_no_record_does_not_get_grace(self):
         self.take_origin_away()
         code, lines = self.run_check(self.eng)
-        self.assertEqual((code, lines[1]), (11, "reason: could not refresh (could-not-refresh)"))
+        self.assertEqual((code, lines[1]), (11, reason_line("could-not-refresh")))
 
     def test_a_missing_malformed_future_or_mismatched_record_grants_no_grace(self):
         self.refresh_once()
@@ -558,7 +563,7 @@ class OfflineGraceTests(OriginTests):
         for name, text in bad_records.items():
             path.write_text(text, encoding="utf-8")
             code, lines = self.run_check(self.eng)
-            self.assertEqual((code, lines[1]), (11, "reason: could not refresh (could-not-refresh)"), name)
+            self.assertEqual((code, lines[1]), (11, reason_line("could-not-refresh")), name)
         path.unlink()
         self.assertEqual(self.run_check(self.eng)[0], 11)
         path.write_text(json.dumps(good), encoding="utf-8")
@@ -586,11 +591,11 @@ class OfflineGraceTests(OriginTests):
         self.take_origin_away()
         self.assertEqual(self.run_check(self.eng, now=NOW + dt.timedelta(days=1, seconds=-1))[0], 0)
         code, lines = self.run_check(self.eng, now=NOW + dt.timedelta(days=1))
-        self.assertEqual((code, lines[1]), (11, "reason: expired"))
+        self.assertEqual((code, lines[1]), (11, reason_line("expired")))
 
     def test_a_checkout_with_no_origin_at_all_is_unreachable(self):
         self.git(self.eng, "remote", "remove", "origin")
-        self.assertEqual(self.run_check(self.eng)[1][1], "reason: could not refresh (could-not-refresh)")
+        self.assertEqual(self.run_check(self.eng)[1][1], reason_line("could-not-refresh"))
 
 
 @unittest.skipUnless(HAS_GIT, "git is needed for the fake origin")
