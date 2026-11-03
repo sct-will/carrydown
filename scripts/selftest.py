@@ -348,7 +348,7 @@ def planning_review(chk, variant, plan_text, people_text):
     step("a zero-slack item is reported", chk + ["--report", "--plan", variant("noslack", late)],
          contains=["WI-02 completes on its checkpoint date 2027-02-12: no slack."], absent=("Traceback", "Every item completes before its checkpoint."))
     step("a zero-slack item is advice, not a finding", chk + ["--plan", variant("noslackcheck", late)], expect=1,
-         contains=["Target row is"], absent=("Traceback", "planning review:"))   # the only finding is the stale header of WI-02
+         contains=["Target row does not match plan.yaml"], absent=("Traceback", "planning review:"))   # the only finding is the stale header of WI-02
     themed = plan_text.replace('    slug: limits-and-duties\n', '    slug: limits-and-duties\n', 1)
     i = themed.index("    slug: limits-and-duties\n")
     themed = themed[:i] + themed[i:].replace('    theme: "expense service"\n', '    theme: "rules module"\n', 1)
@@ -453,7 +453,7 @@ def names(tmp, plan_text):
     spec = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
     spec.write_text(spec.read_text(encoding="utf-8") + "\nLong reviewed this with idris.\n", encoding="utf-8")
     step("a capitalized name part and a handle are still flagged", chk, expect=1,
-         contains=["person name or handle from the plan at line", "Long reviewed this with idris."])
+         contains=["person name or handle from the plan at docs/spec/m1-submit-report/wi-01-service-scaffold.md:"], absent=("Long reviewed this with idris.",))
 
 
 def confidentiality(tmp):
@@ -1021,7 +1021,7 @@ def main():
              contains=["engineers' skill: expense-approvals-dev"])
         step("installed copy of carrydown-plan-to-github refreshes only the references", [PY, str(gh / "scripts/generate_dev_skill.py"), "--root", str(ROOT / SAMPLE), "--only", "references"],
              contains=["would write: references/work-items.md", "would write: references/ground-truth-map.md"], absent=("Traceback", "SKILL.md"))
-        ships = ("generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_repair.py", "github_sync.py", "github_token.py", "plan_repair.py", "release_schema.py", "scaffold_spec.py")
+        ships = ("generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_repair.py", "github_sync.py", "github_token.py", "plan_repair.py", "release_schema.py", "scaffold_spec.py", "detectors.py")
         extra = sorted(x.name for x in (gh / "scripts").glob("*.py") if x.name not in ships)
         results.append((not extra, "carrydown-plan-to-github ships only the scripts it runs"))
         print(("PASS " if not extra else "FAIL ") + "carrydown-plan-to-github ships only the scripts it runs" + (f" (remove {', '.join(extra)})" if extra else ""))
