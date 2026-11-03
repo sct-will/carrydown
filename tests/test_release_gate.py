@@ -246,6 +246,25 @@ class GateDecisionTests(TempCase):
         self.assertIn("allow release docs/spec/README.md", line)
         self.assertNotIn("Expense", line)
 
+    def test_a_dry_run_gets_the_same_answer_and_logs_nothing(self):
+        log = self.ws / "publication" / "gate.log"
+        before = log.read_bytes() if log.exists() else None
+        ctx = self.context()
+        digest = self.digest_of("docs/spec/README.md")
+        for args in (("candidate", "candidate/x.md", ZERO, "workspace"), ("draft", "docs/spec/not-released.md", ZERO),
+                     ("release", "docs/spec/README.md", digest)):
+            kw = {"verified_context": ctx} if args[0] == "release" else {}
+            self.assertTrue(self.check(*args, dry_run=True, **kw).allowed, args)
+        self.assertEqual(log.read_bytes() if log.exists() else None, before, "a dry run added a line to the gate log")
+        # the same questions without dry_run are logged, one line each
+        for args in (("candidate", "candidate/x.md", ZERO, "workspace"), ("release", "docs/spec/README.md", digest)):
+            kw = {"verified_context": ctx} if args[0] == "release" else {}
+            self.assertEqual(self.check(*args, **kw), self.check(*args, dry_run=True, **kw))
+        lines = log.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(len(lines) - (len(before.splitlines()) if before else 0), 2)
+        self.assertEqual(self.check("draft", "docs/spec/README.md", ZERO, dry_run=True).code,
+                         self.check("draft", "docs/spec/README.md", ZERO).code)
+
     def test_a_draft_write_to_an_approved_file_that_was_edited_is_refused(self):
         rel = "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
         d = self.check("draft", rel, ZERO)

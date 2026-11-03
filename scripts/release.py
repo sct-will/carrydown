@@ -194,12 +194,13 @@ def created_text(a):
     return B.now_text()
 
 
-def workspace_put(project, rel, data):
+def workspace_put(project, rel, data, dry_run=False):
     """Write a file inside the private workspace. Candidate-class writes are always allowed; the gate is
-    asked so the write is logged."""
+    asked so the write is logged. dry_run marks the dry run's own bookkeeping (the preview digest): the
+    gate is asked without a log line, so a dry run adds nothing to publication/gate.log."""
     ws = project.need_workspace()
     data = bytes(data)
-    RG.require("candidate", rel, RS.sha256_bytes(data), "workspace", project.root)
+    RG.require("candidate", rel, RS.sha256_bytes(data), "workspace", project.root, dry_run=dry_run)
     path = ws / rel
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(data)
@@ -1057,7 +1058,8 @@ def cmd_release(a):
             return 1
         asm, params, release_id = shown
         binding = shown_binding(release_id, params, used_exceptions(asm))
-        workspace_put(project, SHOWN_RECORD, (json.dumps({"binding": binding, "release_id": release_id}, sort_keys=True) + "\n").encode("utf-8"))
+        workspace_put(project, SHOWN_RECORD, (json.dumps({"binding": binding, "release_id": release_id}, sort_keys=True) + "\n").encode("utf-8"),
+                      dry_run=True)
         if board_status == "missing":
             board_line = f"the board {str(plan_project_block(project).get('project_title'))!r} (created empty first, then filled)"
             board_payload = True

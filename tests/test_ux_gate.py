@@ -85,6 +85,8 @@ class MockCase(unittest.TestCase):
 class ReleaseCommandTests(MockCase):
     def test_the_dry_run_derives_the_repository_id_the_audience_and_the_board_and_writes_nothing(self):
         before = F.tree_state(self.root) if hasattr(F, "tree_state") else None
+        log = self.ws / "publication" / "gate.log"
+        log_before = log.read_bytes() if log.exists() else None
         code, out, err = self.release()
         self.assertEqual(code, 0, out + err)
         self.assertIn(f"Repository: {REPO} (numeric id 4200) on github.com.", out)
@@ -96,6 +98,7 @@ class ReleaseCommandTests(MockCase):
         self.assertEqual(len(list((self.root / "docs" / "release").glob("*.receipt.json"))), 1)     # only the sample's own
         self.assertFalse(any((self.ws / "requests").iterdir()))
         self.assertTrue((self.ws / R.SHOWN_RECORD).is_file())      # the digest of what the owner saw, in the private workspace
+        self.assertEqual(log.read_bytes() if log.exists() else None, log_before, "the dry run added a line to the gate log")
         if before is not None:
             self.assertEqual(F.tree_state(self.root), before)
 

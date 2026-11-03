@@ -24,7 +24,9 @@ What the gate decides
 A receipt, a caller-supplied flag and a plain dict are never a context. The gate has no command-line
 option and no environment variable that changes a decision, and none will be added. Each allowed write
 appends one line (time, request id, decision, write class, artifact path, no content) to
-<workspace>/publication/gate.log when the project has a private workspace.
+<workspace>/publication/gate.log when the project has a private workspace. A dry run asks with
+dry_run=True: the decision is the same and no line is logged, so the log holds only the writes of runs
+with --apply.
 
 This module is imported by the other scripts. Run with --help to see this text.
 """
@@ -249,8 +251,9 @@ def _deny(state, request_id, write_class, artifact_path, code):
     return Decision(False, "deny", code, request_id)
 
 
-def _allow(state, request_id, write_class, artifact_path, outcome="allow"):
-    _workspace_log(state, request_id, outcome, write_class, artifact_path)
+def _allow(state, request_id, write_class, artifact_path, outcome="allow", dry_run=False):
+    if not dry_run:
+        _workspace_log(state, request_id, outcome, write_class, artifact_path)
     return Decision(True, outcome, "" if outcome == "allow" else "no-handling-policy", request_id)
 
 
@@ -372,7 +375,7 @@ def _check_state_only(state, artifact_path, content_digest, request_id, ctx, now
 
 
 def check(write_class, artifact_path, content_digest, destination, root, *,
-          request_id=None, event_id=None, verified_context=None):
+          request_id=None, event_id=None, verified_context=None, dry_run=False):
     """Ask whether a write is permitted. Call this before every write outside the private workspace.
 
     write_class is one of WRITE_CLASSES. artifact_path is the file, relative to root, or the payload path
@@ -386,6 +389,9 @@ def check(write_class, artifact_path, content_digest, destination, root, *,
     with source_classification, which can only narrow the answer: a rendering of a source that is not
     repo-readers or public is denied. Nothing else counts as a context.
 
+    dry_run is True when the caller only previews the write: the decision is the same, and the gate log
+    gets no line, so the log never records an allowed write that did not happen.
+
     An unknown write class is a bug in the caller and raises ValueError."""
     if write_class not in WRITE_CLASSES:
         raise ValueError(f"unknown write class {write_class!r}. Use one of: {', '.join(WRITE_CLASSES)}")
@@ -394,7 +400,7 @@ def check(write_class, artifact_path, content_digest, destination, root, *,
     if write_class == "candidate":
         if _is_legacy(state):
             return Decision(True, "legacy", "no-handling-policy", request_id)
-        return _allow(state, request_id, write_class, artifact_path)
+        return _allow(state, request_id, write_class, artifact_path, dry_run=dry_run)
     if _is_legacy(state):
         if not state.workspace and str(artifact_path).replace("\\", "/") not in UNSOURCED_DRAFTS:
             # a project with a workspace, or one that is creating its workspace pointer, is answering step 0
@@ -415,7 +421,7 @@ def check(write_class, artifact_path, content_digest, destination, root, *,
     if code:
         return _deny(state, request_id, write_class, artifact_path, code)
     rid = request_id or (verified_context.request_id if isinstance(verified_context, V.VerifiedContext) else None)
-    return _allow(state, rid, write_class, artifact_path)
+    return _allow(state, rid, write_class, artifact_path, dry_run=dry_run)
 
 
 def require(write_class, artifact_path, content_digest, destination, root, **kwargs):

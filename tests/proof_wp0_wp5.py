@@ -829,6 +829,37 @@ def _(base):
     return line_with(out, "obligation not found: architecture 3.5")
 
 
+def tree_digests(folder):
+    """{relative path: sha256} of every file under folder, .git excluded."""
+    folder = Path(folder)
+    return {p.relative_to(folder).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in folder.rglob("*") if p.is_file() and ".git" not in p.relative_to(folder).parts}
+
+
+@claim("WP0 gate log: the dry runs of compile_bundles.py and release.py release leave publication/ unchanged; release adds only the preview digest")
+def _(base):
+    project = copy_sample(base)
+    git(base, project, "init", "-q", "-b", "main")
+    ws = Path(base) / "ws"
+    code, out = run(base, ["workspace.py", "init", "--root", project, "--slug", "proof", "--workspace", ws, "--apply"], cwd=project)
+    check(code == 0, out[-300:])
+    shutil.move(str(project / "people.yaml"), str(ws / "people.yaml"))
+    seen = []
+    for args, added in ((["compile_bundles.py", "--root", project], set()),
+                        (["release.py", "release", "--root", project, "--repository-id", "4200", "--no-github"], {"candidate/shown.json"})):
+        before_ws, before_project = tree_digests(ws), tree_digests(project)
+        code, out = run(base, args, cwd=project)
+        check(code == 0, f"{args[0]} dry run exit {code}: {out[-400:]}")
+        after_ws = tree_digests(ws)
+        changed = sorted(k for k in set(before_ws) | set(after_ws) if before_ws.get(k) != after_ws.get(k))
+        check(not [k for k in changed if k.startswith("publication/")], f"{args[0]} dry run changed {changed}")
+        check(set(changed) == added, f"{args[0]} dry run changed {changed}, expected {sorted(added)}")
+        check(tree_digests(project) == before_project, f"{args[0]} dry run changed the project")
+        seen.append(f"{args[0]}: changed {changed or 'nothing'}")
+    check(not (ws / "publication" / "gate.log").exists(), "a dry run created the gate log")
+    return "; ".join(seen) + "; no gate.log"
+
+
 @claim("WP5 prepare refuses no bundle containing the release id, and the committed sample release has none")
 def _(base):
     _, ws, release_id, out = prepare_sample(base)

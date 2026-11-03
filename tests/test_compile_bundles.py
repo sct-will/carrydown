@@ -389,6 +389,10 @@ class CommandLineTests(unittest.TestCase):
         self.assertIn("Whether each bundle is enough to do the work is your review.", out)
         self.assertEqual(list(ws.glob("candidate")), [])
         self.assertFalse((self.root / "docs" / "context").exists())
+        # the gate is asked as a dry run: it logs no "allow" line for files that were not written
+        self.assertFalse((ws / "publication").exists(), "the dry run wrote the gate log")
+        self.assertEqual(sorted(p.relative_to(ws).as_posix() for p in ws.rglob("*") if p.is_file()),
+                         sorted("renderings/" + p.name for p in RENDERINGS.glob("*.md")))
 
     def test_apply_writes_the_candidate_folder_of_the_workspace_by_default(self):
         ws = self.make_workspace()

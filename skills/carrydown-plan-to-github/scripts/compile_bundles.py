@@ -619,7 +619,8 @@ def main(argv=None):
     inside_project = L.path_inside_repository(root, out)
     write_class = "candidate" if workspace is not None and _within(out, workspace) or not inside_project else "draft"
     for rel in sorted(result.files):
-        decision = RG.check(write_class, rel, L.sha256_text(result.files[rel].decode("utf-8")), "workspace" if write_class == "candidate" else "engineering", str(root))
+        decision = RG.check(write_class, rel, L.sha256_text(result.files[rel].decode("utf-8")), "workspace" if write_class == "candidate" else "engineering",
+                            str(root), dry_run=not a.apply)
         if not decision.allowed:
             L.die(f"{decision.code}: the release gate refused the write of {rel}. Nothing was written")
     stale = []
