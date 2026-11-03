@@ -4,7 +4,7 @@
 >
 > - The confidentiality work is merged to `main` through a reviewed pull request.
 > - The real GitHub acceptance run in [the organization setup guide](setup.md#acceptance-on-real-github) has been performed and recorded. **It has not been performed.** Until it is, every answer below that depends on the independent verifier, the staging repository or GitHub publication has been tested only against a local mock of GitHub.
-> - The end-to-end "yes" and "no" scenarios run in continuous integration on every change. They are added by a separate change that this branch does not contain yet.
+> - The end-to-end "yes" and "no" scenarios and the six negative tests pass in continuous integration. They are in this branch and in its workflow, and they pass when run locally on Python 3.9 and the current Python. They have not yet run on the hosted runners for this branch.
 > - A person has completed the documentation checklist and has checked each claim here against the tests, and the plan owner has signed off the wording.
 
 Plain-language answers about what carrydown does with your documents, your staffing notes and your engineers' coding agents, and what it cannot do. Each answer carries one of three labels: **supported** (implemented, documented and tested), **supported with prerequisites** (implemented and tested, but needs configuration your organization provides), or **planned** (the design exists, the feature does not).

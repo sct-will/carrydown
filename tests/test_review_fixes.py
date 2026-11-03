@@ -264,5 +264,19 @@ class StalePublicSampleTests(unittest.TestCase):
         self.assertIn("Legacy pending replacement", row)
 
 
+class DraftNoticeTests(unittest.TestCase):
+    """The draft notice of the enterprise security questions said the scenarios were "added by a separate
+    change that this branch does not contain yet". Work package 11 added them and the workflow runs them."""
+
+    def test_the_notice_no_longer_says_the_scenarios_are_missing(self):
+        text = (ROOT / "docs" / "enterprise-security.md").read_text(encoding="utf-8")
+        self.assertNotIn("does not contain yet", text)
+        self.assertIn("They have not yet run on the hosted runners", text)
+        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        self.assertIn("python tests/scenario_embedded_release.py", workflow)
+        self.assertIn("python tests/test_negative_release.py ${{ matrix.group }}", workflow)
+        self.assertTrue((ROOT / "tests" / "scenario_embedded_release.py").is_file())
+
+
 if __name__ == "__main__":
     unittest.main()
