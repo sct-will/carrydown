@@ -1069,6 +1069,9 @@ def cmd_release(a):
             items = (items + ", " if items else "") + board_line
         say("")
         say(f"Board: {board_text}." if board_text else "Board: not part of this release.")
+        import workspace as W
+        for line in W.apply_retention(project.need_workspace(), None, False):
+            say(line)
         say("")
         active = None
         try:
@@ -1558,8 +1561,15 @@ def cmd_export(a):
     say(f"{len(items)} approved repository file(s), {len(ev.receipts)} receipt(s). Evidence: "
         + ("local owner approval, not authenticated" if ev.record.approval.type == "local-owner" else "authenticated review on the final head"))
     if project.mode == "yes":
-        return export_yes(a, project, ev, items, previous, f"{project.state.spec_dir}/plan.yaml")
-    return export_no(a, project, ev, items)
+        rc = export_yes(a, project, ev, items, previous, f"{project.state.spec_dir}/plan.yaml")
+    else:
+        rc = export_no(a, project, ev, items)
+    if rc == 0 and project.workspace is not None:
+        # E2: raw_inputs: delete-after-release removes the raw inputs once the release is active and exported
+        import workspace as W
+        for line in W.apply_retention(project.workspace, rid, a.apply, when=getattr(a, "created", None)):
+            say(line)
+    return rc
 
 
 def export_yes(a, project, ev, items, previous, plan_rel):

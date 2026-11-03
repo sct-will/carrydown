@@ -38,7 +38,7 @@ The sections below list these and the smaller inputs the interview also asks for
 | Can everyone who can read this repository see all of these documents and your staffing notes? | Yes: a team whose documents are approved for everyone with repository access. No: a governance policy only the owner and two reviewers may read. | Ask. There is no default, and the answer is never guessed. |
 | If no, which documents are restricted? | The company governance policy. The architecture document is shareable. | All of them. |
 | If no, who may approve that a document is shared with the repository's readers? | Two GitHub logins. | You. Collect logins, never email addresses. |
-| If no, are the raw inputs kept after a release? | Keep them in the private workspace. | Kept in the workspace, never in the repository. The agent records the choice. It does not delete files for you. |
+| If no, are the raw inputs kept after a release? | Keep them in the private workspace. | Kept in the workspace, never in the repository. If you choose deletion, the export deletes the files in the workspace's `sources/` folder after the release and records what it deleted. Copies elsewhere stay. |
 
 The answer picks the path:
 

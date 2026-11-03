@@ -49,6 +49,7 @@ import re
 import stat as _stat
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -248,6 +249,98 @@ def workspace_yaml_text(slug, root, remote, staging, answer="yes"):
 
 def retention_yaml_text(raw_inputs):
     return f"raw_inputs: {raw_inputs}\nhistory: keep\nlimits: {yaml_text(RETENTION_LIMITS)}\n"
+
+
+# ---------------------------------------------------------------------------
+# Retention: raw_inputs: delete-after-release
+# ---------------------------------------------------------------------------
+
+RETENTION_LOG = "retention-log.jsonl"
+
+
+def retention_choice(ws):
+    """keep or delete-after-release, from the workspace's retention.yaml. Anything missing, unreadable or
+    unknown is keep: nothing is deleted on a guess."""
+    path = Path(ws) / "retention.yaml"
+    if not path.is_file() or path.is_symlink():
+        return "keep"
+    try:
+        data = L.load_file(path)
+    except (L.YamlError, L.TextError, OSError):
+        return "keep"
+    value = data.get("raw_inputs") if isinstance(data, dict) else None
+    return value if value == "delete-after-release" else "keep"
+
+
+def raw_inputs(ws):
+    """The raw inputs in <workspace>/sources/, as sorted relative paths, without following any link. A
+    link is listed as itself: deleting it removes the link, never what it points to. A sources folder
+    that is itself a link, or that is missing, holds nothing to delete."""
+    base = Path(ws) / "sources"
+    if base.is_symlink() or not base.is_dir():
+        return []
+    out = []
+    for folder, dirs, files in os.walk(str(base), followlinks=False):
+        here = Path(folder)
+        for name in list(dirs):
+            if (here / name).is_symlink():
+                out.append((here / name).relative_to(base).as_posix())
+                dirs.remove(name)
+        for name in files:
+            out.append((here / name).relative_to(base).as_posix())
+    return sorted(out)
+
+
+def apply_retention(ws, request_id, apply, when=None):
+    """Carry out raw_inputs: delete-after-release once a release is active and exported (specification E2).
+    Returns the lines to print, none when the owner chose keep or nothing is left to delete.
+
+    With apply, every regular file and link under <workspace>/sources/ is removed (a link itself, never
+    its target), the emptied folders under it go too, and one line is appended to
+    <workspace>/retention-log.jsonl: the time, the request id, and each deleted path with its size and
+    SHA-256 (never its content). Without apply nothing changes and the lines say what would go. Deleting
+    here does not remove a copy in a backup, a remote, the workspace's own git history or an earlier clone,
+    and the lines say so."""
+    if retention_choice(ws) != "delete-after-release":
+        return []
+    base = Path(ws) / "sources"
+    paths = raw_inputs(ws)
+    if not paths:
+        return []
+    limits = ("Copies in backups, remotes, the workspace's git history or earlier clones are not removed. "
+              f"The record is {RETENTION_LOG} in the private workspace.")
+    if not apply:
+        return [f"retention: with --apply, {len(paths)} raw input file(s) in the private workspace's sources/ folder would be deleted, "
+                "as the owner chose (delete-after-release). " + limits]
+    deleted = []
+    for rel in paths:
+        target = base / rel
+        entry = {"path": rel}
+        try:
+            if target.is_symlink():
+                entry["link"] = True
+            else:
+                entry["bytes"] = target.stat().st_size
+                entry["sha256"] = L.sha256_file(target)
+            target.unlink()
+        except OSError:
+            continue
+        deleted.append(entry)
+    for folder, dirs, _ in os.walk(str(base), topdown=False, followlinks=False):
+        for name in dirs:
+            try:
+                (Path(folder) / name).rmdir()
+            except OSError:
+                pass
+    stamp = when or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    record = {"time": stamp, "request_id": request_id, "rule": "delete-after-release", "deleted": deleted}
+    with open(str(Path(ws) / RETENTION_LOG), "a", encoding="utf-8", newline="\n") as handle:
+        handle.write(json.dumps(record, sort_keys=True) + "\n")
+    lines = [f"retention: deleted {len(deleted)} raw input file(s) from the private workspace's sources/ folder, as the owner chose "
+             "(delete-after-release). " + limits]
+    if len(deleted) != len(paths):
+        lines.append(f"retention: {len(paths) - len(deleted)} file(s) could not be deleted and are still there; the record lists only what went")
+    return lines
 
 
 def gate_or_die(write_class, rel, text, root):

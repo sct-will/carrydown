@@ -50,6 +50,14 @@ class FormatFieldTests(unittest.TestCase):
     because 1.0 == 1 in Python: a receipt, a request, its receipt template and an event batch with format
     1.0 validated, and the gate took a policy pointer with format 1.0 as well formed."""
 
+    def schema_error(self, call, *args, **kwargs):
+        """Run call and return the SchemaError it raised. No error is a test failure."""
+        try:
+            call(*args, **kwargs)
+        except RS.SchemaError as error:
+            return error
+        self.fail("%s did not refuse" % getattr(call, "__name__", call))
+
     def test_is_format_takes_only_the_integer(self):
         self.assertTrue(RS.is_format(1))
         for value in NOT_ONE:
@@ -60,8 +68,7 @@ class FormatFieldTests(unittest.TestCase):
         receipt = RS.loads_strict(raw)
         RS.validate_receipt(raw)
         for value in NOT_ONE:
-            with self.assertRaises(RS.SchemaError, msg=value):
-                RS.validate_receipt(RS.canonical_json(dict(receipt, receipt_format=value)))
+            self.schema_error(RS.validate_receipt, RS.canonical_json(dict(receipt, receipt_format=value)))
 
     def test_the_request_its_template_and_an_event_refuse_it(self):
         request = {k: v for k, v in sample_request().items() if k != "request_sha256"}
@@ -69,12 +76,10 @@ class FormatFieldTests(unittest.TestCase):
         RS.validate_request(dict(request), check_digest=False)
         RS.validate_event(dict(event), check_digest=False)
         for value in NOT_ONE:
-            with self.assertRaises(RS.SchemaError, msg=value):
-                RS.validate_request(dict(request, request_format=value), check_digest=False)
-            with self.assertRaises(RS.SchemaError, msg=value):
-                RS.validate_request(dict(request, receipt_template=dict(request["receipt_template"], receipt_format=value)), check_digest=False)
-            with self.assertRaises(RS.SchemaError, msg=value):
-                RS.validate_event(dict(event, event_format=value), check_digest=False)
+            self.schema_error(RS.validate_request, dict(request, request_format=value), check_digest=False)
+            self.schema_error(RS.validate_request, dict(request, receipt_template=dict(request["receipt_template"], receipt_format=value)),
+                              check_digest=False)
+            self.schema_error(RS.validate_event, dict(event, event_format=value), check_digest=False)
 
     def test_the_engineers_check_refuses_a_receipt_or_a_cache_with_format_1_0(self):
         _, raw = sample_receipt()
@@ -144,6 +149,95 @@ class PointerSpellingTests(unittest.TestCase):
         report = self.verify({"src/other.py": b"x = 1\n"}, FE.OWNER)
         self.assertTrue(report.ok, report.findings)
         self.assertEqual(report.kind, "no-governed-changes")
+
+
+class RetentionTests(unittest.TestCase):
+    """raw_inputs: delete-after-release (specification E2). Before the fix it was recorded in
+    retention.yaml and never acted on: the raw inputs stayed in the workspace after the release."""
+
+    def setUp(self):
+        import hashlib
+        from sample_tree import copy_sample
+        self.hashlib = hashlib
+        self.tmp = Path(tempfile.mkdtemp(prefix="carrydown-retention-"))
+        self.addCleanup(shutil.rmtree, str(self.tmp), True)
+        home = self.tmp / "home"
+        home.mkdir()
+        self.env = {k: v for k, v in os.environ.items() if k not in ("CARRYDOWN_GITHUB_TOKEN", "GITHUB_TOKEN", "GH_TOKEN")}
+        self.env.update(HOME=str(home), USERPROFILE=str(home), GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1", PYTHONDONTWRITEBYTECODE="1")
+        self.root = self.tmp / "project"
+        copy_sample(self.root)
+        self.ws = self.tmp / "workspace"
+        for args in (["init", "-q", "-b", "main"], ["config", "user.name", "Test Owner"], ["config", "user.email", "test.owner@example.com"]):
+            subprocess.run(["git"] + args, cwd=str(self.root), check=True, capture_output=True, env=self.env)
+
+    def run_script(self, script, *args):
+        run = subprocess.run([sys.executable, str(ROOT / "scripts" / script)] + [str(a) for a in args], cwd=str(self.root),
+                             capture_output=True, text=True, env=self.env, timeout=300)
+        self.assertEqual(run.returncode, 0, run.stdout[-400:] + run.stderr[-400:])
+        return run.stdout + run.stderr
+
+    def release(self, retain):
+        self.run_script("workspace.py", "init", "--root", self.root, "--slug", "proof", "--workspace", self.ws, "--retain", retain, "--apply")
+        sources = self.ws / "sources"
+        (sources / "notes").mkdir(parents=True)
+        (sources / "architecture.docx").write_bytes(b"original bytes of a raw input\n")
+        (sources / "notes" / "interview.txt").write_text("raw interview notes\n", encoding="utf-8")
+        self.outside = self.tmp / "elsewhere.md"
+        self.outside.write_text("a file the owner keeps elsewhere\n", encoding="utf-8")
+        if os.name == "posix":
+            os.symlink(str(self.outside), str(sources / "linked.md"))
+        out = self.run_script("release.py", "prepare", "--root", self.root, "--repository-id", "4200", "--apply")
+        rid = out.split("request id (permission):", 1)[1].split()[0]
+        self.run_script("release.py", "approve", "--root", self.root, "--request", rid, "--local", "--preview-shown", "--apply")
+        dry = self.run_script("release.py", "export", "--root", self.root, "--request", rid)
+        applied = self.run_script("release.py", "export", "--root", self.root, "--request", rid, "--apply")
+        return rid, dry, applied
+
+    def test_delete_after_release_removes_the_raw_inputs_after_the_export_and_records_it(self):
+        rid, dry, applied = self.release("delete-after-release")
+        self.assertIn("would be deleted", dry)
+        self.assertIn("retention: deleted", applied)
+        self.assertEqual(sorted(p.name for p in (self.ws / "sources").iterdir()), [])
+        self.assertTrue(self.outside.is_file(), "the target of a link was deleted")
+        records = [json.loads(x) for x in (self.ws / "retention-log.jsonl").read_text(encoding="utf-8").splitlines()]
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["request_id"], rid)
+        by_path = {d["path"]: d for d in records[0]["deleted"]}
+        self.assertEqual(by_path["architecture.docx"]["sha256"], self.hashlib.sha256(b"original bytes of a raw input\n").hexdigest())
+        self.assertIn("notes/interview.txt", by_path)
+        if os.name == "posix":
+            self.assertEqual(by_path["linked.md"], {"path": "linked.md", "link": True})
+        log = (self.ws / "retention-log.jsonl").read_text(encoding="utf-8")
+        self.assertNotIn("raw interview notes", log)
+        self.assertNotIn("original bytes", log)
+        self.assertTrue((self.root / "docs" / "release" / f"{rid}.receipt.json").is_file(), "the export did not finish first")
+
+    def test_keep_deletes_nothing(self):
+        _, dry, applied = self.release("keep")
+        self.assertNotIn("retention:", dry + applied)
+        self.assertTrue((self.ws / "sources" / "architecture.docx").is_file())
+        self.assertFalse((self.ws / "retention-log.jsonl").exists())
+
+    def test_a_dry_run_or_a_sources_link_changes_nothing(self):
+        import workspace as W
+        ws = self.tmp / "ws"
+        (ws / "sources").mkdir(parents=True)
+        (ws / "retention.yaml").write_text("raw_inputs: delete-after-release\nhistory: keep\n", encoding="utf-8")
+        (ws / "sources" / "a.txt").write_text("a\n", encoding="utf-8")
+        lines = W.apply_retention(ws, "0" * 64, apply=False)
+        self.assertTrue(lines and "would be deleted" in lines[0])
+        self.assertTrue((ws / "sources" / "a.txt").exists())
+        if os.name == "posix":
+            other = self.tmp / "other"
+            other.mkdir()
+            (other / "keep.txt").write_text("keep\n", encoding="utf-8")
+            shutil.rmtree(str(ws / "sources"))
+            os.symlink(str(other), str(ws / "sources"))
+            self.assertEqual(W.apply_retention(ws, "0" * 64, apply=True), [])
+            self.assertTrue((other / "keep.txt").exists())
+        (ws / "retention.yaml").write_text("raw_inputs: delete-after-relase\n", encoding="utf-8")
+        self.assertEqual(W.retention_choice(ws), "keep")
 
 
 if __name__ == "__main__":
