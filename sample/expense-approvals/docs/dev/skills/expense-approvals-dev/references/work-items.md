@@ -15,7 +15,7 @@ Generated from `plan.yaml`. The GitHub issues hold the owners, status and dates 
 
 Target. 2027-04-23. The plan was fitted to it.
 
-Allocation. People are allocated as a percentage of their working time to this plan. By track, the allocation adds up to Workflow 100 percent, Experience 60 percent. The dates in this plan already account for it, so a track at less than 100 percent has fewer working days in each work unit.
+Allocation. The plan owner keeps each person's allocation, start date and days off in a private record. The dates in this plan already account for them.
 
 ## Milestone 1, Submit an expense report (`m1-submit-report`)
 

@@ -1,20 +1,20 @@
 # Contracts quick reference
 
-Where each contract is defined. The owning work item file holds the contract text. When a contract changes, the work item file changes first and this page follows.
+Where each contract is defined. The owning work item file holds the contract text. The approved context of the item, docs/context/<id>.md, holds the source text the contract comes from. When a contract changes, the work item file changes first and this page follows.
 
 ## Where each contract is defined
 
-| Id | Work item | Section | File |
-| --- | --- | --- | --- |
-| WI-01 | Service scaffold, flag and API contract | Contract | `docs/spec/m1-submit-report/wi-01-service-scaffold.md` |
-| WI-02 | Report form and receipt upload | Contract | `docs/spec/m1-submit-report/wi-02-report-form.md` |
-| WI-03 | Approval routing engine | Contract | `docs/spec/m2-route-to-approvers/wi-03-routing-engine.md` |
-| WI-04 | Approver inbox and decisions | Contract | `docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md` |
-| WI-06 | Approval limits and separation of duties | Contract | `docs/spec/m3-enforce-policy/wi-06-limits-and-duties.md` |
-| WI-07 | Audit log and retention | Contract | `docs/spec/m3-enforce-policy/wi-07-audit-log.md` |
-| WI-08 | Notifications and delegates | Contract | `docs/spec/m3-enforce-policy/wi-08-notifications-delegates.md` |
-| WI-09 | Ledger export job | Contract | `docs/spec/m4-pilot/wi-09-ledger-export.md` |
-| WI-11 | Release readiness and runbook | Contract | `docs/spec/m5-release/wi-11-release-readiness.md` |
+| Id | Work item | Section | File | Approved context |
+| --- | --- | --- | --- | --- |
+| WI-01 | Service scaffold, flag and API contract | Contract | `docs/spec/m1-submit-report/wi-01-service-scaffold.md` | `docs/context/wi-01.md` |
+| WI-02 | Report form and receipt upload | Contract | `docs/spec/m1-submit-report/wi-02-report-form.md` | `docs/context/wi-02.md` |
+| WI-03 | Approval routing engine | Contract | `docs/spec/m2-route-to-approvers/wi-03-routing-engine.md` | `docs/context/wi-03.md` |
+| WI-04 | Approver inbox and decisions | Contract | `docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md` | `docs/context/wi-04.md` |
+| WI-06 | Approval limits and separation of duties | Contract | `docs/spec/m3-enforce-policy/wi-06-limits-and-duties.md` | `docs/context/wi-06.md` |
+| WI-07 | Audit log and retention | Contract | `docs/spec/m3-enforce-policy/wi-07-audit-log.md` | `docs/context/wi-07.md` |
+| WI-08 | Notifications and delegates | Contract | `docs/spec/m3-enforce-policy/wi-08-notifications-delegates.md` | `docs/context/wi-08.md` |
+| WI-09 | Ledger export job | Contract | `docs/spec/m4-pilot/wi-09-ledger-export.md` | `docs/context/wi-09.md` |
+| WI-11 | Release readiness and runbook | Contract | `docs/spec/m5-release/wi-11-release-readiness.md` | `docs/context/wi-11.md` |
 
 ## WI-01 Service scaffold, flag and API contract
 
