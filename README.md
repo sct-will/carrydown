@@ -16,7 +16,7 @@ The plan is built around your team's availability and target date. You can also 
 
 ## Start here
 
-**Starting a new plan?** Follow [Install carrydown and start your first plan](docs/setup.md). It covers computer setup, installation and the first conversation with your agent. If you have already installed the skills, use the shortcut at the top of that guide.
+**Starting a new plan?** Follow [Install carrydown and start your first plan](docs/setup.md). It covers computer setup, installation and the first conversation with your agent. If you have already installed the skills, use the shortcut at the top of that guide. The agent asks one extra question before it starts: whether everyone who can read the repository may see all of your documents and staffing notes. Most teams answer yes and nothing else changes. If some documents are confidential, read [who may see your documents](docs/setup.md#before-you-add-documents-who-may-see-them) first.
 
 **Have a plan to review or publish?** Continue with [Review and publish your plan](docs/plan-owner-guide.md).
 
@@ -26,10 +26,12 @@ The plan is built around your team's availability and target date. You can also 
 
 ![A context folder with DOCX, PDF, TXT and PNG files and optional team availability, skills and work preferences feed the carrydown flow. Your AI agent proposes best-match tracks and assignments, plans around capacity and dependencies, and drafts a specification for each work item. After script checks, a second-pass agent review challenges scope, staffing choices, dates, tracks, milestones and dependencies. It produces coverage and risk tables. You decide which findings the agent repairs and approve the result. The agent then creates GitHub epics, issues, a project board and the engineers' skill after dry runs. Engineers name a work item by its identifier, and that skill directs their agent to the specification and cited source sections. An amber thread carries the agreed context through each handoff.](docs/images/handoff.png)
 
-1. **Plan for your team.** Put the ground truth in `docs/source/`. It can include Word, Markdown, plain text, PDF and image files for architecture, requirements, governance rules, development standards and company context. The agent inventories the folder and creates reviewable Markdown renderings. It reports files it cannot read and continues with the sources it can process. Put higher-precedence sources first when they can conflict. If you know the team size and target project duration, include them. You may also supply each engineer's skills and preferred work. The agent uses them to propose best-match tracks and assignments, explains tradeoffs, and falls back to the default assignment approach when the information is missing or unclear. The `carrydown-ground-truth` skill interviews you, then drafts a plan and one specification per work item around your constraints. Each engineer has a track, or lane of work. Each milestone ends with an integrated demonstration.
+*The diagram predates the confidentiality controls and is kept as a legacy picture until it is redrawn. Read it with these two corrections. The context folder can stay outside the project. The engineers' agent reads the approved context of the work item, which holds the exact text of the cited sections, not the source documents.*
+
+1. **Plan for your team.** Tell the agent where the ground truth is. It can include Word, Markdown, plain text, PDF and image files for architecture, requirements, governance rules, development standards and company context. The agent inventories the files and creates reviewable Markdown renderings. It reports files it cannot read and continues with the sources it can process. Put higher-precedence sources first when they can conflict. If you know the team size and target project duration, include them. You may also supply each engineer's skills and preferred work. The agent uses them to propose best-match tracks and assignments, explains tradeoffs, and falls back to the default assignment approach when the information is missing or unclear. The `carrydown-ground-truth` skill interviews you, then drafts a plan and one specification per work item around your constraints. Each engineer has a track, or lane of work. Each milestone ends with an integrated demonstration. Names, skills, days off and allocation are kept in a private file on your machine, not in the plan. Confidential documents can stay outside the project: the first question the agent asks decides whether drafting happens in the repository or in a private workspace.
 2. **Challenge, repair and approve.** After the normal checks, the agent makes a separate adversarial pass over the completed plan and specifications. It looks for missing scope, resource conflicts, dependency errors and better sequencing. Review its coverage and risk tables in `docs/spec/plan-review.md`, then let the agent apply the repairs you accept. You decide the owners, dates, scope and order.
-3. **Publish to GitHub.** Commit and push the approved plan and specifications first. Then say "Put the plan on GitHub." The `carrydown-plan-to-github` skill shows dry runs and asks for approval before creating the issues and board. It creates a parent epic for the plan, a sub-epic for each milestone, and an issue linking to each work item's specification. Finally, it generates the engineers' skill.
-4. **Start a work item.** Each engineer installs the generated skill once, then names the work item identifier, for example, "Work on [work item ID]". The skill directs their agent to read the specification, its cited source sections and the project conventions before planning the code. The generated skill is named after the project.
+3. **Approve, then publish to GitHub.** You see a short preview of what will be shared, with whom and where, and you approve it with the plan. The agent then writes the approved files and a small receipt, and you commit and push them. Then say "Put the plan on GitHub." The `carrydown-plan-to-github` skill shows dry runs and asks for approval before creating the issues and board. It creates a parent epic for the plan, a sub-epic for each milestone, and an issue linking to each work item's specification. Finally, it generates the engineers' skill.
+4. **Start a work item.** Each engineer installs the generated skill once, then names the work item identifier, for example, "Work on [work item ID]". The skill checks that the item's approved context is intact and current. Its agent then reads the specification, the approved context and the project conventions before planning the code. The approved context holds the exact text of the source sections the item cites, and nothing else from your documents. Every reader of the repository can read it, so only text approved for all of them is ever in it. The generated skill is named after the project.
 
 <br />
 
@@ -51,33 +53,43 @@ The sample is based on a fictional expense approvals service, so the company, th
 
 ## What you get
 
-Your AI agent generates these artifacts using the carrydown skills. The plan records each rendered source in precedence order. Every work item can cite sections from one or more sources, with dates and capacity checked against the named team.
+Your AI agent generates these artifacts using the carrydown skills. The plan records each source in precedence order. Every work item can cite sections from one or more sources, with dates and capacity checked against the named team.
 
-- **A plan** in `docs/spec/plan.yaml`: milestones, tracks, owners and dates fitted to your people and time, with a load table and a critical path, and a written reason for every milestone. Optional skills and work preferences inform explainable best-match assignments without becoming prerequisites.
-- **One specification per work item**, the smallest piece of work an engineer can finish and show, citing the sections it comes from and checked against the plan by a script that also runs in continuous integration (automatic checks on every pull request).
+- **A plan** in `docs/spec/plan.yaml`: milestones, tracks, owner ids and dates fitted to your people and time, with a load table and a critical path, and a written reason for every milestone. Optional skills and work preferences inform explainable best-match assignments without becoming prerequisites. The committed plan holds ids and tracks only. Names, skills, days off and allocation stay in a private file on your machine, and the load table and date checks run there.
+- **One specification per work item**, the smallest piece of work an engineer can finish and show, citing the sections it comes from and checked against the plan by a script that also runs in continuous integration (automatic checks on every pull request). The checks pass from a clean clone, with no private workspace and no original documents.
+- **One approved context per work item** in `docs/context/`: the exact text of the source sections the item cites, the decisions that settle conflicts between them and what the text may be used for. You approve this text for everyone who can read the repository, and it is the only part of your documents that reaches the engineers' agents.
+- **A release receipt** in `docs/release/`: a small public file that names the approved release, its state and its expiry, so the checks and the engineers' skill can find it.
 - **A second-pass review report**, with source coverage, evidence, reasoning and risk, plus your decisions and the checks on accepted repairs. The agent challenges how the plan will work for each engineer, beyond the script's consistency checks.
 - **GitHub issues**, one per work item under a sub-epic per milestone, each telling the engineer's agent what to read.
 - **A GitHub Project board** with work units, tracks, dates and checkpoints filled in.
-- **The engineers' skill**, generated from your specifications and committed in your repository, so "Work on [work item ID]" tells the coding agent to read that item's specification and its sections before touching code.
+- **The engineers' skill**, generated from your specifications and committed in your repository, so "Work on [work item ID]" tells the coding agent to check and read that item's specification and approved context before touching code.
 
-The plan and specifications stay in version control, with source citations, recorded planning decisions and automated consistency checks. Your team reviews the generated work and approves publication. These provide a practical foundation for governing AI-generated planning and engineering handoffs.
+The plan and specifications stay in version control, with source citations, recorded planning decisions and automated consistency checks. Your team reviews the generated work and approves what is shared and what is published. These provide a practical foundation for governing AI-generated planning and engineering handoffs.
 
 <details>
 <summary>Where the files go in your project</summary>
 
 ```text
 docs/
-  ground-truth/        rendered Markdown, section index, figures
   spec/
-    plan.yaml          the schedule as data
+    plan.yaml          the schedule as data: ids, tracks and decisions, no staffing details
     README.md          conventions, schedule, comment templates, index
     plan-review.md     second-pass coverage, findings, decisions, repair evidence
     m1-.../            one folder per milestone
       milestone.md     the sub-epic content
       <id>-<slug>.md   one specification per work item
+  context/
+    <id>.md            the approved text of the sections the item cites
+    <id>.bundle.json   its integrity record
+  release/
+    <request-id>.receipt.json   the public receipt of one approval
   dev/skills/<project>-dev/
-    SKILL.md  README.md  references/
+    SKILL.md  README.md  references/  scripts/check_context.py
+  ground-truth/        optional. Renderings, only when you answered yes to the one question
+  source/              optional, ignored by git. Originals, only if you want a local copy
 ```
+
+Your private workspace is not in the project. It lives in `~/.carrydown/workspaces/<slug>/` and holds the staffing file, the originals and renderings of restricted documents, and every draft, snapshot and approval record. A pointer to it, `.carrydown/local.yaml`, is the only trace in the project, and git ignores it.
 
 </details>
 
@@ -87,11 +99,13 @@ docs/
 
 ## How does carrydown support AI governance?
 
-You can put governance rules, engineering standards and company-specific context in the same `docs/source/` folder as the technical document. Word, Markdown and plain text render directly. The agent can make reviewed Markdown extractions from readable PDF, image and other files while retaining the originals. The plan records original and rendered files, versions, precedence and coverage limits. Each work item records source-specific section references. The checker validates those references against the correct rendered document. The generated engineers' skill maps the citations back to each source, so the coding agent reads the applicable rules before planning code.
+You can give the agent governance rules, engineering standards and company-specific context along with the technical document. Word, Markdown and plain text render directly. The agent can make reviewed Markdown extractions from readable PDF, image and other files. The plan records each source's version and precedence, and each work item records source-specific section references. The checker validates those references against the rendered document while you draft, and against the item's approved context in a clean clone. The generated engineers' skill checks that context and points the coding agent at it, so the agent reads the applicable rules before planning code.
 
-This makes organizational context part of the ordinary engineering handoff. A company can codify rules for security, privacy, accessibility, data handling, approved patterns or review evidence in maintained source documents, then trace each applicable rule into specifications, issues and the agentic editor. You review the drafts and approve publication after seeing a dry run. The plan, specifications, source versions and recorded decisions stay in your repository for review as the project changes.
+This makes organizational context part of the ordinary engineering handoff. A company can codify rules for security, privacy, accessibility, data handling, approved patterns or review evidence in maintained source documents, then trace each applicable rule into specifications, issues and the agentic editor. You review the drafts and approve exactly what is shared, with whom and where, after seeing a preview and a dry run. The plan, specifications, source versions and recorded decisions stay in your repository for review as the project changes.
 
 The automated checks validate consistency with the plan and whether cited sections exist. The second-pass agent review examines whether the completed work covers the sources and fits the team's constraints, and records the evidence and risks for your decision. Agent review can miss problems. Your team still judges whether the interpretation and resulting work meet your organization's requirements.
+
+Some documents are not for everyone who can read the project repository. Carrydown can keep those in a private workspace and share only the sections you approve. It cannot hide text from a teammate who can read the repository, and it cannot recall text that has already been delivered. For what carrydown protects and what it cannot, read the [enterprise security questions](docs/enterprise-security.md).
 
 <br />
 
@@ -100,7 +114,14 @@ The automated checks validate consistency with the plan and whether cited sectio
 <details>
 <summary>What do I need to start?</summary>
 
-Put one or more project sources in `docs/source/`, then follow [Install carrydown and start your first plan](docs/setup.md). The folder can mix Word, Markdown, plain text, PDF and image files. The agent reports unreadable files and continues when it can process at least one intended source.
+One or more project sources, and an answer to one question: can everyone who can read this repository see all of these documents and your staffing notes? Read [who may see your documents](docs/setup.md#before-you-add-documents-who-may-see-them), then follow [Install carrydown and start your first plan](docs/setup.md). The sources can mix Word, Markdown, plain text, PDF and image files, and they can stay where you keep them. The agent reports unreadable files and continues when it can process at least one intended source.
+
+</details>
+
+<details>
+<summary>Do my confidential documents end up in the project repository?</summary>
+
+Not unless you say everyone who can read the repository may see them. The agent asks that one question first. On yes, it drafts in the repository as before. On no, it drafts in a private workspace on your machine, and the repository receives only the outputs you approve. Originals are optional in the project either way. Ignore rules stop new files from being tracked, but they do not erase a file an earlier commit already holds. Read [the enterprise security questions](docs/enterprise-security.md) for what carrydown protects and what it cannot.
 
 </details>
 
@@ -135,7 +156,7 @@ You do not need a token to plan locally. Publishing issues and a project board r
 
 ## Contributing and license
 
-[CONTRIBUTING.md](CONTRIBUTING.md) shows how to run the scripts and checks yourself, under the [code of conduct](CODE_OF_CONDUCT.md); [SECURITY.md](SECURITY.md) covers private reports. Everything in this repository is licensed under [Apache 2.0](LICENSE). Optional reading: [frequently asked questions](docs/faq.md), [security guide](docs/security.md), [changelog](CHANGELOG.md).
+[CONTRIBUTING.md](CONTRIBUTING.md) shows how to run the scripts and checks yourself, under the [code of conduct](CODE_OF_CONDUCT.md); [SECURITY.md](SECURITY.md) covers private reports. Everything in this repository is licensed under [Apache 2.0](LICENSE). Optional reading: [frequently asked questions](docs/faq.md), [enterprise security questions](docs/enterprise-security.md) beside the [security guide](docs/security.md), [changelog](CHANGELOG.md).
 
 **Want to add an integration?** See the [community integration invitations](https://github.com/sct-will/carrydown/issues/1). We welcome contributors for Jira, Azure Boards, GitLab, Linear, Confluence, SharePoint, Figma and Slack. Each issue describes a first contribution and how the pieces could connect. Comment with your proposed approach before starting. These are community opportunities, with no committed delivery dates.
 

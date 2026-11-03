@@ -105,4 +105,4 @@ A normal check of the same copy passes, because without a target there is nothin
 15 files clean, 0 with findings (9 work items, 5 milestones)
 ```
 
-The other modes are described in [inputs.md](inputs.md#two-inputs). In **Derive the capacity** you give a target and no people, and the skill proposes a team at 100 percent as placeholder people marked `derived: true`. In **Neither given** it proposes a default two-track team and a derived date and asks you to confirm.
+The other modes are described in [inputs.md](inputs.md#three-inputs). In **Derive the capacity** you give a target and no people, and the skill proposes a team at 100 percent as placeholder people marked `derived: true`. In **Neither given** it proposes a default two-track team and a derived date and asks you to confirm.

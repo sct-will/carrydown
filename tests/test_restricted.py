@@ -22,6 +22,8 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import WORKING_PLAN  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests" / "mock"))
 import carrydown_lib as L  # noqa: E402
@@ -64,7 +66,7 @@ class WithholdTests(unittest.TestCase):
     """carrydown_lib.withhold and withheld_view: the one rule for what a restricted item leaves behind."""
 
     def setUp(self):
-        self.plan, problems = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
+        self.plan, problems = L.load_plan(WORKING_PLAN, SAMPLE)
         self.assertEqual(problems, [])
 
     def restrict(self, plan, item_id, summary="Owned elsewhere.", placeholder=None):
@@ -137,7 +139,7 @@ class WithholdTests(unittest.TestCase):
 
 class ValidationTests(unittest.TestCase):
     def setUp(self):
-        self.plan, _ = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
+        self.plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
 
     def problems(self, **fields):
         plan = copy.deepcopy(self.plan)
@@ -172,7 +174,7 @@ class ValidationTests(unittest.TestCase):
 
 class PlaceholderBundleTests(unittest.TestCase):
     def test_a_restricted_item_with_a_placeholder_gets_a_bundle_with_no_source_text(self):
-        plan, _ = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
         item = next(i for i in plan["items"] if i["id"] == 7)
         item["restricted"], item["restricted_summary"], item["restricted_placeholder"] = True, "Owned elsewhere.", "Ask the records office."
         result = CB.compile_report(plan, SAMPLE / "docs/ground-truth", SAMPLE / "docs/spec")
@@ -191,7 +193,7 @@ class PlaceholderBundleTests(unittest.TestCase):
         self.assertEqual(CB.parse_obligations(md), [])
 
     def test_without_a_placeholder_there_is_no_bundle(self):
-        plan, _ = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
         item = next(i for i in plan["items"] if i["id"] == 7)
         item["restricted"], item["restricted_summary"] = True, "Owned elsewhere."
         result = CB.compile_report(plan, SAMPLE / "docs/ground-truth", SAMPLE / "docs/spec")
@@ -422,7 +424,7 @@ class ChangeRequestTests(unittest.TestCase):
     """Change requests under engineer_edits: request-only (WP9 behavior 4 and 5)."""
 
     def setUp(self):
-        self.plan, _ = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
+        self.plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
 
     def skill(self, edits):
         return GD.skill_files(self.plan, SAMPLE, engineer_edits=edits)

@@ -26,6 +26,8 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample, WORKING_PLAN  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests" / "mock"))
 os.environ.pop("CARRYDOWN_GITHUB_TOKEN", None)
@@ -90,7 +92,7 @@ class Cli:
     def __init__(self, base):
         self.base = Path(base)
         self.root = self.base / "project"
-        shutil.copytree(F.SAMPLE, self.root)
+        copy_sample(self.root)
         self.env = dict(os.environ, HOME=str(self.base), USERPROFILE=str(self.base), GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_SYSTEM=os.devnull,
                         PYTHONDONTWRITEBYTECODE="1")
         self.workspace = self.base / "workspace"
@@ -452,7 +454,7 @@ def _(base):
     bad = subprocess.run([PY, str(ROOT / "scripts" / "release_gate.py"), "--force"], capture_output=True, text=True)
     check(bad.returncode == 2)
     legacy = base / "legacy"
-    shutil.copytree(F.SAMPLE, legacy)
+    copy_sample(legacy)
     F.strip_handling(legacy)
     with contextlib.redirect_stderr(io.StringIO()):
         d = RG.check("release", "docs/spec/plan.yaml", "0" * 64, "engineering-repo", str(legacy))
@@ -494,7 +496,7 @@ def _(base):
     run = subprocess.run([PY, str(ROOT / "tests" / "rebuild_sample_release.py"), "--check"], capture_output=True, text=True, timeout=300)
     check(run.returncode == 0, run.stdout + run.stderr)
     project = base / "clone"
-    shutil.copytree(F.SAMPLE, project)
+    copy_sample(project)
     F.init_git(project)
     F.sh(["git", "add", "-A"], project)
     F.sh(["git", "commit", "-q", "-m", "sample"], project)
@@ -511,15 +513,15 @@ def _(base):
 
 @claim("The sample's issue bodies are byte for byte what they were before payloads existed")
 def _(base):
-    plan, _ = L.load_plan(F.SAMPLE / "docs/spec/plan.yaml", F.SAMPLE)
+    plan, _ = L.load_plan(WORKING_PLAN, F.SAMPLE)
     h = hashlib.sha256()
     for it in plan["items"]:
         h.update((GS.build_item_body(plan, F.SAMPLE, it) + "\n").encode())
     for ms in plan["milestones"]:
         h.update((GS.build_subepic_body(plan, F.SAMPLE, ms) + "\n").encode())
-    want = "11e4320d8460658ccbf26787509e3812705a00c318b4f930d47cd4b2f933836c"
+    want = "ed60a4b5f2221d26b341806ba6f96c470255ab75d57ec03f261aa39891cc0a7b"
     check(h.hexdigest() == want, h.hexdigest())
-    return f"sha256 of the 14 bodies {h.hexdigest()[:16]}... equals the digest recorded from the scripts at f4d955a"
+    return f"sha256 of the 14 bodies {h.hexdigest()[:16]}... equals the recorded digest (the earlier 11e4320d... changed only in the Ground truth line of nine issues)"
 
 
 # ---------------------------------------------------------------------------

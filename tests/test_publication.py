@@ -18,6 +18,8 @@ from pathlib import Path
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample, WORKING_PLAN  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests" / "mock"))
 import carrydown_lib as L  # noqa: E402
@@ -38,7 +40,10 @@ import release_verify as V  # noqa: E402
 
 SAMPLE = ROOT / "sample" / "expense-approvals"
 REPO = "sct-will/carrydown-sample"
-GOLDEN_BODIES = "11e4320d8460658ccbf26787509e3812705a00c318b4f930d47cd4b2f933836c"
+# The digest of the 14 offline bodies of the sample. It was 11e4320d8460658c... until the sample cited its sections in
+# source_refs: the only change is the "Ground truth:" line of the nine issues, which now names the source
+# ("Architecture document: Sections 3.1, ..."). Every other line of every body is unchanged.
+GOLDEN_BODIES = "ed60a4b5f2221d26b341806ba6f96c470255ab75d57ec03f261aa39891cc0a7b"
 
 
 def writes(log):
@@ -87,7 +92,7 @@ class PubCase(unittest.TestCase):
 
 class PayloadTests(unittest.TestCase):
     def test_the_sample_issue_bodies_are_byte_for_byte_what_they_were(self):
-        plan, _ = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
         h = hashlib.sha256()
         for it in plan["items"]:
             h.update((GS.build_item_body(plan, SAMPLE, it) + "\n").encode("utf-8"))
@@ -97,7 +102,7 @@ class PayloadTests(unittest.TestCase):
         self.assertEqual(h.hexdigest(), GOLDEN_BODIES)
 
     def test_a_payload_with_the_permitted_substitutions_equals_the_legacy_body(self):
-        plan, _ = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
         numbers = {RP.item_keys(plan).copy().pop(): 99}
         numbers = {L.tag(plan, it["id"]): 100 + n for n, it in enumerate(plan["items"])}
         numbers.update({f"M{m['number']}": 10 + m["number"] for m in plan["milestones"]})
@@ -117,15 +122,15 @@ class PayloadTests(unittest.TestCase):
         self.assertEqual(RP.substitute(payload["body"], numbers, RP.urls_for(payload, "github.com", REPO, "main")[0]), GS.build_rollup(plan, numbers, 1))
 
     def test_logins_are_approved_values_in_the_payload_and_follow_the_flag(self):
-        plan, _ = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
-        staffed, _ = L.load_plan_with_people(SAMPLE / "docs/spec/plan.yaml", SAMPLE, people_path=SAMPLE / "people.yaml")
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
+        staffed, _ = L.load_plan_with_people(WORKING_PLAN, SAMPLE, people_path=SAMPLE / "people.yaml")
         it = plan["items"][0]
         self.assertEqual(RP.item_payload(plan, SAMPLE, it, staffed, {"assignees": False, "capacity_summary": False, "evidence": "synthetic-only"})["assignees"], [])
         # the sample's fictional people have no login, so even an allowed flag publishes none
         self.assertEqual(RP.item_payload(plan, SAMPLE, it, staffed, {"assignees": True, "capacity_summary": False, "evidence": "synthetic-only"})["assignees"], [])
 
     def test_the_capacity_summary_follows_its_flag(self):
-        plan, _ = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
         on = RP.rollup_payload(plan, None, {"assignees": False, "capacity_summary": True, "evidence": "synthetic-only"})["body"]
         off = RP.rollup_payload(plan, None, {"assignees": False, "capacity_summary": False, "evidence": "synthetic-only"})["body"]
         self.assertIn("Track Workflow: 1 person", on)
@@ -146,7 +151,7 @@ class PayloadTests(unittest.TestCase):
                     self.fail("a number that is not a whole number was substituted")
 
     def test_payload_files_carry_destination_target_and_substitution_paths(self):
-        plan, _ = L.load_plan(SAMPLE / "docs/spec/plan.yaml", SAMPLE)
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
         files = RP.build_payloads(plan, SAMPLE)
         self.assertIn("payloads/issue/WI-06.json", files)
         payload = RS.loads_strict(files["payloads/issue/WI-06.json"])
@@ -391,7 +396,7 @@ class SyncTests(PubCase):
 
     def test_a_legacy_project_still_publishes_as_before_and_the_gate_is_asked_for_each_write(self):
         legacy = self.base / "legacy"
-        shutil.copytree(SAMPLE, legacy)
+        copy_sample(legacy)
         F.strip_handling(legacy)
         calls = []
         real = RG.check

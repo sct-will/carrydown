@@ -10,7 +10,7 @@
 | Size | Medium, about 3 days |
 | Depends on | None |
 | Unblocks | WI-02, WI-03 |
-| Ground truth | Sections 3.1, 3.2, 5.1, 7.1 |
+| Ground truth | Architecture document: Sections 3.1, 3.2, 5.1, 7.1 |
 
 ## Why this work item exists
 
@@ -163,8 +163,12 @@ The counterpart on the other track is WI-02, Report form and receipt upload (Exp
 
 ## References
 
-- Ground truth. [3.1 Overview](../../ground-truth/architecture.md#31-overview), [3.2 Components](../../ground-truth/architecture.md#32-components), [3.3 Data model](../../ground-truth/architecture.md#33-data-model), [3.6 Deployment](../../ground-truth/architecture.md#36-deployment).
-- Ground truth. [5.1 DS-1 Delivery standard](../../ground-truth/architecture.md#51-ds-1-delivery-standard), [7.1 REST API](../../ground-truth/architecture.md#71-rest-api).
+- architecture section 3.1, Overview
+- architecture section 3.2, Components
+- architecture section 3.3, Data model
+- architecture section 3.6, Deployment
+- architecture section 5.1, DS-1 Delivery standard
+- architecture section 7.1, REST API
 - Unblocked items. [WI-02 Report form and receipt upload](wi-02-report-form.md), [WI-03 Approval routing engine](../m2-route-to-approvers/wi-03-routing-engine.md).
 
 ## Decisions recorded

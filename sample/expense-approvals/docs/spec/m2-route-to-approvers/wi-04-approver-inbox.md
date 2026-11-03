@@ -10,7 +10,7 @@
 | Size | Medium, about 4 days |
 | Depends on | WI-02, WI-03 |
 | Unblocks | WI-08 |
-| Ground truth | Sections 2.1, 3.4, 6.1, 7.1 |
+| Ground truth | Architecture document: Sections 2.1, 3.4, 6.1, 7.1 |
 
 ## Why this work item exists
 
@@ -142,7 +142,12 @@ The counterpart items on the Workflow track are WI-03 Approval routing engine, w
 
 ## References
 
-- Ground truth sections [2.1](../../ground-truth/architecture.md#21-functional-requirements), [3.4](../../ground-truth/architecture.md#34-report-lifecycle), [6.1](../../ground-truth/architecture.md#61-what-people-asked-for) and [7.1](../../ground-truth/architecture.md#71-rest-api). Also [4.1, GOV-1](../../ground-truth/architecture.md#41-gov-1-approval-limits-and-separation-of-duties) and [2.2, quality requirements](../../ground-truth/architecture.md#22-quality-requirements)
+- architecture section 2.1, Functional requirements
+- architecture section 3.4, Report lifecycle
+- architecture section 6.1, What people asked for
+- architecture section 7.1, REST API
+- architecture section 4.1, GOV-1 Approval limits and separation of duties
+- architecture section 2.2, Quality requirements
 - Depends on [WI-02 Report form and receipt upload](../m1-submit-report/wi-02-report-form.md) and [WI-03 Approval routing engine](wi-03-routing-engine.md). Unblocks [WI-08 Notifications and delegates](../m3-enforce-policy/wi-08-notifications-delegates.md). Related [WI-06 Approval limits and separation of duties](../m3-enforce-policy/wi-06-limits-and-duties.md)
 
 ## Decisions recorded

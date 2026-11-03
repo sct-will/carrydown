@@ -10,7 +10,7 @@
 | Size | Medium, about 3 days |
 | Depends on | WI-08, WI-09; external input: finance sign-off on the export format and retention period |
 | Unblocks | None |
-| Ground truth | Sections 5.1, 8.1 |
+| Ground truth | Architecture document: Sections 5.1, 8.1 |
 
 ## Why this work item exists
 
@@ -135,8 +135,13 @@ The counterpart on the other track is WI-09, Ledger export job (Workflow). Its j
 
 ## References
 
-- Ground truth. [5.1 DS-1 Delivery standard](../../ground-truth/architecture.md#51-ds-1-delivery-standard), [8.1 Risks](../../ground-truth/architecture.md#81-risks), [3.6 Deployment](../../ground-truth/architecture.md#36-deployment), [2.2 Quality requirements](../../ground-truth/architecture.md#22-quality-requirements).
-- Ground truth. [7.3 Ledger export file](../../ground-truth/architecture.md#73-ledger-export-file), [4.2 GOV-2 Audit and retention](../../ground-truth/architecture.md#42-gov-2-audit-and-retention), [3.5 Routing](../../ground-truth/architecture.md#35-routing).
+- architecture section 5.1, DS-1 Delivery standard
+- architecture section 8.1, Risks
+- architecture section 3.6, Deployment
+- architecture section 2.2, Quality requirements
+- architecture section 7.3, Ledger export file
+- architecture section 4.2, GOV-2 Audit and retention
+- architecture section 3.5, Routing
 - Dependency. [WI-08 Notifications and delegates](../m3-enforce-policy/wi-08-notifications-delegates.md).
 - Dependency. [WI-09 Ledger export job](../m4-pilot/wi-09-ledger-export.md).
 - Earlier items the checks cover. [WI-01](../m1-submit-report/wi-01-service-scaffold.md), [WI-02](../m1-submit-report/wi-02-report-form.md), [WI-04](../m2-route-to-approvers/wi-04-approver-inbox.md).

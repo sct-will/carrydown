@@ -70,7 +70,7 @@ The joint check for that date, Milestone 3 demonstration: A decision produces an
 - `wi-06-limits-and-duties.md`
 - `wi-07-audit-log.md`
 - `wi-08-notifications-delegates.md`
-- The ground truth, `docs/ground-truth/architecture.md`
+- The approved context of each item, in `docs/context/`
 - The schedule and checkpoint tables in `../README.md`
 
 ## Decisions recorded

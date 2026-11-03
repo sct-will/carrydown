@@ -4,9 +4,9 @@ Use this guide once the skills are installed and your agent is starting the inte
 
 If you have not installed carrydown, follow [Install carrydown and start your first plan](setup.md) first. Once the interview begins, continue here. Reference pages provide optional background.
 
-Already have a draft? Skip to [reviewing the plan](#reviewing-the-plan). Ready to publish? Skip to [prepare for GitHub](#prepare-for-github).
+Already have a draft? Skip to [reviewing the plan](#reviewing-the-plan). Approved and ready to release? Skip to [release what the engineers will see](#release-what-the-engineers-will-see). Ready to publish? Skip to [prepare for GitHub](#prepare-for-github).
 
-[Answer the interview](#what-the-agent-asks-you) | [Review the plan](#reviewing-the-plan) | [Second-pass review](#the-second-pass-agent-review) | [Review the specifications](#reviewing-the-specifications) | [Prepare for GitHub](#prepare-for-github) | [Publish](#the-github-step) | [Hand off](#hand-the-work-to-engineers) | [Update the plan](#update-the-plan) | [Get help](#if-something-goes-wrong)
+[Answer the interview](#what-the-agent-asks-you) | [Review the plan](#reviewing-the-plan) | [Second-pass review](#the-second-pass-agent-review) | [Review the specifications](#reviewing-the-specifications) | [Release](#release-what-the-engineers-will-see) | [Prepare for GitHub](#prepare-for-github) | [Publish](#the-github-step) | [Hand off](#hand-the-work-to-engineers) | [Update the plan](#update-the-plan) | [Get help](#if-something-goes-wrong)
 
 ## Who runs what
 
@@ -20,21 +20,24 @@ The agent drafts, checks and populates. You decide the owners, dates, scope and 
 
 ## What the agent asks you
 
-The interview has six steps. Replies start with `carrydown: interview, step N of 6`, with the current step number in place of `N`. These questions tell you what to have ready:
+The interview starts with step 0, the question about who may see your documents, and then has six steps. Replies start with `carrydown: interview, step N of 6`, with the current step number in place of `N`. These questions tell you what to have ready:
 
 | The agent asks | You answer with |
 | --- | --- |
+| Step 0, before it renders anything or asks about people: can everyone who can read this repository see all of these documents and your staffing notes? | Yes or no. On no, which documents are restricted (the default is all of them), who may approve sharing them (GitHub logins, the default is you) and whether the raw inputs are kept after a release (the default is kept, in the private workspace and never in the repository). |
 | Which documents must the project obey, and which wins if two disagree? | File paths, and the winner |
-| Who does the work, which part of the system does each person own, from when, and at what share of their time? | Names, a track each (a lane of work one engineer owns, such as back end or front end), allocation percentages, start dates, days off |
+| Who does the work, which part of the system does each person own, from when, and at what share of their time? | Names, a track each (a lane of work one engineer owns, such as back end or front end), allocation percentages, start dates, days off. The agent saves these to a private file on your machine, and the plan holds only ids and tracks. |
 | Should skills or work preferences influence the proposed assignments? | Optional skills and preferred work for any or all engineers. Leave them out when unknown. |
 | When must it ship, or how many weeks do you have? | A date, a number of weeks, or "derive the date" |
 | Which repository, and which coding agents do the engineers use? | owner/repo and the agents |
 | What must the stakeholders see at each milestone demonstration to call it done? | Their words, which become acceptance criteria |
 | How is the code built, tested and merged here? | The commands and the branch rule |
 
-Your source files are required. Put the technical document and broader context in `docs/source/`. The agent inventories Word, Markdown, plain text, PDF, image and other readable files, then creates reviewable Markdown renderings. It identifies unreadable files and continues with the rest. It stops only when no intended source can be processed. Team size, allocation and target dates can be undecided. If you have a team and no date, the agent derives a date. If you have a date and no team, it proposes the capacity needed. If neither is known, it proposes a starting point and asks you to confirm it. Skills and work preferences are always optional. If you supply them, the agent proposes a best match and explains it. If they are missing or unclear, the agent uses the default assignment approach and continues.
+Your source files are required. Give the agent the technical document and broader context where you keep them. You do not need to copy them into the project, and a confidential document should stay where it is. If you want a local folder, use `docs/source/` and put it in `.gitignore` first. The agent inventories Word, Markdown, plain text, PDF, image and other readable files, then creates reviewable Markdown renderings. It reports a file that is already inside the project without calling it safe. It identifies unreadable files and continues with the rest. It stops only when no intended source can be processed. On the yes answer it writes the renderings under `docs/ground-truth/`. On the no answer it writes every rendering into the private workspace, including those of documents you call shareable. For what each answer means in practice, read [who may see your documents](setup.md#before-you-add-documents-who-may-see-them). Team size, allocation and target dates can be undecided. If you have a team and no date, the agent derives a date. If you have a date and no team, it proposes the capacity needed. If neither is known, it proposes a starting point and asks you to confirm it. Skills and work preferences are always optional. If you supply them, the agent proposes a best match and explains it. If they are missing or unclear, the agent uses the default assignment approach and continues.
 
 Allocation is the share of each person's working time available for this plan. The agent assumes 100 percent and asks you to confirm. For someone available three days in five, say 60 percent. Mention start dates, days off, breaks, work owned outside the team and any existing parent epic. An epic is the parent GitHub issue for the whole plan.
+
+Names and personal facts are private on both answers. The agent writes them to `people.yaml` in your private workspace, with the same ids as the plan, and shows you the path. The load table, the dates and the name checks run on your machine, where that file is. In a clean clone, such as the checks that run on every pull request, those checks say `people overlay not loaded: capacity, dates and names not checked` and skip. That is expected.
 
 Confirm engineering commands and branch rules with the engineering team, or mark them "decide later". The agent summarizes your answers before writing the plan. Review and correct the summary before approving it.
 
@@ -82,14 +85,59 @@ Review each generated specification with the agent before publishing. Check whet
 
 The checker compares every specification to the plan. It runs on your computer, and the agent can add it to continuous integration (CI, the automatic checks on every pull request). In CI it fails loudly: a red mark on any pull request that makes a specification disagree with the plan. Ask the agent to add the specification checker to CI.
 
+## Release what the engineers will see
+
+A release turns your approved plan and specifications into exact content and records your decision about it. Nothing reaches the repository or GitHub before that. **On the yes answer you say one sentence and answer one extra line.** The agent runs the rest, and you never type a command, a request id, an audience or a destination. You decide. The agent drafts the preview, runs the commands and reports what they print.
+
+**What you see on the yes answer.**
+
+1. The agent shows a short preview in plain language: what will be shared, with whom, where, and what remains private. It then lists what changed since the previous release and anything unresolved. Carrydown checks by machine that every cited section is in a work item's approved context. Whether that context is enough to do the work is your review, so read a few as the engineer would.
+2. It asks two lines in one prompt. "The plan and specifications are correct." is the approval you always gave. "These exact outputs may be shared with everyone who can read this repository" is the one new line. A yes to one is never a yes to the other.
+3. After your yes the agent builds the exact content, records your approval, and writes the approved files and a small receipt into your working tree. You commit and push as you do today. The approval is your own confirmation. It is labeled not authenticated, and no protected claim is made for it.
+4. The third approval, "Carrydown may create or update these GitHub items", comes later with the dry-run counts, as it always did.
+
+<details>
+<summary>What the agent runs for you on the yes answer</summary>
+
+Every command that writes is a dry run until `--apply`.
+
+```bash
+python3 scripts/release.py preview --root .
+python3 scripts/release.py prepare --root . --apply
+python3 scripts/release.py approve --root . --request <request id> --local --apply --preview-shown
+python3 scripts/release.py export --root . --request <request id> --apply
+```
+
+`prepare` writes only into your private workspace and prints two ids. The release id names the exact content. The request id names one permission decision over it: this content, for this audience, these destinations and these downstream uses. The same content can have several requests, for instance for a second audience, and approving one never approves another. If a retry of `prepare` finds the same content and scope, it reuses the saved request, and an approval you gave earlier is never copied into a new one. `--preview-shown` is how the agent tells the command that you saw the preview and answered the disclosure line. The agent also passes the numeric id of the repository, which `prepare` cannot look up without a GitHub token.
+
+`export` refuses to overwrite a file you edited since the release (`working-copy-differs`). It leaves your working `plan.yaml` in place when it is the draft of the released plan.
+
+</details>
+
+**What stops a release.** Credentials, private paths and staffing fields in an output can never be released. A copied passage from a restricted source, or a phrase your organization listed, can be released only with an exception you approve by name, and it appears in the preview. The renderer also stops for a Word marking that disagrees with your answer, and for hidden or tracked text you have not resolved.
+
+**When something changes.** A change to the plan, a specification or a source after approval needs a new preview and a new approval. The agent runs `release.py diff` to name the work items it touches. A private source edit is not visible to the engineers until you release again. The new request replaces the old one, the new receipt names the one it replaces, and the old receipt stays as superseded. Never edit a file under `docs/context/` or `docs/release/` by hand. To end a release, ask the agent to withdraw it, and give a reason. The withdrawn content can no longer be published, and nothing else changes with it.
+
+**What to tell the engineers.** They learn of a replacement or a withdrawal only when its receipt reaches the default branch they fetch, and an engineer working offline cannot learn of it until the next refresh. An engineer can work offline for the grace period in the receipt (7 days by default) after a successful refresh of that clone. Text already delivered, in a clone, a fork or an agent transcript, cannot be recalled. [The enterprise security questions](enterprise-security.md) give the plain-language limits to share with your security team.
+
+<details>
+<summary>If you answered no: the private path</summary>
+
+The approval is not a chat answer. After the preview, the agent uploads the candidate to your private staging repository once your organization's checks pass, and asks your permission to write to GitHub first. A trusted workflow in the staging repository opens a pull request, so you are not its author. You review its final revision in GitHub and approve it. If anyone adds a commit afterward, GitHub dismisses your review and you approve the new revision. You merge with a merge commit. Carrydown verifies your review through GitHub before it exports anything. It then creates a new branch in an isolated copy of your repository, copies only the approved files and the receipt, commits as you, and prints the push and `gh pr create` commands, which it does not run. Creating the engineering pull request is its own write and needs your yes. Your organization's administrator sets this up once. The steps and the commands are in [the owner's release commands](setup.md#step-7-the-owners-release-commands).
+
+On this path a restricted work item that you marked with a summary is left out of everything and shown as an external item with only your summary.
+
+</details>
+
 ## Prepare for GitHub
 
 You can draft and review locally before publishing. If permissions may take time, ask for them during the review. Before you publish, you need:
 
 - A GitHub repository, identified as `owner/repository`, and the branch that will hold the planning files.
-- Permission to create issues in that repository and a project board in the account or organization that will own it.
+- An active release of the plan, as in the previous section. Publishing writes only what that release approved, and every publishing command checks the approval again before it writes.
+- Permission to create issues in that repository and a project board in the account or organization that will own it. A release never creates a board. The board must already exist, and the release names it by its numeric id.
 - The parent epic's issue number, if one exists, or approval to create one.
-- Engineers' GitHub usernames, if the issues should be assigned to them.
+- Engineers' GitHub usernames, if the issues should be assigned to them. They are kept in the private staffing file. Whether they are published is a separate choice, shown in the preview under "With whom", and publishing how much of each person's time goes to the plan is another separate choice.
 - A GitHub token, prepared in the next section. If your organization uses single sign-on (SSO), it may require authorization or administrator approval.
 
 When you are ready, tell the agent:
@@ -129,17 +177,19 @@ If you think the token leaked, revoke it on [your GitHub tokens page](https://gi
 
 ## The GitHub step
 
-1. **Put the reviewed files in the repository.** Commit and push the plan and specification folder to the intended branch. Each issue links its specification there, so the file must be available first. The agent checks this. You can ask it to commit and push for you, or have your engineering team do that.
-2. **Review the issues dry run.** A dry run previews the changes. The agent prints counts such as "1 Epic, 5 sub-epics, 9 work item issues" and names the repository. Check the destination, counts and proposed content. Say whether to proceed.
+For what publication to GitHub does and cannot do, read [the enterprise security questions](enterprise-security.md) before this step. Issue bodies are visible to everyone who can read the repository, and earlier disclosures cannot be undone.
+
+1. **Put the reviewed files in the repository.** The release export puts the approved files in your working tree or on a new branch. Commit and push them to the intended branch. Each issue links its specification there, so the file must be available first. The agent checks this. You can ask it to commit and push for you, or have your engineering team do that.
+2. **Review the issues dry run.** A dry run previews the changes. The agent first runs the destination preflight, which prints one visibility line for each target and refuses a destination the approved audience does not allow. It then prints counts such as "1 Epic, 5 sub-epics, 9 work item issues" and names the repository. Check the destination, counts and proposed content. Say whether to proceed. If a run stops partway, a rerun resumes from the saved list of what was published and creates nothing twice. If someone edited a managed part of an issue on GitHub, the run stops with `target changed since publication` for your decision and never rewrites it.
 3. **Review the board dry run.** The board has a separate preview and approval. Check its owner, name, fields and dates before saying yes.
 4. **Finish the board settings.** After publishing, the agent verifies the results and gives you the board link. It lists settings you must choose in GitHub, such as grouping and sorting. Follow that list to finish the view.
-5. **Review the engineers' skill.** The agent generates it from your specifications and asks you to review the project conventions. Commit and push this folder too, so engineers can install it from the repository.
+5. **Review the engineers' skill.** The agent generates it from your specifications and the approved contexts, and asks you to review the project conventions. It is part of the release, so it arrives with the export. If you edit its `SKILL.md` or `README.md` by hand, the next release keeps your edits. Commit and push this folder too, so engineers can install it from the repository.
 
 You are ready to hand off when the issues link to their specifications, the board shows the plan and the generated skill is available on the intended branch. If a destination is public, review the content for publication before approving the write.
 
 ## Hand the work to engineers
 
-The agent supplies a complete installation command for your project's generated skill. Send that command and the board link to the engineers. They install the generated skill once in their coding agents. Each starts an item by naming its identifier, for example "Work on [work item ID]". Their agent reads the specification, resolves each citation to the correct rendered source and applies the recorded source precedence before planning code.
+The agent supplies a complete installation command for your project's generated skill. Send that command and the board link to the engineers. They install the generated skill once in their coding agents. Each starts an item by naming its identifier, for example "Work on [work item ID]". Their agent first runs the skill's check on the item's approved context, then reads the specification and that context, which holds the exact text of every source section the item cites, and applies the recorded decisions before planning code. It does not open the source documents. When the check cannot proceed it prints one of four plain messages and stops: no approved context for the item, the approved context is stale, the item cites an obligation that is not in its context, or the item has a restricted destination that the project does not publish. The engineers' README lists them with what to do. The check runs in the engineer's own checkout, so it is a convenience and an integrity check, not the control. The controls are your release process and the independent verifier on pull requests.
 
 The engineers follow three rhythms:
 
@@ -157,19 +207,25 @@ Open the same project in your coding agent and describe what changed. Review the
 
 > Update the plan for these changes. Show me the effects on each person's load, the critical path and the checkpoints. Refresh the specification headers and run the checker. Show me the differences before changing GitHub.
 
-Give the names, availability, dates or dependencies that changed. The agent updates `docs/spec/plan.yaml`, refreshes the affected specification headers and checks the files. Read the revised schedule and approve it only when it fits.
+Give the names, availability, dates or dependencies that changed. The agent updates `docs/spec/plan.yaml` for the ids, tracks and dates, and the private staffing file for the personal facts. It refreshes the affected specification headers and checks the files. Read the revised schedule and approve it only when it fits. A change after approval needs a new release before it reaches the engineers or GitHub.
 
 ### Change the source document
 
 > The source document has changed. Render it again, identify the affected specifications and update the plan with me. Run the checker before we publish anything.
 
-Edit the source document rather than its rendered copy. The checker flags citations to sections that no longer exist; review the affected content with the agent as well. A valid section number alone does not prove that a specification still matches the revised document.
+Edit the source document rather than its rendered copy. The checker flags citations to sections that no longer exist; review the affected content with the agent as well. A valid section number alone does not prove that a specification still matches the revised document. Carrydown records the content digest and version of each source. After you render the new version, `release.py preview` and `release.py diff` name the work items whose approved context would change, and the old release stays in force until you approve a new one. Carrydown cannot see a change to a document's permissions in your own document system, so check that yourself whenever you change who may read a source.
+
+### Reapprove or withdraw a release
+
+> Show me what changed since the active release, then prepare a new request.
+
+A new request replaces the active one in a single reviewed step. You can also approve the same content again, for example for another audience. That makes a new request with a fresh nonce and leaves every earlier approval and its history as it was. To stop a release, withdraw it with a reason code. The withdrawal is a reviewed state change too, and the receipt-only export publishes it without allowing any content to be published. See [the owner's release commands](setup.md#step-7-the-owners-release-commands).
 
 ### Publish an approved update
 
 > Show me a dry run to bring GitHub up to date with this approved plan. Include the existing issue bodies that need updating.
 
-Commit and push the revised planning files first. The synchronization scripts match existing issues, add new items and leave existing bodies unchanged unless an update is requested. Ask the agent to show which bodies it would rewrite. Approve the issue and board updates after their previews. The ordinary sync does not delete issues or change issue titles. After a second-pass review, the separate `github_repair.py` command can preview and repair generated titles, the plan owner's assignment, track labels and parent links using the saved pre-repair plan. Human title changes and retired work require your decision. Read the [published-plan repair procedure](../skills/carrydown-plan-to-github/references/plan-review-repair.md) before applying it.
+Export and commit the new release first. The synchronization scripts match existing issues, add new items and leave existing bodies unchanged unless an update is requested. Ask the agent to show which bodies it would rewrite. Approve the issue and board updates after their previews. The ordinary sync does not delete issues or change issue titles. After a second-pass review, the separate `github_repair.py` command can preview and repair generated titles, the plan owner's assignment, track labels and parent links using the saved pre-repair plan. Human title changes and retired work require your decision. Read the [published-plan repair procedure](../skills/carrydown-plan-to-github/references/plan-review-repair.md) before applying it.
 
 If specifications or engineering conventions changed, ask the agent to refresh the engineers' skill too. Review, commit and push that change, then have the engineers update their installed copy.
 
@@ -177,6 +233,7 @@ If specifications or engineering conventions changed, ask the agent to refresh t
 
 - **The agent does not recognize a stage.** Name its skill explicitly: "Use the carrydown-ground-truth skill" for planning, or "Use the carrydown-plan-to-github skill" for publishing. Then describe what you want to do.
 - **A checker reports findings.** Ask the agent to explain each finding and fix the plan or specifications with you. Ask for a clean check before publishing.
+- **A release command is refused.** The refusal is a fixed reason code, such as `not-approved`, `working-copy-differs`, `approval-scope-mismatch`, `withdrawn`, `superseded`, `expired`, `mixed-release` or `staging-access-not-verified`. Ask the agent to say what the code means and what you can do. None of them has a bypass. Do not look for one: do not edit a file under `docs/context/` or `docs/release/`, regenerate approved files to clear a mismatch, or ask for an approval to be forced. Prepare a new request instead.
 - **A publishing step is refused.** Ask the agent to explain the token or permission check. Confirm the repository, board owner and any single sign-on authorization. Do not paste a token into chat.
 - **A publishing run stops partway through.** Ask the agent to inspect what exists and show another dry run. A rerun matches existing issues and repairs missing links. Review the preview before approving it.
 - **You want to rebuild the draft.** Ask the agent to show the proposed changes and preserve reviewed work before replacing files.
@@ -186,6 +243,12 @@ For installation problems, use the [setup guide's troubleshooting](setup.md#when
 ## Glossary
 
 - **Ground truth.** The document or documents the project must obey, such as an architecture document, requirements, rules and standards.
+- **Private workspace.** An owner-only, versioned folder on your machine, outside the project. It holds the staffing file, restricted documents and their renderings, drafts and every release record. Carrydown never copies it anywhere.
+- **Approved context.** One file per work item, `docs/context/<id>.md`, with the exact text of the source sections the item cites. You approve it for everyone who can read the repository.
+- **Release.** Approved content, named by its release id, together with one permission decision, named by its request id.
+- **Receipt.** The small public file in `docs/release/` that names a release, its state and its expiry.
+- **Staging repository.** A private repository where a release candidate is reviewed and approved before anything reaches the engineering repository. The private path only.
+- **Tooling repository and enrollment.** The organization's protected repository that holds the independent verifier and the list of repositories that use the private path. The private path only.
 - **Agent Skills.** An open format for packaging instructions for a coding agent as a folder with a `SKILL.md` file.
 - **Epic.** A parent GitHub issue that stands for the whole project.
 - **Sub-epic.** An issue for one milestone, placed under the Epic.

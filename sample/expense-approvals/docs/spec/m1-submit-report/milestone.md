@@ -68,7 +68,7 @@ The joint check for that date, Milestone 1 demonstration: A report with one rece
 
 - `wi-01-service-scaffold.md`
 - `wi-02-report-form.md`
-- The ground truth, `docs/ground-truth/architecture.md`
+- The approved context of each item, in `docs/context/`
 - The schedule and checkpoint tables in `../README.md`
 
 ## Decisions recorded

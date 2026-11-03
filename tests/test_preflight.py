@@ -16,6 +16,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "tests" / "mock"))
+from sample_tree import copy_sample  # noqa: E402
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests" / "mock"))
 sys.path.insert(0, str(ROOT / "tests"))
@@ -351,7 +353,7 @@ class LegacyVisibilityTests(unittest.TestCase):
         import github_client as G
         with tempfile.TemporaryDirectory(prefix="carrydown-legacy-vis-") as tmp:
             root = Path(tmp) / "legacy"
-            shutil.copytree(ROOT / "sample/expense-approvals", root)
+            copy_sample(root)
             F.strip_handling(root)
             mockgh.S.__init__()
             mockgh.S.repos.add("sct-will/carrydown-sample")

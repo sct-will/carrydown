@@ -1,6 +1,6 @@
 # Work item specifications for {{project_name}}
 
-One file per development work item, plus `milestone.md` per milestone folder. The GitHub issue for a work item links to its file here, and the milestone sub-epic links to `milestone.md`. Each file gives the engineer, and the coding agent in their editor, the context needed to complete the item without opening the original ground truth documents. Where a file excerpts a contract, the excerpt is normative for the item. Where it conflicts with the ground truth, the ground truth wins and the file is corrected in the same pull request.
+One file per development work item, plus `milestone.md` per milestone folder. The GitHub issue for a work item links to its file here, and the milestone sub-epic links to `milestone.md`. Each file gives the engineer, and the coding agent in their editor, the context needed to complete the item without opening the original ground truth documents. Where a file excerpts a contract, the excerpt is normative for the item. {{ground_truth_wins}}
 
 ## What is in this folder
 
@@ -10,13 +10,13 @@ One file per development work item, plus `milestone.md` per milestone folder. Th
 | `plan.yaml` | The schedule as data: milestones, work items, owners, dates, dependencies, checkpoints. The checker and the GitHub scripts read it. |
 | `m1-.../` and the other milestone folders | The work item files, one per item, and `milestone.md` for each milestone. |
 
-The rendered ground truth lives at `{{ground_truth}}`. The engineers' skill that loads these conventions into a coding agent lives at `{{dev_skill_path}}`. Its README has the install steps.
+{{ground_truth_where}} The engineers' skill that loads these conventions into a coding agent lives at `{{dev_skill_path}}`. Its README has the install steps.
 
 ## How to use a specification
 
-The shortest route is the engineers' skill. It makes a coding agent read the right specification, the ground truth sections it cites and these conventions before it changes code. You do not paste that context by hand.
+The shortest route is the engineers' skill. It makes a coding agent read the right specification, the source sections it cites and these conventions before it changes code. You do not paste that context by hand.
 
-1. Read the whole file, then the code it points to. Open the ground truth only for the sections the file cites.
+1. Read the whole file, then the code it points to. {{ground_truth_use}}
 2. Propose the change in a short plan in the pull request description before writing code. Name the files you will touch.
 3. Work in small pull requests on `{{branch}}`.
 4. Prove each acceptance criterion with a test or a recorded check. The pull request lists them.
