@@ -1,7 +1,7 @@
 """Tests for the verifier program, its launcher, the setup check (doctor) and the staging prerequisites.
 
-Work package 7. Offline: no token and no network. Tests marked [G3] or [G5] are the negative tests of the
-specification (Part G) that WP11 collects.
+Work package 7. Offline: no token and no network. Tests marked [G5] are the negative tests of the
+specification (Part G) that WP11 collects. Tests marked [D14] check staging access before the first upload.
 """
 import hashlib
 import http.client
@@ -611,20 +611,20 @@ class UploadTests(Temp):
         for method, repo in np.reader.calls:
             self.assertNotIn(method, ("push", "create", "post", "write", "merge"))
 
-    def test_G3_an_unauthorized_direct_collaborator_prevents_the_first_upload(self):
-        """[G3]"""
+    def test_D14_an_unauthorized_direct_collaborator_prevents_the_first_upload(self):
+        """[D14] Staging access before the first upload. Not G3, which is configuration separation of an engineering clone."""
         np = self.project()
         np.reader.collaborators_by_repo[FE.STAGING_ID].append({"id": 999, "login": "outsider", "permission": "read"})
         self.refuse_upload(np)
 
-    def test_G3_an_inherited_team_reader_prevents_the_first_upload(self):
-        """[G3]"""
+    def test_D14_an_inherited_team_reader_prevents_the_first_upload(self):
+        """[D14] Staging access before the first upload. Not G3, which is configuration separation of an engineering clone."""
         np = self.project()
         np.reader.teams_by_repo[FE.STAGING_ID] = [{"id": 1, "slug": "all-engineers", "permission": "pull"}]
         self.refuse_upload(np)
 
-    def test_G3_an_unexpected_app_or_deploy_key_prevents_the_first_upload(self):
-        """[G3]"""
+    def test_D14_an_unexpected_app_or_deploy_key_prevents_the_first_upload(self):
+        """[D14] Staging access before the first upload. Not G3, which is configuration separation of an engineering clone."""
         np = self.project()
         np.reader.installations_by_repo[FE.STAGING_ID] = [{"id": 3, "slug": "some-other-app"}]
         self.refuse_upload(np)
@@ -632,22 +632,22 @@ class UploadTests(Temp):
         np.reader.deploy_keys_by_repo[FE.STAGING_ID] = [{"id": 8, "read_only": True}]
         self.refuse_upload(np)
 
-    def test_G3_an_unreadable_access_list_with_no_attestation_prevents_the_first_upload(self):
-        """[G3]"""
+    def test_D14_an_unreadable_access_list_with_no_attestation_prevents_the_first_upload(self):
+        """[D14] Staging access before the first upload. Not G3, which is configuration separation of an engineering clone."""
         np = self.project()
         np.reader.fail("collaborators", FE.STAGING_ID)
         self.refuse_upload(np)
 
-    def test_G3_an_expired_attestation_prevents_the_first_upload(self):
-        """[G3]"""
+    def test_D14_an_expired_attestation_prevents_the_first_upload(self):
+        """[D14] Staging access before the first upload. Not G3, which is configuration separation of an engineering clone."""
         def expired(world):
             world.update_policy(lambda e: e["attestations"].append(admin_attestation(world, "staging-readers", readers_subject(world), days=-1, begin=-86400 * 3)))
         np = self.project(expired)
         np.reader.fail("collaborators", FE.STAGING_ID)
         self.refuse_upload(np)
 
-    def test_G3_an_attestation_by_someone_who_is_not_an_administrator_does_not_count(self):
-        """[G3]"""
+    def test_D14_an_attestation_by_someone_who_is_not_an_administrator_does_not_count(self):
+        """[D14] Staging access before the first upload. Not G3, which is configuration separation of an engineering clone."""
         def forged(world):
             att = admin_attestation(world, "staging-readers", readers_subject(world))
             att["by_id"] = FE.OUTSIDER[0]

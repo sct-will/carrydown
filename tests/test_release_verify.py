@@ -383,7 +383,7 @@ class PrerequisiteTests(VerifyBase):
         self.assertEqual(set(self.statuses().values()), {V.VERIFIED})
         self.assertIsNone(refused(V.require, V.verify_prerequisites(self.r, self.enr, workspace_access=True), V.EXPORT_COMPONENTS))
 
-    def test_G3_an_unauthorized_direct_collaborator_blocks_the_first_upload(self):
+    def test_D14_an_unauthorized_direct_collaborator_blocks_the_first_upload(self):
         self.r.collaborators_by_repo[F.STAGING_ID].append({"id": 999, "login": "outsider", "permission": "read"})
         comps = V.verify_prerequisites(self.r, self.enr, workspace_access=True)
         self.assertEqual(self.statuses(comps)["staging-readers"], V.MISSING)
