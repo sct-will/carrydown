@@ -640,6 +640,19 @@ class PrepareTests(Base):
         prep = self.prepare(apply=False)
         self.assertEqual([(b["ref"], b["kind"]) for b in prep["blocks"]], [("architecture/descriptor", "descriptor")])
         self.assertEqual(prep["comparison"], "compared")
+        # saved, the descriptor block keeps its own kind and the check asks for its disposition
+        change_id = self.prepare()["proposal"]
+        blocks = json.loads((self.proposal_dir(change_id) / "blocks.json").read_text(encoding="utf-8"))["blocks"]
+        self.assertEqual([b["kind"] for b in blocks], ["descriptor"])
+        code, out, err = self.r("check", "--proposal", change_id)
+        self.assertEqual(code, 1)
+        self.assertIn("pending-disposition", out)
+        doc = self.dispositions(change_id)
+        doc["dispositions"] = [{"block": "architecture/descriptor", "disposition": "no-impact", "reason": "Every reader may already see it.",
+                                "context": "The index rows that cite the source were read."}]
+        self.save_dispositions(change_id, doc)
+        code, out, err = self.r("check", "--proposal", change_id)
+        self.assertEqual(code, 0, out + err)
 
 
 # ---------------------------------------------------------------------------

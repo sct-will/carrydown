@@ -9,7 +9,8 @@ plain data.
 What it does
   compare_sections       step 2: split two renderings of one source into numbered sections and
                          classify each changed block (added, modified, removed, moved, renumbered,
-                         precedence, unreadable). A uniquely identical section at a new number is
+                         precedence, unreadable). reconcile.py adds descriptor and
+                         engineer-correction blocks of its own. A uniquely identical section at a new number is
                          proposed as a mapping. An ambiguous mapping is reported with a candidates
                          list and is never mapped silently. A change that only touches whitespace or
                          emphasis markers carries formatting_only.
@@ -59,7 +60,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import carrydown_lib as L  # noqa: E402
 import compile_bundles as CB  # noqa: E402
 
-KINDS = ("added", "modified", "removed", "moved", "renumbered", "precedence", "unreadable")
+# The kinds of a changed block. compare_sections makes the first seven. reconcile.py adds the last two: a
+# change of a source's classification, applicability or extraction limits (descriptor) and an accepted
+# engineer clarification request (engineer-correction). Every kind needs a disposition.
+KINDS = ("added", "modified", "removed", "moved", "renumbered", "precedence", "unreadable", "descriptor", "engineer-correction")
 DISPOSITIONS = ("update", "add", "assess-completed", "no-impact", "defer", "unresolved")
 # The fields each disposition needs (specification section 8, step 5). A value is a non-blank
 # string, or for "affected" a non-empty list or a non-blank string. "item" is a work item number,

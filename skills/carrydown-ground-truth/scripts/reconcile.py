@@ -583,20 +583,6 @@ def extra_block(kind, ref, source, reason, **more):
     return block
 
 
-def core_view(blocks):
-    """The blocks as reconcile_core knows them: its kinds are the ones of step 2, so the two kinds this script adds
-    (descriptor and engineer-correction) are shown to it as modified."""
-    out = []
-    for b in blocks:
-        if b["kind"] in RC.KINDS:
-            out.append(b)
-        else:
-            c = dict(b)
-            c["kind"] = "modified"
-            out.append(c)
-    return out
-
-
 def checkpoint_text(cp, sid, name):
     """The reviewed rendering text of a source from a verified checkpoint, or None."""
     renderings = cp["renderings"]
@@ -712,7 +698,7 @@ def find_consumers(project, gathered, blocks, specs):
     plan = project.plan
     sections = rendering_sections_of(gathered.sources)
     by_source = {}
-    for b in core_view(blocks):
+    for b in blocks:
         if b.get("source"):
             by_source.setdefault(b["source"], []).append(b)
     plan_ids = {s["id"] for s in L.ground_truth_sources(plan)}
@@ -1555,7 +1541,7 @@ def run_check(project, proposal):
     # dispositions
     blocks = proposal["blocks"]
     try:
-        core_blocks = core_view(blocks)
+        core_blocks = blocks
         records, pending = [], set()
         for r in proposal["dispositions"]:
             if isinstance(r, dict) and r.get("disposition") == "pending":

@@ -657,6 +657,16 @@ class TestValidateDispositions(unittest.TestCase):
         self.assertEqual(R.validate_dispositions(blocks, dispositions), [])
         self.assertEqual(sorted(R.REQUIRED_FIELDS), sorted(R.DISPOSITIONS))
 
+    def test_the_descriptor_and_engineer_correction_kinds_need_a_disposition_like_any_other(self):
+        blocks = [{"ref": "architecture/descriptor", "kind": "descriptor", "previous_number": None, "current_number": None},
+                  {"ref": "request/42", "kind": "engineer-correction", "previous_number": None, "current_number": None}]
+        self.assertEqual(sorted(p["code"] for p in R.validate_dispositions(blocks, [])), ["missing-disposition", "missing-disposition"])
+        done = [{"block": "architecture/descriptor", "disposition": "no-impact", "reason": "Wording of the use line only.", "context": "Index rows read."},
+                {"block": "request/42", "disposition": "update", "item": "WI-03", "patch": "p"}]
+        self.assertEqual(R.validate_dispositions(blocks, done), [])
+        with self.assertRaisesRegex(R.ReconcileError, "unknown kind"):
+            R.validate_dispositions([{"ref": "x", "kind": "renamed", "previous_number": None, "current_number": None}], [])
+
     def test_a_block_without_a_disposition_is_a_problem(self):
         problems = R.validate_dispositions(self.BLOCKS, self.good()[:2])
         self.assertEqual([(p["code"], p["block"]) for p in problems], [("missing-disposition", "a/3")])
