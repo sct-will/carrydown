@@ -174,10 +174,10 @@ An editorial change takes a lighter path. A small edit to a number, an exception
    python3 <skill>/scripts/reconcile.py prepare --root . --apply
    ```
 
-   The second command prints the proposal id you pass to the next commands. If no reviewed checkpoint exists, say the missing checkpoint sentence in `references/updates.md` and offer to establish one. Keep the owner's own words about what changed. An engineer's correction or an accepted request is a changed input too.
+   Its last line is `proposal: <id>`. That id is `CHANGE_ID` in the next commands. The proposal is saved in `<workspace>/drafts/proposals/<id>/`, with `dispositions.json`, where you record the decisions, and `descriptor.json`, which the checkpoint step uses. If no reviewed checkpoint exists, say the missing checkpoint sentence in `references/updates.md` and establish the first checkpoint as it says ("The first checkpoint"). Keep the owner's own words about what changed. An engineer's correction or an accepted request is a changed input too.
 3. Assess impact. Read the changed material, the source rules around it and the compact index the command printed. Name every candidate item, direct or indirect, then read the full candidate specifications and the contracts they use. Tell the owner the size of what you will read, labeled approximate. Assess uncited obligations, not only cited ones. An unobserved source is not current because the repository is unchanged.
 4. Reconcile three versions: the previous approved content, the current working content with engineer corrections, and the proposed content. Patch only what must change. Keep compatible engineer edits. Show conflicts and never overwrite them. A drafted request to a source owner is not a corrected document.
-5. Account for every changed block with one disposition: update existing work, add work, assess completed work, no downstream impact, defer or unresolved. "No proposed patch" is not "no impact".
+5. Account for every changed block with one disposition: update existing work, add work, assess completed work, no downstream impact, defer or unresolved. "No proposed patch" is not "no impact". Write them in the proposal's `dispositions.json`, replacing each `pending` placeholder. `references/updates.md` ("The proposal files") has the format and the patch record.
 6. Run the independent review pass, with the prompt in `references/updates.md`. It is a separate reasoning pass that sees the original changed blocks, not only your summary. Fold in accepted findings, then run:
 
    ```bash
@@ -192,7 +192,14 @@ An editorial change takes a lighter path. A small edit to a number, an exception
    python3 <skill>/scripts/reconcile.py apply --root . --proposal CHANGE_ID --apply
    ```
 
-   Then record the accepted source checkpoint with `workspace.py checkpoint`, preview first. Never hand edit a file under `docs/context/` or `docs/release/`.
+   Then record the accepted source checkpoint from the same proposal. The renderings folder is `docs/ground-truth` on the yes answer and `<workspace>/renderings` on the no answer. Preview each command, read it, then run it with `--apply`:
+
+   ```bash
+   python3 <skill>/scripts/workspace.py checkpoint prepare --root . --descriptor <workspace>/drafts/proposals/CHANGE_ID/descriptor.json --rendering-dir docs/ground-truth
+   python3 <skill>/scripts/workspace.py checkpoint commit --root . --id CHECKPOINT_ID
+   ```
+
+   `CHECKPOINT_ID` is the id `checkpoint prepare` prints. Never hand edit a file under `docs/context/` or `docs/release/`.
 9. Hand off. Tell the owner to say "Put the plan on GitHub." That skill releases and publishes the accepted drafts. The previous release stays active until then. Earlier approval covers only its unchanged scope.
 10. Report the distinct states, each as pending or done: draft reconciliation accepted, release approved, engineering repository update, issue updates, board updates and engineer action required. Do not say "up to date" while a publication step is pending. Say that engineers can still hold old material in a checkout or an open conversation. `references/updates.md` has the exact list.
 

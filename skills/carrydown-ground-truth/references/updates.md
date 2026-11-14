@@ -34,6 +34,15 @@ When `status` or `prepare` reports that no reviewed checkpoint exists, say this,
 
 Then offer to review the current sources with the owner so that the review becomes the checkpoint. Do not pretend a comparison ran. Do not guess what the earlier text said.
 
+### The first checkpoint
+
+A project with no reviewed checkpoint gets one this way, after the owner has reviewed the current renderings with you and accepted them:
+
+1. `reconcile.py prepare --root . --apply`. With no checkpoint it finds no changed block, treats every section as history it cannot assess, and saves a proposal that holds only `descriptor.json`. That proposal has nothing to apply and never shows as an unfinished update.
+2. `workspace.py checkpoint prepare --root . --descriptor <workspace>/drafts/proposals/CHANGE_ID/descriptor.json --rendering-dir <renderings folder>`, read the preview, then the same command with `--apply`. The renderings folder is `docs/ground-truth` on the yes answer and `<workspace>/renderings` on the no answer. It prints the checkpoint id.
+3. `workspace.py checkpoint commit --root . --id CHECKPOINT_ID`, read the preview, then with `--apply`. It commits through an isolated index with the owner's git identity, reads the commit back and only then records it in `workspace.yaml`.
+4. If a release is active, bind the checkpoint to it (see "After the owner accepts", step 3). The next `status` compares against this checkpoint.
+
 ## What counts as changed
 
 The script classifies additions, modifications, removals, moves, renumbering, precedence changes and unreadable content. A section that moved and is word for word the same is a mapping, not a change. An ambiguous mapping goes to the owner.
@@ -54,6 +63,25 @@ Every changed block gets exactly one disposition. "No proposed patch" is not "no
 | Unresolved | The specific missing decision or evidence. |
 
 A removed requirement does not delete issues and does not rewrite completion history. The owner decides any follow-up work or status change. A deferred change stays visible in the review and in the next status report. It never disappears.
+
+## The proposal files
+
+`prepare --apply` saves the proposal in `<workspace>/drafts/proposals/CHANGE_ID/`. `CHANGE_ID` is the id on the last line of its output, `proposal: <id>`. The folder holds `inputs.json` (the digest of every input), `blocks.json` (the changed blocks), `consumers.json`, `index.json` (owner only, never shared), `proposal.json`, `descriptor.json` (for the checkpoint) and `dispositions.json`. Edit only `dispositions.json`. Every other file is the record of what was compared.
+
+`dispositions.json` is `{"format": 1, "dispositions": [...]}` with one record per changed block. `prepare` writes a `{"block": "<ref>", "disposition": "pending"}` placeholder for each block, and a finished `no-impact` record, marked `"automatic": true`, for a block whose change is formatting only. Replace every placeholder with one record. `check` reports any `pending` that is left. The fields of each disposition:
+
+| `disposition` | Fields it needs |
+| --- | --- |
+| `update` | `item` and `patch` |
+| `add` | `scope` and `decision` |
+| `assess-completed` | `evidence` and `follow_up` |
+| `no-impact` | `reason` and `context` |
+| `defer` | `consequence`, `affected` and `remaining` |
+| `unresolved` | `missing` |
+
+A `patch` is one record or a list of records, each exactly `{"item", "path", "before_sha256", "after_text"}`. `path` is relative to the drafting folder (the project on the yes answer, `<workspace>/drafts` on the no answer), or starts with `project/` or `workspace/`. `before_sha256` is the SHA-256 of the file as it is now, so read the file, compute its digest and write `after_text` from that exact text. `after_text` is the whole new file. One file takes one patch, so combine changes to the same file. Only the working plan and the specification Markdown files can be patched. Generated and approved files, the released plan, workspace history and links are refused.
+
+A patch that rewrites or removes a decision entry an engineer recorded is a `decision-conflict` finding. After the owner decides the conflict, record the decision in plain words as `conflict_resolution` on that disposition, and `check` accepts it. A patch that keeps every recorded entry and changes other text needs no `conflict_resolution`. After a release, the release gate lets such a patch replace a specification that holds an engineer's entry only because the proposal recorded that exact file. If the file changes again before `apply`, prepare again.
 
 ## Reading the impact index
 
@@ -130,9 +158,22 @@ Say what was observed. A repository that did not change says nothing about a sou
 
 ## After the owner accepts
 
-1. Run the apply command as a preview, read it and show the owner which files will change. Then run it with `--apply`.
-2. When the owner has accepted the reviewed sources, record the source checkpoint with `workspace.py checkpoint`, as a preview first. If review found no downstream change, the accepted checkpoint is recorded against the active release without a new release.
-3. If outputs changed, the owner says "Put the plan on GitHub." and `carrydown-plan-to-github` releases and publishes.
+1. Run the apply command as a preview, read it and show the owner which files will change. Then run it with `--apply`. A proposal with no patch is recorded as applied too.
+2. Record the accepted source checkpoint from the same proposal, each command as a preview first and then with `--apply`:
+
+   ```bash
+   python3 <skill>/scripts/workspace.py checkpoint prepare --root . --descriptor <workspace>/drafts/proposals/CHANGE_ID/descriptor.json --rendering-dir <renderings folder>
+   python3 <skill>/scripts/workspace.py checkpoint commit --root . --id CHECKPOINT_ID
+   ```
+
+3. If review found no downstream change, the accepted checkpoint is recorded against the active release without a new release. `reconcile.py status --root . --json` gives the ids under `active_release`. Preview, then add `--apply`:
+
+   ```bash
+   python3 <skill>/scripts/workspace.py checkpoint bind --root . --id CHECKPOINT_ID --release-id RELEASE_ID --request-id REQUEST_ID
+   ```
+
+   The earlier association stays in the checkpoint's history. This is local bookkeeping, not an approval.
+4. If outputs changed, the owner says "Put the plan on GitHub." and `carrydown-plan-to-github` releases and publishes.
 
 ## The states to report
 
