@@ -40,9 +40,9 @@ Safety
   plan names one) and lists each Rule clarification request with its state: pending, or accepted, declined or deferred
   once a later comment that starts with "Clarification disposition:" names it. It prints no comment text. With --apply
   it writes events/clarifications.json in the private workspace and nothing on GitHub. Only the owner decides: a
-  disposition counts when its author is the login the plan names for the mention channel, an approver recorded in the
-  plan, or the account the token belongs to. Any other author is reported as an unverified disposition by another
-  account, and the request stays pending.
+  disposition counts when its author is the login the plan names for the mention channel or the account the token
+  belongs to. Any other author is reported as an unverified disposition by another account, and the request keeps
+  the state it had.
   --clarification-disposition posts that disposition comment on the issue, as a dry run until --apply, then reads it
   back. It never edits the engineer's comment and never closes the issue.
   A migrated plan holds no logins, names or allocation. The capacity summary of the Epic comment is
@@ -902,20 +902,18 @@ UNVERIFIED = "unverified disposition by another account"
 
 
 def permitted_deciders(a, plans, gh):
-    """The lower case logins whose disposition comments count: the login the plan names for the mention channel,
-    the approvers recorded in the plan's handling (a plan of the private workspace holds them, a released plan does
-    not, so this reads whatever plan is at hand), and the account the token belongs to, read once from GitHub. A
-    read that fails adds nobody. Nothing is read offline: the commands that call this refuse --offline."""
+    """The lower case logins whose disposition comments count (the owner decides, specification 4): the login the
+    plan names for the mention channel, the one person the owner chose to receive requests, and the account the
+    token belongs to, read once from GitHub, because the owner runs this command with their own token. The release
+    approvers of project.handling are not owners of the plan's scope and are not counted; a released plan does not
+    carry them anyway. A read that fails adds nobody. Nothing is read offline: the commands that call this refuse
+    --offline."""
     found = set()
     for plan in plans:
         project = (plan or {}).get("project") or {}
         block = project.get("clarification")
         if isinstance(block, dict) and block.get("channel") == "mention" and isinstance(block.get("login"), str) and RP._LOGIN_OK.match(block["login"]):
             found.add(block["login"].casefold())
-        handling = project.get("handling")
-        for who in (handling.get("approvers") if isinstance(handling, dict) else None) or []:
-            if isinstance(who, str) and RP._LOGIN_OK.match(who):
-                found.add(who.casefold())
     if not getattr(a, "offline", False):
         try:
             me = gh.whoami()

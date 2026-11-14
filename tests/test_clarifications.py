@@ -149,6 +149,42 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(GS.add_clarification_line({"project": {}}, body), body)
 
 
+class DeciderTests(unittest.TestCase):
+    """Who may decide a request (specification 4: the owner decides)."""
+
+    class FakeGitHub:
+        def __init__(self, login=None, fail=False):
+            self.login, self.fail = login, fail
+
+        def whoami(self):
+            if self.fail:
+                raise GS.G.GitHubError("no answer")
+            return {"login": self.login}
+
+    class Args:
+        offline = False
+
+    def plan(self, clarification=None, approvers=None):
+        project = {"handling": {"approvers": approvers or []}}
+        if clarification:
+            project["clarification"] = clarification
+        return {"project": project}
+
+    def test_the_mention_login_and_the_token_account_decide_and_release_approvers_do_not(self):
+        working = self.plan({"channel": "mention", "login": "Plan-Owner"}, approvers=["release-approver"])
+        found = GS.permitted_deciders(self.Args(), (working,), self.FakeGitHub("Token-Owner"))
+        self.assertEqual(found, {"plan-owner", "token-owner"})
+
+    def test_the_issue_channel_leaves_only_the_token_account_and_a_failed_read_adds_nobody(self):
+        working = self.plan({"channel": "issue", "issue": 7}, approvers=["release-approver"])
+        self.assertEqual(GS.permitted_deciders(self.Args(), (working,), self.FakeGitHub("token-owner")), {"token-owner"})
+        self.assertEqual(GS.permitted_deciders(self.Args(), (working,), self.FakeGitHub(fail=True)), set())
+        rows = GS.conversation_requests([{"id": 1, "body": "Rule clarification request\nWI-03", "user": {"login": "engineer"}},
+                                         {"id": 2, "body": "Clarification disposition: accepted\nRequest: 1", "user": {"login": "release-approver"}}],
+                                        GS.permitted_deciders(self.Args(), (working,), self.FakeGitHub(fail=True)))
+        self.assertEqual((rows[0]["state"], rows[0]["decided"], len(rows[0]["unverified"])), ("pending", None, 1))
+
+
 class IssueBodyTests(unittest.TestCase):
     def setUp(self):
         import tempfile
