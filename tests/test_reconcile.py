@@ -1107,16 +1107,68 @@ class ReleasedApplyTests(Base):
         self.assertTrue(working_path.read_text(encoding="utf-8").endswith("# reviewed with the owner\n"))
         self.assertEqual((self.root / "docs" / "spec" / "plan.yaml").read_bytes(), released_before)
 
-    def test_a_working_copy_that_no_longer_matches_the_release_is_refused_by_the_gate_in_the_preview(self):
+    ENTRY = "- 2026-11-10. The reminder counts from the next business day when a report arrives after 17:00 (pull request 12)."
+
+    def engineer_appends_a_decision(self):
+        text = self.read(WI03)
+        self.assertIn("## Decisions recorded\n\nNone yet.\n", text)
+        self.write(WI03, text.replace("## Decisions recorded\n\nNone yet.\n", "## Decisions recorded\n\n" + self.ENTRY + "\n"))
+
+    def annotated_update(self):
+        """Released project, publication done, an engineer's decision entry in WI-03, then a source change and a saved
+        proposal whose update patch is written from the annotated working copy."""
         self.complete_publication()
-        self.write(WI03, self.read(WI03).replace(REMINDER, "after 4 business days without a decision"))
+        self.engineer_appends_a_decision()
         change_id = self.prepared_update(change=True)
-        patch = self.patch_for(WI03, "after 4 business days without a decision", "after 4 business days without a decision, as the owner confirmed")
+        patch = self.patch_for(WI03, REMINDER, "after 4 business days without a decision")
         self.disposition_update(change_id, "architecture/3.5", [patch])
-        before = tree(self.root)
+        return change_id, patch
+
+    def test_an_update_patch_of_a_specification_an_engineer_annotated_preserves_the_entry_and_applies(self):
+        change_id, patch = self.annotated_update()
+        # a plain draft write to the annotated file is still refused: only the reviewed patch may replace it
+        self.assertEqual(RG.check("draft", WI03, "0" * 64, "engineering-repo", str(self.root)).code, "working-copy-differs")
+        code, out, err = self.r("check", "--proposal", change_id)
+        self.assertEqual(code, 0, out + err)
         code, out, err = self.r("apply", "--proposal", change_id)
-        self.assertEqual(code, 1)
-        self.assertIn("working-copy-differs", err)
+        self.assertEqual(code, 0, out + err)
+        self.assertIn(f"would change project/{WI03}", out)
+        code, out, err = self.r("apply", "--proposal", change_id, "--apply")
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("applied 1 patch now", out)
+        after = self.read(WI03)
+        self.assertEqual(after, patch["after_text"])
+        self.assertIn(self.ENTRY, after, "the engineer's decision entry is preserved")
+        self.assertIn("after 4 business days without a decision", after)
+        self.assertNotIn(REMINDER, after)
+        code, out, err = self.r("apply", "--proposal", change_id, "--apply")
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("already applied", out)
+        self.assertEqual(self.read(WI03), after)
+
+    def test_a_patch_whose_before_digest_is_stale_is_still_refused(self):
+        change_id, patch = self.annotated_update()
+        # the engineer adds a second entry after the proposal was saved: the patch no longer starts from the file
+        self.write(WI03, self.read(WI03).replace(self.ENTRY + "\n", self.ENTRY + "\n- 2026-11-12. A second note (pull request 13).\n"))
+        before = tree(self.root)
+        for args in (("apply", "--proposal", change_id), ("apply", "--proposal", change_id, "--apply")):
+            code, out, err = self.r(*args)
+            self.assertEqual(code, 1, out + err)
+            self.assertIn("Nothing was written", out)
+        self.assertEqual(tree(self.root), before)
+        self.assertFalse((self.proposal_dir(change_id) / "applied.json").exists())
+        # asked directly with the proposal, the gate refuses the stale patch too
+        d = RG.check("draft", WI03, sha(patch["after_text"].encode("utf-8")), "engineering-repo", str(self.root), update_proposal=change_id)
+        self.assertEqual((d.allowed, d.code), (False, "working-copy-differs"))
+
+    def test_a_patch_that_rewrites_the_engineers_entry_is_a_conflict_until_resolved(self):
+        change_id, patch = self.annotated_update()
+        rewritten = dict(patch, after_text=patch["after_text"].replace("after 17:00", "after 18:00"))
+        self.disposition_update(change_id, "architecture/3.5", [rewritten])
+        before = tree(self.root)
+        code, out, err = self.r("apply", "--proposal", change_id, "--apply")
+        self.assertEqual(code, 1, out + err)
+        self.assertIn("decision-conflict", out)
         self.assertEqual(tree(self.root), before)
 
 

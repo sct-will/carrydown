@@ -778,8 +778,11 @@ def annotate_working_copies(project, consumers):
 # Writing: every write goes through the release gate
 # ---------------------------------------------------------------------------
 
-def gate(project, write_class, rel, data, destination, apply):
-    decision = RG.check(write_class, rel, sha256_bytes(data), destination, project.root, dry_run=not apply)
+def gate(project, write_class, rel, data, destination, apply, proposal=None):
+    """Ask the release gate. proposal names the checked update proposal of a draft patch: the gate reads that proposal
+    itself and lets a reviewed patch replace a released file that already differs from its approved bytes."""
+    extra = {"update_proposal": proposal} if proposal is not None and write_class == "draft" else {}
+    decision = RG.check(write_class, rel, sha256_bytes(data), destination, project.root, dry_run=not apply, **extra)
     if not decision.allowed:
         raise Stopped(decision.code or "gate-refused", f"{decision.code}: the release gate refused the write of {rel}. Nothing was changed")
 
@@ -1731,8 +1734,10 @@ def cmd_apply(a):
     out_rows = []
     for p in patches:
         out_rows.append({"path": p["key"], "before_sha256": p["before"], "after_sha256": p["after"], "bytes": len(p["after_bytes"]), "state": p["state"]})
+        if p["state"] == "written":
+            continue                                  # already holds the after bytes: nothing is written again
         try:
-            gate(project, p["write_class"], p["gate_rel"], p["after_bytes"], p["destination"], False)
+            gate(project, p["write_class"], p["gate_rel"], p["after_bytes"], p["destination"], False, proposal=change_id)
         except Stopped as e:
             L.die(e.text, 1)
     if not a.apply:
@@ -1784,7 +1789,7 @@ def apply_patches(project, change_id, proposal, patches):
         if digest != p["before"] or entry["state"] != "planned":
             result["stopped"] = p["key"]
             return result
-        gate(project, p["write_class"], p["gate_rel"], p["after_bytes"], p["destination"], True)
+        gate(project, p["write_class"], p["gate_rel"], p["after_bytes"], p["destination"], True, proposal=change_id)
         write_atomic(p["path"], p["after_bytes"])
         entry["state"] = "written"
         save_journal(project, change_id, doc)
