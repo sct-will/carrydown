@@ -562,7 +562,7 @@ def stale_update_warning(root):
         if project.ws is None or project.plan is None:
             return None
         proposals = list_proposals(project)
-        if not [p for p in proposals if p["state"] != "applied"]:
+        if not [p for p in proposals if p["state"] not in ("applied", "nothing-to-apply")]:
             return None
         unfinished, _ = unfinished_proposals(proposals, Gathered(project))
         if any(p["stale"] or p["state"] == "unreadable" for p in unfinished):
@@ -745,6 +745,19 @@ def release_manifest(project):
         return None, {}, f"the release records could not be read ({type(e).__name__})"
 
 
+def active_release_ids(project, rid):
+    """{"request_id", "release_id"} of the active release for machine output (workspace.py checkpoint bind takes them), or
+    None. Read from the owner's own request record."""
+    if rid is None or project.ws is None:
+        return None
+    try:
+        request = strict_json(read_regular(project.ws / "requests" / rid / "approval-request.json"))
+        release_id = request.get("release_id") if isinstance(request, dict) else None
+    except ValueError:
+        release_id = None
+    return {"request_id": rid, "release_id": release_id if isinstance(release_id, str) else None}
+
+
 def annotate_working_copies(project, consumers):
     """Mark whether each consumer's working specification differs from the released copy: a cue for the three-version step."""
     _, manifest, _ = release_manifest(project)
@@ -847,8 +860,22 @@ def list_proposals(project):
             entry["state"] = "unreadable"
         if entry["state"] != "unreadable" and (folder / "applied.json").is_file():
             entry["state"] = "applied"
+        elif entry["state"] == "prepared" and not entry["partial"] and proposal_is_empty(folder):
+            entry["state"] = "nothing-to-apply"
         out.append(entry)
     return out
+
+
+def proposal_is_empty(folder):
+    """True when a saved proposal has no changed block and no disposition: nothing waits for the owner and nothing can be
+    applied. The first comparison of a project with no reviewed checkpoint saves one, only to carry the descriptor for
+    the first checkpoint."""
+    try:
+        blocks = read_json_file(folder / "blocks.json")
+        dispositions = read_json_file(folder / "dispositions.json")
+    except (ValueError, TypeError):
+        return False
+    return isinstance(blocks, dict) and blocks.get("blocks") == [] and isinstance(dispositions, dict) and dispositions.get("dispositions") == []
 
 
 def proposal_staleness(proposal, gathered):
@@ -871,10 +898,10 @@ def proposal_order(proposal):
 
 
 def unfinished_proposals(proposals, gathered):
-    """(unfinished, superseded). A proposal is unfinished when it has no applied record. A partly applied or a fresh one
-    always counts. A stale one counts only when it is the newest proposal of all, because a later prepare or a later
-    applied update replaced it."""
-    open_ones = [p for p in proposals if p["state"] != "applied"]
+    """(unfinished, superseded). A proposal is unfinished when it has no applied record and something in it waits: a
+    proposal with nothing to apply never counts. A partly applied or a fresh one always counts. A stale one counts only
+    when it is the newest proposal of all, because a later prepare or a later applied update replaced it."""
+    open_ones = [p for p in proposals if p["state"] not in ("applied", "nothing-to-apply")]
     for p in open_ones:
         p["stale"] = proposal_staleness(p, gathered) if p["state"] == "prepared" else None
     if not open_ones:
@@ -949,7 +976,7 @@ def has_any_release(project):
 def observe(project):
     """The project state for status: a dict with state, reasons, checked, limits, notes, proposals, requests."""
     out = {"state": None, "reasons": [], "checked": [], "limits": [], "notes": [], "proposals": [], "requests": None,
-           "workspace": project.ws is not None, "candidates": []}
+           "workspace": project.ws is not None, "candidates": [], "active_release": None}
     if project.ws is None:
         out["limits"].append(NO_WORKSPACE)
     if project.plan_error:
@@ -983,6 +1010,7 @@ def observe(project):
     rid, manifest, release_problem = release_manifest(project)
     if release_problem:
         out["limits"].append(release_problem.capitalize() + ".")
+    out["active_release"] = active_release_ids(project, rid)
     if project.ws is not None:
         out["checked"].append("the private workspace: reviewed checkpoints, saved updates, release and publication records")
     pending_publications = []

@@ -602,6 +602,60 @@ class PrepareTests(Base):
         self.assertEqual(code, 0, out + err)
         self.assertIn("checkpoint ", out)
 
+    def first_checkpoint_through_the_commands(self):
+        """The first checkpoint the way the skill establishes it: prepare --apply, then the descriptor it saved goes to
+        workspace.py checkpoint prepare and commit."""
+        self.complete_publication()
+        change_id = self.prepare()["proposal"]
+        descriptor = self.proposal_dir(change_id) / "descriptor.json"
+        args = ["--root", str(self.root), "--descriptor", str(descriptor), "--rendering-dir", str(self.root / "docs" / "ground-truth")]
+        code, out, err = self.workspace_main(["checkpoint", "prepare"] + args + ["--apply"])
+        self.assertEqual(code, 0, out + err)
+        checkpoint = out.split("checkpoint ", 1)[1].split()[0]
+        code, out, err = self.workspace_main(["checkpoint", "commit", "--root", str(self.root), "--id", checkpoint, "--apply"])
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("committed and read back", out)
+        return change_id
+
+    def test_the_first_checkpoint_leaves_no_unfinished_update(self):
+        before = self.status()
+        self.assertNotEqual(before["state"], "unfinished-update")
+        change_id = self.first_checkpoint_through_the_commands()
+        data = self.status()
+        self.assertEqual(data["state"], "inputs-unchanged", data)
+        self.assertNotIn(NO_CHECKPOINT, data["limits"])
+        self.assertEqual([(p["id"], p["state"]) for p in data["proposals"]], [(change_id, "nothing-to-apply")])
+        self.assertIsNone(R.stale_update_warning(self.root))
+        # the owner accepted that no output changes: the checkpoint is bound to the still active release, no new release
+        ids = data["active_release"]
+        self.assertRegex(ids["request_id"] or "", r"^[0-9a-f]{64}$")
+        self.assertRegex(ids["release_id"] or "", r"^[0-9a-f]{64}$")
+        checkpoint = W.latest_checkpoint(self.ws)["id"]
+        releases_before = tree(self.ws / "releases")
+        code, out, err = self.workspace_main(["checkpoint", "bind", "--root", str(self.root), "--id", checkpoint, "--release-id", ids["release_id"],
+                                              "--request-id", ids["request_id"], "--apply"])
+        self.assertEqual(code, 0, out + err)
+        self.assertEqual((W.latest_checkpoint(self.ws)["release_id"], W.latest_checkpoint(self.ws)["request_id"]), (ids["release_id"], ids["request_id"]))
+        self.assertEqual(tree(self.ws / "releases"), releases_before)
+        # the next change is compared against that checkpoint
+        self.edit_reminder()
+        self.assertEqual(self.status()["state"], "changed-sources")
+        refs = [b["ref"] for b in self.prepare(apply=False)["blocks"]]
+        self.assertEqual(refs, ["architecture/3.5"])
+
+    def test_a_change_of_the_plan_alone_is_not_a_source_change(self):
+        self.first_checkpoint_through_the_commands()
+        plan_path = self.ws / "drafts" / "plan.yaml"
+        plan = plan_path.read_text(encoding="utf-8")
+        self.assertIn('label: "Approval routing engine"', plan)
+        plan_path.write_text(plan.replace('label: "Approval routing engine"', 'label: "Approval routing engine and reminders"', 1), encoding="utf-8")
+        data = self.status()
+        self.assertEqual(data["changed_sources"], [], data)
+        self.assertNotEqual(data["state"], "changed-sources")
+        prep = self.prepare(apply=False)
+        self.assertEqual(prep["blocks"], [])
+        self.assertEqual(prep["comparison"], "compared")
+
     def test_the_index_is_cached_by_its_contributing_digests_and_a_miss_rebuilds(self):
         first = self.prepare()
         self.assertEqual(first["index_cache"], "built")
