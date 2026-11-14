@@ -1251,7 +1251,16 @@ Restore the approved file, or ask the plan owner. If a rule looks wrong, draft a
 [exit 14]
 ```
 
-An edit to an earlier approved entry gets the same exit 14, with the reason `entry-edited`. The sample has no approved entry yet, because every "Decisions recorded" section still says `None yet.`, so there is nothing to edit. `tests/test_check_context.py` covers that case.
+An edit to an earlier approved entry gets the same exit 14, with the reason `entry-edited`. The committed sample has no approved entry, because every "Decisions recorded" section still says `None yet.`. The run below is from a temporary copy in which an engineer's entry in WI-03 was merged, the owner's update kept it, and the update was released (`release.py prepare`, `approve --local` and `export`, as the sample rebuild does). An engineer then edits that approved entry.
+
+```text
+$ python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-03 --no-refresh   # after editing the approved old entry
+carrydown: the specification for WI-03 does not match its approved release
+reason: an earlier entry under Decisions recorded was changed or removed. Only new entries may be added (entry-edited)
+file: docs/spec/m2-route-to-approvers/wi-03-routing-engine.md
+Restore the approved file, or ask the plan owner. If a rule looks wrong, draft a Rule clarification request. Do not edit an approved specification outside what this project allows.
+[exit 14]
+```
 
 ### The engineer's request, not sent
 

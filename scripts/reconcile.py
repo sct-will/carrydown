@@ -1115,11 +1115,11 @@ def observe(project):
         out["reasons"].append(f"The approved release has {plural(pend, 'GitHub target')} of {total} not yet shown as published.")
     elif differing and not out["unassessed_changes"]:
         out["state"] = "drafts-awaiting-release"
-        out["reasons"].append(f"{plural(len(differing), 'file')} of the working drafts differ from the active release.")
+        out["reasons"].append(f"{plural(len(differing), 'file')} of the working drafts {'differs' if len(differing) == 1 else 'differ'} from the active release.")
     elif changed or accepted:
         out["state"] = "changed-sources"
         if differing:
-            out["notes"].append(f"{plural(len(differing), 'file')} of the working drafts also differ from the active release. "
+            out["notes"].append(f"{plural(len(differing), 'file')} of the working drafts also {'differs' if len(differing) == 1 else 'differ'} from the active release. "
                                 "Assess the source change first, so the next release carries both.")
         if changed:
             out["reasons"].append("Since the reviewed checkpoint these changed: " + "; ".join(changed) + ".")

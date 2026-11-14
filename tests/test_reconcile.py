@@ -330,7 +330,7 @@ class ReleasedStatusTests(Base):
         data = self.status()
         self.assertEqual(data["state"], "changed-sources", data)
         self.assertTrue(data["unassessed_changes"])
-        self.assertTrue(any("also differ from the active release" in n for n in data["notes"]), data["notes"])
+        self.assertTrue(any("1 file of the working drafts also differs from the active release" in n for n in data["notes"]), data["notes"])
 
     def test_an_applied_update_whose_checkpoint_is_not_recorded_says_so(self):
         self.complete_publication()
