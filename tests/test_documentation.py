@@ -476,6 +476,9 @@ class MaintenanceNoticeTests(unittest.TestCase):
                                                   "Disclosure effects", "Next action", "Technical record")]
         self.assertEqual(order, sorted(order))
         self.assertIn("Two specifications need updates. One completed item needs a follow-up decision. One engineer correction conflicts with the revised source.", text)
+        # the automatic no-impact records of formatting-only blocks are shown to the owner, not hidden in the record
+        unchanged = text[text.index("## Reviewed and unchanged"):text.index("## Decisions needed")]
+        self.assertIn("only their formatting changed", unchanged)
 
     def test_the_update_reference_holds_the_fixed_sentences(self):
         text = (ROOT / "skills" / "carrydown-ground-truth" / "references" / "updates.md").read_text(encoding="utf-8")

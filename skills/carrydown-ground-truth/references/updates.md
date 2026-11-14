@@ -68,7 +68,7 @@ A removed requirement does not delete issues and does not rewrite completion his
 
 `prepare --apply` saves the proposal in `<workspace>/drafts/proposals/CHANGE_ID/`. `CHANGE_ID` is the id on the last line of its output, `proposal: <id>`. The folder holds `inputs.json` (the digest of every input), `blocks.json` (the changed blocks), `consumers.json`, `index.json` (owner only, never shared), `proposal.json`, `descriptor.json` (for the checkpoint) and `dispositions.json`. Edit only `dispositions.json`. Every other file is the record of what was compared.
 
-`dispositions.json` is `{"format": 1, "dispositions": [...]}` with one record per changed block. `prepare` writes a `{"block": "<ref>", "disposition": "pending"}` placeholder for each block, and a finished `no-impact` record, marked `"automatic": true`, for a block whose change is formatting only. Replace every placeholder with one record. `check` reports any `pending` that is left. The fields of each disposition:
+`dispositions.json` is `{"format": 1, "dispositions": [...]}` with one record per changed block. `prepare` writes a `{"block": "<ref>", "disposition": "pending"}` placeholder for each block, and a finished `no-impact` record, marked `"automatic": true`, for a block whose change is formatting only. Show those under "Reviewed and unchanged" in the review, so the owner sees them. Replace every placeholder with one record. `check` reports any `pending` that is left. The fields of each disposition:
 
 | `disposition` | Fields it needs |
 | --- | --- |

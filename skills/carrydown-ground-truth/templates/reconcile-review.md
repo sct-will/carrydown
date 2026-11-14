@@ -24,6 +24,8 @@ Owner reads. One row per item the agent looked at and left alone, so the owner c
 | Item | Reason it stays as it is |
 | --- | --- |
 
+Also show, in one row, the source passages the comparison recorded as no downstream impact because only their formatting changed (white space, emphasis or heading level), for example "Formatting only: 2 passages of the architecture document. No words, numbers or conditions changed." The owner can ask to see them. If one of them did change a word, a number or a condition, treat it as a real change instead.
+
 ## Decisions needed
 
 Owner reads. Group the rows. Each row names the decision that makes the question necessary and the choices the owner has. Resolve conflicts here before asking for the final approval.
