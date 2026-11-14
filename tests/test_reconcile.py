@@ -320,6 +320,18 @@ class ReleasedStatusTests(Base):
         self.assertEqual(data["state"], "drafts-awaiting-release", data)
         self.assertIn("Put the plan on GitHub", data["next_action"])
 
+    def test_a_source_change_no_update_assessed_comes_before_drafts_awaiting_release(self):
+        self.complete_publication()
+        self.make_checkpoint()
+        text = self.read(WI03)
+        self.write(WI03, text.replace("## Decisions recorded\n\nNone yet.\n", "## Decisions recorded\n\n- 2026-11-10. A merged note (pull request 12).\n"))
+        self.assertEqual(self.status()["state"], "drafts-awaiting-release")
+        self.edit_reminder()
+        data = self.status()
+        self.assertEqual(data["state"], "changed-sources", data)
+        self.assertTrue(data["unassessed_changes"])
+        self.assertTrue(any("also differ from the active release" in n for n in data["notes"]), data["notes"])
+
     def test_an_applied_update_whose_checkpoint_is_not_recorded_says_so(self):
         self.complete_publication()
         change_id = self.prepared_update()
@@ -732,6 +744,17 @@ class PrepareTests(Base):
         self.assertEqual(sorted(p.name for p in self.base.iterdir() if p.name.startswith("PLANTED")), [])
         self.assertTrue(self.home.is_dir())
         self.assertIn(f"$(touch {planted}-3)", self.read(WI03), "the patch text is written verbatim, as data")
+
+    def test_the_printed_block_line_says_when_the_heading_is_unchanged_and_the_truncated_fields_are_counted(self):
+        self.make_checkpoint()
+        self.edit_reminder()
+        code, out, err = self.r("prepare")
+        self.assertEqual(code, 0, out + err)
+        self.assertIn('architecture/3.5  modified  "3.5 Routing" (heading unchanged)', out)
+        self.assertNotIn('was "3.5 Routing", now "3.5 Routing"', out)
+        measure = self.prepare(apply=False)["measure"]
+        self.assertGreater(measure["truncated_fields"], 0)
+        self.assertIn(f"{measure['truncated_fields']} fields of the index are truncated excerpts ({measure['omitted_words']} words left out)", out)
 
     def test_a_changed_classification_is_a_descriptor_block(self):
         self.make_checkpoint()
@@ -1374,6 +1397,21 @@ class ReleasePreparationTests(Base):
             self.assertNotRegex(name, r"renderings/|checkpoints|proposals|index-cache", name)
             self.assertNotIn(data, private, f"{name} holds the bytes of {private.get(data)}")
         self.assertFalse(any(b"owner_only" in data for data in asm.files.values()))
+
+    def test_a_source_change_that_no_update_assessed_gives_one_warning_line_at_release_preparation(self):
+        self.make_checkpoint()
+        self.assertIsNone(R.unassessed_change_warning(self.root))
+        self.edit_reminder()
+        self.assertEqual(R.unassessed_change_warning(self.root), R.UNASSESSED_WARNING)
+        lines = A.impact_report(A.assemble(self.root, with_github=False, skip_detectors=True))
+        self.assertEqual(lines[1:], [R.UNASSESSED_WARNING])
+        env = dict(os.environ)
+        env.pop("CARRYDOWN_GITHUB_TOKEN", None)
+        run_release = subprocess.run([sys.executable, str(ROOT / "scripts" / "release.py"), "release", "--root", str(self.root), "--repository-id", "4200",
+                                      "--no-github"], capture_output=True, text=True, env=env, timeout=240)
+        self.assertIn(R.UNASSESSED_WARNING, run_release.stdout, run_release.stdout + run_release.stderr)
+        self.prepare()                                          # a saved update is assessing it now
+        self.assertIsNone(R.unassessed_change_warning(self.root))
 
     def test_a_stale_unfinished_update_gives_one_warning_line_and_never_stops_the_release(self):
         self.make_checkpoint()

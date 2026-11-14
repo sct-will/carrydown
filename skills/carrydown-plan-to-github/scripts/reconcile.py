@@ -555,6 +555,26 @@ def impact_index_lines(plan, spec_base, renderings_dir=None):
     return [f"impact index of this release: {plural(measure['rows'], 'row')}, {measure_sentence(measure)[len('index: '):]}"]
 
 
+UNASSESSED_WARNING = ("warning: a source changed since the reviewed checkpoint and no project update has assessed it. "
+                      "Run the update path first, or release knowing the change is not assessed. The release continues.")
+
+
+def unassessed_change_warning(root):
+    """UNASSESSED_WARNING when a source (or an accepted engineer request) changed since the reviewed checkpoint and no
+    applied or saved update covers it, else None. Reads only."""
+    try:
+        project = Project(root)
+        if project.ws is None or project.plan is None:
+            return None
+        out = observe(project)
+        live = [p for p in out["proposals"] if p["state"] in ("prepared", "unreadable") or p["partially_applied"]]
+        if out.get("unassessed_changes") and not live:
+            return UNASSESSED_WARNING
+    except (Stopped, RC.ReconcileError, SystemExit, OSError, ValueError, W.CheckpointProblem):
+        return None
+    return None
+
+
 def stale_update_warning(root):
     """STALE_WARNING when a saved, unfinished proposal no longer matches its inputs, else None. Reads only."""
     try:
@@ -1057,17 +1077,22 @@ def observe(project):
     out["accepted_requests"] = [{"issue": r["issue"], "item": r["item"]} for r in accepted]
     # an applied update whose checkpoint is not recorded yet
     applied = [p for p in proposals if p["state"] == "applied"]
+    covered = False
     if changed and applied:
         for p in applied:
             try:
                 before = {k: v for k, v in p["inputs"].items() if k.startswith(("workspace/renderings/", "project/docs/ground-truth/"))}
                 now = {k: v for k, v in gathered.inputs.items() if k in before}
                 if before and before == now:
+                    covered = True
                     out["notes"].append("An applied update covers these source changes, but the accepted source checkpoint is not recorded yet. "
                                         "Record it with workspace.py checkpoint prepare and commit (preview first).")
                     break
             except AttributeError:
                 continue
+    # a change that no applied update assessed comes before a release of the drafts: release them first and the change
+    # is published unassessed
+    out["unassessed_changes"] = bool((changed and not covered) or accepted)
     # the state
     differing = drafts_differences(project, manifest) if rid is not None else []
     out["drafts_differ"] = len(differing)
@@ -1088,11 +1113,14 @@ def observe(project):
         rid0, pend, total = pending_publications[0]
         out["state"] = "release-awaiting-publication"
         out["reasons"].append(f"The approved release has {plural(pend, 'GitHub target')} of {total} not yet shown as published.")
-    elif differing:
+    elif differing and not out["unassessed_changes"]:
         out["state"] = "drafts-awaiting-release"
         out["reasons"].append(f"{plural(len(differing), 'file')} of the working drafts differ from the active release.")
     elif changed or accepted:
         out["state"] = "changed-sources"
+        if differing:
+            out["notes"].append(f"{plural(len(differing), 'file')} of the working drafts also differ from the active release. "
+                                "Assess the source change first, so the next release carries both.")
         if changed:
             out["reasons"].append("Since the reviewed checkpoint these changed: " + "; ".join(changed) + ".")
         if accepted:
@@ -1237,12 +1265,21 @@ def print_prepare(project, assessment, change_id, apply, reused, state_note):
                 "Treat each as unassessable history and review the current source with the owner.")
     say(f"{len(blocks)} changed block(s) in {len(sources_changed)} source(s); {len(items)} direct consumer(s); "
         + measure_sentence(assessment["measure"]))
+    measure = assessment["measure"]
+    if measure.get("truncated_fields"):
+        say(f"{plural(measure['truncated_fields'], 'field')} of the index {'is a truncated excerpt' if measure['truncated_fields'] == 1 else 'are truncated excerpts'} "
+            f"({plural(measure.get('omitted_words', 0), 'word')} left out). Read the full specification before you conclude no impact for such a row.")
     for b in blocks:
         heads = []
-        if b.get("previous_heading"):
-            heads.append(f"was \"{b['previous_number']} {b['previous_heading']}\"")
-        if b.get("current_heading"):
-            heads.append(f"now \"{b['current_number']} {b['current_heading']}\"")
+        same = (b.get("previous_heading") and b.get("previous_number") == b.get("current_number")
+                and b.get("previous_heading") == b.get("current_heading"))
+        if same:
+            heads.append(f"\"{b['current_number']} {b['current_heading']}\" (heading unchanged)")
+        else:
+            if b.get("previous_heading"):
+                heads.append(f"was \"{b['previous_number']} {b['previous_heading']}\"")
+            if b.get("current_heading"):
+                heads.append(f"now \"{b['current_number']} {b['current_heading']}\"")
         extra = f" ({b['reason']})" if b.get("reason") and not heads else ""
         say(f"  {b['ref']}  {b['kind']}  {', '.join(heads) if heads else '-'}{extra}  formatting only: {'yes' if b.get('formatting_only') else 'no'}")
     for c in compare_result["descriptor_changes"]:

@@ -1076,6 +1076,9 @@ def cmd_release(a):
         import workspace as W
         for line in W.apply_retention(project.need_workspace(), None, False):
             say(line)
+        for line in A.impact_report(asm):             # the owner sees an unassessed or stale update before saying yes
+            if line.startswith("warning:"):
+                say(line)
         say("")
         active = None
         try:
