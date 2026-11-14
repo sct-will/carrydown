@@ -326,6 +326,24 @@ def assemble(root, *, plan_path=None, with_github=True, with_board=True, excepti
                     tuple((L.tag(plan, it["id"]), bool(L.restricted_evidence(it))) for it in restricted))
 
 
+def impact_report(asm):
+    """Lines that release preparation prints on the screen only, never in a release file: the size of the impact
+    index of the plan being released (specification 7.1), and a warning when an unfinished project update no longer
+    matches its inputs (specification 11). Reads only. It never stops a release: a failure is one line."""
+    lines = []
+    try:
+        import reconcile as RECON            # lazily: a library for the update path, shipped with both skills
+        if asm.plan is not None and asm.spec_base is not None:
+            renderings, _ = CB.locate_renderings(asm.plan, asm.root, asm.workspace, None, None)
+            lines += RECON.impact_index_lines(asm.plan, asm.spec_base, renderings)
+        warning = RECON.stale_update_warning(asm.root)
+        if warning:
+            lines.append(warning)
+    except Exception as e:                   # the report is advice. A release does not depend on it
+        lines.append(f"impact index: not built ({type(e).__name__})")
+    return lines
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Assemble the files of a release from the owner's plan, in memory. A library: import it, do not run it. "

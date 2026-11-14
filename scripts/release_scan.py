@@ -170,8 +170,12 @@ def _summary(report, head, extra=()):
     lines = [f"Verified at head {head[:12]}." if report.ok else f"Not verified at head {head[:12]}."]
     if report.ok:
         lines.append("No governed changes." if report.kind == "no-governed-changes" else f"Kind: {report.kind}.")
+        if getattr(report, "explanation", ""):
+            lines.append(report.explanation)
     for f in report.findings[:30]:
         lines.append(f"- {f.code}: {f.where}" if f.where else f"- {f.code}")
+        if getattr(f, "why", ""):
+            lines.append(f"  {f.why}")
     if len(report.findings) > 30:
         lines.append(f"- {len(report.findings) - 30} more finding(s)")
     lines.extend(extra)

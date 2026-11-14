@@ -39,7 +39,10 @@ Safety
   --clarifications reads the comments of the work item issues (and of the owner-assigned clarification issue, when the
   plan names one) and lists each Rule clarification request with its state: pending, or accepted, declined or deferred
   once a later comment that starts with "Clarification disposition:" names it. It prints no comment text. With --apply
-  it writes events/clarifications.json in the private workspace and nothing on GitHub.
+  it writes events/clarifications.json in the private workspace and nothing on GitHub. Only the owner decides: a
+  disposition counts when its author is the login the plan names for the mention channel, an approver recorded in the
+  plan, or the account the token belongs to. Any other author is reported as an unverified disposition by another
+  account, and the request stays pending.
   --clarification-disposition posts that disposition comment on the issue, as a dry run until --apply, then reads it
   back. It never edits the engineer's comment and never closes the issue.
   A migrated plan holds no logins, names or allocation. The capacity summary of the Epic comment is
@@ -102,37 +105,15 @@ build_rollup = RP.build_rollup
 # The clarification line of a work item issue (specification 9.2)
 # ---------------------------------------------------------------------------
 
-CLARIFICATION_LINE = "Clarification requests:"
-_LOGIN_OK = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})\Z")
-
-
-def clarification_line(plan):
-    """The one line of a work item issue that says where an engineer's Rule clarification request goes, from the
-    optional plan key project.clarification (channel mention with a login, or channel issue with an issue number).
-    A plan without the key gets no line, so a project that never named a recipient keeps the bodies it always had.
-    A key with no usable value gets the default sentence. A login appears here only because the owner recorded it
-    in the plan, which is how the owner approved publishing it."""
-    block = (plan.get("project") or {}).get("clarification")
-    if not isinstance(block, dict):
-        return ""
-    login, number = block.get("login"), block.get("issue")
-    if block.get("channel") == "mention" and isinstance(login, str) and _LOGIN_OK.match(login):
-        return f"{CLARIFICATION_LINE} mention @{login} on this issue."
-    if block.get("channel") == "issue" and isinstance(number, int) and not isinstance(number, bool) and number > 0:
-        return f"{CLARIFICATION_LINE} comment on issue #{number}."
-    return f"{CLARIFICATION_LINE} comment on this issue, addressed to the plan owner."
+CLARIFICATION_LINE = RP.CLARIFICATION_LINE
+clarification_line = RP.clarification_line
 
 
 def add_clarification_line(plan, body):
     """body with the clarification line before the Depends on section, inside whatever region the body is in.
-    A body that already carries the line, from the shared builder, is returned as it is."""
-    line = clarification_line(plan)
-    if not line or ("\n" + body).find("\n" + CLARIFICATION_LINE) >= 0:
-        return body
-    at = body.find("\n### Depends on")
-    if at < 0:
-        return body.rstrip("\n") + "\n\n" + line + "\n"
-    return body[:at].rstrip("\n") + "\n\n" + line + "\n" + body[at:]
+    The shared builder (release_payloads.item_body_raw) already emits the line, and a body that carries it is
+    returned as it is, so this only matters for a body built elsewhere."""
+    return RP.add_clarification_line(plan, body)
 
 
 def build_item_body(plan, root, it, numbers=None, mark=True, restricted_bundle=False):
@@ -880,13 +861,24 @@ def _quoted_lines(body):
     return out
 
 
-def conversation_requests(comments):
-    """The requests of one issue conversation, oldest first, as dicts with the request comment, its state and the
-    comment that decided it. A request is pending until a later disposition names it, by its comment id or by
-    quoting its heading line (the quote counts only when exactly one earlier request has that heading line). The
-    latest disposition that names a request is the one that applies."""
+def _author(comment):
+    """The login of a comment's author, lower case, or "" when the comment names none."""
+    user = comment.get("user")
+    login = user.get("login") if isinstance(user, dict) else None
+    return login.casefold() if isinstance(login, str) else ""
+
+
+def conversation_requests(comments, permitted=None):
+    """The requests of one issue conversation, oldest first, as dicts with the request comment, its state, the
+    comment that decided it and the dispositions that were ignored. A request is pending until a later disposition
+    names it, by its comment id or by quoting its heading line (the quote counts only when exactly one earlier
+    request has that heading line). The latest disposition that names a request is the one that applies.
+
+    permitted is None, or the set of lower case logins whose dispositions count (the owner decides, specification
+    4). With a set, a disposition written by any other account decides nothing: the request stays as it was and the
+    comment is listed in the row's "unverified" list. With None every disposition counts."""
     requests = [(i, c, first_line(c.get("body"))) for i, c in enumerate(comments) if is_request(c.get("body"))]
-    rows = [{"comment": c, "state": "pending", "decided": None} for _i, c, _h in requests]
+    rows = [{"comment": c, "state": "pending", "decided": None, "unverified": []} for _i, c, _h in requests]
     for i, comment in enumerate(comments):
         state = disposition_state(comment.get("body"))
         if state is None:
@@ -897,9 +889,49 @@ def conversation_requests(comments):
         by_heading = [k for k in before if requests[k][2] in quoted]
         if len(by_heading) == 1:
             hits.add(by_heading[0])
+        counts = permitted is None or _author(comment) in permitted
         for k in hits:
-            rows[k].update(state=state, decided=comment)
+            if counts:
+                rows[k].update(state=state, decided=comment)
+            else:
+                rows[k]["unverified"].append(comment)
     return rows
+
+
+UNVERIFIED = "unverified disposition by another account"
+
+
+def permitted_deciders(a, plans, gh):
+    """The lower case logins whose disposition comments count: the login the plan names for the mention channel,
+    the approvers recorded in the plan's handling (a plan of the private workspace holds them, a released plan does
+    not, so this reads whatever plan is at hand), and the account the token belongs to, read once from GitHub. A
+    read that fails adds nobody. Nothing is read offline: the commands that call this refuse --offline."""
+    found = set()
+    for plan in plans:
+        project = (plan or {}).get("project") or {}
+        block = project.get("clarification")
+        if isinstance(block, dict) and block.get("channel") == "mention" and isinstance(block.get("login"), str) and RP._LOGIN_OK.match(block["login"]):
+            found.add(block["login"].casefold())
+        handling = project.get("handling")
+        for who in (handling.get("approvers") if isinstance(handling, dict) else None) or []:
+            if isinstance(who, str) and RP._LOGIN_OK.match(who):
+                found.add(who.casefold())
+    if not getattr(a, "offline", False):
+        try:
+            me = gh.whoami()
+        except G.GitHubError:
+            me = None
+        login = me.get("login") if isinstance(me, dict) else None
+        if isinstance(login, str) and login:
+            found.add(login.casefold())
+    return found
+
+
+def _login_text(comment):
+    """The author's login for a report line, only when it has the shape of a login."""
+    user = comment.get("user")
+    login = user.get("login") if isinstance(user, dict) else None
+    return login if isinstance(login, str) and RP._LOGIN_OK.match(login) else "unknown"
 
 
 def _comment_url(owner, repo, number, comment):
@@ -993,7 +1025,9 @@ def clarifications_command(a, root, plan):
     gh = G.GitHub(token)
     L.say("")
     L.say("carrydown github_sync  CLARIFICATIONS (reads GitHub; nothing is written there)")
+    working = plan
     plan, owner, repo, pub, why = clarification_scope(a, root, plan, gh)
+    permitted = permitted_deciders(a, (plan, working), gh)
     L.say(f"repository: {owner}/{repo}    active release: " + (pub.rid if pub is not None else "none" + (f" ({why})" if why else "")))
     base = f"/repos/{owner}/{repo}"
     status, _js = gh.rest_status("GET", base)
@@ -1025,18 +1059,24 @@ def clarifications_command(a, root, plan):
             if not key:
                 unmatched.append(f"#{number}")
             continue
-        for found in conversation_requests(gh.paged(f"{base}/issues/{number}/comments")):
+        for found in conversation_requests(gh.paged(f"{base}/issues/{number}/comments"), permitted):
             c = found["comment"]
             rows.append({"issue": number, "item": key or _request_item(plan, c.get("body"), ""), "state": found["state"],
                          "url": _comment_url(owner, repo, number, c), "comment_id": int(c["id"]),
                          "decided_url": _comment_url(owner, repo, number, found["decided"]) if found["decided"] else None,
-                         "_age": _age(c.get("created_at"), now)})
+                         "decided_by": _login_text(found["decided"]) if found["decided"] else None,
+                         "_age": _age(c.get("created_at"), now),
+                         "_unverified": [(_login_text(u), _comment_url(owner, repo, number, u)) for u in found["unverified"]]})
     rows.sort(key=lambda r: (r["issue"], r["comment_id"]))
     L.say("")
     if rows:
         L.say("item | issue | state | age | link")
         for r in rows:
             L.say(f"{r['item'] or '-'} | #{r['issue']} | {r['state']} | {r['_age']} | {r['url']}")
+        for r in rows:
+            for who, link in r["_unverified"]:
+                L.say(f"{r['item'] or '-'} | #{r['issue']} | {UNVERIFIED} ({who}): {link}. It is ignored, so the request stays {r['state']}. "
+                      "The owner can decide it with --clarification-disposition.")
         counts = {st: sum(1 for r in rows if r["state"] == st) for st in ("pending",) + DISPOSITION_STATES}
         L.say(f"{len(rows)} request(s): " + ", ".join(f"{n} {st}" for st, n in counts.items()))
         if counts["pending"]:
@@ -1047,7 +1087,7 @@ def clarifications_command(a, root, plan):
         L.say(f"{len(unmatched)} issue(s) could not be read ({', '.join(unmatched[:6])}), so the list may be incomplete. {NOT_RECORDED}")
         return 1
     doc = {"format": OBSERVATION_FORMAT, "observed": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-           "repository": f"{owner}/{repo}", "requests": [{k: v for k, v in r.items() if k != "_age"} for r in rows]}
+           "repository": f"{owner}/{repo}", "requests": [{k: v for k, v in r.items() if not k.startswith("_")} for r in rows]}
     if not a.apply:
         L.say("Nothing was recorded. Add --apply to save this observation in the private workspace. It writes no file in the repository and nothing on GitHub.")
         return 0
@@ -1088,7 +1128,9 @@ def disposition_command(a, root, plan):
     gh = G.GitHub(token)
     L.say("")
     L.say(f"carrydown github_sync  CLARIFICATION DISPOSITION  {'APPLY' if a.apply else 'DRY RUN (nothing will be posted)'}")
+    working = plan
     plan, owner, repo, pub, why = clarification_scope(a, root, plan, gh)
+    permitted = permitted_deciders(a, (plan, working), gh)
     base = f"/repos/{owner}/{repo}"
     L.say(f"repository: {owner}/{repo}")
     status, issue = gh.rest_status("GET", f"{base}/issues/{number}")
@@ -1099,13 +1141,15 @@ def disposition_command(a, root, plan):
     if not (set(MARKER_RE.findall(issue.get("body") or "")) & item_keys) and number != _clarification_issue(plan):
         L.say(f"issue #{number} is neither a work item issue of this project nor its clarification issue, so nothing was posted there.")
         return 1
-    found = next((r for r in conversation_requests(gh.paged(f"{base}/issues/{number}/comments")) if r["comment"].get("id") == a.request_comment), None)
+    found = next((r for r in conversation_requests(gh.paged(f"{base}/issues/{number}/comments"), permitted) if r["comment"].get("id") == a.request_comment), None)
     if found is None:
         L.say(f"comment {a.request_comment} on issue #{number} is not a Rule clarification request. Nothing was posted. "
               "List the requests with --clarifications, and use the number after issuecomment- at the end of the link.")
         return 1
     text = disposition_text(state, _comment_url(owner, repo, number, found["comment"]), note)
     L.say(f"request {a.request_comment} on issue #{number} reads as {found['state']} now. The comment below records it as {state}.")
+    for other in found["unverified"]:
+        L.say(f"{UNVERIFIED} ({_login_text(other)}): {_comment_url(owner, repo, number, other)}. It is ignored.")
     L.say("")
     for line in text.split("\n"):
         L.say("  | " + line)
@@ -1125,7 +1169,7 @@ def disposition_command(a, root, plan):
         posted = next((c for c in gh.paged(f"{base}/issues/{number}/comments") if (c.get("body") or "").replace("\r\n", "\n") == text), None)
         if posted is None:
             raise
-    row = next((r for r in conversation_requests(gh.paged(f"{base}/issues/{number}/comments")) if r["comment"].get("id") == a.request_comment), None)
+    row = next((r for r in conversation_requests(gh.paged(f"{base}/issues/{number}/comments"), permitted) if r["comment"].get("id") == a.request_comment), None)
     decided = row["decided"] if row else None
     if not (row and row["state"] == state and decided is not None and decided.get("id") == posted.get("id")
             and (decided.get("body") or "").replace("\r\n", "\n") == text):

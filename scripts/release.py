@@ -967,6 +967,8 @@ def cmd_prepare(a):
     say("destinations, these targets and these downstream uses. The same content can have several requests, and approving one")
     say("never approves another.")
     say(f"{len(asm.files)} file(s) in the snapshot; audience {params['audience']}; destinations {', '.join(params['destinations'])}.")
+    for line in A.impact_report(asm):
+        say(line)
     if supersedes:
         say(f"This request replaces the active request {supersedes}. The replacement is one reviewed batch.")
     if not a.apply:

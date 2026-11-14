@@ -121,6 +121,37 @@ class PayloadTests(unittest.TestCase):
         payload = RP.rollup_payload(plan)
         self.assertEqual(RP.substitute(payload["body"], numbers, RP.urls_for(payload, "github.com", REPO, "main")[0]), GS.build_rollup(plan, numbers, 1))
 
+    def test_the_payload_body_carries_the_clarification_line_only_when_the_plan_names_a_channel(self):
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
+        it = plan["items"][2]
+        key = L.tag(plan, it["id"])
+        self.assertNotIn("Clarification requests", RP.item_payload(plan, SAMPLE, it)["body"])
+        for block, line in (({"channel": "mention", "login": "octocat"}, "Clarification requests: mention @octocat on this issue."),
+                            ({"channel": "issue", "issue": 7}, "Clarification requests: comment on issue #7."),
+                            ({"channel": "mention"}, "Clarification requests: comment on this issue, addressed to the plan owner.")):
+            with self.subTest(block=block):
+                chosen = json.loads(json.dumps(plan))
+                chosen["project"]["clarification"] = block
+                body = RP.item_payload(chosen, SAMPLE, it)["body"]
+                self.assertEqual(body.count(line), 1)
+                self.assertLess(body.index("Ground truth:"), body.index(line))
+                self.assertLess(body.index(line), body.index("### Depends on"))
+                self.assertEqual(body.replace("\n" + line + "\n", "", 1).count("Clarification requests"), 0)
+                # parity: the legacy builder produces the same body from the same plan, with and without issue numbers
+                numbers = {L.tag(plan, i["id"]): 100 + n for n, i in enumerate(plan["items"])}
+                spec_url, skill_url = RP.urls_for(RP.item_payload(chosen, SAMPLE, it), "github.com", REPO, "main")
+                for given in (numbers, {}):
+                    self.assertEqual(GS.with_marker(RP.substitute(body, given, spec_url, skill_url), key),
+                                     GS.build_item_body(chosen, SAMPLE, it, given), key)
+                # the clarification line is not a work item link: no placeholder is added to it
+                self.assertNotIn("{{issue", [x for x in body.splitlines() if x.startswith("Clarification requests")][0])
+
+    def test_a_login_that_looks_like_a_work_item_id_is_not_turned_into_a_link(self):
+        plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
+        plan["project"]["clarification"] = {"channel": "mention", "login": plan["project"]["id_prefix"] + "-3"}
+        body = RP.item_payload(plan, SAMPLE, plan["items"][2])["body"]
+        self.assertIn(f"mention @{plan['project']['id_prefix']}-3 on this issue.", body)
+
     def test_logins_are_approved_values_in_the_payload_and_follow_the_flag(self):
         plan, _ = L.load_plan(WORKING_PLAN, SAMPLE)
         staffed, _ = L.load_plan_with_people(WORKING_PLAN, SAMPLE, people_path=SAMPLE / "people.yaml")
@@ -161,6 +192,50 @@ class PayloadTests(unittest.TestCase):
         self.assertEqual(payload["substitutions"]["spec_path"], "docs/spec/m3-enforce-policy/wi-06-limits-and-duties.md")
         self.assertEqual(RS.loads_strict(files["payloads/board/project.json"])["destination_id"], "board")
         self.assertEqual(files["payloads/issue/WI-06.json"], RS.canonical_json(payload))
+
+
+class ScanSummaryTests(unittest.TestCase):
+    """The check text the verifier publishes carries the plain sentence of each finding and of a pass."""
+
+    def evaluate(self, report):
+        import release_scan as S
+        reader = mock.Mock()
+        reader.pull_request.return_value = {"head": {"sha": "a" * 40}}
+        with mock.patch.object(S.RE, "verify_engineering", return_value=report):
+            return S._evaluate_engineering(reader, mock.Mock(repository_id=1), 7, 0)
+
+    def test_a_change_of_meaning_prints_its_sentence_under_its_finding(self):
+        import release_engineering as RE
+        report = RE.EngineeringReport(False, "sha256-mismatch", "refused",
+                                      (RE.Finding("sha256-mismatch", "docs/spec/m1/wi-01.md", RE.SEMANTIC_WHY),), (), (), None)
+        result = self.evaluate(report)
+        self.assertEqual(result.conclusion, "failure")
+        lines = result.summary.splitlines()
+        at = lines.index("- sha256-mismatch: docs/spec/m1/wi-01.md")
+        self.assertEqual(lines[at + 1], "  " + RE.SEMANTIC_WHY)
+        self.assertIn("provenance refresh", result.summary)
+
+    def test_a_finding_with_no_sentence_prints_one_line(self):
+        import release_engineering as RE
+        report = RE.EngineeringReport(False, "target-identity-mismatch", "refused", (RE.Finding("target-identity-mismatch", "pull request 7"),), (), (), None)
+        lines = self.evaluate(report).summary.splitlines()
+        at = lines.index("- target-identity-mismatch: pull request 7")
+        self.assertTrue(lines[at + 1].startswith("This check verifies"))
+
+    def test_a_provenance_refresh_names_its_kind_and_explains_the_pass(self):
+        import release_engineering as RE
+        report = RE.EngineeringReport(True, "", "provenance-refresh", (), (), (), None, RE.PROVENANCE_PASS)
+        result = self.evaluate(report)
+        self.assertEqual((result.conclusion, result.kind), ("success", "engineering"))
+        lines = result.summary.splitlines()
+        self.assertEqual(lines[1:3], ["Kind: provenance-refresh.", RE.PROVENANCE_PASS])
+
+    def test_an_ordinary_pass_has_no_explanation_line(self):
+        import release_engineering as RE
+        report = RE.EngineeringReport(True, "", "content", (), (), (), None)
+        lines = self.evaluate(report).summary.splitlines()
+        self.assertEqual(lines[1], "Kind: content.")
+        self.assertTrue(lines[2].startswith("This check verifies"))
 
 
 class SyncTests(PubCase):

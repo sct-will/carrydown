@@ -27,7 +27,7 @@ TOKEN = "ghp_" + "Z" * 36
 MARK = "SECRET-MARKER-9183"          # planted in comment bodies: it must never appear in any output
 REQUEST = "Rule clarification request"
 CLARIFICATION_KEY = '  clarification:\n    channel: "mention"\n    login: "plan-owner"\n'
-OBSERVATION_KEYS = ["issue", "item", "state", "url", "comment_id", "decided_url"]
+OBSERVATION_KEYS = ["issue", "item", "state", "url", "comment_id", "decided_url", "decided_by"]
 
 
 def request_body(item="WI-03", marker=MARK):
@@ -111,6 +111,22 @@ class ParserTests(unittest.TestCase):
         rows = GS.conversation_requests(self.comments()[:1] + [{"id": 13, "body": "Clarification disposition: deferred\nRequest: 10"},
                                                                {"id": 14, "body": "Clarification disposition: accepted\nRequest: 10"}])
         self.assertEqual((rows[0]["state"], rows[0]["decided"]["id"]), ("accepted", 14))
+
+    def test_a_disposition_by_an_account_that_is_not_permitted_decides_nothing(self):
+        request = {"id": 10, "body": request_body("WI-01"), "user": {"login": "engineer"}}
+        stranger = {"id": 13, "body": "Clarification disposition: accepted\nRequest: 10", "user": {"login": "Stranger"}}
+        owner = {"id": 14, "body": "Clarification disposition: declined\nRequest: 10", "user": {"login": "Plan-Owner"}}
+        rows = GS.conversation_requests([request, stranger], {"plan-owner"})
+        self.assertEqual((rows[0]["state"], rows[0]["decided"], [c["id"] for c in rows[0]["unverified"]]), ("pending", None, [13]))
+        rows = GS.conversation_requests([request, stranger, owner], {"plan-owner"})
+        self.assertEqual((rows[0]["state"], rows[0]["decided"]["id"], [c["id"] for c in rows[0]["unverified"]]), ("declined", 14, [13]))
+        # a later disposition by another account does not undo a permitted one
+        rows = GS.conversation_requests([request, owner, dict(stranger, id=15)], {"plan-owner"})
+        self.assertEqual((rows[0]["state"], rows[0]["decided"]["id"]), ("declined", 14))
+        # with no permitted set the parser counts every disposition, as before
+        self.assertEqual(GS.conversation_requests([request, stranger])[0]["state"], "accepted")
+        # a comment that names no author is never permitted
+        self.assertEqual(GS.conversation_requests([request, {"id": 16, "body": "Clarification disposition: accepted\nRequest: 10"}], {"plan-owner"})[0]["state"], "pending")
 
     def test_the_clarification_line_follows_the_channel(self):
         plan = {"project": {}}
@@ -302,7 +318,7 @@ class ListTests(ClarificationCase):
         self.assertEqual(len(doc["requests"]), 2)
         for row, issue, comment, item in ((doc["requests"][0], self.item, request, "WI-03"), (doc["requests"][1], self.other, other, "WI-04")):
             self.assertEqual(list(row), OBSERVATION_KEYS)
-            self.assertEqual(row, {"issue": issue["number"], "item": item, "state": "pending", "url": comment["html_url"], "comment_id": comment["id"], "decided_url": None})
+            self.assertEqual(row, {"issue": issue["number"], "item": item, "state": "pending", "url": comment["html_url"], "comment_id": comment["id"], "decided_url": None, "decided_by": None})
         self.assertTrue(text.endswith("\n"))
         self.assertIn("Recorded the observation in the private workspace", out)
 
@@ -350,6 +366,51 @@ class ListTests(ClarificationCase):
         self.assertIn(f"WI-03 | #{self.item['number']} | pending", out)
         self.assertIn("The observation was not recorded", out)
         self.assertFalse(self.observation.exists())
+
+    def decide_as(self, request, login, state="accepted"):
+        return mockgh.S.add_comment(self.item["number"], f"Clarification disposition: {state}\nRequest: {request['html_url']}\n", login=login, repository=TP.REPO)
+
+    def test_a_disposition_by_the_login_the_plan_names_counts(self):
+        request = self.request()
+        decision = self.decide_as(request, "plan-owner")
+        code, out, err = self.ask("--apply")
+        self.assertEqual(code, 0, out + err)
+        self.assertNotIn("unverified disposition", out)
+        row = json.loads(self.observation.read_text(encoding="utf-8"))["requests"][0]
+        self.assertEqual((row["state"], row["decided_url"], row["decided_by"]), ("accepted", decision["html_url"], "plan-owner"))
+
+    def test_a_disposition_by_the_account_of_the_token_counts(self):
+        request = self.request()
+        decision = self.decide_as(request, mockgh.LOGIN, "deferred")
+        code, out, err = self.ask("--apply")
+        self.assertEqual(code, 0, out + err)
+        row = json.loads(self.observation.read_text(encoding="utf-8"))["requests"][0]
+        self.assertEqual((row["state"], row["decided_url"], row["decided_by"]), ("deferred", decision["html_url"], mockgh.LOGIN))
+
+    def test_a_disposition_by_another_account_is_reported_and_the_request_stays_pending(self):
+        request = self.request()
+        decision = self.decide_as(request, "drive-by-reader")
+        code, out, err = self.ask("--apply")
+        self.assertEqual(code, 0, out + err)
+        line = next(x for x in out.splitlines() if "unverified disposition by another account" in x)
+        self.assertIn("(drive-by-reader)", line)
+        self.assertIn(decision["html_url"], line)
+        self.assertIn(f"WI-03 | #{self.item['number']} | pending | ", out)
+        self.assertIn("1 pending", out)
+        doc = json.loads(self.observation.read_text(encoding="utf-8"))
+        row = doc["requests"][0]
+        self.assertEqual((row["state"], row["decided_url"], row["decided_by"]), ("pending", None, None))
+        self.assertNotIn(decision["html_url"], json.dumps(doc), "an unverified disposition is never written into the observation as a decision")
+
+    def test_the_owner_decision_applies_after_a_disposition_by_another_account(self):
+        request = self.request()
+        self.decide_as(request, "drive-by-reader", "accepted")
+        decision = self.decide_as(request, "plan-owner", "declined")
+        code, out, err = self.ask("--apply")
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("unverified disposition by another account", out)
+        row = json.loads(self.observation.read_text(encoding="utf-8"))["requests"][0]
+        self.assertEqual((row["state"], row["decided_url"], row["decided_by"]), ("declined", decision["html_url"], "plan-owner"))
 
     def test_the_clarification_issue_is_read_when_the_plan_names_one(self):
         shared = mockgh.S.add_issue("Rule questions for the owner", "a plain issue with no marker", repository=TP.REPO)
@@ -413,6 +474,18 @@ class DispositionTests(ClarificationCase):
         self.sync("--clarifications", "--apply")
         row = json.loads(self.observation.read_text(encoding="utf-8"))["requests"][0]
         self.assertEqual((row["state"], row["decided_url"]), ("deferred", comments[1]["html_url"]))
+
+    def test_a_disposition_by_another_account_is_named_in_the_dry_run_and_does_not_block_the_owner(self):
+        request = self.request()
+        stranger = mockgh.S.add_comment(self.item["number"], f"Clarification disposition: accepted\nRequest: {request['html_url']}\n", login="drive-by-reader", repository=TP.REPO)
+        code, out, err = self.post(comment=request["id"])
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("reads as pending now", out)
+        self.assertIn(f"unverified disposition by another account (drive-by-reader): {stranger['html_url']}. It is ignored.", out)
+        self.assertNotIn("already recorded", out)
+        code, out, err = self.post(comment=request["id"], apply=True)
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("verified by reading it back", out)
 
     def test_the_engineers_comment_is_untouched_and_the_issue_stays_open(self):
         request = self.request()

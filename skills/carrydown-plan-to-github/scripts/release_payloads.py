@@ -334,15 +334,50 @@ def _item_values(plan, root, it, urls, proj=None):
     }, skill, rel
 
 
+CLARIFICATION_LINE = "Clarification requests:"
+_LOGIN_OK = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})\Z")
+
+
+def clarification_line(plan):
+    """The one line of a work item issue that says where an engineer's Rule clarification request goes, from the
+    optional plan key project.clarification (channel mention with a login, or channel issue with an issue number).
+    A plan without the key gets no line, so a project that never named a recipient keeps the bodies it always had.
+    A key with no usable value gets the default sentence. A login appears here only because the owner recorded it
+    in the plan, which is how the owner approved publishing it."""
+    block = (plan.get("project") or {}).get("clarification")
+    if not isinstance(block, dict):
+        return ""
+    login, number = block.get("login"), block.get("issue")
+    if block.get("channel") == "mention" and isinstance(login, str) and _LOGIN_OK.match(login):
+        return f"{CLARIFICATION_LINE} mention @{login} on this issue."
+    if block.get("channel") == "issue" and isinstance(number, int) and not isinstance(number, bool) and number > 0:
+        return f"{CLARIFICATION_LINE} comment on issue #{number}."
+    return f"{CLARIFICATION_LINE} comment on this issue, addressed to the plan owner."
+
+
+def add_clarification_line(plan, body):
+    """body with the clarification line before the Depends on section, inside whatever region the body is in.
+    A body that already carries the line is returned as it is, and so is any body of a plan without the key."""
+    line = clarification_line(plan)
+    if not line or ("\n" + body).find("\n" + CLARIFICATION_LINE) >= 0:
+        return body
+    at = body.find("\n### Depends on")
+    if at < 0:
+        return body.rstrip("\n") + "\n\n" + line + "\n"
+    return body[:at].rstrip("\n") + "\n\n" + line + "\n" + body[at:]
+
+
 def item_body_raw(plan, root, it, proj=None):
     """The managed body of a work item with placeholders: {{spec_url}}, {{skill_url}} and an
-    {{issue:KEY}} after every work item id. No wrapper and no marker. proj is the issue projection."""
+    {{issue:KEY}} after every work item id. No wrapper and no marker. proj is the issue projection. When the
+    plan has project.clarification, the clarification line stands before "Depends on". The line is added after
+    the placeholders, so a login that looks like a work item id is never turned into a link."""
     values, skill, rel = _item_values(plan, root, it, urls=False, proj=proj)
     body = L.fill(L.read_template("issue-body.md"), values)
     body = re.sub(r"\n{3,}", "\n\n", body)
     if not skill:
         body = body.replace("Specification: " + values["spec_url"] + "\n\n\n", "Specification: " + values["spec_url"] + "\n\n")
-    return placeholderize(plan, body.rstrip() + "\n", item_keys(plan))
+    return add_clarification_line(plan, placeholderize(plan, body.rstrip() + "\n", item_keys(plan)))
 
 
 def build_item_body(plan, root, it, numbers=None, mark=True, restricted_bundle=False):
