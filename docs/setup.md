@@ -279,6 +279,8 @@ What this means in practice:
 
 **Next:** [Review and publish your plan](plan-owner-guide.md). That guide helps you answer the interview, review the drafts and carry the approved plan into GitHub. It also explains what to say [when the project changes](plan-owner-guide.md#when-the-project-changes). Planning locally needs no GitHub token. When you are ready to publish, its [token section](plan-owner-guide.md#the-token) lists the exact repository and project permissions for organization-owned and user-owned boards.
 
+When you ask the agent to add the specification checker to continuous integration (CI, the automatic checks on every pull request), it runs `scaffold_spec.py --ci`. That writes the checking workflow, a pull request template with the `Work items:` and `Outside the plan:` lines, and the checker copy under `tools/carrydown/`. Each pull request then names the work items it serves, or says why it is outside the plan.
+
 ---
 
 ## Other installation options

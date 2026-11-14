@@ -20,7 +20,7 @@ The shortest route is the engineers' skill. It makes a coding agent read the rig
 2. Propose the change in a short plan in the pull request description before writing code. Name the files you will touch.
 3. Work in small pull requests on `{{branch}}`.
 4. Prove each acceptance criterion with a test or a recorded check. The pull request lists them.
-5. If the implementation departs from the file, append a short entry under "Decisions recorded" at the end of the file with the pull request number, in the same pull request.
+5. If the implementation departs from the file, append a short entry under "Decisions recorded" at the end of the file, in the same pull request. The entry form is `- YYYY-MM-DD. text (pull request NN).` The first entry replaces the `None yet.` line.
 
 ## Raising a specification problem
 

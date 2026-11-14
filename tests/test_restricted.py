@@ -491,7 +491,7 @@ class ChangeRequestTests(unittest.TestCase):
             self.assertIn("Rule clarification request", asm.files[skill_rel + "SKILL.md"].decode("utf-8"))
             self.assertIn("fails the independent check on pull requests", asm.files[skill_rel + "README.md"].decode("utf-8"))
             asm = A.assemble(yp.root, with_board=False)
-            self.assertNotIn("Rule clarification request", asm.files[skill_rel + "SKILL.md"].decode("utf-8"))
+            self.assertNotIn(GD.DECISION_NOTES_REQUEST_ONLY, asm.files[skill_rel + "SKILL.md"].decode("utf-8"))
 
     def test_a_kept_skill_follows_a_change_of_policy_but_keeps_the_owners_other_edits(self):
         with tempfile.TemporaryDirectory(prefix="carrydown-change-") as tmp:
@@ -503,13 +503,15 @@ class ChangeRequestTests(unittest.TestCase):
             (skill_dir / "SKILL.md").write_text((skill_dir / "SKILL.md").read_text(encoding="utf-8") + "\nOwner's own line.\n", encoding="utf-8")
             asm = A.assemble(yp.root, with_board=False, engineer_edits="request-only")
             kept = asm.files["repo/docs/dev/skills/expense-approvals-dev/SKILL.md"].decode("utf-8")
-            self.assertIn("Rule clarification request", kept)
+            self.assertIn(GD.DECISION_NOTES_REQUEST_ONLY, kept)
             self.assertIn("Owner's own line.", kept)
-            # a sentence the owner rewrote is not touched
+            # a sentence the owner rewrote is not touched. The decision note paragraph still follows the policy.
             rewritten = (skill_dir / "SKILL.md").read_text(encoding="utf-8").replace(GD.DECISIONS_ALLOWED, "Write decisions down however you like.")
             (skill_dir / "SKILL.md").write_text(rewritten, encoding="utf-8")
             asm = A.assemble(yp.root, with_board=False, engineer_edits="request-only")
-            self.assertEqual(asm.files["repo/docs/dev/skills/expense-approvals-dev/SKILL.md"].decode("utf-8"), rewritten)
+            after = asm.files["repo/docs/dev/skills/expense-approvals-dev/SKILL.md"].decode("utf-8")
+            self.assertIn("Write decisions down however you like.", after)
+            self.assertEqual(after, rewritten.replace(GD.DECISION_NOTES_ALLOWED, GD.DECISION_NOTES_REQUEST_ONLY))
 
 
 class ConfidentialFixtureTests(unittest.TestCase):
