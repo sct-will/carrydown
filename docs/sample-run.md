@@ -128,7 +128,7 @@ detectors: no findings (this does not prove safety)
 $ python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-06      # the engineers' check
 carrydown: approved context for WI-06 is ready
 Read docs/context/wi-06.md. Do not open docs/ground-truth/ or any source.
-baseline: request 8579e540cc6b431c00c73450e2eb4f8525f0174867474f743334fa4dcde2e1d0, specification 6f3e13ccb352a77994e98abd912aecd2d4f78ac81d9043ccfaaf34a61cbcac0a
+baseline: request 59151c0c1a4033a36b7b1137f8a4ce0c7d9c1bafb1f190319e021a0ee009ec98, specification 6f3e13ccb352a77994e98abd912aecd2d4f78ac81d9043ccfaaf34a61cbcac0a
 [exit 0]
 ```
 
@@ -1213,7 +1213,7 @@ Meanwhile an engineer works on WI-04 in a clone of the repository, with the engi
 $ python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-04
 carrydown: approved context for WI-04 is ready
 Read docs/context/wi-04.md. Do not open docs/ground-truth/ or any source.
-baseline: request 8579e540cc6b431c00c73450e2eb4f8525f0174867474f743334fa4dcde2e1d0, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7
+baseline: request 59151c0c1a4033a36b7b1137f8a4ce0c7d9c1bafb1f190319e021a0ee009ec98, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7
 [exit 0]
 ```
 
@@ -1234,7 +1234,7 @@ The check, run offline with `--no-refresh`, still exits 0. It shows the note and
 $ python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-04 --no-refresh
 carrydown: approved context for WI-04 is ready
 Read docs/context/wi-04.md. Do not open docs/ground-truth/ or any source.
-baseline: request 8579e540cc6b431c00c73450e2eb4f8525f0174867474f743334fa4dcde2e1d0, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7
+baseline: request 59151c0c1a4033a36b7b1137f8a4ce0c7d9c1bafb1f190319e021a0ee009ec98, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7
 note: 1 new note(s) under Decisions recorded in your copy of the specification. They are not an approval. The plan owner reviews them
 warning: freshness not confirmed; within offline grace
 [exit 0]
@@ -1245,7 +1245,7 @@ Anything else is not a decision note. When the engineer edits an acceptance crit
 ```text
 $ python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-04 --no-refresh   # after editing an acceptance criterion
 carrydown: the specification for WI-04 does not match its approved release
-reason: the specification differs from its approved text where this project does not let engineers edit (body-changed)
+reason: the specification differs from its approved text outside Decisions recorded. Only new dated decision entries may be added there (body-changed)
 file: docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md
 Restore the approved file, or ask the plan owner. If a rule looks wrong, draft a Rule clarification request. Do not edit an approved specification outside what this project allows.
 [exit 14]
@@ -1268,7 +1268,7 @@ Work item: WI-04, Approver inbox and decisions.
 Place: "Outcome" and "Acceptance criteria" in docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md.
 Problem: The specification lists the reports waiting for the caller. FR-8 in the approved context says "The delegate sees the approver's inbox for that range." Neither text says who the approval step is assigned to when the approver has named a delegate, or whether a decision by one of them removes the report from the other's inbox.
 Proposed question: Is the step assigned to both the approver and the delegate, and does the first decision close it?
-Baseline: request 8579e540cc6b431c00c73450e2eb4f8525f0174867474f743334fa4dcde2e1d0, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7.
+Baseline: request 59151c0c1a4033a36b7b1137f8a4ce0c7d9c1bafb1f190319e021a0ee009ec98, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7.
 Unaffected work: The inbox page, the decision dialog and the error display do not depend on the answer and can continue. The delegate case of the inbox waits.
 Next action for the plan owner: Decide accepted, declined or deferred on this issue.
 ```
