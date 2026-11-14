@@ -859,6 +859,23 @@ class CheckTests(Base):
                 self.assertEqual(code, 1)
                 self.assertEqual([f["code"] for f in data["findings"]], ["patch-path"], data)
 
+    def test_a_symbolic_link_in_the_specification_folder_is_never_patched(self):
+        change_id = self.prepared_update()
+        outside = self.base / "outside.md"
+        outside.write_text("# Outside\n", encoding="utf-8")
+        (self.root / "docs" / "spec" / "linked.md").symlink_to(outside)
+        (self.root / "docs" / "spec" / "linked-folder").symlink_to(self.base, target_is_directory=True)
+        inside = self.root / "docs" / "spec" / "linked-inside.md"
+        inside.symlink_to(self.root / WI03)
+        for path, target in (("docs/spec/linked.md", outside), ("docs/spec/linked-folder/outside.md", outside), ("docs/spec/linked-inside.md", self.root / WI03)):
+            with self.subTest(path=path):
+                patch = {"item": "WI-03", "path": path, "before_sha256": sha(target.read_bytes()), "after_text": "replaced\n"}
+                self.disposition_update(change_id, "architecture/3.5", [patch])
+                code, data = self.findings(change_id)
+                self.assertEqual(code, 1)
+                self.assertIn("patch-path", [f["code"] for f in data["findings"]], data)
+        self.assertEqual(outside.read_text(encoding="utf-8"), "# Outside\n")
+
     def test_the_released_plan_on_the_yes_answer_is_never_patched_and_the_working_plan_is_allowed(self):
         change_id = self.prepared_update()
         released = self.read("docs/spec/plan.yaml")
