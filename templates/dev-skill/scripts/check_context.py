@@ -322,7 +322,7 @@ REASONS = {
     "input-missing": "this approved file is missing or is not a plain file. Restore it from the default branch",
     "input-changed": "this approved file differs from the version the release lists. Restore it, or pull the default branch",
     "approved-copy-unavailable": "git holds no copy of the approved version to compare with, so the file is unverified. Fetch the default branch, then check again",
-    "body-changed": "the specification differs from its approved text where this project does not let engineers edit",
+    "body-changed": "the specification differs from its approved text, and this project does not let engineers edit specifications",
     "entry-edited": "an earlier entry under Decisions recorded was changed or removed. Only new entries may be added",
     "entry-undated": "a new note under Decisions recorded is not a dated entry. Write it as - YYYY-MM-DD. Text",
     "placeholder-kept": "the line None yet. must be replaced by your first entry, not kept beside it",
@@ -333,11 +333,23 @@ REASONS = {
 }
 
 
+# body-changed on a project that permits decision notes: the edit is outside the one place engineers may write.
+BODY_CHANGED_ALLOWED = ("the specification differs from its approved text outside Decisions recorded. "
+                        "Only new dated decision entries may be added there")
+
+
+def reason_text(reason):
+    """The plain words for a reason code, matched to the project's edit policy."""
+    if reason == "body-changed" and edit_policy() == "allowed":
+        return BODY_CHANGED_ALLOWED
+    return REASONS.get(reason, reason.replace("-", " "))
+
+
 def message(kind, item_id, reason="", extra=(), where=None):
     code, first, action = KINDS[kind]
     lines = [first.format(id=item_id)]
     if reason:
-        lines.append(f"reason: {REASONS.get(reason, reason.replace('-', ' '))} ({reason})")
+        lines.append(f"reason: {reason_text(reason)} ({reason})")
     if where:
         lines.append(f"file: {where}")
     lines += list(extra)

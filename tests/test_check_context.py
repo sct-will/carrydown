@@ -54,9 +54,11 @@ def H_FILE(path):
     return hashlib.sha256(PROJECT[path]).hexdigest()
 
 
-def reason_line(code):
-    """The second line of a stale message: the plain words, then the fixed code."""
-    return f"reason: {CC.REASONS[code]} ({code})"
+def reason_line(code, policy=None):
+    """The second line of a stale message: the plain words, then the fixed code. The words of body-changed follow the
+    edit policy, the generated one unless policy names another."""
+    with mock.patch.object(CC, "ENGINEER_EDITS", policy or CC.ENGINEER_EDITS):
+        return f"reason: {CC.reason_text(code)} ({code})"
 CITES = "carrydown: WI-06 cites an obligation that is not in its approved context"
 RESTRICTED = "carrydown: WI-06 has a restricted destination that this project does not publish"
 SPEC_MISMATCH = "carrydown: the specification for WI-06 does not match its approved release"
@@ -901,7 +903,16 @@ class DecisionOverlayCheckTests(OriginTests):
         with mock.patch.object(CC, "ENGINEER_EDITS", "request-only"):
             self.append("- 2027-02-10. Used integer cents (pull request 12).")
             code, lines = self.run_check(self.eng)
-        self.assertEqual((code, lines[0], lines[1]), (14, SPEC_MISMATCH, reason_line("body-changed")))
+        self.assertEqual((code, lines[0], lines[1]), (14, SPEC_MISMATCH, reason_line("body-changed", "request-only")))
+        self.assertIn("does not let engineers edit specifications", lines[1])
+
+    def test_the_body_changed_reason_names_what_an_allowed_project_permits(self):
+        self.spec.write_bytes(self.spec.read_bytes().replace(b"## Outcome\n", b"## Outcome\n\nA changed promise.\n", 1))
+        code, lines = self.run_check(self.eng)
+        self.assertEqual(code, 14)
+        self.assertEqual(lines[1], f"reason: {CC.BODY_CHANGED_ALLOWED} (body-changed)")
+        self.assertIn("Only new dated decision entries may be added", lines[1])
+        self.assertNotIn("does not let engineers edit", lines[1])
 
     def test_a_neighbor_specification_may_carry_a_valid_overlay_too(self):
         stems = CC.neighbor_stems(PROJECT[SPEC_FILE].decode("utf-8"), "WI-06")
