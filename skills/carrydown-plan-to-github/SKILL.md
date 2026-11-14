@@ -247,7 +247,7 @@ It writes `SKILL.md`, `README.md`, four references (including the Python preflig
 npx skills add https://github.com/<owner>/<repo>/tree/<branch>/<dev_skill_path> -a <agent>
 ```
 
-The line works once the folder is on `project.branch` on GitHub, so ask the user to commit and push it if it is not yet. Do not commit or push it yourself unless the user asks for that command in this chat. `references/engineers-skill-install.md` has every agent, the copy and link options and the team rollout. `references/engineers-skill-maintenance.md` says when to regenerate. An approved update regenerates the engineers' skill through the same release, so the engineers get the new specifications and approved contexts together. The engineers review every change their agent makes.
+The line works once the folder is on `project.branch` on GitHub, so ask the user to commit and push it if it is not yet. Do not commit or push it yourself unless the user asks for that command in this chat. `references/engineers-skill-install.md` has every agent, the copy and link options and the team rollout. `references/engineers-skill-maintenance.md` says when to regenerate. An approved update regenerates the engineers' skill through the same release, so an engineer who updates their checkout gets the new specifications and approved contexts together. The engineers review every change their agent makes.
 
 ## When something fails
 

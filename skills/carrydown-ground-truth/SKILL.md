@@ -167,7 +167,7 @@ What counts as a significant change. Assess it when it could alter:
 An editorial change takes a lighter path. A small edit to a number, an exception, a condition or a prohibition can still have broad consequences, so read it before you call it editorial.
 
 1. Establish the comparison. Identify the project, the active release, the reviewed source checkpoint, the owner's working drafts, the changed sources or the engineer's request, and any unfinished update. Use the drafting location rules above. Never overwrite the released plan as though it were the working draft. Never scaffold a replacement project. If `status` shows outstanding engineer requests, show them first and let the owner decide each one (`references/updates.md`, "Engineer clarification requests").
-2. Detect changed content. Render the revised sources with the renderer of step 2 and a new `--version`, then preview the comparison and save it:
+2. Detect changed content. Render the revised sources with the renderer of step 2 and a new `--version`. Before it replaces a rendering it keeps the previous one in the private workspace and prints `preserved the previous rendering of ...`. A `warning:` line instead means there is no private workspace to keep it in, so tell the owner. Then preview the comparison and save it:
 
    ```bash
    python3 <skill>/scripts/reconcile.py prepare --root .
