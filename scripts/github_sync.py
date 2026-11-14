@@ -957,6 +957,22 @@ def _age(created, now):
     return f"{seconds // 86400} days"
 
 
+def _created_at(created):
+    """A comment's creation time as YYYY-MM-DDTHH:MM:SSZ in UTC, or None when GitHub gave none that can be read.
+    GitHub answers in UTC with a Z; an offset such as +02:00 is converted."""
+    import datetime as dt
+    text = str(created or "")
+    for pattern in ("%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S%z"):
+        try:
+            when = dt.datetime.strptime(text, pattern)
+        except ValueError:
+            continue
+        if when.tzinfo is None:
+            when = when.replace(tzinfo=dt.timezone.utc)
+        return when.astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return None
+
+
 def _request_item(plan, body, default):
     """The work item id a request names on its first lines, as the plan writes it, or default. Used only for a
     request on the shared clarification issue, which belongs to no one work item."""
@@ -1063,6 +1079,7 @@ def clarifications_command(a, root, plan):
             c = found["comment"]
             rows.append({"issue": number, "item": key or _request_item(plan, c.get("body"), ""), "state": found["state"],
                          "url": _comment_url(owner, repo, number, c), "comment_id": int(c["id"]),
+                         "created_at": _created_at(c.get("created_at")),
                          "decided_url": _comment_url(owner, repo, number, found["decided"]) if found["decided"] else None,
                          "decided_by": _login_text(found["decided"]) if found["decided"] else None,
                          "_age": _age(c.get("created_at"), now),

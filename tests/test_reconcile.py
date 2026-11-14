@@ -394,6 +394,12 @@ class ClarificationStatusTests(Base):
         self.assertNotIn("issue 13", out)
         self.assertNotIn("were not observed: the publishing skill", out)
 
+    def test_a_creation_time_in_another_form_makes_the_observation_unreadable(self):
+        self.clar([self.request(12, "WI-03", "pending", created_at="3 days ago")])
+        data = self.status()
+        self.assertFalse(data["requests"]["observed"])
+        self.assertEqual(data["requests"]["reason"], "could not be read")
+
     def test_a_request_without_a_recorded_time_says_so(self):
         self.clar([self.request(12, "WI-03", "pending")])
         code, out, err = run(["status", "--root", str(self.root)])

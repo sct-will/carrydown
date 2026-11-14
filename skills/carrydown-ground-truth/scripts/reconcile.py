@@ -354,7 +354,9 @@ def read_clarifications(project):
         for r in data["requests"]:
             if not (isinstance(r, dict) and isinstance(r.get("issue"), int) and not isinstance(r.get("issue"), bool)
                     and isinstance(r.get("item"), str) and r.get("state") in REQUEST_STATES and isinstance(r.get("url"), str)
-                    and (r.get("decided_url") is None or isinstance(r.get("decided_url"), str))):
+                    and (r.get("decided_url") is None or isinstance(r.get("decided_url"), str))
+                    and (r.get("created_at") is None or (isinstance(r.get("created_at"), str)
+                                                         and re.fullmatch(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ", r["created_at"])))):
                 ok = False
                 break
     if not ok:
@@ -1091,7 +1093,7 @@ def finish_requests(project, out, gathered=None):
         return
     rows = []
     for r in data["requests"]:
-        created = r.get("created_at") or r.get("created")
+        created = r.get("created_at")
         age = age_text(created) if created else None
         rows.append({"issue": r["issue"], "item": r["item"], "state": r["state"], "url": r["url"], "decided_url": r.get("decided_url"),
                      "age": age})

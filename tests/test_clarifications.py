@@ -27,7 +27,7 @@ TOKEN = "ghp_" + "Z" * 36
 MARK = "SECRET-MARKER-9183"          # planted in comment bodies: it must never appear in any output
 REQUEST = "Rule clarification request"
 CLARIFICATION_KEY = '  clarification:\n    channel: "mention"\n    login: "plan-owner"\n'
-OBSERVATION_KEYS = ["issue", "item", "state", "url", "comment_id", "decided_url", "decided_by"]
+OBSERVATION_KEYS = ["issue", "item", "state", "url", "comment_id", "created_at", "decided_url", "decided_by"]
 
 
 def request_body(item="WI-03", marker=MARK):
@@ -318,9 +318,31 @@ class ListTests(ClarificationCase):
         self.assertEqual(len(doc["requests"]), 2)
         for row, issue, comment, item in ((doc["requests"][0], self.item, request, "WI-03"), (doc["requests"][1], self.other, other, "WI-04")):
             self.assertEqual(list(row), OBSERVATION_KEYS)
-            self.assertEqual(row, {"issue": issue["number"], "item": item, "state": "pending", "url": comment["html_url"], "comment_id": comment["id"], "decided_url": None, "decided_by": None})
+            self.assertEqual(row, {"issue": issue["number"], "item": item, "state": "pending", "url": comment["html_url"], "comment_id": comment["id"], "created_at": "2020-01-01T00:00:00Z", "decided_url": None, "decided_by": None})
         self.assertTrue(text.endswith("\n"))
         self.assertIn("Recorded the observation in the private workspace", out)
+
+    def test_each_request_records_its_creation_time_and_the_update_status_reads_it(self):
+        self.request()
+        code, out, err = self.ask("--apply")
+        self.assertEqual(code, 0, out + err)
+        row = json.loads(self.observation.read_text(encoding="utf-8"))["requests"][0]
+        self.assertEqual(row["created_at"], "2020-01-01T00:00:00Z")
+        import contextlib
+        import io
+        import reconcile as R
+        buffer = io.StringIO()
+        with contextlib.redirect_stdout(buffer):
+            self.assertEqual(R.main(["status", "--root", str(self.root), "--json"]), 0)
+        requests = json.loads(buffer.getvalue())["requests"]
+        self.assertTrue(requests["observed"], requests)
+        self.assertRegex(requests["requests"][0]["age"], r"^\d+ days$")
+
+    def test_the_creation_time_is_normalized_to_utc_or_left_out(self):
+        self.assertEqual(GS._created_at("2026-11-14T09:30:00Z"), "2026-11-14T09:30:00Z")
+        self.assertEqual(GS._created_at("2026-11-14T11:30:00+02:00"), "2026-11-14T09:30:00Z")
+        for bad in (None, "", "yesterday", "2026-11-14", 5):
+            self.assertIsNone(GS._created_at(bad))
 
     def test_a_dry_run_records_nothing(self):
         self.request()
