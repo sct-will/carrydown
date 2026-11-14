@@ -2,6 +2,41 @@
 
 Recovery starts with a concrete preview. Local repairs write only with `--apply`. GitHub repairs also require separate approval for each run. They never delete or close duplicate issues. Owners, dates, scope and order stay with the plan owner.
 
+## Resume a project update
+
+If an update to an existing project stopped, because the session ended, a check failed or a publication step was interrupted, say:
+
+> Resume the project update.
+
+You do not need an identifier, a command or a file name. The agent finds the saved proposal or the unfinished publication, rechecks that the sources and drafts have not changed since you reviewed them, and continues with the work that is verified as remaining. It asks you a question only when more than one consequential choice is left. If a source or a draft changed during the pause, the agent reassesses the affected part and tells you what changed. It does not apply an old proposal over newer content.
+
+Nothing you accepted is lost when an update stops. Accepted draft changes stay in your drafts, and the part that did not finish stays visible as pending.
+
+**A failure does not authorize a reset, a forced approval, a blind retry or the removal of human work.** The agent does not delete issues, labels, projects or repositories, and it keeps human comments and text outside the managed parts of an issue. If a managed part was changed on GitHub since publication, the run stops and asks for your decision.
+
+### Where a project update can stand
+
+Each state is reported on its own. The agent does not say "up to date" while a required step is pending, and it does not claim that every engineer has received or understood the update.
+
+| State | What it means | What happens next |
+| --- | --- | --- |
+| Draft accepted | You accepted the proposed changes to the plan and specifications. Nothing is released or published yet. | The agent hands the drafts to the publishing skill for a release preview and your approvals. |
+| Release approved | The release is approved for its audience and destinations. The earlier release stays active until the new one is. | The exported files are committed and pushed, then the issue and board updates follow. |
+| Repository update pending | The approved files are not yet on the branch that engineers fetch. | Commit and push the export. Until then, engineers do not see the update. |
+| Issues pending | Some issue updates are not written or not read back. | Resume. Updates that were read back and match are skipped, and nothing is created twice. |
+| Board pending | The board fields do not yet match the plan. | Resume. The board is verified separately from the issues. |
+| Engineer action required | The update is published and an engineer must review it. | The affected engineer sees an action notice on the work item, reviews what changed and reassesses the implementation plan before continuing. |
+
+The technical recoveries behind these states are in [resume an interrupted release](#resume-an-interrupted-release) and [reconcile published issues and the board](#reconcile-published-issues-and-the-board).
+
+### When a previous source checkpoint is missing
+
+An update compares the new sources with the source versions you last reviewed. Those versions are kept privately, in your private workspace. If they are not there, because the workspace was moved or an earlier review never recorded them, the agent says:
+
+> A previous complete source checkpoint is unavailable. Review the current sources to establish one. Earlier uncited changes cannot be assessed automatically.
+
+That sentence means what it says. The agent can still use the citations that the plan records, and you can review the current sources so that later changes have something to be compared with. It cannot discover what changed in the past outside those citations. Deleting raw inputs or clearing a workspace does not make the missing history reappear, so keep the workspace and its backups under your organization's retention rules.
+
 ## Repair local identities and source references
 
 Run these commands from the project root. Replace `<skill>` with either installed carrydown skill folder.

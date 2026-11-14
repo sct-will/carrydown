@@ -209,6 +209,10 @@ Use the arrow keys to move through terminal menus. In a multiple-selection list,
 
 Wait until the installer reports completion and the terminal is ready for another command. You should see both skill names in its installation summary. Security scan results may also appear; the optional [security guide](security.md#what-skillssh-shows) explains them.
 
+There is no third skill to install. The first skill, `carrydown-ground-truth`, covers initial planning and later updates, and the second, `carrydown-plan-to-github`, publishes. Because this is the first release, there is no upgrade walkthrough. The generated engineers' skill is installed separately, as before.
+
+An installer-created link may point to an installer-managed copy of a skill, not into this repository's checkout. Such a link does not necessarily update through `git pull`. A link that you create by hand into your own checkout follows that checkout. To change the installed skills, run the installer again.
+
 If your agent is missing from the chooser, use its [complete installation command below](#choose-where-to-install). Then continue to the installation check.
 
 ## Check the installation
@@ -263,9 +267,9 @@ What this means in practice:
 1. Collect the locations of the files the project must obey: architecture, requirements, governance rules, development standards and company context as needed. Word, Markdown and plain UTF-8 text render directly. The agent can inspect readable PDF, PNG and other files and create reviewed Markdown renderings. Export older Word files to `.docx` first. You can include more than one file. You do not need to create a folder or copy anything into the project. Read [who may see your documents](#before-you-add-documents-who-may-see-them) first if you have not.
 2. In the agent's chat, say:
 
-   > Set up a project plan from this document.
+   > Set up a project plan from these documents.
 
-   For multiple documents, give the paths of the files to use.
+   Give the paths of the files to use. One file is fine.
 3. The agent inventories the files and reports how each will be processed. It identifies unreadable files and continues with readable sources. It stops only when none of the intended ground truth can be processed. It reports a file that is already inside the project folder. It does not call that file safe and does not delete it. It also checks the setup and requests approval if Git needs to be initialized. Initialization is local and does not upload the project.
 4. The first reply is `carrydown: interview, step 0 of 6`, and it asks the one question above. After your answer the agent creates the private workspace on your machine with owner-only permissions, and tells you where drafting will happen. On the no answer it also prints the commands that create the private staging repository. It does not run them.
 5. The interview continues. Replies identify the current step as `carrydown: interview, step N of 6`. Dates, team size and other constraints can remain undecided; the agent proposes assumptions for review. Staffing details you give in step 2 are saved to the private workspace.
@@ -273,7 +277,7 @@ What this means in practice:
 
 **You are ready when the agent begins the interview.**
 
-**Next:** [Review and publish your plan](plan-owner-guide.md). That guide helps you answer the interview, review the drafts and carry the approved plan into GitHub. Planning locally needs no GitHub token. When you are ready to publish, its [token section](plan-owner-guide.md#the-token) lists the exact repository and project permissions for organization-owned and user-owned boards.
+**Next:** [Review and publish your plan](plan-owner-guide.md). That guide helps you answer the interview, review the drafts and carry the approved plan into GitHub. It also explains what to say [when the project changes](plan-owner-guide.md#when-the-project-changes). Planning locally needs no GitHub token. When you are ready to publish, its [token section](plan-owner-guide.md#the-token) lists the exact repository and project permissions for organization-owned and user-owned boards.
 
 ---
 
@@ -686,7 +690,7 @@ Check these in order:
 3. End the agent session and start a new one, or close and reopen the application. Enable Agent Skills in its settings if the agent requires that.
 4. In its chat, say:
 
-   > Use the carrydown-ground-truth skill. Set up a project plan from this document.
+   > Use the carrydown-ground-truth skill. Set up a project plan from these documents.
 
 5. If the skills are still missing, use the complete command for your agent in the [agent command list](#choose-where-to-install) and repeat the check. If the installer reports a permission error creating a symlink, choose **Copy** or use the manual installation route.
 

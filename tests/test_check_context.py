@@ -1,9 +1,10 @@
 """The engineers' check (work package 5): templates/dev-skill/scripts/check_context.py.
 
 They cover local validity (bundle bytes, sidecar, the specification's citations, an active receipt),
-the four messages and their exit codes, freshness against a fake origin (a bare git repository on
-disk), offline grace and its record, expiry, the replacement and withdrawal of a release, and that
-no message holds withheld text, a private path or a name. Tests tagged [G4] are negative tests of the
+the six messages and their exit codes, the receipt-based check of the specification and the shared
+files (exit 14 and 15), the decision overlay and the approved delta, freshness against a fake origin
+(a bare git repository on disk), offline grace and its record, expiry, the replacement and withdrawal
+of a release, and that no message holds withheld text, a private path or a name. Tests tagged [G4] are negative tests of the
 specification (Part G): the consumer side of the expired, withdrawn and superseded behavior and of the offline
 grace rule. tests/test_negative_release.py collects them into the G4 group. A synthetic receipt is built with the
 release_schema helpers. No token and no network are used: the only fetch is from a folder on disk.
@@ -27,6 +28,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 import carrydown_lib as L  # noqa: E402
 import compile_bundles as CB  # noqa: E402
+import decision_overlay as DO  # noqa: E402
 import release_schema as RS  # noqa: E402
 
 TEMPLATE = ROOT / "templates" / "dev-skill" / "scripts" / "check_context.py"
@@ -38,6 +40,8 @@ HAS_GIT = shutil.which("git") is not None
 spec = importlib.util.spec_from_file_location("check_context_under_test", str(TEMPLATE))
 CC = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(CC)
+SKILL_REL = "docs/dev/skills/expense-approvals-dev"
+CC.SKILL_PATH = SKILL_REL      # a generated copy has this filled in. The template alone does not know it
 
 UTC = dt.timezone.utc
 NOW = dt.datetime(2027, 2, 1, 12, 0, 0, tzinfo=UTC)
@@ -46,11 +50,17 @@ FIRST = "carrydown: no approved context for WI-06"
 STALE = "carrydown: the approved context for WI-06 is stale"
 
 
+def H_FILE(path):
+    return hashlib.sha256(PROJECT[path]).hexdigest()
+
+
 def reason_line(code):
     """The second line of a stale message: the plain words, then the fixed code."""
     return f"reason: {CC.REASONS[code]} ({code})"
 CITES = "carrydown: WI-06 cites an obligation that is not in its approved context"
 RESTRICTED = "carrydown: WI-06 has a restricted destination that this project does not publish"
+SPEC_MISMATCH = "carrydown: the specification for WI-06 does not match its approved release"
+MIXED = "carrydown: the approved inputs for WI-06 come from more than one release"
 OFFLINE_WARNING = "freshness not confirmed; within offline grace"
 SPEC_FILE = "docs/spec/m3-enforce-policy/wi-06-limits-and-duties.md"
 
@@ -66,6 +76,21 @@ def compile_fixture():
 
 
 BUNDLES = compile_fixture()
+
+
+def project_files():
+    """Every approved file of the fixture project that a release lists: the bundles, the released plan, the
+    specifications, the specification README and the skill's two Markdown files (stand-ins)."""
+    out = dict(BUNDLES)
+    for path in sorted((FIXTURE / "docs" / "spec").rglob("*")):
+        if path.is_file():
+            out[path.relative_to(FIXTURE).as_posix()] = path.read_bytes()
+    out[f"{SKILL_REL}/SKILL.md"] = b"# Skill\n\nOrient on a work item.\n"
+    out[f"{SKILL_REL}/README.md"] = b"# Engineers' skill\n\nInstall it.\n"
+    return out
+
+
+PROJECT = project_files()
 GIT_HOME = tempfile.mkdtemp(prefix="carrydown-check-context-home-")
 
 
@@ -137,7 +162,7 @@ class Base(unittest.TestCase):
         patch = mock.patch.dict(os.environ, {"HOME": str(self.home), "USERPROFILE": str(self.home), "GIT_TERMINAL_PROMPT": "0"})
         patch.start()
         self.addCleanup(patch.stop)
-        self.files = dict(BUNDLES)
+        self.files = dict(PROJECT)
 
     def git(self, cwd, *args):
         return run_git(cwd, *args)
@@ -355,8 +380,8 @@ class OriginTests(Base):
         pub = cls.world / "publisher"
         run_git(cls.world, "clone", "-q", origin, pub)
         run_git(pub, "checkout", "-q", "-b", "main")
-        cls.rid, cls.receipt = build_receipt(BUNDLES)
-        write_project_files(pub, BUNDLES, [(cls.rid, cls.receipt)])
+        cls.rid, cls.receipt = build_receipt(PROJECT)
+        write_project_files(pub, PROJECT, [(cls.rid, cls.receipt)])
         run_git(pub, "add", "-A")
         run_git(pub, "commit", "-q", "-m", "first release")
         run_git(pub, "push", "-q", "origin", "HEAD:main")
@@ -406,9 +431,16 @@ class FreshnessTests(OriginTests):
         self.assertEqual(code, 0, lines)
         self.assertEqual(lines[0], "carrydown: approved context for WI-06 is ready")
         self.assertEqual(lines[1], "Read docs/context/wi-06.md. Do not open docs/ground-truth/ or any source.")
-        self.assertEqual(len(lines), 2)
-        self.assertEqual(self.cache(), {"cache_format": 1, "repository": CC.origin_identity(self.eng), "commit": self.origin_head(),
-                                        "request_id": self.rid, "time": "2027-02-01T12:00:00Z"})
+        self.assertEqual(lines[2], f"baseline: request {self.rid}, specification {H_FILE(SPEC_FILE)}")
+        self.assertEqual(len(lines), 3, "the first check of an item has no previous baseline, so no delta")
+        cache = self.cache()
+        item = cache.pop("items")["WI-06"]
+        self.assertEqual(cache, {"cache_format": 1, "repository": CC.origin_identity(self.eng), "commit": self.origin_head(),
+                                 "request_id": self.rid, "time": "2027-02-01T12:00:00Z"})
+        self.assertEqual((item["request_id"], item["overlay_sha256"], item["overlays"]), (self.rid, None, {}))
+        self.assertEqual(item["files"][SPEC_FILE], H_FILE(SPEC_FILE))
+        self.assertIn("docs/context/wi-06.md", item["files"])
+        self.assertIn(f"{SKILL_REL}/SKILL.md", item["files"])
         self.assertTrue(CC.origin_identity(self.eng).endswith("origin.git") or "origin" in CC.origin_identity(self.eng))
 
     def test_a_superseded_release_on_the_default_branch_is_stale_after_the_refresh(self):
@@ -609,6 +641,410 @@ class OfflineGraceTests(OriginTests):
         self.assertEqual(self.run_check(self.eng)[1][1], reason_line("could-not-refresh"))
 
 
+class ApprovedInputsLocalTests(LocalProject):
+    """The specification and the shared files against one active receipt, without git (exit 14 and 15)."""
+
+    def assert_spec_block(self, code_lines, reason, where=None):
+        code, lines = code_lines
+        self.assertEqual((code, lines[0]), (14, SPEC_MISMATCH), lines)
+        self.assertEqual(lines[1], reason_line(reason))
+        if where is not None:
+            self.assertEqual(lines[2], f"file: {where}")
+        self.assertIn("Restore the approved file", lines[-1])
+        self.assertLessEqual(len(lines), 4)
+        text = "\n".join(lines)
+        for forbidden in (str(self.base), "Sole approver", "Routing", "Harbor", "company-governance"):
+            self.assertNotIn(forbidden, text)
+
+    def passes(self, root=None, receipt=None):
+        receipt = receipt or CC.parse_receipt(self.receipt)
+        with mock.patch.object(CC, "refresh", return_value=("fresh", receipt, "a" * 40)):
+            return self.run_check(root or self.root)
+
+    def test_every_approved_file_matching_one_receipt_is_ready_and_names_the_baseline(self):
+        code, lines = self.passes()
+        self.assertEqual(code, 0, lines)
+        self.assertEqual(lines[:3], ["carrydown: approved context for WI-06 is ready",
+                                     "Read docs/context/wi-06.md. Do not open docs/ground-truth/ or any source.",
+                                     f"baseline: request {self.rid}, specification {H_FILE(SPEC_FILE)}"])
+
+    def test_the_specification_changed_outside_the_overlay_is_exit_14_in_a_request_only_project(self):
+        path = self.root / SPEC_FILE
+        for edit in (path.read_bytes().replace(b"## Outcome\n", b"## Outcome\n\nA changed promise.\n", 1),
+                     path.read_bytes().replace(b"None yet.", b"- 2027-02-10. Used cents (pull request 12)."),
+                     path.read_bytes() + b"\n"):
+            path.write_bytes(edit)
+            self.assert_spec_block(self.run_check(self.root, refresh=False), "body-changed", SPEC_FILE)
+
+    def test_the_wrong_specification_never_reaches_the_freshness_step(self):
+        (self.root / SPEC_FILE).write_bytes(PROJECT[SPEC_FILE] + b"x")
+        with mock.patch.object(CC, "refresh") as fetch:
+            self.assertEqual(self.run_check(self.root)[0], 14)
+        fetch.assert_not_called()
+
+    def test_a_missing_specification_is_exit_14(self):
+        (self.root / SPEC_FILE).unlink()
+        self.assert_spec_block(self.run_check(self.root), "spec-missing")
+
+    def test_two_specifications_for_one_item_are_ambiguous(self):
+        twin = self.root / "docs/spec/m3-enforce-policy/wi-06-copy.md"
+        twin.write_bytes(PROJECT[SPEC_FILE])
+        self.assert_spec_block(self.run_check(self.root), "spec-ambiguous")
+
+    def test_a_specification_that_is_a_link_is_not_a_specification(self):
+        if os.name != "posix":
+            self.skipTest("symbolic links need a POSIX file system")
+        path = self.root / SPEC_FILE
+        elsewhere = self.base / "elsewhere.md"
+        elsewhere.write_bytes(PROJECT[SPEC_FILE])
+        path.unlink()
+        path.symlink_to(elsewhere)
+        self.assert_spec_block(self.run_check(self.root), "spec-missing")
+
+    def test_each_shared_file_is_an_input(self):
+        shared = ["docs/spec/plan.yaml", "docs/spec/README.md", f"{SKILL_REL}/SKILL.md", f"{SKILL_REL}/README.md"]
+        for rel in shared:
+            path = self.root / rel
+            good = path.read_bytes()
+            path.write_bytes(good + b"\nchanged\n")
+            self.assert_spec_block(self.run_check(self.root), "input-changed", rel)
+            path.unlink()
+            self.assert_spec_block(self.run_check(self.root), "input-missing", rel)
+            path.write_bytes(good)
+        self.assertEqual(self.passes()[0], 0)
+
+    def test_a_shared_specification_named_in_integration_points_is_an_input(self):
+        text = PROJECT[SPEC_FILE].decode("utf-8")
+        stems = CC.neighbor_stems(text, "WI-06")
+        self.assertTrue(stems, "the fixture's specification names other work items")
+        neighbor = next(p for p in sorted(PROJECT) if p.startswith("docs/spec/") and p.rsplit("/", 1)[-1].startswith(stems[0] + "-"))
+        (self.root / neighbor).write_bytes(PROJECT[neighbor] + b"\nchanged\n")
+        self.assert_spec_block(self.run_check(self.root), "body-changed", neighbor)
+        (self.root / neighbor).write_bytes(PROJECT[neighbor])
+        self.assertEqual(self.passes()[0], 0)
+
+    def test_a_work_item_the_receipt_does_not_list_is_not_a_required_input(self):
+        text = PROJECT[SPEC_FILE].decode("utf-8").replace("## Integration points\n", "## Integration points\n\nThe counterpart is WI-12, which has no file.\n", 1)
+        (self.root / SPEC_FILE).write_bytes(text.encode())
+        files = dict(self.files, **{SPEC_FILE: text.encode()})
+        (self.root / "docs/release" / f"{self.rid}.receipt.json").unlink()
+        rid, data = build_receipt(files)
+        self.write_receipt(self.root, rid, data)
+        self.assertEqual(self.passes(receipt=CC.parse_receipt(data))[0], 0)
+
+    def test_a_receipt_that_does_not_list_the_specification_is_exit_14(self):
+        (self.root / "docs/release" / f"{self.rid}.receipt.json").unlink()
+        rid, data = build_receipt({p: d for p, d in self.files.items() if p != SPEC_FILE})
+        self.write_receipt(self.root, rid, data)
+        self.assert_spec_block(self.run_check(self.root), "not-in-release", SPEC_FILE)
+
+    def test_a_receipt_that_does_not_list_the_skill_instructions_is_exit_14(self):
+        (self.root / "docs/release" / f"{self.rid}.receipt.json").unlink()
+        rid, data = build_receipt({p: d for p, d in self.files.items() if p != f"{SKILL_REL}/SKILL.md"})
+        self.write_receipt(self.root, rid, data)
+        self.assert_spec_block(self.run_check(self.root), "not-in-release", f"{SKILL_REL}/SKILL.md")
+
+    def test_the_context_alone_in_a_receipt_is_no_longer_enough(self):
+        (self.root / "docs/release" / f"{self.rid}.receipt.json").unlink()
+        rid, data = build_receipt(BUNDLES)
+        self.write_receipt(self.root, rid, data)
+        self.assertEqual(self.run_check(self.root)[0], 14)
+
+    def test_files_that_match_different_active_receipts_are_exit_15(self):
+        """Two active receipts, each covering a different part of what the checkout holds."""
+        readme = "docs/spec/README.md"
+        other = dict(self.files, **{readme: PROJECT[readme] + b"\nNewer conventions.\n"})
+        spec_b = dict(other, **{SPEC_FILE: PROJECT[SPEC_FILE].replace(b"## Outcome\n", b"## Outcome\n\nSecond release.\n", 1)})
+        rid_b, data_b = build_receipt(spec_b, nonce="b2" * 16)
+        self.write_receipt(self.root, rid_b, data_b)
+        (self.root / readme).write_bytes(other[readme])            # matches release B only
+        # the specification still holds release A's bytes, which release B does not list
+        code, lines = self.run_check(self.root)
+        self.assertEqual((code, lines[0]), (15, MIXED), lines)
+        self.assertEqual(lines[1], reason_line("inputs-from-different-releases"))
+        self.assertIn("Pull the default branch", lines[-1])
+        self.assertLessEqual(len(lines), 4)
+
+    def test_two_active_receipts_that_list_the_same_bytes_are_not_ambiguous(self):
+        rid, data = build_receipt(self.files, nonce="b2" * 16)
+        self.write_receipt(self.root, rid, data)
+        self.assertEqual(self.passes(receipt=CC.parse_receipt(data))[0], 0)
+
+    def test_an_ended_release_is_stale_before_any_file_is_judged(self):
+        rid, data = build_receipt(self.files, state="withdrawn")
+        self.write_receipt(self.root, rid, data)
+        (self.root / SPEC_FILE).write_bytes(PROJECT[SPEC_FILE] + b"x")
+        code, lines = self.run_check(self.root)
+        self.assertEqual((code, lines[0], lines[1]), (11, STALE, reason_line("withdrawn")))
+
+    def test_a_placeholder_item_needs_no_specification(self):
+        side = json.loads(self.files["docs/context/wi-06.bundle.json"])
+        side["restricted_destination"] = True
+        files = dict(self.files, **{"docs/context/wi-06.bundle.json": RS.canonical_json(side)})
+        (self.root / "docs/release" / f"{self.rid}.receipt.json").unlink()
+        rid, data = build_receipt({p: d for p, d in files.items() if not p.startswith("docs/spec/")})
+        self.write_project(self.root, files=files, receipts=[(rid, data)])
+        (self.root / SPEC_FILE).unlink()
+        with mock.patch.object(CC, "refresh", return_value=("fresh", CC.parse_receipt(data), "a" * 40)):
+            self.assertEqual(self.run_check(self.root)[1][0], RESTRICTED)
+
+    def test_an_unfilled_or_odd_policy_is_the_strict_one(self):
+        for value in ("{{engineer_edits}}", "whatever", ""):
+            with mock.patch.object(CC, "ENGINEER_EDITS", value):
+                self.assertEqual(CC.edit_policy(), "request-only", value)
+        with mock.patch.object(CC, "ENGINEER_EDITS", "allowed"):
+            self.assertEqual(CC.edit_policy(), "allowed")
+        with mock.patch.object(CC, "SKILL_PATH", "{{skill_path}}"):
+            self.assertIsNone(CC.skill_dir())
+        with mock.patch.object(CC, "SKILL_PATH", "../outside"):
+            self.assertIsNone(CC.skill_dir())
+
+
+@unittest.skipUnless(HAS_GIT, "git is needed for the fake origin")
+class DecisionOverlayCheckTests(OriginTests):
+    """The decision overlay in the engineer's check: the approved bytes come from git, the receipt verifies them."""
+
+    def setUp(self):
+        super().setUp()
+        patch = mock.patch.object(CC, "ENGINEER_EDITS", "allowed")
+        patch.start()
+        self.addCleanup(patch.stop)
+        self.spec = self.eng / SPEC_FILE
+
+    def append(self, entry, root=None):
+        path = (root or self.eng) / SPEC_FILE
+        path.write_bytes(path.read_bytes().replace(b"None yet.", entry.encode()))
+
+    def cache_item(self):
+        return self.cache()["items"]["WI-06"]
+
+    def test_a_valid_first_entry_passes_and_records_the_overlay_digest(self):
+        entry = "- 2027-02-10. Used integer cents (pull request 12)."
+        self.append(entry)
+        code, lines = self.run_check(self.eng)
+        self.assertEqual(code, 0, lines)
+        self.assertEqual(lines[2], f"baseline: request {self.rid}, specification {H_FILE(SPEC_FILE)}",
+                         "the baseline is the approved digest, not the digest of the edited file")
+        self.assertIn("note: 1 new note(s) under Decisions recorded in your copy of the specification. They are not an approval. The plan owner reviews them", lines)
+        expected = hashlib.sha256(entry.encode()).hexdigest()
+        item = self.cache_item()
+        self.assertEqual(item["overlay_sha256"], expected)
+        self.assertEqual(item["overlays"], {SPEC_FILE: expected})
+        self.assertEqual(item["files"][SPEC_FILE], H_FILE(SPEC_FILE))
+        self.assertEqual(DO.validate_overlay(PROJECT[SPEC_FILE], self.spec.read_bytes(), "allowed").overlay_sha256, expected)
+
+    def test_an_entry_committed_on_a_branch_is_still_judged_against_the_approved_text(self):
+        self.append("- 2027-02-10. Used integer cents (pull request 12).")
+        self.git(self.eng, "checkout", "-q", "-b", "feature")
+        self.git(self.eng, "commit", "-q", "-am", "decision note")
+        self.assertEqual(self.run_check(self.eng)[0], 0)
+        # the note was committed, but the receipt lists the first approved version: a later edit of the note is still an overlay of that
+        self.spec.write_bytes(self.spec.read_bytes().replace(b"Used integer cents (pull request 12)", b"Used floats (pull request 12)"))
+        self.assertEqual(self.run_check(self.eng)[0], 0)
+
+    def test_the_placeholder_kept_beside_an_entry_is_exit_14(self):
+        self.spec.write_bytes(self.spec.read_bytes() + b"\n- 2027-02-10. Used cents (pull request 12).\n")
+        code, lines = self.run_check(self.eng)
+        self.assertEqual((code, lines[0], lines[1]), (14, SPEC_MISMATCH, reason_line("placeholder-kept")))
+
+    def test_an_undated_note_is_exit_14(self):
+        self.append("- Used integer cents.")
+        code, lines = self.run_check(self.eng)
+        self.assertEqual((code, lines[1]), (14, reason_line("entry-undated")))
+
+    def test_a_change_outside_the_section_is_exit_14_even_with_a_valid_entry(self):
+        self.append("- 2027-02-10. Used integer cents (pull request 12).")
+        self.spec.write_bytes(self.spec.read_bytes().replace(b"## Outcome\n", b"## Outcome\n\nA changed promise.\n", 1))
+        code, lines = self.run_check(self.eng)
+        self.assertEqual((code, lines[1], lines[2]), (14, reason_line("body-changed"), f"file: {SPEC_FILE}"))
+        self.assertFalse((self.eng / ".carrydown").exists(), "a refused check records nothing")
+
+    def test_an_edited_old_entry_is_exit_14(self):
+        approved = dict(self.files, **{SPEC_FILE: PROJECT[SPEC_FILE].replace(b"None yet.", b"- 2027-02-01. Used integer cents (pull request 3).")})
+        rid, data = build_receipt(approved, nonce="b2" * 16)
+        (self.pub / "docs" / "release" / f"{self.rid}.receipt.json").unlink()
+        write_project_files(self.pub, approved, [(rid, data)])
+        self.publish("release with a decision note")
+        self.git(self.eng, "pull", "-q")
+        self.assertEqual(self.run_check(self.eng)[0], 0)
+        self.spec.write_bytes(self.spec.read_bytes().replace(b"Used integer cents (pull request 3)", b"Used floats (pull request 3)"))
+        code, lines = self.run_check(self.eng)
+        self.assertEqual((code, lines[0], lines[1]), (14, SPEC_MISMATCH, reason_line("entry-edited")))
+        # a new entry after the approved one is fine
+        self.spec.write_bytes(self.git(self.eng, "show", f"HEAD:{SPEC_FILE}").encode() + b"\n- 2027-02-10. Then a retry (PR #14).\n")
+        self.assertEqual(self.run_check(self.eng)[0], 0)
+
+    def test_a_removed_old_entry_is_exit_14(self):
+        approved = dict(self.files, **{SPEC_FILE: PROJECT[SPEC_FILE].replace(b"None yet.", b"- 2027-02-01. Used integer cents (pull request 3).")})
+        rid, data = build_receipt(approved, nonce="b2" * 16)
+        (self.pub / "docs" / "release" / f"{self.rid}.receipt.json").unlink()
+        write_project_files(self.pub, approved, [(rid, data)])
+        self.publish("release with a decision note")
+        self.git(self.eng, "pull", "-q")
+        self.spec.write_bytes(PROJECT[SPEC_FILE])
+        self.assertEqual(self.run_check(self.eng)[1][1], reason_line("entry-edited"))
+
+    def test_without_the_approved_text_in_git_the_specification_is_unverified(self):
+        self.append("- 2027-02-10. Used integer cents (pull request 12).")
+        with mock.patch.object(CC, "approved_copy", return_value=None):
+            code, lines = self.run_check(self.eng)
+        self.assertEqual((code, lines[0], lines[1]), (14, SPEC_MISMATCH, reason_line("approved-copy-unavailable")))
+        self.assertIn("unverified", lines[1])
+
+    def test_only_a_version_whose_digest_matches_the_receipt_counts_as_approved(self):
+        """A history that holds a different version of the file under the same name is not an approved copy."""
+        other = PROJECT[SPEC_FILE].replace(b"None yet.", b"- 2027-01-01. Another note (PR 1).")
+        self.assertIsNone(CC.approved_copy(self.eng, SPEC_FILE, hashlib.sha256(other).hexdigest()))
+        self.assertEqual(CC.approved_copy(self.eng, SPEC_FILE, H_FILE(SPEC_FILE)), PROJECT[SPEC_FILE])
+
+    def test_a_request_only_project_refuses_even_a_valid_entry(self):
+        with mock.patch.object(CC, "ENGINEER_EDITS", "request-only"):
+            self.append("- 2027-02-10. Used integer cents (pull request 12).")
+            code, lines = self.run_check(self.eng)
+        self.assertEqual((code, lines[0], lines[1]), (14, SPEC_MISMATCH, reason_line("body-changed")))
+
+    def test_a_neighbor_specification_may_carry_a_valid_overlay_too(self):
+        stems = CC.neighbor_stems(PROJECT[SPEC_FILE].decode("utf-8"), "WI-06")
+        neighbor = next(p for p in sorted(PROJECT) if p.startswith("docs/spec/") and p.rsplit("/", 1)[-1].startswith(stems[0] + "-"))
+        path = self.eng / neighbor
+        path.write_bytes(path.read_bytes().replace(b"None yet.", b"- 2027-02-10. Their note (pull request 5)."))
+        self.assertEqual(self.run_check(self.eng)[0], 0)
+        self.assertIn(neighbor, self.cache_item()["overlays"])
+        self.assertIsNone(self.cache_item()["overlay_sha256"], "the item's own specification has no overlay")
+
+
+@unittest.skipUnless(HAS_GIT, "git is needed for the fake origin")
+class ApprovedDeltaTests(OriginTests):
+    """After a refresh, the approved inputs are compared with the ones recorded at the last check (design 10.3)."""
+
+    def release(self, changes, nonce="b2" * 16, supersede=True):
+        """Publish a replacement release with the files changed ({path: bytes}); the old receipt becomes superseded."""
+        files = dict(self.files, **changes)
+        new_rid, new_data = build_receipt(files, nonce=nonce, supersedes=self.rid)
+        _, old_data = build_receipt(self.files, state="superseded", superseded_by=new_rid)
+        write_project_files(self.pub, files, [(self.rid, old_data), (new_rid, new_data)])
+        self.publish("replacement release")
+        return new_rid, files
+
+    def pull(self):
+        self.git(self.eng, "pull", "-q", "--ff-only")
+
+    def delta(self, lines):
+        return [ln for ln in lines if ln.startswith("carrydown: approved inputs changed")]
+
+    def test_the_first_check_and_an_unchanged_check_print_no_delta(self):
+        self.assertEqual(len(self.run_check(self.eng)[1]), 3)
+        self.assertEqual(len(self.run_check(self.eng)[1]), 3)
+
+    def test_a_changed_specification_prints_the_changed_passages_and_the_reassessment_instruction(self):
+        self.refresh_once()
+        text = PROJECT[SPEC_FILE].decode("utf-8")
+        changed = text.replace("## Outcome\n", "## Outcome\n\nApprovals above 30,000.00 need the chief finance officer.\n", 1)
+        new_rid, files = self.release({SPEC_FILE: changed.encode()})
+        self.pull()
+        code, lines = self.run_check(self.eng)
+        self.assertEqual(code, 0, lines)
+        self.assertEqual(lines[0], "carrydown: approved context for WI-06 is ready")
+        self.assertEqual(lines[2], f"baseline: request {new_rid}, specification {hashlib.sha256(changed.encode()).hexdigest()}")
+        self.assertEqual(self.delta(lines), [CC.DELTA_HEADLINE.format(id="WI-06")])
+        block = lines[lines.index(CC.DELTA_HEADLINE.format(id="WI-06")):]
+        self.assertEqual(block[1], f"changed: {SPEC_FILE} (specification)")
+        self.assertNotIn("changed: docs/context/wi-06.md (approved context)", block, "unchanged files are not listed")
+        self.assertIn(f"--- {SPEC_FILE} (previous)", block)
+        self.assertIn(f"+++ {SPEC_FILE} (current)", block)
+        self.assertIn("+Approvals above 30,000.00 need the chief finance officer.", block)
+        self.assertEqual(block[-1], CC.REASSESS)
+        self.assertEqual(CC.REASSESS, "Reassess your implementation plan against the current approved inputs before you write more code. Do not continue on the old plan.")
+        context_lines = [ln for ln in block if ln.startswith(("+", "-", " ", "@@")) and "Approvals above" not in ln]
+        self.assertTrue(all(len(ln) <= 300 for ln in block))
+        self.assertLessEqual(len(context_lines), 12, "a short delta: the changed lines and two lines of context each side")
+        # the record moved to the new baseline, so the next check is quiet
+        self.assertEqual(len(self.run_check(self.eng)[1]), 3)
+        self.assertEqual(self.cache()["items"]["WI-06"]["request_id"], new_rid)
+
+    def test_a_changed_context_and_a_changed_convention_are_listed_with_their_labels(self):
+        self.refresh_once()
+        readme, context = "docs/spec/README.md", "docs/context/wi-06.md"
+        side = json.loads(PROJECT["docs/context/wi-06.bundle.json"])
+        new_context = PROJECT[context] + b"\nA new approved rule.\n"
+        side["content_sha256"] = hashlib.sha256(new_context).hexdigest()
+        self.release({readme: PROJECT[readme] + b"\nA new convention.\n", context: new_context, "docs/context/wi-06.bundle.json": RS.canonical_json(side),
+                      "docs/spec/plan.yaml": PROJECT["docs/spec/plan.yaml"] + b"# note\n"})
+        self.pull()
+        code, lines = self.run_check(self.eng)
+        self.assertEqual(code, 0, lines)
+        block = lines[lines.index(CC.DELTA_HEADLINE.format(id="WI-06")):]
+        for row in (f"changed: {context} (approved context)", "changed: docs/context/wi-06.bundle.json (context sidecar)",
+                    f"changed: {readme} (specification folder README)", "changed: docs/spec/plan.yaml (released plan)"):
+            self.assertIn(row, block)
+        self.assertIn("+A new approved rule.", block)
+        self.assertIn("+A new convention.", block)
+        self.assertNotIn("+# note", block, "the released plan is listed, its lines are not shown")
+
+    def test_a_missing_previous_version_says_so_and_still_asks_for_reassessment(self):
+        self.refresh_once()
+        record = self.cache()
+        record["items"]["WI-06"]["files"][SPEC_FILE] = "9" * 64            # a version no history holds
+        (self.eng / ".carrydown/cache/last-refresh").write_text(json.dumps(record), encoding="utf-8")
+        code, lines = self.run_check(self.eng)
+        self.assertEqual(code, 0, lines)
+        self.assertIn(CC.DELTA_HEADLINE.format(id="WI-06"), lines)
+        self.assertIn(f"changed: {SPEC_FILE} (specification)", lines)
+        self.assertIn(f"{SPEC_FILE}: previous version unavailable locally; load the current approved inputs", lines)
+        self.assertEqual(lines[-1], CC.REASSESS)
+        self.assertEqual(CC.NO_PREVIOUS, "previous version unavailable locally; load the current approved inputs")
+
+    def test_a_newer_release_with_the_same_bytes_is_a_provenance_refresh_not_a_delta(self):
+        self.refresh_once()
+        new_rid, _ = self.release({})
+        self.pull()
+        code, lines = self.run_check(self.eng)
+        self.assertEqual(code, 0, lines)
+        self.assertEqual(self.delta(lines), [])
+        self.assertEqual(lines[3], "note: a newer release covers the same approved inputs for WI-06. Only its provenance changed, so nothing in your plan needs to change")
+        self.assertNotIn(CC.REASSESS, lines)
+        self.assertEqual(self.cache()["items"]["WI-06"]["request_id"], new_rid)
+
+    def test_the_baseline_of_another_item_is_kept_and_not_confused(self):
+        self.refresh_once()
+        code, lines = self.run_check(self.eng, "WI-03")
+        self.assertEqual(code, 0, lines)
+        self.assertEqual(len(lines), 3, "WI-03 has no baseline of its own yet")
+        self.assertEqual(sorted(self.cache()["items"]), ["WI-03", "WI-06"])
+
+    def test_the_check_never_changes_the_working_tree_or_the_branch(self):
+        self.refresh_once()
+        new_rid, _ = self.release({SPEC_FILE: PROJECT[SPEC_FILE].replace(b"## Outcome\n", b"## Outcome\n\nA changed promise.\n", 1)})
+        before_head = self.git(self.eng, "rev-parse", "HEAD")
+        before_status = self.git(self.eng, "status", "--porcelain")
+        code, lines = self.run_check(self.eng)
+        # the clone has not pulled: the local release is stale next to the fetched one, and nothing was merged
+        self.assertEqual((code, lines[0]), (11, STALE))
+        self.assertEqual(self.git(self.eng, "rev-parse", "HEAD"), before_head)
+        self.assertEqual(self.git(self.eng, "status", "--porcelain"), before_status)
+        self.assertEqual((self.eng / SPEC_FILE).read_bytes(), PROJECT[SPEC_FILE])
+
+    def test_the_delta_is_labeled_text_and_holds_no_color(self):
+        self.refresh_once()
+        self.release({SPEC_FILE: PROJECT[SPEC_FILE].replace(b"## Outcome\n", b"## Outcome\n\nA changed promise.\n", 1)})
+        self.pull()
+        text = "\n".join(self.run_check(self.eng)[1])
+        self.assertNotIn("\x1b", text)
+        self.assertIn("changed: ", text)
+
+    def test_the_command_line_prints_the_delta_after_the_ready_line(self):
+        self.refresh_once()
+        self.release({SPEC_FILE: PROJECT[SPEC_FILE].replace(b"## Outcome\n", b"## Outcome\n\nA changed promise.\n", 1)})
+        self.pull()
+        env = dict(os.environ, PYTHONDONTWRITEBYTECODE="1", HOME=str(self.home))
+        run = subprocess.run([sys.executable, str(TEMPLATE), "WI-06"], cwd=str(self.eng), env=env, capture_output=True, text=True, timeout=120)
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        lines = run.stdout.splitlines()
+        self.assertEqual(lines[0], "carrydown: approved context for WI-06 is ready")
+        self.assertIn(CC.DELTA_HEADLINE.format(id="WI-06"), lines)
+        self.assertEqual(lines[-1], CC.REASSESS)
+
+
 @unittest.skipUnless(HAS_GIT, "git is needed for the fake origin")
 class MessageHygieneTests(OriginTests):
     def test_no_blocked_run_prints_withheld_text_a_heading_a_private_path_or_a_name(self):
@@ -619,7 +1055,7 @@ class MessageHygieneTests(OriginTests):
         spec_path = self.eng / SPEC_FILE
         spec_path.write_text(spec_path.read_text(encoding="utf-8").replace("## References\n", "## References\n\n- architecture section 9.9, Sole approver\n", 1), encoding="utf-8")
         outputs.append(self.run_check(self.eng)[1])
-        spec_path.write_text(spec_path.read_text(encoding="utf-8").replace("- architecture section 9.9, Sole approver\n", ""), encoding="utf-8")
+        self.git(self.eng, "checkout", "--", SPEC_FILE)
         _, data = build_receipt(self.files, state="withdrawn")
         self.write_receipt(self.pub, self.rid, data)
         self.publish("withdraw")
@@ -644,12 +1080,16 @@ class CommandLineTests(OriginTests):
         self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
         self.assertTrue(run.stdout.startswith("carrydown: approved context for WI-06 is ready"))
 
-    def test_the_four_exit_codes(self):
+    def test_the_exit_codes(self):
         self.assertEqual(self.run_script("WI-99").returncode, 10)
         spec_path = self.eng / SPEC_FILE
         spec_path.write_text(spec_path.read_text(encoding="utf-8").replace("## References\n", "## References\n\n- architecture section 9.9\n", 1), encoding="utf-8")
         run = self.run_script("WI-06")
         self.assertEqual((run.returncode, run.stdout.splitlines()[0]), (12, CITES))
+        self.git(self.eng, "checkout", "--", SPEC_FILE)
+        spec_path.write_text(spec_path.read_text(encoding="utf-8").replace("## Outcome\n", "## Outcome\n\nA changed promise.\n", 1), encoding="utf-8")
+        run = self.run_script("WI-06")
+        self.assertEqual((run.returncode, run.stdout.splitlines()[0]), (14, SPEC_MISMATCH))
         self.git(self.eng, "checkout", "--", SPEC_FILE)
         self.take_origin_away()
         run = self.run_script("WI-06")
@@ -685,10 +1125,16 @@ class CommandLineTests(OriginTests):
         self.assertLess(step2.index("check_context.py"), step2.index("references/preflight.md"))
         self.assertNotIn("references/preflight.md", text.split("## Orient on a work item", 1)[0])
 
-    def test_the_generated_copy_in_the_sample_is_the_template_with_two_constants_filled(self):
-        expected = TEMPLATE.read_text(encoding="utf-8").replace("{{id_prefix}}", "WI").replace("{{spec_dir}}", "docs/spec")
+    def test_the_generated_copy_in_the_sample_is_the_template_with_four_constants_filled(self):
+        """The sample's copy is regenerated from the template after a template change: until then this fails."""
+        fill = (("id_prefix", "WI"), ("spec_dir", "docs/spec"), ("skill_path", SKILL_REL), ("engineer_edits", "allowed"))
+        expected = TEMPLATE.read_text(encoding="utf-8")
+        shipped = (ROOT / "skills/carrydown-plan-to-github/templates/dev-skill/scripts/check_context.py").read_text(encoding="utf-8")
+        for name, value in fill:
+            expected = expected.replace("{{" + name + "}}", value)
+            shipped = shipped.replace("{{" + name + "}}", value)
         self.assertEqual(GENERATED.read_text(encoding="utf-8"), expected)
-        self.assertEqual(GENERATED.read_bytes(), (ROOT / "skills/carrydown-plan-to-github/templates/dev-skill/scripts/check_context.py").read_bytes().replace(b"{{id_prefix}}", b"WI").replace(b"{{spec_dir}}", b"docs/spec"))
+        self.assertEqual(GENERATED.read_text(encoding="utf-8"), shipped)
 
     def test_the_generated_copy_runs_in_a_checkout(self):
         run = self.run_script("WI-06", script=GENERATED)
@@ -708,7 +1154,7 @@ class CommandLineTests(OriginTests):
                 imported |= {a.name.split(".")[0] for a in node.names}
             elif isinstance(node, ast.ImportFrom):
                 imported.add((node.module or "").split(".")[0])
-        self.assertEqual(imported, {"argparse", "datetime", "hashlib", "json", "os", "re", "subprocess", "sys", "pathlib"})
+        self.assertEqual(imported, {"argparse", "datetime", "difflib", "hashlib", "json", "os", "re", "subprocess", "sys", "pathlib", "typing"})
         text = TEMPLATE.read_text(encoding="utf-8")
         for word in ("urllib", "socket", "ssl", "GITHUB_TOKEN", "CARRYDOWN_GITHUB_TOKEN", "Authorization"):
             self.assertNotIn(word, text, word)

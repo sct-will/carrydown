@@ -50,6 +50,21 @@ For a plan with M milestones and N work items:
 | Views | 3 |
 | Iterations | M |
 
+## States to report after an update
+
+After a release that carries an approved update, report these states separately. Use text labels. Each is one of its two values. A state not reached yet is pending, never left out.
+
+| State | Values | Where it comes from |
+| --- | --- | --- |
+| Draft reconciliation | accepted, or not yet accepted | The planning skill's apply step. |
+| Release | approved, or not yet approved | `release.py release`, with the owner's approvals. |
+| Engineering repository update | pending, or available | The committed and pushed release files (step 4 commit and push check). |
+| Issue updates | pending, or verified | `github_sync.py --verify`. |
+| Board updates | pending, or verified | `github_project.py --verify`. |
+| Engineer action | required, with the work items, or none | The work items whose approved specification or context changed. |
+
+Do not say "up to date" while a required publication step is pending. A verified surface says only that the managed content matches the release. Engineers can still hold old material: an offline checkout or an open conversation keeps what it had. Do not say that every engineer has received or understood the update. Tell the owner which work items need engineer action and what the engineer does: update the checkout through the normal reviewed repository update, reread the approved changes and reassess their plan.
+
 ## By hand
 
 Open the project link. Check the Table view shows the fields. Open one issue and read its body from top to bottom. Check one dependency link and one sub-issue link. Then do the clicks listed in `project-board.md`.

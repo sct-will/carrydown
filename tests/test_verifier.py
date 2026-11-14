@@ -106,6 +106,8 @@ class EngineeringTests(ExportedBase):
         self.assertFalse(report.ok)
         self.assertEqual(report.code, "sha256-mismatch")
         self.assertIn(self.spec, [f.where for f in report.findings])
+        self.assertEqual(report.findings[0].why, RE.SEMANTIC_WHY, "changed bytes are a change of meaning, never a provenance refresh")
+        self.assertIn("provenance refresh", report.findings[0].why)
 
     def test_a_changed_file_mode_fails(self):
         report = self.verify(self.case.open(edit={self.spec: ("100755", self.ex.files[self.spec][1])}))
@@ -312,16 +314,107 @@ class RequestOnlyTests(ExportedBase):
 class EngineerEditsAllowedTests(ExportedBase):
     edits = {"docs/spec/**": "allowed"}
 
+    def overlay(self, entry="- 2027-02-01. Departed from the contract in pull request 12."):
+        """The approved specification with its "None yet." line replaced by one new entry."""
+        text = self.text(self.spec)
+        self.assertEqual(text.count("None yet."), 1)
+        return text.replace("None yet.", entry)
+
+    def check(self, content, branch="decisions"):
+        return self.verify(self.case.open(only={self.spec: content.encode() if isinstance(content, str) else content}, branch=branch))
+
     def test_WP9_with_edits_allowed_an_append_to_decisions_recorded_passes_and_other_edits_fail(self):
         self.case.merge(self.case.open())
-        text = self.text(self.spec)
-        appended = text.rstrip("\n") + "\n\n- 2027-02-01. Departed from the contract in pull request 12.\n"
-        report = self.verify(self.case.open(only={self.spec: appended.encode()}, branch="decisions"))
+        appended = self.overlay()
+        report = self.check(appended)
         self.assertTrue(report.ok, report.findings)
         elsewhere = appended.replace("## Outcome", "## Outcome\n\nA changed promise.", 1)
         self.assertNotEqual(elsewhere, appended)
-        report = self.verify(self.case.open(only={self.spec: elsewhere.encode()}, branch="outcome"))
+        report = self.check(elsewhere, "outcome")
         self.assertEqual((report.ok, report.code), (False, "sha256-mismatch"))
+
+    def test_a_valid_overlay_passes_with_a_plain_explanation_that_it_is_not_an_approval(self):
+        self.case.merge(self.case.open())
+        report = self.check(self.overlay())
+        self.assertEqual((report.ok, report.kind), (True, "content"), report.findings)
+        self.assertEqual(report.explanation, RE.OVERLAY_PASS)
+        self.assertIn("not an approval", report.explanation)
+
+    def test_the_placeholder_kept_beside_the_entry_fails_with_its_reason(self):
+        self.case.merge(self.case.open())
+        kept = self.text(self.spec).rstrip("\n") + "\n\n- 2027-02-01. Departed from the contract in pull request 12.\n"
+        report = self.check(kept)
+        self.assertEqual((report.ok, report.code), (False, "sha256-mismatch"))
+        self.assertIn(self.spec, [f.where for f in report.findings])
+        self.assertIn("(placeholder-kept)", report.findings[0].why)
+        self.assertIn("None yet.", report.findings[0].why)
+
+    def test_an_entry_without_a_pull_request_reference_fails(self):
+        self.case.merge(self.case.open())
+        report = self.check(self.overlay("- 2027-02-01. Departed from the contract."))
+        self.assertEqual((report.ok, report.code), (False, "sha256-mismatch"))
+        self.assertIn("(pr-reference-missing)", report.findings[0].why)
+
+    def test_an_undated_entry_and_a_removed_placeholder_fail(self):
+        self.case.merge(self.case.open())
+        for n, (content, reason) in enumerate(((self.overlay("- Departed from the contract (PR 12)."), "entry-undated"),
+                                              (self.overlay(""), "placeholder-removed"))):
+            report = self.check(content, f"bad-{n}")
+            self.assertEqual((report.ok, report.code), (False, "sha256-mismatch"), reason)
+            self.assertIn(f"({reason})", report.findings[0].why)
+
+    def test_a_malformed_boundary_fails(self):
+        self.case.merge(self.case.open())
+        for n, content in enumerate((self.overlay().replace("## Decisions recorded", "### Decisions recorded"),
+                                     self.overlay() + "\n## Decisions recorded\n\n- 2027-02-02. Again (PR 3).\n")):
+            report = self.check(content, f"boundary-{n}")
+            self.assertEqual((report.ok, report.code), (False, "sha256-mismatch"))
+            self.assertIn("(boundary-malformed)", report.findings[0].why)
+
+    def test_a_change_outside_the_section_names_a_semantic_change(self):
+        self.case.merge(self.case.open())
+        report = self.check(self.overlay().replace("## Outcome", "## Outcome\n\nA changed promise.", 1), "outside")
+        self.assertIn("(body-changed)", report.findings[0].why)
+        self.assertIn("change of meaning", report.findings[0].why)
+
+    def test_the_verifier_uses_the_same_validator_as_the_engineers_check(self):
+        import decision_overlay as DO
+        self.case.merge(self.case.open())
+        approved = self.ex.files[self.spec][1]
+        cases = (self.overlay(), self.overlay("- 2027-02-01. No number."), self.overlay("- note"), self.text(self.spec) + "\nTrailing.\n")
+        for n, content in enumerate(cases):
+            expected = DO.validate_overlay(approved, content.encode(), "allowed", require_pr_reference=True)
+            report = self.check(content, f"same-{n}")
+            self.assertEqual(report.ok, expected.ok, (expected.reason, report.findings))
+        self.assertEqual([DO.validate_overlay(approved, c.encode(), "allowed", require_pr_reference=True).ok for c in cases], [True, False, False, False])
+
+
+class ProvenanceTests(ExportedBase):
+    """A receipt that changed while the approved bytes did not is a provenance refresh, never a change of meaning."""
+
+    def test_a_replacement_that_lists_the_same_bytes_is_a_provenance_refresh(self):
+        self.case.merge(self.case.open())
+        files = {f"repo/{p}": data for p, (mode, data) in self.ex.files.items() if not p.startswith("docs/release/")}
+        files["payloads/issue/refresh.json"] = b"{}\n"                  # the release differs. The repository files do not
+        c = FE.make_candidate(self.case.world, files=files, supersedes=self.rid, destinations=("engineering-repo",))
+        c.land()
+        enr = self.case.enrollment()
+        replay = V.replay_staging(self.r, enr).replay
+        receipts = {}
+        for rid in (c.rid, self.rid):
+            record = V.verify_request(rid, self.r, enr)
+            receipts[f"docs/release/{rid}.receipt.json"] = RS.project_receipt(record.request, record.manifest_bytes, replay.requests[rid], record.approval)
+        report = RE.verify_engineering(self.r, enr, self.case.open(only=receipts, branch="refresh"))
+        self.assertTrue(report.ok, report.findings)
+        self.assertEqual((report.kind, report.explanation), ("provenance-refresh", RE.PROVENANCE_PASS))
+        self.assertIn("approved bytes are equal", report.explanation)
+
+    def test_a_receipt_only_change_is_not_a_provenance_refresh_when_the_tree_lacks_the_approved_bytes(self):
+        """The label is earned by equal bytes in the tree, not by the shape of the pull request."""
+        n = self.case.open(only={self.receipt_path: self.ex.files[self.receipt_path][1]})
+        report = self.verify(n)
+        self.assertTrue(report.ok, report.findings)
+        self.assertEqual((report.kind, report.explanation), ("content", ""))
 
 
 class StateTests(ExportedBase):

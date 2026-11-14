@@ -11,6 +11,7 @@ and the drafts. It is never copied anywhere by default.
     people.yaml      names, logins, skills, preferences, rationale, days off, allocation
     retention.yaml   what is kept, for how long, and what deletion can and cannot do
     sources/ renderings/ drafts/ releases/ requests/ events/ publication/
+    renderings/reviewed/ and renderings/history/, and drafts/checkpoints/: the reviewed source checkpoints
 
 The engineering repository gets one pointer, .carrydown/local.yaml, with the line `workspace: <path>`.
 It is untracked: init appends it to .gitignore. Scripts the owner runs read the pointer. No tracked
@@ -24,10 +25,22 @@ Commands (every one reads files only; init writes only with --apply)
   python3 scripts/workspace.py status --root .                               paths and state, no names
   python3 scripts/workspace.py doctor --root .                               permissions, path separation, ignore rules, plan schema,
                                                                               and the remote components, labeled not verifiable (offline)
+  python3 scripts/workspace.py checkpoint prepare --root . --descriptor FILE --rendering FILE ...   maintainers: dry run, copies the reviewed renderings
+  python3 scripts/workspace.py checkpoint commit --root . --id ID --apply    commit the prepared checkpoint in the workspace's git, read it back, record it
+  python3 scripts/workspace.py checkpoint bind --root . --id ID --release-id R --request-id Q --apply
+                                                                              record which release and request a checkpoint belongs to
+  python3 scripts/workspace.py checkpoint list --root .                      count, latest id and whether the latest commit verifies
 
 --answer is your answer to the one question of the interview: "Can everyone who can read this
 repository see all of these documents and your staffing notes?" On no, init prints the commands
 that create the private staging repository. It does not run them.
+
+Reviewed source checkpoints (reconciliation). A checkpoint is the reviewed rendering of each source, a minimal
+descriptor and a small record, committed in the workspace's own git repository on the ref
+refs/carrydown/checkpoints through an isolated index, so the normal index, people.yaml, sources/ and every
+other file stay out. It is recorded in workspace.yaml only after the commit is read back and every digest
+matches. Nothing is pushed, mirrored or uploaded, and nothing goes under releases/ or into the project.
+The checkpoint commands are for maintainers and agents. The owner never types them.
 
 Permissions. On macOS, Linux and other POSIX systems the folder is created with mode 0o700 (owner
 only) and the mode is read back; if it is not 0o700, or the folder is not yours, init stops. On
@@ -60,8 +73,10 @@ WORKSPACE_FORMAT = 1
 POINTER = ".carrydown/local.yaml"
 ANSWER_QUESTION = "Can everyone who can read this repository see all of these documents and your staffing notes?"
 SUBFOLDERS = ("sources", "renderings", "drafts", "releases", "requests", "events", "publication")
+RETENTION_HISTORY = ("Reconciliation keeps earlier reviewed renderings privately in this workspace. "
+                     "Deleting raw inputs does not erase rendering history, backups or earlier copies.")
 RETENTION_LIMITS = ("Deleting files from this workspace does not remove them from any backup, remote or copy made earlier. "
-                    "Carrydown records what it deleted and when.")
+                    "Carrydown records what it deleted and when. " + RETENTION_HISTORY)
 # Lines the project's .gitignore should hold. The first is required: it keeps the pointer out of git.
 # The others are added by the scaffold and checked here as advice.
 IGNORE_REQUIRED = (POINTER,)
@@ -310,7 +325,7 @@ def apply_retention(ws, request_id, apply, when=None):
     if not paths:
         return []
     limits = ("Copies in backups, remotes, the workspace's git history or earlier clones are not removed. "
-              f"The record is {RETENTION_LOG} in the private workspace.")
+              f"The record is {RETENTION_LOG} in the private workspace. " + RETENTION_HISTORY)
     if not apply:
         return [f"retention: with --apply, {len(paths)} raw input file(s) in the private workspace's sources/ folder would be deleted, "
                 "as the owner chose (delete-after-release). " + limits]
@@ -543,6 +558,850 @@ def cmd_init(a):
 
 
 # ---------------------------------------------------------------------------
+# Reviewed source checkpoints (specification 6.1 to 6.3)
+#
+# A checkpoint is the reviewed rendering of every source in the set, a minimal descriptor and a small
+# record, committed in the workspace's own git repository and then recorded in workspace.yaml. It lives
+# only under renderings/reviewed/ and drafts/checkpoints/. It never goes into the project, into
+# releases/ or into any snapshot, and nothing here pushes or adds a remote.
+# ---------------------------------------------------------------------------
+
+CHECKPOINT_FORMAT = 1
+CHECKPOINT_REF = "refs/carrydown/checkpoints"
+REVIEWED_DIR = "renderings/reviewed"
+HISTORY_DIR = "renderings/history"
+CHECKPOINT_DIR = "drafts/checkpoints"
+CHECKPOINT_PREFIXES = (REVIEWED_DIR + "/", CHECKPOINT_DIR + "/")
+# The exact words of specification 6.2, for a caller that finds no checkpoint to compare with.
+CHECKPOINT_UNAVAILABLE = ("A previous complete source checkpoint is unavailable. Review the current sources to establish one. "
+                          "Earlier uncited changes cannot be assessed automatically.")
+MAX_RENDERING_BYTES = 16 * 1024 * 1024
+MAX_RECORD_BYTES = 1024 * 1024
+_HEX64 = re.compile(r"[0-9a-f]{64}\Z")
+_GIT_ID = re.compile(r"(?:[0-9a-f]{40}|[0-9a-f]{64})\Z")
+_SOURCE_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,63}\Z")
+_FILE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,100}\.(?:md|index\.txt)\Z")
+_LABEL_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}\Z")
+_CONTROL = re.compile(r"[\x00-\x1f\x7f]")
+DESCRIPTOR_KEYS = ("plan_sha256", "sources")
+DESCRIPTOR_SOURCE_KEYS = ("id", "version", "rendering", "content_sha256", "rendering_sha256", "precedence",
+                          "applicability", "classification", "extraction_limits")
+CLASSIFICATIONS = ("public", "repo-readers", "restricted")
+
+
+class CheckpointProblem(Exception):
+    """A checkpoint step that cannot go ahead. code is a fixed word (checkpoint-missing, checkpoint-mismatch,
+    checkpoint-invalid, checkpoint-staged-changes, checkpoint-identity-missing, checkpoint-path-refused,
+    checkpoint-git-failed, checkpoint-gate-refused). message says what to do next in plain words and never
+    holds source content."""
+
+    def __init__(self, code, message):
+        super().__init__(f"{code}: {message}")
+        self.code = code
+        self.message = message
+
+
+def _now():
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def checkpoint_id_of(entries):
+    """The checkpoint id: the SHA-256 of the sorted (path, digest) list. entries are (path, sha256) pairs:
+    each reviewed rendering by its workspace-relative path, and the descriptor as ("descriptor.json", digest)."""
+    pairs = sorted((str(p), str(d)) for p, d in entries)
+    return L.sha256_text(json.dumps(pairs, separators=(",", ":"), ensure_ascii=True))
+
+
+def _json_bytes(value):
+    return (json.dumps(value, sort_keys=True, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+
+
+def _sha256_bytes(data):
+    return RG.RS.sha256_bytes(data)
+
+
+def _git_env(extra=None):
+    env = {k: v for k, v in os.environ.items() if k not in ("GIT_INDEX_FILE", "GIT_DIR", "GIT_WORK_TREE", "GIT_OBJECT_DIRECTORY")}
+    env["GIT_TERMINAL_PROMPT"] = "0"
+    if extra:
+        env.update(extra)
+    return env
+
+
+def _git(ws, *args, env=None, data=None):
+    """Run git in the workspace. Returns the completed process with bytes in stdout and stderr. A git that
+    cannot be run is a checkpoint-git-failed problem."""
+    if not (Path(ws) / ".git").exists():
+        raise CheckpointProblem("checkpoint-git-failed", "the private workspace is not a git repository. Run workspace.py init --apply, then try again")
+    try:
+        return subprocess.run(["git", "-C", str(ws), "-c", "commit.gpgsign=false"] + list(args), capture_output=True, timeout=120,
+                              env=_git_env(env), input=data)
+    except (OSError, subprocess.SubprocessError) as e:
+        raise CheckpointProblem("checkpoint-git-failed", f"git could not be run ({e}). Install git, then try again")
+
+
+def _git_ok(ws, *args, env=None, data=None):
+    run = _git(ws, *args, env=env, data=data)
+    if run.returncode != 0:
+        raise CheckpointProblem("checkpoint-git-failed", "a git command failed in the private workspace. Run workspace.py doctor, then try again")
+    return run.stdout
+
+
+def _gate_candidate(root, rel, data, apply):
+    """Ask the release gate about a write into the private workspace, as every such write does. A caller
+    without a project root skips the question: the write is inside the workspace either way."""
+    if root is None:
+        return
+    decision = RG.check("candidate", rel, _sha256_bytes(data), "workspace", str(root), dry_run=not apply)
+    if not decision.allowed:
+        raise CheckpointProblem("checkpoint-gate-refused", f"{decision.code}: the release gate refused the write of workspace:{rel}. Nothing was written")
+
+
+def _text_value(value, where, limit=200):
+    if not isinstance(value, str) or not value.strip() or len(value) > limit or _CONTROL.search(value):
+        raise CheckpointProblem("checkpoint-invalid", f"{where} must be a short line of text")
+    return value
+
+
+def _scalar_value(value, where):
+    if isinstance(value, bool) or value is None:
+        return value
+    if isinstance(value, (int, float)):
+        return value
+    return _text_value(value, where)
+
+
+def project_descriptor(sources, plan_sha256):
+    """The minimal source descriptor from plan.yaml style source entries: only the allowlisted keys, with
+    precedence set from the order of the list (1 is the highest). A name, a path of an original, staffing
+    or any other key is dropped here and refused by checkpoint_prepare if it is passed in directly."""
+    out = []
+    for index, source in enumerate(sources or [], start=1):
+        if not isinstance(source, dict):
+            continue
+        item = {k: source[k] for k in DESCRIPTOR_SOURCE_KEYS if k in source and source[k] is not None}
+        item.setdefault("precedence", index)
+        out.append(item)
+    return {"plan_sha256": plan_sha256, "sources": out}
+
+
+def _clean_descriptor(descriptor):
+    """The descriptor, checked and normalized, or a checkpoint-invalid problem. Strict: any key outside the
+    allowlist is refused, so staffing or a path of an original can never ride along."""
+    if not isinstance(descriptor, dict):
+        raise CheckpointProblem("checkpoint-invalid", "the source descriptor must be a mapping")
+    extra = sorted(str(k) for k in descriptor if k not in DESCRIPTOR_KEYS)
+    if extra:
+        raise CheckpointProblem("checkpoint-invalid", f"the source descriptor may hold only {', '.join(DESCRIPTOR_KEYS)}. Remove: {', '.join(extra)[:80]}")
+    plan_sha = descriptor.get("plan_sha256")
+    if not isinstance(plan_sha, str) or not _HEX64.match(plan_sha):
+        raise CheckpointProblem("checkpoint-invalid", "plan_sha256 in the source descriptor must be 64 lowercase hex digits")
+    sources = descriptor.get("sources")
+    if not isinstance(sources, list) or not sources or len(sources) > 200:
+        raise CheckpointProblem("checkpoint-invalid", "the source descriptor needs a list of sources")
+    cleaned, seen = [], set()
+    for number, source in enumerate(sources, start=1):
+        where = f"source {number} of the source descriptor"
+        if not isinstance(source, dict):
+            raise CheckpointProblem("checkpoint-invalid", f"{where} must be a mapping")
+        extra = sorted(str(k) for k in source if k not in DESCRIPTOR_SOURCE_KEYS)
+        if extra:
+            raise CheckpointProblem("checkpoint-invalid", f"{where} may hold only {', '.join(DESCRIPTOR_SOURCE_KEYS)}. Remove: {', '.join(extra)[:80]}")
+        sid = source.get("id")
+        if not isinstance(sid, str) or not _SOURCE_ID.match(sid) or sid in (".", ".."):
+            raise CheckpointProblem("checkpoint-invalid", f"{where} needs an id of letters, digits, dots, underscores and hyphens")
+        if sid in seen:
+            raise CheckpointProblem("checkpoint-invalid", f"source id {sid} appears twice in the source descriptor")
+        seen.add(sid)
+        item = {"id": sid}
+        version = source.get("version")
+        if isinstance(version, (int, float)) and not isinstance(version, bool):
+            version = str(version)
+        item["version"] = _text_value(version, f"the version of source {sid}", 80)
+        if source.get("rendering") is not None:
+            name = _text_value(source["rendering"], f"the rendering name of source {sid}", 100)
+            if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", name):
+                raise CheckpointProblem("checkpoint-invalid", f"the rendering name of source {sid} must be a plain file name without an extension")
+            item["rendering"] = name
+        for key in ("content_sha256", "rendering_sha256"):
+            if source.get(key) is not None:
+                if not isinstance(source[key], str) or not _HEX64.match(source[key]):
+                    raise CheckpointProblem("checkpoint-invalid", f"{key} of source {sid} must be 64 lowercase hex digits")
+                item[key] = source[key]
+        if source.get("precedence") is not None:
+            if type(source["precedence"]) is not int or source["precedence"] < 1:
+                raise CheckpointProblem("checkpoint-invalid", f"precedence of source {sid} must be a whole number from 1")
+            item["precedence"] = source["precedence"]
+        if source.get("classification") is not None:
+            if source["classification"] not in CLASSIFICATIONS:
+                raise CheckpointProblem("checkpoint-invalid", f"classification of source {sid} must be public, repo-readers or restricted")
+            item["classification"] = source["classification"]
+        for key in ("applicability", "extraction_limits"):
+            value = source.get(key)
+            if value is None:
+                continue
+            if isinstance(value, list):
+                if len(value) > 50:
+                    raise CheckpointProblem("checkpoint-invalid", f"{key} of source {sid} holds too many entries")
+                item[key] = [_scalar_value(v, f"{key} of source {sid}") for v in value]
+            elif isinstance(value, dict) and key == "extraction_limits":
+                if len(value) > 50:
+                    raise CheckpointProblem("checkpoint-invalid", f"{key} of source {sid} holds too many entries")
+                item[key] = {_text_value(str(k), f"a key of {key} of source {sid}", 80): _scalar_value(v, f"{key} of source {sid}") for k, v in value.items()}
+            else:
+                item[key] = _scalar_value(value, f"{key} of source {sid}")
+        cleaned.append(item)
+    return {"plan_sha256": plan_sha, "sources": cleaned}
+
+
+def _read_regular(path, limit=MAX_RENDERING_BYTES):
+    """The bytes of a regular file that is not a link, read within a size limit, or None."""
+    try:
+        st = os.lstat(str(path))
+    except OSError:
+        return None
+    if not _stat.S_ISREG(st.st_mode) or st.st_size > limit:
+        return None
+    try:
+        with open(str(path), "rb") as handle:
+            data = handle.read(limit + 1)
+    except OSError:
+        return None
+    return data if len(data) <= limit else None
+
+
+def _path_has_link(ws, rel):
+    """True when any existing part of workspace/rel, below the workspace folder, is a symbolic link."""
+    here = Path(ws)
+    for part in Path(rel).parts:
+        here = here / part
+        if here.is_symlink():
+            return True
+    return False
+
+
+def _write_private(path, data):
+    """Write bytes to a file in the workspace through a temporary file, so a stop never leaves half a file."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        fd = os.open(str(temp), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+        os.replace(str(temp), str(path))
+    except OSError as e:
+        try:
+            temp.unlink()
+        except OSError:
+            pass
+        raise CheckpointProblem("checkpoint-path-refused", f"cannot write in the private workspace: {e.strerror or e}")
+
+
+def _rendering_entries(renderings, sources, ws, root):
+    """The renderings as (source id, file name, bytes, origin label), checked. An entry is a path, or a
+    (source id, path) pair, or a mapping with source_id and path. A bare path is matched to the source whose
+    rendering name or id is the file name without .md or .index.txt."""
+    by_stem = {}
+    for s in sources:
+        by_stem.setdefault(s.get("rendering", s["id"]), s["id"])
+        by_stem.setdefault(s["id"], s["id"])
+    ids = {s["id"] for s in sources}
+    out, seen = [], set()
+    forbidden = [Path(os.path.realpath(str(Path(ws) / "sources")))]
+    if root is not None:
+        forbidden.append(Path(os.path.realpath(str(Path(root) / "docs" / "source"))))
+    for entry in list(renderings or []):
+        sid = None
+        if isinstance(entry, dict):
+            sid, entry = entry.get("source_id"), entry.get("path")
+        elif isinstance(entry, (tuple, list)) and len(entry) == 2:
+            sid, entry = entry
+        path = Path(str(entry))
+        name = path.name
+        if not _FILE_NAME.match(name):
+            raise CheckpointProblem("checkpoint-invalid", f"{name[:60]} is not a rendering file. A rendering is <name>.md or <name>.index.txt")
+        if sid is None:
+            stem = name[:-len(".index.txt")] if name.endswith(".index.txt") else name[:-len(".md")]
+            sid = by_stem.get(stem)
+            if sid is None:
+                raise CheckpointProblem("checkpoint-invalid", f"{name[:60]} matches no source in the descriptor. Pass it with its source id")
+        if sid not in ids:
+            raise CheckpointProblem("checkpoint-invalid", f"{name[:60]} is for a source that is not in the descriptor")
+        real = Path(os.path.realpath(str(path)))
+        for bad in forbidden:
+            if real == bad or bad in real.parents:
+                raise CheckpointProblem("checkpoint-invalid", f"{name[:60]} is in a folder of original documents. A checkpoint holds renderings only, never originals")
+        data = _read_regular(path)
+        if data is None:
+            raise CheckpointProblem("checkpoint-invalid", f"{name[:60]} cannot be read as a regular file of a reasonable size")
+        try:
+            text = data.decode("utf-8")
+        except UnicodeDecodeError:
+            raise CheckpointProblem("checkpoint-invalid", f"{name[:60]} is not UTF-8 text")
+        if name.endswith(".md") and not text.startswith("<!-- Generated from "):
+            raise CheckpointProblem("checkpoint-invalid", f"{name[:60]} does not carry the generated header of a rendering, so it may be an original. A checkpoint holds renderings only")
+        kind = "md" if name.endswith(".md") else "index"
+        if (sid, kind) in seen:
+            raise CheckpointProblem("checkpoint-invalid", f"source {sid} has more than one {'rendering' if kind == 'md' else 'section index'} in the list")
+        seen.add((sid, kind))
+        out.append((sid, name, data, str(path)))
+    have = {sid for sid, name, _, _ in out if name.endswith(".md")}
+    missing = sorted(ids - have)
+    if missing:
+        raise CheckpointProblem("checkpoint-invalid", f"no rendering was given for source {', '.join(missing)[:80]}. Every source in the set needs its .md rendering")
+    return sorted(out, key=lambda e: (e[0], e[1]))
+
+
+def checkpoint_prepare(root, workspace, renderings, descriptor, apply=False):
+    """Prepare a source checkpoint (specification 6.1). Copies the renderings of the set into
+    <workspace>/renderings/reviewed/<source id>/ and writes the descriptor and checkpoint.json under
+    <workspace>/drafts/checkpoints/<checkpoint id>/. The copies are private: a rendering is read from the
+    project (the "yes" path) or from <workspace>/renderings/ (the "no" path), never an original. Writes only
+    with apply=True. Returns a dict: id, apply, created, plan_sha256, sources, files (path, sha256, bytes,
+    action write or unchanged), checkpoint_path. The checkpoint id is the SHA-256 of the sorted (path,
+    digest) list of the renderings and the descriptor."""
+    ws = Path(workspace)
+    clean = _clean_descriptor(descriptor)
+    entries = _rendering_entries(renderings, clean["sources"], ws, root)
+    files = []
+    for sid, name, data, _origin in entries:
+        rel = f"{REVIEWED_DIR}/{sid}/{name}"
+        files.append({"path": rel, "sha256": _sha256_bytes(data), "bytes": len(data), "_data": data})
+    descriptor_bytes = _json_bytes({"format": CHECKPOINT_FORMAT, **clean})
+    descriptor_sha = _sha256_bytes(descriptor_bytes)
+    cid = checkpoint_id_of([(f["path"], f["sha256"]) for f in files] + [("descriptor.json", descriptor_sha)])
+    folder = f"{CHECKPOINT_DIR}/{cid}"
+    by_source = {}
+    for f in files:
+        if f["path"].endswith(".md"):
+            by_source[f["path"].split("/")[2]] = f["sha256"]
+    created = _now()
+    meta = {"format": CHECKPOINT_FORMAT, "id": cid, "created": created, "plan_sha256": clean["plan_sha256"],
+            "sources": [{"id": s["id"], "version": s["version"], "sha256": by_source[s["id"]]} for s in clean["sources"]],
+            "files": [{"path": f["path"], "sha256": f["sha256"]} for f in files],
+            "descriptor_sha256": descriptor_sha}
+    meta_bytes = _json_bytes(meta)
+    writes = [(f["path"], f["_data"]) for f in files] + [(f"{folder}/descriptor.json", descriptor_bytes), (f"{folder}/checkpoint.json", meta_bytes)]
+    result_files = []
+    for rel, data in writes:
+        if not rel.startswith(CHECKPOINT_PREFIXES) or ".." in Path(rel).parts or _path_has_link(ws, rel):
+            raise CheckpointProblem("checkpoint-path-refused", f"workspace:{rel} is not a place a checkpoint may write")
+        _gate_candidate(root, rel, data, apply)
+        current = _read_regular(ws / rel)
+        result_files.append({"path": rel, "sha256": _sha256_bytes(data), "bytes": len(data),
+                             "action": "unchanged" if current == data else "write"})
+    if apply:
+        for rel, data in writes:
+            if _read_regular(ws / rel) != data:
+                _write_private(ws / rel, data)
+    return {"id": cid, "apply": bool(apply), "created": created, "plan_sha256": clean["plan_sha256"], "sources": meta["sources"],
+            "files": result_files, "checkpoint_path": f"{folder}/checkpoint.json"}
+
+
+def _identity_problem(ws):
+    """Why git has no author or committer for the workspace, or None. Resolved the way git resolves them:
+    the environment first, then the author.* and committer.* settings, then user.name and user.email, all
+    read from one listing of git's configuration. Nothing is invented."""
+    run = _git(ws, "config", "-z", "--list")
+    settings = {}
+    if run.returncode == 0:
+        for item in run.stdout.decode("utf-8", "replace").split("\x00"):
+            key, _, value = item.partition("\n")
+            if key:
+                settings[key.lower()] = value.strip()           # a later setting overrides an earlier one
+    for role in ("AUTHOR", "COMMITTER"):
+        low = role.lower()
+        name = os.environ.get(f"GIT_{role}_NAME", "").strip() or settings.get(f"{low}.name") or settings.get("user.name")
+        email = os.environ.get(f"GIT_{role}_EMAIL", "").strip() or settings.get(f"{low}.email") or settings.get("user.email")
+        if not name or not email:
+            return ("No git name and email are set for the private workspace, so no author can be recorded and nothing was committed. "
+                    "Set them once, for example: git config --global user.name \"Your Name\" and git config --global user.email \"you@example.com\". "
+                    "Then run this again")
+    return None
+
+
+def _staged_count(ws):
+    run = _git(ws, "diff", "--cached", "--name-only", "-z")
+    if run.returncode != 0:
+        raise CheckpointProblem("checkpoint-git-failed", "the staged changes of the private workspace could not be read. Run workspace.py doctor, then try again")
+    return len([p for p in run.stdout.split(b"\x00") if p])
+
+
+def _load_checkpoint_meta(data, checkpoint_id):
+    """checkpoint.json bytes as a checked dict, or a checkpoint-mismatch problem."""
+    try:
+        meta = json.loads(data.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError):
+        raise CheckpointProblem("checkpoint-mismatch", "checkpoint.json is not valid. Review the current sources to establish a new checkpoint")
+    ok = isinstance(meta, dict) and meta.get("format") == CHECKPOINT_FORMAT and meta.get("id") == checkpoint_id \
+        and isinstance(meta.get("files"), list) and isinstance(meta.get("sources"), list) \
+        and isinstance(meta.get("descriptor_sha256"), str) and _HEX64.match(meta["descriptor_sha256"]) \
+        and isinstance(meta.get("plan_sha256"), str)
+    if not ok:
+        raise CheckpointProblem("checkpoint-mismatch", "checkpoint.json does not match the checkpoint it belongs to")
+    entries = []
+    for f in meta["files"]:
+        if not isinstance(f, dict) or not isinstance(f.get("path"), str) or not isinstance(f.get("sha256"), str) or not _HEX64.match(f["sha256"]):
+            raise CheckpointProblem("checkpoint-mismatch", "checkpoint.json lists a file that is not valid")
+        path = f["path"]
+        if not path.startswith(REVIEWED_DIR + "/") or ".." in Path(path).parts or "\\" in path:
+            raise CheckpointProblem("checkpoint-path-refused", "checkpoint.json lists a file outside renderings/reviewed/, so nothing is committed or read from it")
+        entries.append((path, f["sha256"]))
+    if checkpoint_id_of(entries + [("descriptor.json", meta["descriptor_sha256"])]) != checkpoint_id:
+        raise CheckpointProblem("checkpoint-mismatch", "the files listed in checkpoint.json do not add up to its id")
+    return meta, entries
+
+
+def _checkpoint_working_files(ws, checkpoint_id):
+    """(meta, {path: digest} including the descriptor, [(path, bytes)] of every file to commit) read from the
+    working tree and verified, or a problem."""
+    folder = f"{CHECKPOINT_DIR}/{checkpoint_id}"
+    if not _HEX64.match(checkpoint_id or ""):
+        raise CheckpointProblem("checkpoint-invalid", "a checkpoint id is 64 lowercase hex digits")
+    raw = _read_regular(Path(ws) / folder / "checkpoint.json", MAX_RECORD_BYTES)
+    if raw is None:
+        raise CheckpointProblem("checkpoint-missing", "that checkpoint was not prepared in this workspace. Prepare it first")
+    meta, entries = _load_checkpoint_meta(raw, checkpoint_id)
+    out = []
+    for path, digest in entries + [(f"{folder}/descriptor.json", meta["descriptor_sha256"])]:
+        if not path.startswith(CHECKPOINT_PREFIXES) or _path_has_link(ws, path):
+            raise CheckpointProblem("checkpoint-path-refused", f"workspace:{path} is not a place a checkpoint may read or write")
+        data = _read_regular(Path(ws) / path)
+        if data is None:
+            raise CheckpointProblem("checkpoint-mismatch", f"{path.rsplit('/', 1)[-1]} of the prepared checkpoint is missing. Prepare the checkpoint again")
+        if _sha256_bytes(data) != digest:
+            raise CheckpointProblem("checkpoint-mismatch", f"{path.rsplit('/', 1)[-1]} changed after the checkpoint was prepared. Prepare the checkpoint again")
+        out.append((path, data))
+    out.append((f"{folder}/checkpoint.json", raw))
+    return meta, out
+
+
+# -- the record in workspace.yaml ------------------------------------------------------------------
+
+def _yaml_scalar(value):
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return str(value)
+    return yaml_text(value)
+
+
+def checkpoints_yaml_text(records):
+    """The `checkpoints:` block of workspace.yaml for a list of records, in the block layout carrydown_lib reads."""
+    if not records:
+        return "checkpoints: []\n"
+    lines = ["checkpoints:"]
+    for r in records:
+        lines.append(f"  - id: {_yaml_scalar(r['id'])}")
+        for key in ("commit", "created"):
+            lines.append(f"    {key}: {_yaml_scalar(r[key])}")
+        lines.append("    sources:")
+        for s in r["sources"]:
+            lines.append(f"      - id: {_yaml_scalar(s['id'])}")
+            lines.append(f"        version: {_yaml_scalar(s['version'])}")
+            lines.append(f"        sha256: {_yaml_scalar(s['sha256'])}")
+        for key in ("plan_sha256", "release_id", "request_id"):
+            lines.append(f"    {key}: {_yaml_scalar(r.get(key))}")
+        history = r.get("history") or []
+        if not history:
+            lines.append("    history: []")
+        else:
+            lines.append("    history:")
+            for h in history:
+                lines.append(f"      - release_id: {_yaml_scalar(h.get('release_id'))}")
+                lines.append(f"        request_id: {_yaml_scalar(h.get('request_id'))}")
+                lines.append(f"        replaced: {_yaml_scalar(h.get('replaced'))}")
+    return "\n".join(lines) + "\n"
+
+
+def _without_checkpoints(text):
+    """workspace.yaml text without its top-level checkpoints block."""
+    out, skipping = [], False
+    for line in text.split("\n"):
+        if re.match(r"checkpoints:", line):
+            skipping = True
+            continue
+        if skipping and (line.strip() == "" or line[:1] in (" ", "\t", "-")):
+            continue
+        skipping = False
+        out.append(line)
+    return "\n".join(out).rstrip("\n") + "\n"
+
+
+def checkpoint_records(workspace):
+    """The checkpoint records of workspace.yaml, oldest first, as a list of dicts. An empty list when there are none."""
+    data = read_workspace_yaml(workspace)
+    if data is None:
+        raise CheckpointProblem("checkpoint-mismatch", "workspace.yaml is missing or unreadable. Run workspace.py doctor")
+    records = data.get("checkpoints")
+    if records is None:
+        return []
+    if not isinstance(records, list):
+        raise CheckpointProblem("checkpoint-mismatch", "the checkpoints list in workspace.yaml is not valid. Run workspace.py doctor")
+    out = []
+    for r in records:
+        ok = isinstance(r, dict) and isinstance(r.get("id"), str) and _HEX64.match(r["id"]) and isinstance(r.get("commit"), str) \
+            and _GIT_ID.match(r["commit"]) and isinstance(r.get("sources"), list) and \
+            all(isinstance(s, dict) and isinstance(s.get("id"), str) and isinstance(s.get("sha256"), str) for s in r["sources"])
+        if not ok:
+            raise CheckpointProblem("checkpoint-mismatch", "a checkpoint record in workspace.yaml is not valid. Run workspace.py doctor")
+        r = dict(r)
+        if not isinstance(r.get("history"), list):
+            r["history"] = []
+        out.append(r)
+    return out
+
+
+def _store_records(workspace, records, root=None):
+    path = Path(workspace) / "workspace.yaml"
+    old = L.read_text(path) if path.is_file() else ""
+    new = _without_checkpoints(old) + checkpoints_yaml_text(records)
+    data = new.encode("utf-8")
+    _gate_candidate(root, "workspace.yaml", data, True)
+    _write_private(path, data)
+    back = checkpoint_records(workspace)
+    if [r["id"] for r in back] != [r["id"] for r in records]:
+        raise CheckpointProblem("checkpoint-mismatch", "the checkpoint record could not be read back from workspace.yaml")
+
+
+def _find_record(workspace, checkpoint_id):
+    for r in checkpoint_records(workspace):
+        if r["id"] == checkpoint_id:
+            return r
+    raise CheckpointProblem("checkpoint-missing", "no checkpoint with that id is recorded in this workspace")
+
+
+def latest_checkpoint(workspace):
+    """The newest recorded checkpoint as a dict (id, commit, created, sources, plan_sha256, release_id,
+    request_id, history), or None when there is none. This reads the record only. checkpoint_read verifies
+    it against git. A caller that gets None says CHECKPOINT_UNAVAILABLE."""
+    records = checkpoint_records(workspace)
+    return records[-1] if records else None
+
+
+def checkpoint_for_sources(workspace, source_ids):
+    """The newest recorded checkpoint that holds every one of source_ids, or None."""
+    wanted = set(source_ids)
+    for r in reversed(checkpoint_records(workspace)):
+        if wanted <= {s["id"] for s in r["sources"]}:
+            return r
+    return None
+
+
+def recorded_digests(workspace):
+    """Every digest inside a recorded checkpoint: the rendering digests in workspace.yaml and, read from git,
+    the digest of each file of each checkpoint. A checkpoint that cannot be read from git still contributes
+    the digests in its record. Returns a set. Used before a rendering is replaced."""
+    out = set()
+    try:
+        records = checkpoint_records(workspace)
+    except CheckpointProblem:
+        return out
+    for r in records:
+        out |= {s["sha256"] for s in r["sources"]}
+        try:
+            run = _git(workspace, "show", f"{r['commit']}:{CHECKPOINT_DIR}/{r['id']}/checkpoint.json")
+            if run.returncode == 0:
+                meta = json.loads(run.stdout.decode("utf-8"))
+                out |= {f["sha256"] for f in meta.get("files", []) if isinstance(f, dict) and isinstance(f.get("sha256"), str)}
+        except (CheckpointProblem, ValueError, UnicodeDecodeError):
+            continue
+    return out
+
+
+# -- commit, read back, bind -----------------------------------------------------------------------
+
+def _ls_tree(ws, commit):
+    """{path: (mode, type, object id)} of a commit's whole tree."""
+    run = _git(ws, "ls-tree", "-r", "-z", "--full-tree", commit)
+    if run.returncode != 0:
+        raise CheckpointProblem("checkpoint-missing", "the commit of that checkpoint is no longer in the private workspace's git repository. "
+                              "Review the current sources to establish a new checkpoint")
+    tree = {}
+    for item in run.stdout.split(b"\x00"):
+        if not item:
+            continue
+        head, _, path = item.partition(b"\t")
+        parts = head.decode("ascii", "replace").split()
+        if len(parts) != 3:
+            raise CheckpointProblem("checkpoint-mismatch", "the commit of that checkpoint could not be read")
+        tree[path.decode("utf-8", "replace")] = (parts[0], parts[1], parts[2])
+    return tree
+
+
+def _blobs(ws, oids):
+    """{object id: bytes} for the blobs in oids, read with one git call."""
+    wanted = sorted(set(oids))
+    if not wanted:
+        return {}
+    run = _git(ws, "cat-file", "--batch", data=("\n".join(wanted) + "\n").encode("ascii"))
+    if run.returncode != 0:
+        raise CheckpointProblem("checkpoint-mismatch", "a file of that checkpoint could not be read from git")
+    out, data, pos = {}, run.stdout, 0
+    for oid in wanted:
+        end = data.find(b"\n", pos)
+        head = data[pos:end].split() if end != -1 else []
+        if len(head) != 3 or head[1] != b"blob" or not head[2].isdigit():
+            raise CheckpointProblem("checkpoint-mismatch", "a file of that checkpoint could not be read from git")
+        size = int(head[2])
+        out[head[0].decode("ascii")] = data[end + 1:end + 1 + size]
+        pos = end + 1 + size + 1
+    return out
+
+
+def entries_paths(entries):
+    return [p for p, _ in entries]
+
+
+def checkpoint_read(workspace, checkpoint_id, check_working=False):
+    """Read a recorded checkpoint back and verify it. The commit must still exist, its tree must hold exactly
+    the files checkpoint.json lists with their recorded digests, the id must add up, and the record in
+    workspace.yaml must agree with it. Returns a dict: id, commit, created, release_id, request_id, history,
+    plan_sha256, descriptor (as recorded), sources, renderings ({"<source id>/<file name>": text}) and
+    working_copy_differs (reviewed paths whose file in the workspace no longer matches). The texts come from
+    git, never from the working files. A later checkpoint may replace a reviewed file, so a differing working
+    copy is reported and is a problem only when check_working is true.
+    Raises CheckpointProblem with code checkpoint-missing or checkpoint-mismatch."""
+    ws = Path(workspace)
+    record = _find_record(ws, checkpoint_id)
+    commit = record["commit"]
+    tree = _ls_tree(ws, commit)
+    folder = f"{CHECKPOINT_DIR}/{checkpoint_id}"
+    meta_entry = tree.get(f"{folder}/checkpoint.json")
+    if meta_entry is None:
+        raise CheckpointProblem("checkpoint-mismatch", "the commit does not hold checkpoint.json for that checkpoint")
+    blobs = _blobs(ws, [entry[2] for entry in tree.values()])
+    meta, entries = _load_checkpoint_meta(blobs.get(meta_entry[2], b""), checkpoint_id)
+    expected = dict(entries)
+    expected[f"{folder}/descriptor.json"] = meta["descriptor_sha256"]
+    if set(tree) != set(expected) | {f"{folder}/checkpoint.json"}:
+        raise CheckpointProblem("checkpoint-mismatch", "the commit holds files that are not the checkpoint's files, or lacks some of them")
+    texts = {}
+    for path, digest in expected.items():
+        mode, kind, oid = tree[path]
+        data = blobs.get(oid)
+        if kind != "blob" or data is None or _sha256_bytes(data) != digest:
+            raise CheckpointProblem("checkpoint-mismatch", f"{path.rsplit('/', 1)[-1]} in the commit does not match its recorded digest")
+        texts[path] = data
+    recorded = [(s["id"], s.get("version"), s["sha256"]) for s in record["sources"]]
+    from_meta = [(s.get("id"), s.get("version"), s.get("sha256")) for s in meta["sources"]]
+    if [(a, str(b), c) for a, b, c in recorded] != [(a, str(b), c) for a, b, c in from_meta] or record.get("plan_sha256") != meta["plan_sha256"]:
+        raise CheckpointProblem("checkpoint-mismatch", "the record in workspace.yaml does not agree with the checkpoint in git")
+    try:
+        descriptor = json.loads(texts[f"{folder}/descriptor.json"].decode("utf-8"))
+    except (ValueError, UnicodeDecodeError):
+        raise CheckpointProblem("checkpoint-mismatch", "the descriptor of that checkpoint is not valid")
+    differs = sorted(p for p in entries_paths(entries) if _read_regular(ws / p) != texts[p])
+    if check_working and differs:
+        raise CheckpointProblem("checkpoint-mismatch", f"{len(differs)} reviewed file(s) in the workspace changed after the checkpoint was committed")
+    renderings = {p[len(REVIEWED_DIR) + 1:]: texts[p].decode("utf-8") for p in entries_paths(entries)}
+    return {"id": checkpoint_id, "commit": commit, "created": record.get("created"), "release_id": record.get("release_id"),
+            "request_id": record.get("request_id"), "history": record["history"], "plan_sha256": meta["plan_sha256"],
+            "descriptor": descriptor, "sources": meta["sources"], "renderings": renderings, "working_copy_differs": differs}
+
+
+def checkpoint_verify(workspace, checkpoint_id, check_working=False):
+    """None when the checkpoint reads back and verifies, else the problem code (checkpoint-missing or checkpoint-mismatch)."""
+    try:
+        checkpoint_read(workspace, checkpoint_id, check_working)
+    except CheckpointProblem as e:
+        return e.code
+    return None
+
+
+def checkpoint_commit(workspace, checkpoint_id, apply=False, root=None):
+    """Commit a prepared checkpoint in the workspace's git repository, read it back, and only then record it
+    in workspace.yaml (specification 6.1). Exactly the checkpoint's files are committed, through an isolated
+    index inside the workspace's .git, on the ref refs/carrydown/checkpoints, so the normal index, the
+    current branch and people.yaml, sources/, retention.yaml and every other file are never touched.
+    Refused: staged changes in the normal index, a file outside renderings/reviewed/ or drafts/checkpoints/,
+    and a missing git name or email (no author is ever invented). Returns a dict: id, apply, status
+    (would-commit, committed or already-recorded), files, commit. Dry run without apply."""
+    ws = Path(workspace)
+    meta, files = _checkpoint_working_files(ws, checkpoint_id)
+    for path, _ in files:
+        if not path.startswith(CHECKPOINT_PREFIXES):
+            raise CheckpointProblem("checkpoint-path-refused", f"workspace:{path} is not a place a checkpoint may commit from")
+    staged = _staged_count(ws)
+    if staged:
+        raise CheckpointProblem("checkpoint-staged-changes",
+                                f"The private workspace's git index already has {staged} staged change(s) that are not part of this checkpoint. "
+                                "Nothing was committed. Commit or unstage them yourself, then run this again")
+    why = _identity_problem(ws)
+    if why:
+        raise CheckpointProblem("checkpoint-identity-missing", why)
+    listed = [p for p, _ in files]
+    existing = [r for r in checkpoint_records(ws) if r["id"] == checkpoint_id]
+    if existing and checkpoint_verify(ws, checkpoint_id) is None:
+        return {"id": checkpoint_id, "apply": bool(apply), "status": "already-recorded", "files": listed, "commit": existing[0]["commit"]}
+    if not apply:
+        return {"id": checkpoint_id, "apply": False, "status": "would-commit", "files": listed, "commit": None}
+    gitdir = ws / ".git"
+    if not gitdir.is_dir():
+        gitdir = Path(_git_ok(ws, "rev-parse", "--absolute-git-dir").decode("utf-8").strip())
+    index = gitdir / f"carrydown-checkpoint-{os.getpid()}-{os.urandom(4).hex()}.index"
+    env = {"GIT_INDEX_FILE": str(index)}
+    try:
+        for path, data in files:
+            if _read_regular(ws / path) != data:
+                raise CheckpointProblem("checkpoint-mismatch", f"{path.rsplit('/', 1)[-1]} changed while the checkpoint was being committed. Nothing was recorded")
+        # write each file's bytes as an object, then put exactly those paths in the empty isolated index
+        oids = _git_ok(ws, "hash-object", "-w", "--no-filters", "--stdin-paths", env=env,
+                       data=("\n".join(str(ws / path) for path, _ in files) + "\n").encode("utf-8")).decode("ascii").split()
+        if len(oids) != len(files):
+            raise CheckpointProblem("checkpoint-git-failed", "git did not store every file of the checkpoint. Nothing was recorded")
+        _git_ok(ws, "update-index", "--add", "--index-info", env=env,
+                data="".join(f"100644 {oid}\t{path}\n" for oid, (path, _) in zip(oids, files)).encode("utf-8"))
+        tree = _git_ok(ws, "write-tree", env=env).decode("ascii").strip()
+        parent_run = _git(ws, "rev-parse", "--verify", "-q", f"{CHECKPOINT_REF}^{{commit}}")
+        parent = parent_run.stdout.decode("ascii").strip() if parent_run.returncode == 0 else ""
+        args = ["commit-tree", tree, "-m", f"Record reviewed source checkpoint {checkpoint_id[:12]}"]
+        if parent:
+            args[2:2] = ["-p", parent]
+        commit = _git_ok(ws, *args).decode("ascii").strip()
+        # read it back before anything points at it or records it
+        tree_back = _ls_tree(ws, commit)
+        want = {p: _sha256_bytes(d) for p, d in files}
+        if set(tree_back) != set(want):
+            raise CheckpointProblem("checkpoint-mismatch", "the commit does not hold exactly the checkpoint's files. Nothing was recorded")
+        back = _blobs(ws, [entry[2] for entry in tree_back.values()])
+        for path, digest in want.items():
+            data = back.get(tree_back[path][2])
+            if tree_back[path][0] != "100644" or data is None or _sha256_bytes(data) != digest:
+                raise CheckpointProblem("checkpoint-mismatch", f"{path.rsplit('/', 1)[-1]} in the commit does not match its digest. Nothing was recorded")
+        _git_ok(ws, "update-ref", "-m", f"carrydown checkpoint {checkpoint_id[:12]}", CHECKPOINT_REF, commit, parent)
+    finally:
+        try:
+            index.unlink()
+        except OSError:
+            pass
+    record = {"id": checkpoint_id, "commit": commit, "created": _now(), "sources": [dict(s) for s in meta["sources"]],
+              "plan_sha256": meta["plan_sha256"], "release_id": None, "request_id": None, "history": []}
+    others = [r for r in checkpoint_records(ws) if r["id"] != checkpoint_id]
+    if existing:
+        record.update(release_id=existing[0].get("release_id"), request_id=existing[0].get("request_id"),
+                      history=list(existing[0].get("history") or []))
+    _store_records(ws, others + [record], root)
+    return {"id": checkpoint_id, "apply": True, "status": "committed", "files": listed, "commit": commit}
+
+
+def checkpoint_bind(workspace, checkpoint_id, release_id, request_id, apply=False, root=None, when=None):
+    """Record that a checkpoint belongs to an existing release and approval request (specification 6.2).
+    Local bookkeeping only: it approves nothing and publishes nothing. An earlier association is kept in the
+    record's history list (appended, never overwritten). Binding the same pair again changes nothing.
+    Returns a dict: id, apply, status (would-bind, bound or unchanged), release_id, request_id, history."""
+    for label, value in (("release id", release_id), ("request id", request_id)):
+        if not isinstance(value, str) or not _LABEL_ID.match(value):
+            raise CheckpointProblem("checkpoint-invalid", f"the {label} must be a short identifier")
+    records = checkpoint_records(workspace)
+    record = next((r for r in records if r["id"] == checkpoint_id), None)
+    if record is None:
+        raise CheckpointProblem("checkpoint-missing", "no checkpoint with that id is recorded in this workspace")
+    problem = checkpoint_verify(workspace, checkpoint_id)
+    if problem:
+        raise CheckpointProblem(problem, "that checkpoint no longer verifies against git, so it is not bound. Run workspace.py doctor")
+    history = list(record["history"])
+    if record.get("release_id") == release_id and record.get("request_id") == request_id:
+        return {"id": checkpoint_id, "apply": bool(apply), "status": "unchanged", "release_id": release_id, "request_id": request_id, "history": history}
+    if record.get("release_id") is not None or record.get("request_id") is not None:
+        history.append({"release_id": record.get("release_id"), "request_id": record.get("request_id"), "replaced": when or _now()})
+    result = {"id": checkpoint_id, "apply": bool(apply), "status": "bound" if apply else "would-bind", "release_id": release_id,
+              "request_id": request_id, "history": history}
+    if apply:
+        updated = dict(record, release_id=release_id, request_id=request_id, history=history)
+        _store_records(workspace, [updated if r["id"] == checkpoint_id else r for r in records], root)
+    return result
+
+
+def checkpoint_summary(workspace):
+    """(count, latest id or None, problem code or None, note). The latest checkpoint is read back from git and the
+    problem is the code that read raised. The note says why the records could not be read. No source content,
+    heading or path of an original is ever returned."""
+    try:
+        records = checkpoint_records(workspace)
+    except CheckpointProblem as e:
+        return 0, None, e.code, e.message
+    if not records:
+        return 0, None, None, ""
+    latest = records[-1]["id"]
+    return len(records), latest, checkpoint_verify(workspace, latest), ""
+
+
+def _print_prepare(result):
+    L.say(f"checkpoint {result['id']}" + ("" if result["apply"] else "  DRY RUN (nothing was written)"))
+    for f in result["files"]:
+        L.say(f"  {'would write' if not result['apply'] and f['action'] == 'write' else 'wrote' if f['action'] == 'write' else 'unchanged'} workspace:{f['path']}")
+    if not result["apply"]:
+        L.say("Add --apply to write these files. Then commit the checkpoint with: workspace.py checkpoint commit --id " + result["id"] + " --apply")
+
+
+def _checkpoint_workspace(a):
+    root = L.project_root(a.root)
+    ws, why = L.workspace_root(root)
+    if ws is None:
+        L.die(f"{why}: no private workspace is usable for this project. Create it with workspace.py init, then run this again")
+    return root, ws
+
+
+def cmd_checkpoint(a):
+    root, ws = _checkpoint_workspace(a)
+    try:
+        if a.action == "prepare":
+            try:
+                raw = L.read_text(a.descriptor)
+                descriptor = json.loads(raw) if raw.lstrip().startswith("{") else L.loads(raw)
+            except (ValueError, L.YamlError) as e:
+                L.die(f"--descriptor cannot be read: {str(e)[:100]}")
+            files = [Path(p) for p in (a.rendering or [])]
+            if a.rendering_dir:
+                base = Path(a.rendering_dir)
+                sources = descriptor.get("sources") if isinstance(descriptor, dict) else None
+                for s in sources if isinstance(sources, list) else []:
+                    stem = s.get("rendering", s.get("id")) if isinstance(s, dict) else None
+                    if isinstance(stem, str):
+                        for suffix in (".md", ".index.txt"):
+                            if (base / (stem + suffix)).is_file():
+                                files.append((s["id"], base / (stem + suffix)))
+            _print_prepare(checkpoint_prepare(root, ws, files, descriptor, apply=a.apply))
+        elif a.action == "commit":
+            result = checkpoint_commit(ws, a.id, apply=a.apply, root=root)
+            if result["status"] == "already-recorded":
+                L.say(f"checkpoint {a.id} is already committed and verified")
+            elif result["status"] == "would-commit":
+                L.say(f"checkpoint {a.id}  DRY RUN (nothing was committed)")
+                L.say(f"would commit {len(result['files'])} file(s) from renderings/reviewed/ and drafts/checkpoints/ through an isolated index, then read the commit back and record it in workspace.yaml")
+                L.say("Add --apply to commit.")
+            else:
+                L.say(f"checkpoint {a.id} committed and read back. Recorded in workspace.yaml")
+        elif a.action == "bind":
+            result = checkpoint_bind(ws, a.id, a.release_id, a.request_id, apply=a.apply, root=root)
+            if result["status"] == "unchanged":
+                L.say(f"checkpoint {a.id} is already bound to that release and request")
+            elif result["status"] == "would-bind":
+                L.say(f"checkpoint {a.id}  DRY RUN: would record the release and request in workspace.yaml (local bookkeeping, not an approval)")
+                L.say("Add --apply to record it.")
+            else:
+                L.say(f"checkpoint {a.id} bound to the release and request in workspace.yaml (local bookkeeping, not an approval). "
+                      f"Earlier associations kept: {len(result['history'])}")
+        else:
+            count, latest, problem, note = checkpoint_summary(ws)
+            L.say(f"source checkpoints: {count}")
+            if latest:
+                L.say(f"latest checkpoint: {latest} ({'commit verifies' if problem is None else 'commit does NOT verify: ' + problem})")
+            elif problem:
+                L.say(f"checkpoint records: {problem} ({note})")
+            else:
+                L.say("latest checkpoint: none. " + CHECKPOINT_UNAVAILABLE)
+            return 1 if problem else 0
+    except CheckpointProblem as e:
+        L.die(f"{e.code}: {e.message}", 1 if e.code in ("checkpoint-mismatch", "checkpoint-missing") else 2)
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # status and doctor
 # ---------------------------------------------------------------------------
 
@@ -589,6 +1448,12 @@ def cmd_status(a):
         L.say(f"staging repository: {data['staging_repository']} (named here; not checked offline)")
     done = {sub: sum(1 for _ in (ws / sub).iterdir()) if (ws / sub).is_dir() else 0 for sub in ("releases", "requests", "events")}
     L.say(f"releases: {done['releases']}, requests: {done['requests']}, events: {done['events']}")
+    count, latest, problem, note = checkpoint_summary(ws)
+    L.say(f"source checkpoints: {count}")
+    if latest:
+        L.say(f"latest checkpoint: {latest} (" + ("commit verifies" if problem is None else f"commit does NOT verify: {problem}") + ")")
+    elif problem:
+        L.say(f"latest checkpoint: unreadable ({problem})")
     return 0 if bad is None and data else 1
 
 
@@ -629,6 +1494,16 @@ def doctor_rows(root):
             add("ok" if same else "warn", "workspace.yaml", "format 1" + ("" if same else ", and it names another engineering folder"))
         add("ok" if (ws / "retention.yaml").is_file() else "warn", "retention.yaml", "present" if (ws / "retention.yaml").is_file() else "missing")
         add("ok" if (ws / ".git").exists() else "warn", "git", "the workspace is a git repository" if (ws / ".git").exists() else "the workspace is not a git repository")
+        if (ws / ".git").exists() and data is not None:
+            count, latest, problem, note = checkpoint_summary(ws)
+            if problem and latest is None:
+                add("FAIL", "checkpoints", f"the checkpoint records cannot be read ({problem})")
+            elif not count:
+                add("ok", "checkpoints", "none recorded yet. A checkpoint is made when a source review is accepted")
+            elif problem:
+                add("FAIL", "checkpoints", f"{count} recorded. The latest ({latest[:12]}) does not verify ({problem}). Review the current sources to establish a new one")
+            else:
+                add("ok", "checkpoints", f"{count} recorded. The latest ({latest[:12]}) verifies against its commit")
         if (ws / "people.yaml").is_file():
             try:
                 doc, problems = L.load_people_file(ws / "people.yaml")
@@ -722,8 +1597,32 @@ def main(argv=None):
             p.add_argument("--staging-repository", metavar="OWNER/NAME", help="name of the private staging repository on the no answer (default: <owner>/<slug>-releases)")
             p.add_argument("--retain", choices=("keep", "delete-after-release"), help="whether raw inputs are kept after release (default: from plan.yaml, else keep)")
             p.add_argument("--apply", action="store_true", help="create the workspace. Without it nothing is written")
+    ck = sub.add_parser("checkpoint", help="maintainers: prepare, commit, bind or list reviewed source checkpoints (dry run unless --apply)",
+                        description="Reviewed source checkpoints in the private workspace's git repository. For maintainers and agents. "
+                                    "prepare copies the reviewed renderings and writes the descriptor, commit commits exactly those files "
+                                    "through an isolated index and records the commit after reading it back, bind records the release and "
+                                    "request a checkpoint belongs to, list shows the count and whether the latest commit verifies. "
+                                    "Every command that writes is a dry run without --apply. Nothing is pushed.")
+    cks = ck.add_subparsers(dest="action", required=True)
+    for action, text in (("prepare", "copy the reviewed renderings and write the descriptor and checkpoint.json"),
+                         ("commit", "commit a prepared checkpoint, read it back, then record it in workspace.yaml"),
+                         ("bind", "record the release and request a checkpoint belongs to (local bookkeeping, not an approval)"),
+                         ("list", "print the checkpoint count and whether the latest commit verifies")):
+        p = cks.add_parser(action, help=text, description=text)
+        p.add_argument("--root", default=".", help="the engineering repository (default: current directory)")
+        if action == "prepare":
+            p.add_argument("--descriptor", required=True, metavar="FILE", help="JSON or YAML file: plan_sha256 and sources (id, version, digests, precedence, applicability, classification, extraction_limits)")
+            p.add_argument("--rendering", action="append", metavar="FILE", help="a rendering (.md or .index.txt) of a source. Repeat for each file. Matched to a source by its name")
+            p.add_argument("--rendering-dir", metavar="DIR", help="a folder holding <name>.md and <name>.index.txt for each source in the descriptor")
+        if action in ("commit", "bind"):
+            p.add_argument("--id", required=True, help="the checkpoint id printed by prepare")
+        if action == "bind":
+            p.add_argument("--release-id", required=True, help="the id of an existing release")
+            p.add_argument("--request-id", required=True, help="the id of the approval request of that release")
+        if action != "list":
+            p.add_argument("--apply", action="store_true", help="write. Without it nothing is written")
     a = ap.parse_args(argv)
-    return {"init": cmd_init, "status": cmd_status, "doctor": cmd_doctor}[a.command](a)
+    return {"init": cmd_init, "status": cmd_status, "doctor": cmd_doctor, "checkpoint": cmd_checkpoint}[a.command](a)
 
 
 if __name__ == "__main__":

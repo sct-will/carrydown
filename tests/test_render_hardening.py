@@ -7,6 +7,7 @@ Run from the repository root: python -m unittest discover -s tests -v
 """
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -14,6 +15,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tests" / "mock"))
@@ -23,6 +25,7 @@ sys.path.insert(0, str(ROOT / "tests" / "fixtures"))
 import carrydown_lib as L  # noqa: E402
 import make_numbered_docx as fixtures  # noqa: E402
 import render_ground_truth as R  # noqa: E402
+import workspace as W  # noqa: E402
 
 FIXTURE = ROOT / "tests" / "fixtures" / "confidential-project"
 SAMPLE = ROOT / "sample" / "expense-approvals"
@@ -427,7 +430,9 @@ class DestinationTests(RenderCase):
                              capture_output=True, text=True, timeout=120)
         self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
         self.assertIn("wrote docs/ground-truth/architecture.md", run.stdout)
-        self.assertNotIn("workspace", run.stdout)
+        # the one line about the previous rendering is the only mention of a workspace
+        others = [ln for ln in run.stdout.splitlines() if "workspace" in ln and not ln.startswith("warning: there is no private workspace, so the previous rendering of architecture")]
+        self.assertEqual(others, [])
 
     def test_an_unreadable_plan_stops_the_render(self):
         (self.project / "docs" / "spec" / "plan.yaml").write_text("project: [unclosed\n", encoding="utf-8")
@@ -580,6 +585,154 @@ class DigestTests(RenderCase):
         before = path.read_bytes()
         self.assertEqual(R.record_source_digests(path, {"alpha": {"content_sha256": "a" * 64}}), ([], ["alpha"], None))
         self.assertEqual(path.read_bytes(), before)
+
+
+class PreviousRenderingTests(RenderCase):
+    """The previous rendering is kept privately before it is replaced (specification 6.1). Rendering is not
+    review: a render never changes a recorded checkpoint."""
+
+    def history(self):
+        folder = self.workspace / "renderings" / "history"
+        return sorted(p.name for p in folder.iterdir()) if folder.is_dir() else []
+
+    def old_files(self):
+        return (self.project / "docs/ground-truth/architecture.md").read_bytes(), (self.project / "docs/ground-truth/architecture.index.txt").read_bytes()
+
+    def test_the_previous_rendering_is_copied_privately_before_it_is_replaced(self):
+        self.set_handling(True)
+        old_md, old_idx = self.old_files()
+        code, out = self.render(self.project / "ground-truth" / "architecture.md", "--version", "9.1")
+        self.assertEqual(code, 0, out)
+        self.assertNotEqual(self.old_files()[0], old_md)
+        # a new version changes the header, so the .md is replaced and kept; the index lists the same headings and is not replaced
+        self.assertEqual(self.old_files()[1], old_idx)
+        self.assertEqual(self.history(), [f"architecture.{sha256_bytes(old_md)[:12]}.md"])
+        folder = self.workspace / "renderings" / "history"
+        self.assertEqual((folder / f"architecture.{sha256_bytes(old_md)[:12]}.md").read_bytes(), old_md)
+        lines = [ln for ln in out.splitlines() if "preserved" in ln]
+        self.assertEqual(lines, ["preserved the previous rendering of architecture privately in workspace:renderings/history/"])
+        self.assertNotIn(str(self.workspace), out)
+        self.assertLess(out.index("preserved the previous"), out.index("wrote docs/ground-truth/architecture.md"))
+
+    def test_a_second_version_keeps_each_earlier_one_and_an_unchanged_render_keeps_nothing_new(self):
+        self.set_handling(True)
+        source = self.project / "ground-truth" / "architecture.md"
+        self.assertEqual(self.render(source, "--version", "9.1")[0], 0)
+        first_new = self.old_files()[0]
+        before = self.history()
+        code, out = self.render(source, "--version", "9.1")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.history(), before)
+        self.assertNotIn("preserved", out)
+        code, out = self.render(source, "--version", "9.2")
+        self.assertEqual(code, 0, out)
+        self.assertIn(f"architecture.{sha256_bytes(first_new)[:12]}.md", self.history())
+        self.assertEqual(len(self.history()), len(before) + 1)
+
+    def test_a_dry_run_says_what_it_would_keep_and_keeps_nothing(self):
+        self.set_handling(True)
+        before = self.old_files()
+        code, out = self.render(self.project / "ground-truth" / "architecture.md", "--version", "9.1", "--dry-run")
+        self.assertEqual(code, 0, out)
+        self.assertIn("would preserve the previous rendering of architecture privately in workspace:renderings/history/", out)
+        self.assertEqual(self.history(), [])
+        self.assertFalse((self.workspace / "renderings" / "history").exists())
+        self.assertEqual(self.old_files(), before)
+
+    def test_without_a_workspace_one_line_warns_that_the_previous_rendering_was_not_kept(self):
+        self.set_handling(True)
+        (self.project / ".carrydown" / "local.yaml").unlink()
+        old_md = self.old_files()[0]
+        code, out = self.render(self.project / "ground-truth" / "architecture.md", "--version", "9.1")
+        self.assertEqual(code, 0, out)
+        warnings = [ln for ln in out.splitlines() if ln.startswith("warning:")]
+        self.assertEqual(len(warnings), 1, out)
+        self.assertIn("previous rendering of architecture was not preserved", warnings[0])
+        self.assertIn("cannot be compared", warnings[0])
+        self.assertNotEqual(self.old_files()[0], old_md)
+        self.assertFalse((self.workspace / "renderings" / "history").exists())
+        code, out = self.render(self.project / "ground-truth" / "architecture.md", "--version", "9.2", "--dry-run")
+        self.assertIn("would not be preserved", out)
+
+    def test_a_first_rendering_has_nothing_to_keep_and_prints_neither_line(self):
+        self.set_handling(True)
+        (self.project / "docs/ground-truth/architecture.md").unlink()
+        (self.project / "docs/ground-truth/architecture.index.txt").unlink()
+        code, out = self.render(self.project / "ground-truth" / "architecture.md", "--version", "9.1")
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("preserved", out)
+        self.assertNotIn("warning:", out)
+        self.assertEqual(self.history(), [])
+
+    def test_a_changed_index_is_kept_with_its_own_digest(self):
+        self.set_handling(True)
+        old_md, old_idx = self.old_files()
+        source = self.project / "ground-truth" / "architecture.md"
+        source.write_text(source.read_text(encoding="utf-8") + "\n## 99. Added\n\nNew rule.\n", encoding="utf-8")
+        code, out = self.render(source, "--version", "9.1")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.history(), [f"architecture.{sha256_bytes(old_md)[:12]}.md", f"architecture.{sha256_bytes(old_idx)[:12]}.index.txt"])
+        self.assertEqual(len([ln for ln in out.splitlines() if "preserved" in ln]), 1)
+
+    def test_the_no_path_keeps_the_previous_workspace_rendering_too(self):
+        self.set_handling(False)
+        source = self.project / "ground-truth" / "architecture.md"
+        self.assertEqual(self.render(source, "--version", "9.1")[0], 0)
+        first = self.ws_rendering("architecture").read_bytes()
+        self.assertEqual(self.history(), [])
+        code, out = self.render(source, "--version", "9.2")
+        self.assertEqual(code, 0, out)
+        self.assertIn(f"architecture.{sha256_bytes(first)[:12]}.md", self.history())
+        self.assertIn("preserved the previous rendering of architecture privately", out)
+
+    def test_a_rendering_already_inside_a_recorded_checkpoint_is_not_copied_and_checkpoints_are_never_changed(self):
+        if shutil.which("git") is None:
+            self.skipTest("git is needed")
+        self.set_handling(True)
+        identity = {"GIT_AUTHOR_NAME": "Test Owner", "GIT_AUTHOR_EMAIL": "owner@example.com", "GIT_COMMITTER_NAME": "Test Owner",
+                    "GIT_COMMITTER_EMAIL": "owner@example.com", "HOME": str(self.tmp), "GIT_CONFIG_NOSYSTEM": "1"}
+        with mock.patch.dict(os.environ, identity):
+            subprocess.run(["git", "init", "-q"], cwd=str(self.workspace), check=True)
+            (self.workspace / "workspace.yaml").write_text("format: 1\nslug: confidential-fixture\nstate: drafting\n", encoding="utf-8")
+            ground = self.project / "docs" / "ground-truth"
+            descriptor = {"plan_sha256": sha256_bytes(b"plan"), "sources": [{"id": "architecture", "version": "0.3"}]}
+            prepared = W.checkpoint_prepare(self.project, self.workspace, [ground / "architecture.md", ground / "architecture.index.txt"], descriptor, apply=True)
+            result = W.checkpoint_commit(self.workspace, prepared["id"], apply=True)
+            self.assertEqual(result["status"], "committed")
+            record_before = (self.workspace / "workspace.yaml").read_bytes()
+            old_md, old_idx = self.old_files()
+            code, out = self.render(self.project / "ground-truth" / "architecture.md", "--version", "9.1")
+        self.assertEqual(code, 0, out)
+        self.assertNotEqual(self.old_files()[0], old_md)
+        self.assertEqual(self.history(), [])
+        self.assertNotIn("preserved", out)
+        self.assertNotIn("warning:", out)
+        self.assertEqual((self.workspace / "workspace.yaml").read_bytes(), record_before)       # rendering is not review
+        self.assertEqual(len(W.checkpoint_records(self.workspace)), 1)
+        # the new rendering is not in any checkpoint, so replacing it keeps it
+        with mock.patch.dict(os.environ, identity):
+            code, out = self.render(self.project / "ground-truth" / "architecture.md", "--version", "9.2")
+        self.assertEqual(code, 0, out)
+        self.assertEqual(len(self.history()), 1)
+        self.assertEqual((self.workspace / "workspace.yaml").read_bytes(), record_before)
+
+    def test_a_history_copy_that_the_gate_refuses_stops_the_render_before_anything_is_replaced(self):
+        self.set_handling(True)
+        before = self.old_files()
+        from release_gate import Decision
+        import release_gate as RG
+        real = RG.check
+
+        def deny_history(write_class, rel, digest, destination, root, **kw):
+            if "renderings/history" in str(rel).replace("\\", "/"):
+                return Decision(False, "deny", "workspace-unavailable", None)
+            return real(write_class, rel, digest, destination, root, **kw)
+
+        with mock.patch.object(RG, "check", side_effect=deny_history):
+            code = R.main([str(self.project / "ground-truth" / "architecture.md"), "--root", str(self.project), "--version", "9.1"])
+        self.assertEqual(code, 2)
+        self.assertEqual(self.old_files(), before)
+        self.assertEqual(self.history(), [])
 
 
 class CommandLineTests(unittest.TestCase):

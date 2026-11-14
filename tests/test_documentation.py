@@ -351,5 +351,155 @@ class ObsoleteInstructionTests(unittest.TestCase):
         self.assertEqual(self.search(r"(every|within|in) (five|5)[- ]minutes?\b(?! is a requested)"), [])
 
 
+class MaintenanceNoticeTests(unittest.TestCase):
+    """The notice, the completion lines and the action phrases have one source, templates/maintenance-notice.md.
+    The copies in the two skills and in the specification README template must match it word for word, the two
+    routing tables must be present, and the owner-facing skill text must stay clean."""
+    CANON = ROOT / "templates" / "maintenance-notice.md"
+    GT = ROOT / "skills" / "carrydown-ground-truth" / "SKILL.md"
+    PUB = ROOT / "skills" / "carrydown-plan-to-github" / "SKILL.md"
+    README_TEMPLATE = ROOT / "templates" / "spec-README.md"
+
+    def canon_block(self, heading):
+        """The quoted lines (the contiguous run of lines starting with '>') after the heading."""
+        text = self.CANON.read_text(encoding="utf-8")
+        after = text.split("## " + heading + "\n", 1)[1]
+        lines = []
+        for line in after.split("\n"):
+            if line.startswith(">"):
+                lines.append(line)
+            elif lines:
+                break
+        self.assertGreater(len(lines), 0, heading)
+        return "\n".join(lines)
+
+    def test_the_canonical_template_holds_the_action_phrases_and_the_blocks_exactly(self):
+        text = self.CANON.read_text(encoding="utf-8")
+        for phrase in ('| Create a plan | "Set up a project plan from these documents." |',
+                       '| Publish the approved plan | "Put the plan on GitHub." |',
+                       '| Update an existing project | "This changed: [describe the change or provide revised documents]." |',
+                       '| Start a work item | "Work on WI-03." |',
+                       '| Raise a specification problem | "This specification seems wrong because [explanation]." |',
+                       '> "Use carrydown-ground-truth to update this existing project."'):
+            self.assertIn(phrase, text)
+        self.assertEqual(self.canon_block("The notice"), "\n".join([
+            "> **Important: when the project changes**",
+            ">",
+            "> If requirements, architecture or company rules change significantly, or an engineer finds a specification problem, say:",
+            ">",
+            '> **"This changed: [describe the change or provide revised documents]."**',
+            ">",
+            "> Your agent will review the existing project, preserve engineer corrections and show proposed updates for approval."]))
+        self.assertIn("single source", text.split("-->", 1)[0])
+
+    def test_the_notice_matches_the_canonical_template_in_the_readme_template_and_both_skills(self):
+        notice = self.canon_block("The notice")
+        for path in (self.README_TEMPLATE, self.GT, self.PUB):
+            self.assertIn(notice, path.read_text(encoding="utf-8"), path.name)
+
+    def test_the_completion_lines_match_the_canonical_template(self):
+        self.assertIn(self.canon_block("Completion line after planning"), self.GT.read_text(encoding="utf-8"))
+        self.assertIn(self.canon_block("Completion line after publication"), self.PUB.read_text(encoding="utf-8"))
+
+    def test_the_notice_comes_before_the_routine_counts_and_links(self):
+        gt = self.GT.read_text(encoding="utf-8")
+        self.assertLess(gt.index("Your plan is ready for review."), gt.index("Important: when the project changes"))
+        pub = self.PUB.read_text(encoding="utf-8")
+        step = pub.split("### 7. After", 1)[1].split("### 8.", 1)[0]
+        self.assertLess(step.index("Your approved project has been published."), step.index("Important: when the project changes"))
+        self.assertLess(step.index("Important: when the project changes"), step.index("Then show the user the counts and the project link."))
+
+    def test_the_ground_truth_skill_has_the_whole_routing_table_and_the_two_sentences(self):
+        text = self.GT.read_text(encoding="utf-8")
+        self.assertIn("## Route by project state", text)
+        self.assertLess(text.index("## Rules that never bend"), text.index("## Route by project state"))
+        for state in ("No plan", "Unapproved draft", "Existing project with changed sources or a correction", "Unfinished update",
+                      "Accepted drafts awaiting release", "Approved release awaiting publication", "Observable inputs unchanged",
+                      "Ambiguous project or baseline"):
+            self.assertRegex(text, r"(?m)^\| " + re.escape(state) + r" \| ", state)
+        self.assertIn("python3 <skill>/scripts/reconcile.py status --root .", text)
+        self.assertIn("Routing works after this skill activates.", text)
+        self.assertIn("does not replace the deterministic checks", text)
+        for phrase in ("This changed:", "Is this project up to date?", "What's next?", "Resume the project update", "update this existing project"):
+            self.assertIn(phrase, text.split("\n", 4)[2], phrase)
+        self.assertIn("## The update path", text)
+        self.assertIn("Never scaffold a replacement project", text)
+
+    def test_the_publishing_skill_has_the_routing_rows_that_concern_it(self):
+        text = self.PUB.read_text(encoding="utf-8")
+        self.assertIn("## Route by project state", text)
+        for state in ("Accepted drafts awaiting release", "Approved release awaiting publication", "Resume existing publication"):
+            self.assertRegex(text, r"(?m)^\| " + re.escape(state), state)
+        self.assertIn("Resume the project update.", text)
+        self.assertIn("`project.clarification`", text)
+        self.assertIn("`channel: mention` with `login`", text)
+        self.assertIn("`channel: issue` with `issue`", text)
+        self.assertIn("Do not say \"up to date\" while any publication step is pending.", text)
+        self.assertIn("references/verification.md", text)
+
+    def skill_pages(self):
+        pages = [ROOT / "skills" / s / "SKILL.md" for s in ("carrydown-ground-truth", "carrydown-plan-to-github")]
+        for s in ("carrydown-ground-truth", "carrydown-plan-to-github"):
+            pages += sorted((ROOT / "skills" / s / "references").glob("*.md"))
+        pages += [self.CANON, ROOT / "templates" / "reconcile-review.md", self.README_TEMPLATE]
+        return pages
+
+    def test_no_skill_page_or_notice_template_has_an_em_dash_or_an_en_dash(self):
+        for page in self.skill_pages():
+            text = page.read_text(encoding="utf-8")
+            for dash in (chr(0x2014), chr(0x2013)):
+                self.assertNotIn(dash, text, page.name)
+
+    def test_the_proposal_placeholder_appears_only_in_code(self):
+        for page in (self.GT, ROOT / "skills" / "carrydown-ground-truth" / "references" / "updates.md",
+                     ROOT / "templates" / "reconcile-review.md", self.CANON):
+            text = page.read_text(encoding="utf-8")
+            prose = re.sub(r"(?s)```.*?```", "", text)          # fenced blocks
+            prose = re.sub(r"`[^`\n]*`", "", prose)               # code spans
+            self.assertNotIn("CHANGE_ID", prose, page.name)
+
+    def test_the_ground_truth_skill_never_names_the_publishing_client_a_release_command_or_a_token(self):
+        text = self.GT.read_text(encoding="utf-8")
+        refs = "\n".join(p.read_text(encoding="utf-8") for p in (ROOT / "skills" / "carrydown-ground-truth" / "references").glob("updates.md"))
+        for body in (text, refs):
+            self.assertNotIn("github_client.py", body)
+            self.assertNotIn("release.py release", body)
+        self.assertNotRegex(text, r"(?i)\btokens?\b")          # the update reference may say "approximate token count" of a model
+
+    def test_the_owner_facing_pages_hold_no_script_command_for_the_agent_only_interface_outside_the_skill(self):
+        for page in (self.CANON, ROOT / "templates" / "reconcile-review.md", self.README_TEMPLATE):
+            self.assertNotIn("reconcile.py", page.read_text(encoding="utf-8"), page.name)
+
+    def test_the_review_template_leads_with_the_counts_and_keeps_the_record_last(self):
+        text = (ROOT / "templates" / "reconcile-review.md").read_text(encoding="utf-8")
+        order = [text.index("## " + h) for h in ("Lead sentence", "Proposed updates", "Reviewed and unchanged", "Decisions needed",
+                                                  "Disclosure effects", "Next action", "Technical record")]
+        self.assertEqual(order, sorted(order))
+        self.assertIn("Two specifications need updates. One completed item needs a follow-up decision. One engineer correction conflicts with the revised source.", text)
+
+    def test_the_update_reference_holds_the_fixed_sentences(self):
+        text = (ROOT / "skills" / "carrydown-ground-truth" / "references" / "updates.md").read_text(encoding="utf-8")
+        self.assertIn("> A previous complete source checkpoint is unavailable. Review the current sources to establish one. "
+                      "Earlier uncited changes cannot be assessed automatically.", text)
+        for heading in ("## Independent review prompt", "## The states to report", "## Engineer clarification requests"):
+            self.assertIn(heading, text)
+        self.assertIn("The reviewer must see the original changed blocks", text)
+        self.assertIn("Have any source decisions, requirements, constraints or implementation findings changed since the last review?", text)
+        self.assertIn("Resume the project update.", text)
+        for state in ("Draft reconciliation", "Release", "Engineering repository update", "Issue updates", "Board updates", "Engineer action"):
+            self.assertRegex(text, r"(?m)^\| " + state + r" \|", state)
+        self.assertIn("approximate", text)
+
+    def test_the_verification_and_maintenance_pages_carry_the_states_and_the_old_material_caveat(self):
+        pub = ROOT / "skills" / "carrydown-plan-to-github" / "references"
+        verification = (pub / "verification.md").read_text(encoding="utf-8")
+        maintenance = (pub / "engineers-skill-maintenance.md").read_text(encoding="utf-8")
+        self.assertIn("## States to report after an update", verification)
+        self.assertIn("Do not say \"up to date\" while a required publication step is pending.", verification)
+        self.assertIn("Engineers can still hold old material", verification)
+        self.assertIn("Engineers can still hold old material", maintenance)
+        self.assertIn("An approved update regenerates the engineers' skill through the existing release.", maintenance)
+
+
 if __name__ == "__main__":
     unittest.main()

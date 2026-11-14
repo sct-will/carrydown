@@ -673,8 +673,9 @@ class ScaffoldIgnoreTests(WithTemp):
 class TemplateAndCopyTests(WithTemp):
     def test_the_workflow_watches_bundles_and_receipts_and_reads_only(self):
         text = (ROOT / "templates/check-specs-workflow.yml").read_text(encoding="utf-8")
-        self.assertEqual(text.count('- "docs/context/**"'), 2)
-        self.assertEqual(text.count('- "docs/release/**"'), 2)
+        # The path filter stays on push only. A pull request runs the check whatever it changes (tests/test_pr_declaration.py).
+        self.assertEqual(text.count('- "docs/context/**"'), 1)
+        self.assertEqual(text.count('- "docs/release/**"'), 1)
         self.assertIn("contents: read", text)
         self.assertNotIn("write", text.split("permissions:", 1)[1].split("jobs:", 1)[0])
 

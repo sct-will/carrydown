@@ -1,22 +1,53 @@
 # Review and publish your plan
 
-Use this guide once the skills are installed and your agent is starting the interview. It takes you through answering the questions, reviewing the drafts, publishing to GitHub and updating the plan later.
+Use this guide once the skills are installed and your agent is starting the interview. It takes you through answering the questions, reviewing the drafts, publishing to GitHub and keeping the project aligned when it changes.
 
 If you have not installed carrydown, follow [Install carrydown and start your first plan](setup.md) first. Once the interview begins, continue here. Reference pages provide optional background.
 
 Already have a draft? Skip to [reviewing the plan](#reviewing-the-plan). Approved and ready to publish? Skip to [release what the engineers will see](#release-what-the-engineers-will-see) and [prepare for GitHub](#prepare-for-github).
 
-[Answer the interview](#what-the-agent-asks-you) | [Review the plan](#reviewing-the-plan) | [Second-pass review](#the-second-pass-agent-review) | [Review the specifications](#reviewing-the-specifications) | [Release](#release-what-the-engineers-will-see) | [Prepare for GitHub](#prepare-for-github) | [Publish](#the-github-step) | [Hand off](#hand-the-work-to-engineers) | [Update the plan](#update-the-plan) | [Get help](#if-something-goes-wrong)
+[Answer the interview](#what-the-agent-asks-you) | [Review the plan](#reviewing-the-plan) | [Second-pass review](#the-second-pass-agent-review) | [Review the specifications](#reviewing-the-specifications) | [Release](#release-what-the-engineers-will-see) | [Prepare for GitHub](#prepare-for-github) | [Publish](#the-github-step) | [Hand off](#hand-the-work-to-engineers) | [When the project changes](#when-the-project-changes) | [Update the plan](#update-the-plan) | [Get help](#if-something-goes-wrong)
 
 ## Who runs what
 
 | Role | What they do |
 | --- | --- |
 | Plan owner | An engineering manager, product manager or other person responsible for the plan. Answers the interview, reviews the drafts, approves publishing and gives the engineers their generated skill. |
-| Engineers | Install the generated skill, work from their specifications and demonstrate completed work. |
+| Engineers | Install the generated skill, work from their specifications, raise a specification problem when they find one and demonstrate completed work. |
 | Stakeholders | The people accountable for the outcome. Watch demonstrations and decide whether the acceptance criteria have been met. They run nothing. |
 
 The agent drafts, checks and populates. You decide the owners, dates, scope and order.
+
+**What to say.** Ordinary language is the normal entry point. The same tables are in [the README](../README.md#what-to-say).
+
+Plan owner:
+
+| What you want to do | What to say |
+| --- | --- |
+| Create a plan | "Set up a project plan from these documents." |
+| Publish the approved plan | "Put the plan on GitHub." |
+| Update an existing project | "This changed: [describe the change or provide revised documents]." |
+
+Engineers:
+
+| What you want to do | What to say |
+| --- | --- |
+| Start a work item | "Work on WI-03." |
+| Raise a specification problem | "This specification seems wrong because [explanation]." |
+
+The plan owner uses the two installed skills, engineers use the generated project skill, and stakeholders review milestone outcomes. If your agent does not pick up the right skill, name it:
+
+> "Use carrydown-ground-truth to update this existing project."
+
+> **Important: when the project changes**
+>
+> If requirements, architecture or company rules change significantly, or an engineer finds a specification problem, say:
+>
+> **"This changed: [describe the change or provide revised documents]."**
+>
+> Your agent will review the existing project, preserve engineer corrections and show proposed updates for approval.
+
+The steps are in [when the project changes](#when-the-project-changes).
 
 ## What the agent asks you
 
@@ -42,6 +73,8 @@ Names and personal facts are private on both answers. The agent writes them to `
 Confirm engineering commands and branch rules with the engineering team, or mark them "decide later". The agent summarizes your answers before writing the plan. Review and correct the summary before approving it.
 
 If your document has no numbered sections, ask the agent to propose numbering in the source document. Review those changes before it renders the document for planning.
+
+When you publish, the second skill asks one more question, once: who receives an engineer's clarification request? The answer is either a mention of a named person on the work item, or an existing issue that you or a teammate already owns for that purpose. Give a GitHub login or an issue number. The agent reuses what the project already records, does not guess a recipient from an organization name and asks your approval before it publishes a person's login. Without a recipient, an engineer's request is shown as not sent and the engineer delivers it by hand.
 
 Optional preparation: the [detailed inputs checklist](inputs.md) includes examples, defaults and a form to copy. You can also answer the questions as the agent asks them.
 
@@ -185,6 +218,20 @@ For what publication to GitHub does and cannot do, read [the enterprise security
 
 You are ready to hand off when the issues link to their specifications, the board shows the plan and the generated skill is available on the intended branch. If a destination is public, review the content for publication before approving the write.
 
+**What you see when a stage finishes.** After planning, the agent says:
+
+> **Your plan is ready for review.**
+>
+> Review it with your agent. When you approve it, say "Put the plan on GitHub."
+
+After publication, it says:
+
+> **Your approved project has been published.**
+>
+> Engineers can start with "Work on [work item ID]."
+
+At the end of both stages, the agent shows the notice "Important: when the project changes", at the top of this guide, before the routine counts and links. You can ask "What's next?" or "Is this project up to date?" at any time. The agent answers from the state of the project and names what it checked and could not observe.
+
 ## Hand the work to engineers
 
 The agent supplies a complete installation command for your project's generated skill. Send that command and the board link to the engineers. They install the generated skill once in their coding agents. Each starts an item by naming its identifier, for example "Work on [work item ID]". Their agent first runs the skill's check on the item's approved context, then reads the specification and that context, which holds the exact text of every source section the item cites, and applies the recorded decisions before planning code. It does not open the source documents. When the check cannot proceed it prints one of four plain messages and stops: no approved context for the item, the approved context is stale, the item cites an obligation that is not in its context, or the item has a restricted destination that the project does not publish. The engineers' README lists them with what to do. The check runs in the engineer's own checkout, so it is a convenience and an integrity check, not the control. The controls are your release process and the independent verifier on pull requests.
@@ -197,9 +244,104 @@ The engineers follow three rhythms:
 
 The stakeholders decide whether the outcome meets the criteria. You keep the plan current as the team learns.
 
+## When the project changes
+
+Changes reach a project from two directions. A source changes: a requirement, an architecture decision or a company rule. Or an engineer finds that a specification is wrong, incomplete, ambiguous or impractical. Both can affect the plan, the specifications, the acceptance criteria, shared contracts, the approved context, the GitHub items and work that is already built.
+
+Say what changed, in your own words:
+
+> This changed: [describe the change or provide revised documents].
+
+You do not need to name a skill or a script. If the agent does not take the update path, name the skill, as the table at the top of this guide shows. The agent starts from the existing project. It does not start a new plan, and it does not overwrite the released plan as though it were your working draft. It asks only when the project or the source set is ambiguous.
+
+### What counts as a significant change
+
+A change needs assessment if it could alter any of these:
+
+- What gets built or how success is judged.
+- A shared interface or integration assumption.
+- An applicable rule or permitted use.
+- Another engineer's work.
+- Delivery dates, staffing capacity, dependencies or scope.
+- The validity of work already completed.
+
+Editorial changes can take a lighter path. A small edit to a number, an exception, a condition or a prohibition can still have broad consequences, so the agent treats a changed quantity, exception or negation as potentially meaningful.
+
+At each milestone review, ask the team:
+
+> "Have any source decisions, requirements, constraints or implementation findings changed since the last review?"
+
+This is a prompt for a person. It is not an automatic approval, and it does not mean that any source was checked.
+
+### The one review
+
+For an ordinary update, with the revised material available and no unresolved conflict, you say one sentence, see one consolidated review and give one final approval. You type no script command and handle no internal identifier.
+
+The review opens with a plain summary, for example: "Two specifications need updates. One completed item needs a follow-up decision. One engineer correction conflicts with the revised source." It then shows:
+
+- The proposed patches, each one small and focused, never a whole specification rewritten because regenerating it is easier.
+- Why each other candidate was reviewed and left unchanged.
+- How an engineer's compatible correction was preserved, and which corrections conflict.
+- The decisions that need you, and what each choice would affect.
+- What would be disclosed, to whom and where, and the next publication step.
+
+Every change the agent found in the sources receives a disposition: update existing work, add work, assess completed work, no downstream impact with the reason, defer with the accepted consequence, or unresolved with the missing decision named. "No proposed patch" does not mean "no impact". A removed requirement does not delete an issue or rewrite what was completed. You decide any follow-up.
+
+A conflict, a missing decision or an approval your organization requires can mean one more question. Each such question names the consequential decision that makes it necessary. Distinct permissions stay distinct: approving an update to the drafts is not permission to disclose it or to write to GitHub.
+
+The agent reads the compact index of all work items, then the full specifications of the candidates. It says what it checked and what it could not observe. It does not claim to have found every affected item, and an independent review pass looks again at the original changes, the claimed lack of impact and the proposed patches. People decide what the changes mean.
+
+The agent keeps a private copy of each source version you reviewed, in your private workspace on your machine, so that it can compare the next change with it. [The security guide](security.md#local-source-history) says what that copy holds and what deleting a raw input does not erase. If a previous complete source checkpoint is missing, the agent says what it cannot compare and asks you to review the current sources to establish one. In that case earlier uncited changes cannot be assessed automatically.
+
+### Requests from engineers
+
+An engineer who finds a problem says "This specification seems wrong because [explanation]." The generated skill drafts a `Rule clarification request` with the work item, the specification location, the problem and the evidence, the proposed correction or question, the approved baseline the engineer is working from, whether unaffected work can continue and what you need to do next. It needs no access to your confidential documents or your private workspace.
+
+A draft in chat is not a delivered request. The engineer decides whether to post it. The generated skill holds no posting credential, so the engineer or an authorized tool posts it, and the request carries the label "not sent" until then.
+
+Your answer to the recipient question at publication decides where requests go: a mention of the person you named on the work item, or an existing issue you own for the purpose. A mention or an assignment directs attention. It does not guarantee email delivery or an acknowledgment. Delivery, your decision and the completed update are three separate states.
+
+Each request keeps one disposition on the issue conversation:
+
+| Disposition | Meaning |
+| --- | --- |
+| `pending` | Raised, and not yet decided. |
+| `accepted` | You agreed. The decision and the resulting update are linked when they exist. |
+| `declined` | You decided against it. The reason stays with the request. |
+| `deferred` | You decided to wait. The consequence you accepted and the affected work stay visible. |
+
+Human comments stay as written. Nothing closes a request silently. When you resume planning or an update, the agent reads outstanding requests if you have authorized project reads. If it cannot read them, it says so.
+
+An engineer's request does not change an upstream obligation. A recorded implementation note does not either. Only a released update does. A source correction needs its author's decision, and the agent never says that your original document was corrected when only a request was drafted.
+
+### Resume the project update
+
+If an update stopped, say:
+
+> Resume the project update.
+
+The agent finds the saved proposal or the unfinished publication and continues from what is verified. It asks you only when more than one consequential choice remains. Before it writes anything, it checks the sources and drafts again, because an input that changed during the review needs a new assessment. [Recover a plan or publication](recovery.md#resume-a-project-update) lists the states an update can stop in.
+
+### When the update is finished
+
+The agent reports each state on its own and does not say "up to date" while a required step is pending:
+
+- Draft changes accepted.
+- Release approved.
+- Engineering repository update pending or available.
+- Issue updates pending or verified.
+- Board updates pending or verified.
+- Engineer action required.
+
+When a work item has an approved update, an engineer sees a notice such as: **Action required: WI-03 has an approved update.** Delegated approval behavior and one acceptance criterion changed. Review the update and reassess your implementation plan before continuing.
+
+The agent does not claim that every engineer has received or understood the update. An offline checkout and an active conversation can keep earlier material. The engineer's check compares the specification, its approved context, the README and the skill files with one active receipt, and it validates any decision notes the project allows.
+
+You accept the update for the drafts first. The existing publishing skill then handles the release, the disclosure approval, the GitHub write permission, the exact commit and push, the issue and board updates and the checks that follow. Your earlier approval counts only within its unchanged scope. The previous release stays active while you review, unless you withdraw it separately.
+
 ## Update the plan
 
-Open the same project in your coding agent and describe what changed. Review the affected items and dates before publishing another update. You can use these prompts.
+Open the same project in your coding agent and describe what changed. Review the affected items and dates before publishing another update. For a changed source or an engineer's correction, use [when the project changes](#when-the-project-changes). For a change to people, dates or dependencies, you can use these prompts.
 
 ### Change people, dates or dependencies
 
@@ -209,7 +351,7 @@ Give the names, availability, dates or dependencies that changed. The agent upda
 
 ### Change the source document
 
-> The source document has changed. Render it again, identify the affected specifications and update the plan with me. Run the checker before we publish anything.
+> This changed: the source document has a new version at [path]. Render it again, identify the affected specifications and update the plan with me. Run the checker before we publish anything.
 
 Edit the source document rather than its rendered copy. The checker flags citations to sections that no longer exist; review the affected content with the agent as well. A valid section number alone does not prove that a specification still matches the revised document. Carrydown records the content digest and version of each source. After you render the new version, `release.py preview` and `release.py diff` name the work items whose approved context would change, and the old release stays in force until you approve a new one. Carrydown cannot see a change to a document's permissions in your own document system, so check that yourself whenever you change who may read a source.
 
@@ -234,6 +376,7 @@ If specifications or engineering conventions changed, ask the agent to refresh t
 - **A release command is refused.** The refusal is a fixed reason code, such as `not-approved`, `working-copy-differs`, `approval-scope-mismatch`, `withdrawn`, `superseded`, `expired`, `mixed-release` or `staging-access-not-verified`. Ask the agent to say what the code means and what you can do. None of them has a bypass. Do not look for one: do not edit a file under `docs/context/` or `docs/release/`, regenerate approved files to clear a mismatch, or ask for an approval to be forced. Prepare a new request instead.
 - **A publishing step is refused.** Ask the agent to explain the token or permission check. Confirm the repository, board owner and any single sign-on authorization. Do not paste a token into chat.
 - **A publishing run stops partway through.** Ask the agent to inspect what exists and show another dry run. A rerun matches existing issues and repairs missing links. Review the preview before approving it.
+- **An update stopped partway.** Say "Resume the project update." A failure is not permission to reset, to force an approval, to retry blindly or to remove human work. [Recover a plan or publication](recovery.md#resume-a-project-update) explains each state.
 - **You want to rebuild the draft.** Ask the agent to show the proposed changes and preserve reviewed work before replacing files.
 
 For installation problems, use the [setup guide's troubleshooting](setup.md#when-something-does-not-work). The [planning method](method.md) and [security guide](security.md) provide optional background.
@@ -247,6 +390,9 @@ For installation problems, use the [setup guide's troubleshooting](setup.md#when
 - **Receipt.** The small public file in `docs/release/` that names a release, its state and its expiry.
 - **Staging repository.** A private repository where a release candidate is reviewed and approved before anything reaches the engineering repository. The private path only.
 - **Tooling repository and enrollment.** The organization's protected repository that holds the independent verifier and the list of repositories that use the private path. The private path only.
+- **Reconciliation.** The step in which your agent compares revised sources or an engineer's correction with the reviewed sources and the current work, prepares focused corrections and shows conflicts for your decision.
+- **Source checkpoint.** A private copy of the source renderings you reviewed, kept in your private workspace, that the next change is compared with.
+- **Disposition.** The recorded outcome for one changed source passage or one engineer request, such as updated, no downstream impact, deferred or unresolved.
 - **Agent Skills.** An open format for packaging instructions for a coding agent as a folder with a `SKILL.md` file.
 - **Epic.** A parent GitHub issue that stands for the whole project.
 - **Sub-epic.** An issue for one milestone, placed under the Epic.

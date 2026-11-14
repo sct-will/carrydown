@@ -20,8 +20,12 @@ What it does with one pull request
      active request whose receipt is in the proposed tree, and that request must be approved by an
      authorized account, unexpired and captured under the current policy digest. Removals, renames,
      links and submodules fail. An unlisted file fails even when the pull request also holds a valid receipt.
-     With engineer_edits "allowed" for a path, a change that touches only "Decisions recorded" of an
-     exported specification is permitted; "request-only" (the default) permits none.
+     With engineer_edits "allowed" for a path, an exported specification may differ from its approved
+     bytes by the decision overlay only (decision_overlay.validate_overlay): new dated entries appended
+     under "Decisions recorded", each naming a pull request, with the body outside the section and every
+     earlier entry unchanged. "request-only" (the default) permits no change. A failure says whether
+     the bytes differ (a semantic change that needs a new release) or only the receipt changed (a
+     provenance refresh, which is not a failure).
   6. Content checks on the changed artifacts: the released-plan schema and project.handling of a plan,
      the bundle digest of each bundle pair, and the detectors that no exception can clear.
   7. Base drift: a governed file that reached the default branch after the pull request was opened must
@@ -39,6 +43,7 @@ from typing import NamedTuple, Optional
 
 import carrydown_lib as L
 import compile_bundles as CB
+import decision_overlay as DO
 import detectors as D
 import release_schema as RS
 import release_verify as V
@@ -49,21 +54,26 @@ POINTER_KEYS = ("format", "tooling_repository", "enrollment_id")
 RECEIPT_DIR = "docs/release/"
 RECEIPT_PATH = re.compile(r"docs/release/([0-9a-f]{64})\.receipt\.json\Z")
 PLAN_NAME = "plan.yaml"
-DECISIONS_HEADING = "## Decisions recorded"
+DECISIONS_HEADING = DO.OVERLAY_HEADING.decode("ascii")
 MAX_FINDINGS = 40
 NO_GOVERNED = "no governed changes"
 
 
 class Finding(NamedTuple):
+    """code is a fixed reason code, where a repository path or a request id. why is a plain sentence that
+    says what the finding means for the person who must act, when the verifier can say it."""
     code: str
     where: str
+    why: str = ""
 
 
 class EngineeringReport(NamedTuple):
     """ok is True only when every check passed. kind is no-governed-changes, content, state-only or
-    refused. findings are (code, where) pairs, the first being the headline. request_ids are the
+    provenance-refresh or refused. findings are Finding rows, the first being the headline. request_ids are the
     requests whose receipts were verified. evidence lists the staging pull requests the verdict leaned on
-    ((pull request number, merge commit)), for the verifier's private input record."""
+    ((pull request number, merge commit)), for the verifier's private input record. explanation is one plain
+    sentence about a pass that is not an ordinary content change: a provenance refresh (the receipt changed and
+    the approved bytes are equal) or a decision overlay (new notes under "Decisions recorded")."""
     ok: bool
     code: str
     kind: str
@@ -71,7 +81,24 @@ class EngineeringReport(NamedTuple):
     request_ids: tuple
     evidence: tuple
     expires_at: Optional[str]
+    explanation: str = ""
 
+
+SEMANTIC_WHY = ("The bytes of this file differ from the approved release, so this is a change of meaning and needs a new release. "
+                "A provenance refresh changes only the receipt and leaves the approved bytes equal.")
+OVERLAY_WHY = {
+    "body-changed": "The file differs from its approved text outside the notes this project allows. That is a change of meaning and needs a new release.",
+    "boundary-malformed": 'The heading "Decisions recorded" is missing, repeated or at another level, so the notes cannot be separated from the approved text.',
+    "entry-edited": "An earlier decision note was changed or removed. Only new notes may be added.",
+    "entry-undated": "A new decision note is not a dated entry in the form - YYYY-MM-DD. Text.",
+    "placeholder-kept": 'The line "None yet." must be replaced by the first entry, not kept beside it.',
+    "placeholder-removed": 'The line "None yet." was removed without a new entry.',
+    "pr-reference-missing": "A new decision note does not name its pull request.",
+    "encoding-invalid": "A new decision note is not valid text.",
+}
+OVERLAY_PASS = ('A decision note was appended under "Decisions recorded" and the rest of the file matches the approved release. '
+                "The notes are not an approval. The plan owner reviews them at the next release.")
+PROVENANCE_PASS = "Only the receipt changed. The approved bytes are equal, so this is a provenance refresh and carries no change of meaning."
 
 # ---------------------------------------------------------------------------
 # Governed paths
@@ -118,29 +145,11 @@ def edit_policy(path, engineer_edits):
 
 
 def decisions_only_change(approved, proposed):
-    """True when the two texts of a specification differ only inside the "Decisions recorded" section.
-    Both must have that heading; the section runs to the next heading of the same level."""
-    try:
-        a, b = bytes(approved).decode("utf-8"), bytes(proposed).decode("utf-8")
-    except UnicodeDecodeError:
-        return False
-
-    def outside(text):
-        lines, out, skip, seen = text.splitlines(keepends=True), [], False, False
-        for line in lines:
-            bare = line.rstrip("\r\n")
-            if bare == DECISIONS_HEADING:
-                skip, seen = True, True
-                out.append(line)
-                continue
-            if skip and bare.startswith("## "):
-                skip = False
-            if not skip:
-                out.append(line)
-        return "".join(out), seen
-    left, seen_a = outside(a)
-    right, seen_b = outside(b)
-    return seen_a and seen_b and left == right
+    """True when the proposed specification is the approved bytes plus a valid decision overlay. A thin
+    wrapper over decision_overlay.validate_overlay under the allowed policy, kept for callers of the older
+    name. It no longer ignores the section: an edited earlier entry, a changed body or a malformed boundary
+    is False. The verifier itself calls validate_overlay and also requires a pull request reference."""
+    return DO.validate_overlay(approved, proposed, "allowed").ok
 
 
 # ---------------------------------------------------------------------------
@@ -160,12 +169,13 @@ class _Run:
         self.history = None
         self.evidence = []
         self.expiries = []
+        self.overlays = []         # specifications accepted because they differ by a valid decision overlay only
         self.blobs = {}
         self.staging_trees = {}
 
-    def fail(self, code, where=""):
+    def fail(self, code, where="", why=""):
         if len(self.findings) < MAX_FINDINGS:
-            self.findings.append(Finding(code, where))
+            self.findings.append(Finding(code, where, why))
 
     # --- reads
     def blob(self, path):
@@ -384,12 +394,38 @@ def _check_artifacts(run, artifacts):
             data = run.blob(path)
             if len(data) == entry["bytes"] and sha256_bytes(data) == entry["sha256"]:
                 continue
+        why = SEMANTIC_WHY if entry is not None else ""
         if edit_policy(path, edits) == "allowed" and entry is not None and path.casefold().endswith(".md") \
                 and node["mode"] == entry["mode"]:
             approved = _snapshot_file(run, record, path)
-            if approved is not None and decisions_only_change(approved, run.blob(path)):
+            if approved is not None:
+                result = DO.validate_overlay(approved, run.blob(path), "allowed", require_pr_reference=True)
+                if result.ok:
+                    run.overlays.append(path)
+                    continue
+                why = OVERLAY_WHY.get(result.reason, SEMANTIC_WHY) + f" ({result.reason})"
+        run.fail("sha256-mismatch" if entry is not None else "governed-file-without-release", path, why)
+
+
+def _approved_bytes_equal(run, request_ids):
+    """True when each verified active request lists repository files that are all in the proposed tree with
+    the approved path, mode and bytes. A pull request that changes only a receipt and passes this is a
+    provenance refresh: the receipt changed, the bytes did not."""
+    history = run.get_history()
+    checked = False
+    for rid in request_ids:
+        state = history.replay.requests.get(rid)
+        if state is None or state.state != "active":
+            continue
+        for entry in run.record(rid).entries:
+            if not entry["path"].startswith("repo/"):
                 continue
-        run.fail("sha256-mismatch" if entry is not None else "governed-file-without-release", path)
+            path = entry["path"][len("repo/"):]
+            node = run.nodes.get(path)
+            if node is None or node["type"] != "blob" or node["mode"] != entry["mode"] or sha256_bytes(run.blob(path)) != entry["sha256"]:
+                return False
+            checked = True
+    return checked
 
 
 def _check_content(run, artifacts):
@@ -573,8 +609,14 @@ def verify_engineering(reader, enrollment, pull_number, now=None):
     kind = "state-only" if receipts and not artifacts and pointer is None and all(
         run.history is not None and run.history.replay.requests[RECEIPT_PATH.match(p).group(1)].state in RS.TERMINAL_STATES for p in receipts) \
         else "content"
+    explanation = ""
+    if run.overlays:
+        explanation = OVERLAY_PASS
+    elif kind == "content" and receipts and not artifacts and pointer is None and _approved_bytes_equal(run, request_ids):
+        # receipts only, and every file the active release lists is in the tree with its approved bytes
+        kind, explanation = "provenance-refresh", PROVENANCE_PASS
     soonest = min(run.expiries) if run.expiries else None
-    return EngineeringReport(True, "", kind, (), request_ids, tuple(run.evidence), soonest)
+    return EngineeringReport(True, "", kind, (), request_ids, tuple(run.evidence), soonest, explanation)
 
 
 def main(argv=None):

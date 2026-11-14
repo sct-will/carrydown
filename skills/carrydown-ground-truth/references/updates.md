@@ -1,0 +1,156 @@
+# Updating an existing project
+
+Read this when the project already has a plan and something changed: a source document, a requirement, a company rule, or an engineer's finding that a specification is wrong. `SKILL.md` has the steps. This page has the detail.
+
+The commands below are for you. The owner never types them and never sees a proposal id, a digest or a flag. Say what you are doing in one plain sentence, then run the command. The script never calls a model. You read the comparison and the compact index it prints, and you write the proposed patches.
+
+## The comparison and the three versions
+
+Every update compares three versions of the downstream content.
+
+| Version | Where it comes from |
+| --- | --- |
+| Previous approved | The released plan and specifications, from the active release. |
+| Current | The owner's working drafts, with any engineer corrections already in them. |
+| Proposed | What the revised source or the accepted clarification calls for. |
+
+On the source side, the script compares the previously reviewed rendering of each source with the current rendering, by source identifier, section and changed block. A rendering of a new version does not make it the reviewed baseline. Only an accepted review does.
+
+| Situation | What you do |
+| --- | --- |
+| Current content equals previous approved content | Prepare a focused patch. |
+| An engineer edit and the source change are compatible | Keep both. Explain the result in one sentence. |
+| They conflict | Show both texts and the source passage. Ask the owner. Do not overwrite either. |
+| An engineer correction shows a defect in the source | Draft a correction request for the source owner. The specification keeps the correction. |
+| Historical content is incomplete | Say what is missing and require review. |
+
+Never rewrite a whole specification because regeneration is easier. A patch touches only the lines that must change.
+
+## Missing checkpoint
+
+When `status` or `prepare` reports that no reviewed checkpoint exists, say this, word for word:
+
+> A previous complete source checkpoint is unavailable. Review the current sources to establish one. Earlier uncited changes cannot be assessed automatically.
+
+Then offer to review the current sources with the owner so that the review becomes the checkpoint. Do not pretend a comparison ran. Do not guess what the earlier text said.
+
+## What counts as changed
+
+The script classifies additions, modifications, removals, moves, renumbering, precedence changes and unreadable content. A section that moved and is word for word the same is a mapping, not a change. An ambiguous mapping goes to the owner.
+
+A formatting change is not an engineering change. A change to a number, a unit, a condition, an exception, a negation or a prohibition is potentially meaningful even when it is one word. Read it before you call it editorial.
+
+## One disposition for every changed block
+
+Every changed block gets exactly one disposition. "No proposed patch" is not "no impact".
+
+| Disposition | Required record |
+| --- | --- |
+| Update existing work | The affected item and the proposed patch. |
+| Add work | The proposed scope and an explicit planning decision by the owner. |
+| Assess completed work | The evidence and a follow-up decision by the owner. |
+| No downstream impact | The reason and the context that supports it. |
+| Defer | The consequence the owner accepts, the affected work and the remaining action. |
+| Unresolved | The specific missing decision or evidence. |
+
+A removed requirement does not delete issues and does not rewrite completion history. The owner decides any follow-up work or status change. A deferred change stays visible in the review and in the next status report. It never disappears.
+
+## Reading the impact index
+
+The prepare command prints a compact index with one row per work item: identifier, title, scope excerpt, acceptance excerpts, source citations, shared contracts, dependencies, recorded decisions and completion state when known. Global conventions appear once.
+
+1. Read the changed material first, with the surrounding source rules it depends on.
+2. Read the whole index once. Do not skip rows. Direct consumers come from citations. Indirect consumers come from shared obligations, contracts, integration points and conventions.
+3. Name candidate items and say why each is a candidate, including indirect ones.
+4. Read the full specification of every candidate, and the contracts it uses.
+5. An excerpt is not enough to say "no impact" when the omitted words could matter. The index records omitted word counts. Open the full item in that case.
+6. Propose a patch only where content must change. A direct citation can still need no patch.
+7. Apply this to architecture and requirements changes as well as governance and standards. A source category ranks where to look first. It never excludes anything.
+
+A scheduling dependency alone does not mean the consumer's specification changes. Distinguish the relationship types.
+
+New obligations are assessed even when nothing cites them. Check new uncited obligations, resolved conflicts, changes of applicability or precedence, and completed work.
+
+### Cost
+
+Before you assess, tell the owner what you will read, in one line: the index size in bytes and words, and an approximate token count, labeled approximate. Use the real usage figure afterward when the environment supplies one. Do not promise a count for every project.
+
+If the index is large, process it in bounded batches and account for every row. If the owner has set a budget and the work does not fit, report the assessment as incomplete, name the rows not read and ask whether to continue. Never turn a budget into a clean result, and never say a project has no impact for rows you did not read.
+
+## Independent review prompt
+
+After you draft the patches and the dispositions, run a separate reasoning pass. In an environment that can start a fresh agent, use one. Otherwise run the pass as a distinct step in this conversation: set your draft summary aside and reread the original material first. The reviewer must see the original changed blocks, the candidate list, every "no impact" reason, every proposed patch and every preserved engineer decision. A summary of your reasoning is not enough.
+
+> You are a skeptical reviewer of a proposed project update. You have the original changed source blocks, the compact index, the list of candidate work items, the reasons given for items left unchanged, the proposed patches and the engineer decisions that were kept. Try to show the update is wrong.
+>
+> 1. Missed consumers. Name any work item, contract or convention that depends on a changed block and is not in the candidate list. Quote the changed words and the item's words.
+> 2. Altered exceptions. For each changed number, condition, exception, negation or prohibition, say whether any patch or any "no impact" reason ignores it.
+> 3. Global applicability. Does a changed rule, precedence or applicability reach items that never cited it?
+> 4. Completed work. Does any change invalidate work already recorded as complete or in progress?
+> 5. Preserved decisions. Does any patch overwrite an engineer correction or a recorded decision? Is any claimed compatibility actually a conflict?
+> 6. Unsupported patches. Does any patch say more than the source supports?
+>
+> For each finding give the item, the quoted evidence, why it matters and a proposed fix. Do not praise the update. Do not rewrite it. If you find nothing in a category, say what you checked.
+
+Fold each accepted finding into the proposal and run the check again. Findings are input for the owner's review. People decide substantive interpretation. This pass does not need another provider, a hosted service or automatic delegation.
+
+## The consolidated review
+
+Use `templates/reconcile-review.md`. Lead with the counts sentence, in plain words and only for counts above zero. For example: "Two specifications need updates. One completed item needs a follow-up decision. One engineer correction conflicts with the revised source." Then show the proposed patches, the evidence for unchanged work, the decisions needed, the disclosure effects and the next action. Keep the technical record out of the conversation. Offer it if the owner asks.
+
+Settle real conflicts before you ask for the final approval. Combine compatible questions into one prompt where policy allows. Do not merge distinct permissions. An answer to one permission is not an answer to another. Accepting the update is not permission to disclose anything or to write to GitHub.
+
+## Engineer conflicts and source corrections
+
+An engineer's correction stays in the working draft until the owner decides. When it conflicts with the revised source, the owner chooses one of three things: keep the correction and ask the source owner to fix the source, take the revised source and discard the correction, or write a new passage. Record the choice in the review.
+
+A source correction needs the source owner's decision. If you draft a request to the source owner, say "I drafted a request. The source document is unchanged." Never say the document was corrected when only a request was drafted.
+
+## Engineer clarification requests
+
+Engineers raise problems with their own agent. Each request is addressed to the plan owner on the work item's issue, and it has a state: `pending`, `accepted`, `declined` or `deferred`.
+
+1. When `status` reports outstanding requests, show them first, before anything else, one line each: the work item, the problem in a sentence, and how long it has waited. If the owner's authorized reads did not run, say that outstanding requests could not be observed and why.
+2. The owner decides each one: accepted, declined or deferred. Do not decide for the owner.
+3. An accepted request enters the update as a changed input. Run the update path from the impact step with the request as the source of the change. A declined or deferred request stays in the review with the owner's reason.
+4. This skill does not write to GitHub. The publishing skill records the decision on the issue, as a comment that starts with `Clarification disposition:` and links the request. The planning skill reads what was last observed from `<workspace>/events/clarifications.json`, through `reconcile.py status`, and reports the time of that observation. Say what the observation shows and when it was taken. A request that shows `pending` may have been decided after that time.
+5. Tell the owner that the decision is recorded on the issue by the publishing skill, with its disposition command, after the owner says yes. Until the observation shows the new state, say "not yet recorded on the work item". If there is no observation, say that requests could not be observed, and ask the owner to say "Put the plan on GitHub." or to run the publishing skill's `--clarifications --apply` read first.
+
+A mention or an assignment draws attention. It does not prove the owner was notified. Delivery, the owner's decision and the finished update are three separate states.
+
+## When inputs change during review
+
+If a source or a working draft changes after you prepared the proposal, the proposal is stale. Say this, in plain words: "Something changed while we were reviewing: [which source or draft]. Nothing was applied. I will reassess only the items it affects and show you what differs." Then run `prepare --root . --apply` again, reassess the affected items and show the owner only what changed since the last review. A decision the owner already made on an unaffected item stands.
+
+If `check` or `apply` reports that an input changed, treat it the same way. Never apply a patch to content that is not what you reviewed.
+
+## Observation limits
+
+Say what was observed. A repository that did not change says nothing about a source kept elsewhere. When the owner asks "Is this project up to date?", answer with what `status` checked and what it could not see, and ask for revised material for anything kept elsewhere. Do not say "up to date" while a publication step is pending.
+
+## After the owner accepts
+
+1. Run the apply command as a preview, read it and show the owner which files will change. Then run it with `--apply`.
+2. When the owner has accepted the reviewed sources, record the source checkpoint with `workspace.py checkpoint`, as a preview first. If review found no downstream change, the accepted checkpoint is recorded against the active release without a new release.
+3. If outputs changed, the owner says "Put the plan on GitHub." and `carrydown-plan-to-github` releases and publishes.
+
+## The states to report
+
+At the end, report these states separately, in this order, each with one of its values. Use text labels.
+
+| State | Values |
+| --- | --- |
+| Draft reconciliation | accepted, or not yet accepted |
+| Release | approved, or not yet approved |
+| Engineering repository update | pending, or available |
+| Issue updates | pending, or verified |
+| Board updates | pending, or verified |
+| Engineer action | required, with the work items, or none |
+
+A state that is not reached yet is pending, not omitted. Engineers can still hold old material in a checkout or an open conversation. Do not claim that every engineer has received or understood the update. Name the work items whose engineers need to act, and say what they must do: update their checkout, reread the approved changes and reassess their plan.
+
+At a milestone review, the owner can ask the team: "Have any source decisions, requirements, constraints or implementation findings changed since the last review?" This is a human observation point. It does not approve anything and it does not show that every source was checked.
+
+## Recovery
+
+If the owner comes back later, or an update stopped halfway, they say "Resume the project update." Run `status`, pick the saved proposal or the existing publication request, and say where things stand in plain words. Ask the owner only when more than one consequential choice remains. A failure never authorizes a reset, a forced approval, a blind retry or removal of anyone's work.

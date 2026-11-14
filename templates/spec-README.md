@@ -22,6 +22,20 @@ The shortest route is the engineers' skill. It makes a coding agent read the rig
 4. Prove each acceptance criterion with a test or a recorded check. The pull request lists them.
 5. If the implementation departs from the file, append a short entry under "Decisions recorded" at the end of the file with the pull request number, in the same pull request.
 
+## Raising a specification problem
+
+If a specification seems wrong, incomplete or impractical, say to your agent: "This specification seems wrong because [explanation]." Your agent reads the approved context and the code, then drafts a request. The request is addressed to the plan owner on the work item's issue. It is sent only when you permit it. Until the owner decides, it stays pending, and a request your agent could not post is marked not sent. Work the request does not affect can continue.
+
+## When the project changes
+
+> **Important: when the project changes**
+>
+> If requirements, architecture or company rules change significantly, or an engineer finds a specification problem, say:
+>
+> **"This changed: [describe the change or provide revised documents]."**
+>
+> Your agent will review the existing project, preserve engineer corrections and show proposed updates for approval.
+
 ## Source documents
 
 {{source_table}}

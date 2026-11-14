@@ -32,6 +32,15 @@ Confidential projects (a plan with `project.handling` or a classification on its
   --resolve-review-items include|exclude; --show-review-items lists them for the owner. Links
   other than http and https are dropped, keeping the link text. HTML comments in Markdown are removed.
   A plan without these fields renders as it always did.
+
+The previous rendering is kept before it is replaced
+  When a rendering file (the .md or the .index.txt) is about to be replaced by different content and the
+  project has a private workspace, the existing file is first copied to
+  <workspace>/renderings/history/<name>.<first 12 hex digits of its SHA-256>.md (or .index.txt), unless
+  a recorded source checkpoint already holds that exact file. One line says it was kept privately. With no
+  private workspace, one warning line says the previous rendering was not kept and cannot be compared
+  with a reviewed checkpoint later. Rendering a new version is not review: it never records or changes a
+  checkpoint. --dry-run says what would be kept and writes nothing.
 """
 import argparse
 import datetime as dt
@@ -1502,6 +1511,71 @@ def record_source_digests(plan_path, updates):
 # ---------------------------------------------------------------------------
 
 
+HISTORY_FOLDER = "renderings/history"
+MAX_PREVIOUS_BYTES = 32 * 1024 * 1024
+
+
+def read_previous(path):
+    """The bytes of an existing rendering file, or None when there is none to keep: no file, a link, not a
+    regular file, or too large to be a rendering."""
+    try:
+        if path.is_symlink() or not path.is_file() or path.stat().st_size > MAX_PREVIOUS_BYTES:
+            return None
+        return path.read_bytes()
+    except OSError:
+        return None
+
+
+def checkpointed_digests(workspace):
+    """The digests of every file inside a recorded source checkpoint of the workspace, or an empty set when
+    the checkpoint code is not there or its records cannot be read."""
+    try:
+        import workspace as W
+    except ImportError:
+        return set()
+    try:
+        return W.recorded_digests(workspace)
+    except (OSError, ValueError, L.YamlError, L.TextError):
+        return set()
+
+
+def plan_preservation(rendered, workspace):
+    """What to keep before this run replaces renderings. Returns (kept, copies, unkept): kept is the list of
+    source names whose previous rendering is (or would be) kept privately, copies is the list of
+    (history path, bytes) still to write, unkept is the list of names whose previous rendering is replaced
+    with no private workspace to keep it in. A file that is new, unchanged, or already inside a recorded
+    checkpoint needs nothing."""
+    kept, copies, unkept = [], [], []
+    recorded = None
+    for job, figs, notes, findings, text, index_txt, n_head in rendered:
+        wrote_any = False
+        replaced = False
+        for out_path, new_text, suffix in ((job["out_md"], text, ".md"), (job["out_idx"], index_txt, ".index.txt")):
+            old = read_previous(out_path)
+            if old is None or old == new_text.encode("utf-8"):
+                continue
+            replaced = True
+            if workspace is None:
+                continue
+            digest = RG.RS.sha256_bytes(old)
+            if recorded is None:
+                recorded = checkpointed_digests(workspace)
+            if digest in recorded:
+                continue
+            target = Path(workspace).resolve() / HISTORY_FOLDER / f"{job['name']}.{digest[:12]}{suffix}"
+            have = read_previous(target)
+            if have is not None and have != old:
+                raise ValueError(f"{target.name} is already in the private history with other content")
+            if have is None:
+                copies.append((target, old))
+            wrote_any = True
+        if replaced and workspace is None:
+            unkept.append(job["name"])
+        elif wrote_any:
+            kept.append(job["name"])
+    return kept, copies, unkept
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Render .docx, .md or .txt ground-truth documents as Markdown with stable anchors, a section index and figures.",
@@ -1717,11 +1791,31 @@ def main(argv=None):
             return False
         return True
 
+    # keep the previous rendering privately before this run replaces it. Rendering is not review: no checkpoint changes.
+    try:
+        kept, copies, unkept = plan_preservation(rendered, workspace)
+    except ValueError as e:
+        return fail(f"the previous rendering cannot be kept: {e}")
+
     if not a.dry_run:
         for job, figs, notes, findings, text, index_txt, n_head in rendered:
             outputs = [(job["out_md"], text), (job["out_idx"], index_txt)] + [(job["fig_dir"] / f, d) for f, d in figs.files]
             if not all(gate(path, data, job["classification"]) for path, data in outputs):
                 return 2
+        if not all(gate(path, data, None) for path, data in copies):
+            return 2
+        for path, data in copies:
+            try:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(data)
+            except OSError as e:
+                print(f"error: cannot keep the previous rendering in the private workspace: {e.strerror or e}. Nothing was replaced.", file=sys.stderr)
+                return 2
+    for name in kept:
+        print(f"{'would preserve' if a.dry_run else 'preserved'} the previous rendering of {name} privately in workspace:{HISTORY_FOLDER}/")
+    for name in unkept:
+        print(f"warning: there is no private workspace, so the previous rendering of {name} {'would not be' if a.dry_run else 'was not'} preserved. "
+              "The checkpoint cannot be compared with it later. Create the workspace with workspace.py init")
 
     verb = "would write" if a.dry_run else "wrote"
     digests = {}

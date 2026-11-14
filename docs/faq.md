@@ -2,7 +2,7 @@
 
 ## How do I start each skill?
 
-Planning starts with the first conversation in [start your plan](setup.md#start-your-plan). Publishing starts after review in [prepare for GitHub](plan-owner-guide.md#prepare-for-github). The generated engineers' skill is the last step of publishing.
+Planning starts with the first conversation in [start your plan](setup.md#start-your-plan). Publishing starts after review in [prepare for GitHub](plan-owner-guide.md#prepare-for-github). The generated engineers' skill is the last step of publishing. When the project changes after planning, say "This changed: [describe the change or provide revised documents]." The README lists [what to say](../README.md#what-to-say) at each stage.
 
 ## npx: command not found
 
@@ -49,7 +49,7 @@ Not in version 1. The approved context of a work item is committed to the reposi
 
 ## Is the engineers' check a security control?
 
-No. The check that the engineers' skill runs is a convenience and an integrity check in the engineer's own checkout, which the engineer can edit. The controls are the release gate on the plan owner's side and the independent verifier on pull requests, and an engineer can edit neither. The check also learns of a replacement or a withdrawal only after the receipt reaches the default branch the engineer fetches. An offline clone cannot learn it, and the first run in a clone needs a successful refresh.
+No. The check that the engineers' skill runs is a convenience and an integrity check in the engineer's own checkout, which the engineer can edit. It compares the item's specification, approved context, README and skill files with one active receipt, and it validates the decision notes that the project's edit policy permits. The controls are the release gate on the plan owner's side and the independent verifier on pull requests, and an engineer can edit neither. The check also learns of a replacement or a withdrawal only after the receipt reaches the default branch the engineer fetches. An offline clone cannot learn it, and the first run in a clone needs a successful refresh.
 
 ## Can a released document be recalled?
 
@@ -83,7 +83,7 @@ Plan mode and spec-driven tools plan one task or one feature from a specificatio
 
 Here cost means your agent's model usage, the amount of text the AI model reads and writes. It is separate from the GitHub token.
 
-The planning run reads the whole document once and writes one specification per item, so the cost grows with the number of items. The generated skill loads one specification and the cited sections each time an engineer starts an item, not the whole document. The two skill descriptions are kept short so they stay in every session's listing.
+The planning run reads the documents and writes one specification per item, so the cost grows with the number of items. An update reads the changed material, a compact index of every work item and the full specifications of the candidates it finds. It rewrites only what needs a patch. The agent reports the size of that index before it assesses, and the figures are estimates. A broad rule change can still need broad reading. The generated skill loads one specification and the cited sections each time an engineer starts an item, not the whole document. The two skill descriptions are kept short so they stay in every session's listing.
 
 ## Does it write the code?
 
@@ -109,11 +109,31 @@ Skills and preferences are never required. Missing, partial or ambiguous informa
 
 ## What if my ground truth changes?
 
-Update the source document, then review the affected plan and specifications with your agent. Follow [change the source document](plan-owner-guide.md#change-the-source-document) for the steps and publishing guidance.
+Update the source document, then tell your agent: "This changed: [describe the change or provide revised documents]." The agent compares the change with the sources you last reviewed and with the current work, shows one review of proposed corrections and conflicts, and waits for your approval. Follow [when the project changes](plan-owner-guide.md#when-the-project-changes) for the steps, and [change the source document](plan-owner-guide.md#change-the-source-document) for the rendering and release guidance.
+
+## Does it watch my documents?
+
+No. carrydown has no file watcher and does not read your document system on its own. An update starts when you say what changed and provide the revised material. Repository checks assess the material they can observe. An integration that observes a source automatically is a later enhancement, and it could only raise an observation for review, never approve a change. The milestone review prompt in the owner guide also asks whether any source decisions, requirements, constraints or implementation findings have changed.
+
+## What happens to an engineer's recorded decision when the source changes?
+
+It is preserved, or it is shown as a conflict. When the engineer's decision and the revised source fit together, the update keeps both and the review explains the result. When they conflict, the review shows both sides and the plan owner decides. The agent does not overwrite an engineer's correction to make a regenerated specification simpler. A recorded decision does not change an obligation by itself. A released update does.
+
+## Can it tell me every affected item?
+
+No. It assesses what it can observe. It starts with the work that cites the changed material, scans a compact index of every work item for indirect effects, reads the full specifications of the candidates and expands when the evidence is incomplete. Each changed passage receives a recorded disposition, and the review states what could not be observed. It does not claim complete discovery. A person still decides what each change means.
+
+## What if an update stops partway?
+
+Say "Resume the project update." The agent finds the saved proposal or the unfinished publication and continues from what is verified. A failure does not authorize a reset, a forced approval, a blind retry or the removal of human work. See [resume a project update](recovery.md#resume-a-project-update).
+
+## Is the project up to date?
+
+You can ask. "Up to date" means that, for the sources the agent could observe, each change has a recorded disposition, you approved the update and every required publication step is verified. It does not mean that the agent saw sources it was not given, that no impact was missed or that every engineer has received the update. While a publication step is pending, the agent says so.
 
 ## Can I change the plan after the issues exist?
 
-Yes. Review local changes first, then preview the updates to GitHub. Existing issue bodies are updated only when requested, and issues are never deleted by the scripts. Follow [update the plan](plan-owner-guide.md#update-the-plan).
+Yes. Review local changes first, then preview the updates to GitHub. A changed source or an engineer's correction follows the same path: say what changed, review the one proposed update and approve it. Existing issue bodies are updated only when requested, and issues are never deleted by the scripts. Follow [update the plan](plan-owner-guide.md#update-the-plan).
 
 ## Why work units and not sprints?
 

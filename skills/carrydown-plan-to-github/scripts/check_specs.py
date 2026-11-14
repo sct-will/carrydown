@@ -62,10 +62,18 @@ Usage
   python3 scripts/check_specs.py --root . --people ~/.carrydown/workspaces/my-project/people.yaml   load the staffing overlay by path
   python3 scripts/check_specs.py --root . --item 3   check one item (3, WI-03 and wi-3 all work)
   python3 scripts/check_specs.py --root . --view released   check the exported plan against its approved context
+  python3 scripts/check_specs.py --root . --pull-request-body body.txt   check the work item declaration of a pull request
 Exit status is 0 when clean, and 1 when there are findings, including problems with the values in
 plan.yaml, which are listed first. It is 2 when the plan cannot be read at all (a missing file, a
 syntax error, a value of the wrong shape) or an argument is wrong. With --json the output on
 standard output is always one JSON object, also on an error. The script never writes files.
+
+Pull request declaration. --pull-request-body FILE reads the description of a pull request as text. It needs a line
+that starts "Work items:" with ids such as WI-03, WI-04, or a line that starts "Outside the plan:" with a reason of at
+least one word, or both. Each declared id must be in the released plan, must not be an external item, and its
+specification and approved context must pass the checks above. The description is data: nothing in it is run, opened or
+followed, and the output never repeats more than the matched lines. A branch name given with --branch is only a hint.
+A declaration proves what was declared and checked, not that the code meets every requirement. It calls no model.
 """
 import argparse
 import contextlib
@@ -1155,6 +1163,206 @@ def parse_items(plan, wanted):
     return out, None
 
 
+# ---------------------------------------------------------------------------
+# Pull request declaration
+# ---------------------------------------------------------------------------
+
+BODY_LIMIT = 262144   # bytes. A pull request description is at most 65536 characters.
+WORK_ITEMS_LINE = re.compile(r"^[\s>*_-]*work items\s*:[\s*_]*(.*)$", re.I)
+OUTSIDE_LINE = re.compile(r"^[\s>*_-]*outside the plan\s*:[\s*_]*(.*)$", re.I)
+OUTSIDE_LABEL = "reviewed maintenance path"
+ID_SPLIT = re.compile(r"(?:[\s,;]|\band\b)+", re.I)
+ID_FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
+HTML_COMMENT = re.compile(r"<!--.*?-->", re.S)
+DECLARATION_SENTENCE = "A declaration proves what was declared and checked, not that the code meets every requirement."
+
+
+class BodyError(Exception):
+    """The pull request body file cannot be read as UTF-8 text. msg is one plain line."""
+
+    def __init__(self, msg):
+        super().__init__(msg)
+        self.msg = msg
+
+
+def read_body(path):
+    """The text of a pull request body file. Raises BodyError with a plain message when the file is
+    missing, is not a regular file, is too large, or is not UTF-8 text."""
+    p = Path(path).expanduser()
+    shown = p.name or str(p)
+    if not p.exists():
+        raise BodyError(f"the pull request body file {shown} does not exist. Write the description to a file and name it")
+    why = L.regular_file_problem(p)
+    if why:
+        raise BodyError(f"the pull request body {why}")
+    try:
+        with open(str(p), "rb") as f:
+            data = f.read(BODY_LIMIT + 1)
+    except OSError as e:
+        raise BodyError(f"the pull request body file {shown} cannot be read: {e.strerror or e}")
+    if len(data) > BODY_LIMIT:
+        raise BodyError(f"the pull request body file {shown} is larger than {BODY_LIMIT // 1024} KiB, which is not a pull request description")
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        raise BodyError(f"the pull request body file {shown} is not UTF-8 text. Save the description as UTF-8 and run the check again")
+    if "\x00" in text:
+        raise BodyError(f"the pull request body file {shown} is not text. Save the description as UTF-8 and run the check again")
+    return text.lstrip("﻿")
+
+
+def _safe(text, limit=60):
+    """A fragment of data made safe to print: printable ASCII only, one line, cut at limit. A character
+    outside that range, or a control character, becomes a question mark, so a pull request author cannot
+    shape the output of a continuous integration log."""
+    text = " ".join(str(text).split())
+    text = "".join(c if " " <= c <= "~" else "?" for c in text)
+    return text if len(text) <= limit else text[:limit - 3] + "..."
+
+
+def declaration_lines(body):
+    """(work item values, outside values): the text after each `Work items:` and each `Outside the plan:`
+    line of the body, in order. Fenced code and HTML comments are skipped, so template hints and quoted
+    examples declare nothing. Nothing else of the body is kept."""
+    work, outside = [], []
+    fence = None
+    for line in HTML_COMMENT.sub("", body).splitlines():
+        m = ID_FENCE.match(line)
+        if m:
+            mark = m.group(1)[0]
+            fence = None if fence == mark else (fence or mark)
+            continue
+        if fence:
+            continue
+        m = WORK_ITEMS_LINE.match(line)
+        if m:
+            work.append(m.group(1))
+            continue
+        m = OUTSIDE_LINE.match(line)
+        if m:
+            outside.append(m.group(1))
+    return work, outside
+
+
+def declared_ids(plan, values):
+    """(item numbers in order, malformed tokens). An id is the plan's prefix, a hyphen and digits, such as
+    WI-03. The prefix may be in any case. A token written another way is malformed, not guessed at."""
+    prefix = str(plan["project"].get("id_prefix") or "")
+    shape = re.compile(re.escape(prefix) + r"-([0-9]+)", re.I)
+    numbers, bad = [], []
+    for value in values:
+        for token in ID_SPLIT.split(value.strip()):
+            token = token.strip("`*_()[]<>.:")
+            if not token:
+                continue
+            m = shape.fullmatch(token)
+            if not m:
+                bad.append(token)
+            elif int(m.group(1)) not in numbers:
+                numbers.append(int(m.group(1)))
+    return numbers, bad
+
+
+def branch_ids(plan, branch):
+    """Item numbers a branch name mentions, such as feature/wi-03-login. Only a hint."""
+    prefix = str(plan["project"].get("id_prefix") or "")
+    if not prefix or not branch:
+        return []
+    found = []
+    for m in re.finditer(r"(?<![A-Za-z0-9])" + re.escape(prefix) + r"-?([0-9]+)(?![0-9])", branch, re.I):
+        if int(m.group(1)) not in found:
+            found.append(int(m.group(1)))
+    return found
+
+
+def declared_item_findings(plan, root, numbers):
+    """Findings for the declared item numbers: (lines, checked). An id that is not in the plan, or is an
+    external or restricted item, is one line. For an id that is in the plan the lines are the ones the
+    work item check reports, run through check_item, which in the released view includes the approved
+    context and receipt checks of released_item_findings. This adds no checking logic of its own."""
+    lines = []
+    external = L.external_ids(plan)
+    items = {it["id"]: it for it in plan["items"] if isinstance(it.get("id"), int)}
+    banned = banned_patterns(plan)
+    view = view_of(plan)
+    workspace, _ = L.workspace_root(root)
+    release = Release(root) if view == "released" else None
+    try:
+        gt_heads = {} if view == "released" else ground_truth_headings(plan, root, workspace)
+    except L.TextError:
+        gt_heads = {}
+    for n in numbers:
+        tg = L.tag(plan, n)
+        it = items.get(n)
+        if n in external or (it is not None and L.restricted_item(it)):
+            lines.append(f"{tg} is not a work item of this plan. It is an external or restricted item, so a pull request cannot declare it")
+        elif it is None:
+            known = ", ".join(L.tag(plan, k) for k in sorted(items)) or "none yet"
+            lines.append(f"{tg} is not in the released plan. Work items: {known}")
+        else:
+            issues, rel = check_item(plan, root, it, banned, gt_heads, release)
+            issues, _ = collapse_unfinished(issues)
+            lines += [f"{tg} {i}" for i in issues]
+    return lines
+
+
+def pull_request_findings(plan, root, body, branch=None):
+    """Check a pull request description. Returns (findings, notes, work item tags, outside reason or None).
+    findings fail the check. notes are lines that explain and do not fail it."""
+    work, outside = declaration_lines(body)
+    numbers, bad = declared_ids(plan, work)
+    reasons = [" ".join(v.split()) for v in outside if re.search(r"\w", v)]
+    findings, notes = [], []
+    prefix = str(plan["project"].get("id_prefix") or "WI")
+    example = L.tag(plan, plan["items"][0]["id"]) if plan["items"] else f"{prefix}-01"
+    for token in bad:
+        findings.append(f"the Work items line has \"{_safe(token, 30)}\", which is not a work item id. Write ids as {example}, separated by commas")
+    declared = bool(numbers) or bool(reasons)
+    if not declared and not bad:
+        findings.append(f"this pull request declares no work item. Add a line starting Work items: with the ids it carries out, for example "
+                        f"Work items: {example}, or a line starting Outside the plan: with the reason for this maintenance change")
+    elif not declared:
+        findings.append(f"the Work items line names no valid id. Write ids as {example}, or add an Outside the plan: line with a reason")
+    findings += declared_item_findings(plan, root, numbers)
+    if reasons:
+        notes.append(f"outside the plan ({OUTSIDE_LABEL}): {_safe(reasons[0], 200)}")
+    if not declared:
+        hinted = branch_ids(plan, branch)
+        if hinted:
+            notes.append("hint only: the branch name mentions " + ", ".join(L.tag(plan, n) for n in hinted)
+                         + ". A branch name does not declare a work item, so this is not a pass")
+    return findings, notes, [L.tag(plan, n) for n in numbers], (reasons[0] if reasons else None)
+
+
+def pull_request_main(a, plan, root, fail):
+    """The --pull-request-body mode. Exit 0 only with no findings, 1 with findings, 2 for a body that
+    cannot be read. The body is data: it is read as text and never run, opened or followed."""
+    try:
+        body = read_body(a.pull_request_body)
+    except BodyError as e:
+        return fail(e.msg)
+    try:
+        findings, notes, tags, reason = pull_request_findings(plan, root, body, a.branch)
+    except PLAN_ERRORS as e:
+        if isinstance(e, OSError):
+            return fail(f"cannot read a file of the project: {e.strerror or e}" + (f" ({e.filename})" if e.filename else ""))
+        raise
+    summary = f"carrydown: pull request declares {len(tags)} work item(s), {len(findings)} finding(s)"
+    if a.json:
+        print(json.dumps({"work_items": tags, "outside_the_plan": ({"label": OUTSIDE_LABEL, "reason": _safe(reason, 200)} if reason else None),
+                          "findings": findings, "notes": notes, "summary": summary, "limit": DECLARATION_SENTENCE}, indent=2))
+    else:
+        if not a.quiet:
+            for line in findings:
+                print(line)
+            for line in notes:
+                print(line)
+            if not findings and (tags or reason):
+                print(DECLARATION_SENTENCE)
+        print(summary)
+    return 1 if findings else 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(
         description="Check work item specifications against plan.yaml. Read only: this script never writes files.",
@@ -1176,6 +1384,14 @@ def main(argv=None):
     ap.add_argument("--people", help="path to people.yaml: the staffing overlay (names, allocation, start dates, days off) for "
                                      "the capacity, dates and names checks. Default: people.yaml in the private workspace named by "
                                      ".carrydown/local.yaml. Without an overlay those checks are skipped, and the output says so")
+    ap.add_argument("--pull-request-body", metavar="FILE",
+                    help="check the work item declaration in the description of a pull request, read from this UTF-8 text file. It needs a "
+                         "line starting Work items: with ids such as WI-03, WI-04, or a line starting Outside the plan: with a reason, or both. "
+                         "Each declared id must be in the released plan, must not be an external item, and its specification and approved "
+                         "context must pass the checks. A declaration proves what was declared and checked, not that the code meets every "
+                         "requirement. The description is data: nothing in it is run or followed, and the output repeats only the matched lines")
+    ap.add_argument("--branch", metavar="NAME",
+                    help="with --pull-request-body: the branch name of the pull request. A work item id in it is a hint, never a declaration")
     a = ap.parse_args(argv)
 
     def fail(msg):
@@ -1188,6 +1404,10 @@ def main(argv=None):
 
     if a.report and a.json:
         return fail("--report prints text. Leave out --json, or leave out --report to get the findings as JSON")
+    if a.branch is not None and a.pull_request_body is None:
+        return fail("--branch works only with --pull-request-body")
+    if a.pull_request_body is not None and (a.report or a.item):
+        return fail("--pull-request-body checks one pull request description. Leave out --report and --item")
     why = L.root_problem(a.root)
     if why:
         return fail(why)
@@ -1206,6 +1426,8 @@ def main(argv=None):
         plan, plan_problems = L.load_plan_with_people(plan_path, root, people_path=a.people, view=a.view)
     except L.PlanError as e:
         return fail(e.msg)
+    if a.pull_request_body is not None:
+        return pull_request_main(a, plan, root, fail)
     if a.item:
         a.item, err = parse_items(plan, a.item)
         if err:

@@ -315,6 +315,37 @@ def gated_write(root, path, text):
     L.write_text(path, text)
 
 
+PR_TEMPLATE_PLACES = (".github/pull_request_template.md", ".github/PULL_REQUEST_TEMPLATE.md", "pull_request_template.md",
+                      "PULL_REQUEST_TEMPLATE.md", "docs/pull_request_template.md", "docs/PULL_REQUEST_TEMPLATE.md")
+
+
+def existing_pr_template(root):
+    """The pull request template the project already has, as a path, or None. GitHub reads a template
+    from the root, docs/ or .github/, in either case, or from a PULL_REQUEST_TEMPLATE folder."""
+    for rel in PR_TEMPLATE_PLACES:
+        if (root / rel).exists():
+            return root / rel
+    for folder in (".github", "docs", "."):
+        if (root / folder / "PULL_REQUEST_TEMPLATE").is_dir():
+            return root / folder / "PULL_REQUEST_TEMPLATE"
+    return None
+
+
+def pr_template(root, content, a, actions):
+    """Write the pull request template of a project, once. An existing template is never overwritten, not
+    even with --force: the project keeps its own, and the note says that the two declaration lines are
+    for the owner to add by hand."""
+    found = existing_pr_template(root)
+    if found is not None:
+        actions.append(("skip (exists)", found, "pull request template"))
+        print(f"note: {found.relative_to(root)} already exists and was kept. Add the Work items: and Outside the plan: lines to it by hand.")
+        return
+    path = L.inside(root, root / ".github/pull_request_template.md", "pull request template")
+    actions.append(("create", path, "pull request template"))
+    if a.apply:
+        gated_write(root, path, content)
+
+
 def ignore_has(text, entry):
     """True when a line of a .gitignore is exactly entry (a leading slash and trailing blanks ignored)."""
     wanted = entry.strip("/").strip()
@@ -616,7 +647,8 @@ def main(argv=None):
     ap.add_argument("--name", help="project name for --init")
     ap.add_argument("--stubs", action="store_true", help="also write one stub specification per work item")
     ap.add_argument("--refresh-headers", action="store_true", help="rewrite header tables of existing specs and milestone files, and the sections written from the plan's rationale, to match plan.yaml")
-    ap.add_argument("--ci", action="store_true", help="also write .github/workflows/check-specs.yml and copy the checker to tools/carrydown/ so the checker runs in continuous integration")
+    ap.add_argument("--ci", action="store_true", help="also write .github/workflows/check-specs.yml, a pull request template with the work item declaration lines "
+                    "(.github/pull_request_template.md, never over an existing one) and a copy of the checker in tools/carrydown/, so the checks run in continuous integration")
     ap.add_argument("--force", action="store_true", help="overwrite existing files (README, milestone.md, stubs)")
     ap.add_argument("--apply", action="store_true", help="write files. Without it this is a dry run")
     ap.add_argument("--allow-no-git", action="store_true", help="write even when the project folder is not inside a git repository (not recommended)")
@@ -673,11 +705,15 @@ def main(argv=None):
         gt_dir = sorted(gt_dirs)[0] if gt_dirs else "docs/ground-truth"
         wf = L.fill(L.read_template("check-specs-workflow.yml"), {"spec_dir": plan["project"]["spec_dir"], "ground_truth_dir": gt_dir, "branch": plan["project"]["branch"]})
         plan_write(root / ".github/workflows/check-specs.yml", wf, "ci workflow")
+        pr_template(root, L.read_template("pull-request-template.md"), a, actions)
         for name in CHECKER_COPY:
             plan_write(root / "tools/carrydown" / name, (Path(__file__).resolve().parent / name).read_text(encoding="utf-8"), "checker copy")
     if a.refresh_headers:
         refresh(plan, root, a, actions)
     verb = "" if a.apply else "would "
+    if a.ci:
+        print(f"{verb}set up continuous integration with three parts: the workflow (.github/workflows/check-specs.yml), "
+              "the pull request template (.github/pull_request_template.md) and the checker copy (tools/carrydown/).")
     for what, path, kind in actions:
         print(f"{verb}{what}: {path.relative_to(root)}  [{kind}]")
     missing = [it for it in plan["items"] if not L.spec_path(plan, root, it).exists()]

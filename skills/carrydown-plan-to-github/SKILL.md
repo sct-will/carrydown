@@ -1,6 +1,6 @@
 ---
 name: carrydown-plan-to-github
-description: Publishes an approved plan to GitHub and generates the engineers' skill. Use for "Put the plan on GitHub", "Generate the engineers' skill" or "Review and repair the published plan". External updates are previewed before approval.
+description: Publishes an approved plan to GitHub, carries an approved update through the same release and generates the engineers' skill. Use for "Put the plan on GitHub", "Resume the project update", "Generate the engineers' skill" or "Review and repair the published plan". External updates are previewed before approval.
 license: Apache-2.0
 compatibility: Needs Python 3.9 or later (the skill checks for it and offers to install it), network access to api.github.com only, and a GitHub token the user creates.
 metadata:
@@ -37,6 +37,33 @@ Then it generates the engineers' skill: a small folder in the Agent Skills forma
 - Keep to the repository and owner the user named.
 - Do not put secrets, tokens or personal data in the generated skill, and ask before you write outside `docs/`.
 
+## Route by project state
+
+Before you start, find out where the project stands, after the preflight in step 0:
+
+```bash
+python3 <skill>/scripts/reconcile.py status --root .
+```
+
+It writes nothing. Pick the response from the rows that concern this skill. The planning skill, `carrydown-ground-truth`, owns the other states: no plan, an unapproved draft, changed sources or a correction, and an unfinished update.
+
+| Observed state | Response |
+| --- | --- |
+| Accepted drafts awaiting release | Continue here at step 3: the release preview, then the owner's approvals. |
+| Approved release awaiting publication | Resume the existing publication at step 4. The journal says what remains. |
+| Resume existing publication ("Resume the project update.") | Pick the existing publication request and resume it. Ask the owner only when more than one consequential choice remains. |
+| Anything earlier in the state list | Go back to `carrydown-ground-truth`. |
+
+When the owner says "Resume the project update." or asks "Is this project up to date?", start with the engineers' requests, before the publication state:
+
+```bash
+python3 <skill>/scripts/github_sync.py --root . --clarifications
+```
+
+Show the outstanding requests first, one line each. If the read could not run, say so: outstanding requests were not observed, and why. Then go on with the rows above. Do not say "up to date" while a request is pending or a publication step is pending.
+
+Routing works after this skill activates. It does not replace the checks that every script runs before it writes. Never reset, force an approval, retry blindly or remove human work to recover. Previous approval covers only its unchanged scope. An approved update goes through the same release as a first plan: preview, disclosure approval, authorization, commit and push check, managed updates and the journal.
+
 ## Where the files are
 
 The scripts and templates folders sit next to this SKILL.md. In the commands below, `<skill>` stands for this folder. Run the scripts from the user's project root with `--root .`, using the Python command from the preflight in step 0. The commands below start with `python3`.
@@ -60,6 +87,29 @@ python3 <skill>/scripts/release.py inventory --root .
 ```
 
 It lists the tracked originals and renderings, the staffing fields in tracked files, the generated references of the engineers' skill and whether any of them are in git history, and it says plainly that Carrydown cannot rewrite history and links GitHub's guidance. Show it to the user. The user then answers the one question in step 0 of `carrydown-ground-truth`, which migrates the project. For the issues already on GitHub, the same step has a read-only report once there is a token (step 2): `github_sync.py --root . --inventory` lists every managed issue, whether its body is pristine, whether it holds text outside the managed region and whether it predates the active release. Text outside the managed region stays when the managed region is replaced, so replacing it does not remove that text. Changes need a reviewed migration and approved updates, and the user decides issue by issue. The report proposes no rewrite, and you must not make one.
+
+**The clarification recipient.** Engineers who find a specification problem need to know whom to ask. During the first publication, establish that recipient once and record it. Prefer a permitted owner mention on the engineer's work item. An existing issue assigned to the owner is the alternative, if it is the project's chosen channel. Do not require a new issue for every project. Reuse what the project already says, and do not ask again for something you know. Do not guess a recipient from an organization name, copy staffing details into a public file or expose a contact nobody approved. Ask for approval before you publish a person's login, create an issue or assign one. Record the choice in the owner's working plan under `project.clarification`, either `channel: mention` with `login`, or `channel: issue` with `issue`. A project with no recipient yet is not blocked: say that requests will show as not sent until one is set.
+
+Do it in this order:
+
+1. Before publication, ask the owner one question: "Who should engineers ask when a specification looks wrong?" Offer what the project already shows, such as the owner of the plan or a clarification issue the project already uses, and take a yes or a different answer. Do not ask when the plan already records `project.clarification`.
+2. Record the answer in the owner's working plan, after the owner approves the login or the issue number. Then run the release steps in step 3, so the released plan carries it. The line `Clarification requests: ...` in each work item issue says where requests go. A project that records nothing gets no such line.
+3. After publication, show the owner what is waiting. Run it as a read, first without `--apply`:
+
+```bash
+python3 <skill>/scripts/github_sync.py --root . --clarifications
+python3 <skill>/scripts/github_sync.py --root . --clarifications --apply      # also records the observation in the private workspace
+```
+
+   Each line names the work item, the issue, the state (`pending`, `accepted`, `declined` or `deferred`), the age and the link to the request. The script prints no comment text. `--apply` here writes one file in the private workspace, `events/clarifications.json`, which `carrydown-ground-truth` reads. It writes nothing on GitHub. Without a private workspace the script says the observation was not recorded.
+4. When the owner has decided a request, record the decision on the issue. The owner decides. Do not decide for the owner. Preview the comment, show it, and post it only after a yes:
+
+```bash
+python3 <skill>/scripts/github_sync.py --root . --clarification-disposition ISSUE accepted --request-comment ID --note "One short line."
+python3 <skill>/scripts/github_sync.py --root . --clarification-disposition ISSUE accepted --request-comment ID --note "One short line." --apply
+```
+
+   `ISSUE` is the issue number and `ID` is the number after `issuecomment-` at the end of the request link. The state is `accepted`, `declined` or `deferred`. The note is optional, one line of at most 500 characters, and becomes part of the issue, so keep private details out of it. The first command prints the exact comment and posts nothing. With `--apply` the script posts it, reads the issue back and says whether the request now shows the new state. Do not say the decision is recorded until it says so. It never edits the engineer's comment and never closes the issue. A mention directs attention. It does not prove the owner or the engineer was notified.
 
 Confirm with the user, in plain words: the repository (`owner/name`) and whether it is public, whether a parent Epic issue exists (its number) or may be created, the people's GitHub logins if they should be assigned, and which account owns the project board (the user's own GitHub account or the organization). Put the repository, Epic number and project title in `plan.yaml` under `project` (after a first release on the yes answer, in the working plan, `drafts/plan.yaml` in the private workspace).
 
@@ -160,7 +210,23 @@ The script does not yet set grouping, sorting, the board column field, the roadm
 
 ### 7. After
 
-Show the user the counts and the project link. Remind them of the rhythm: closing comment on every issue, a checkpoint comment after each checkpoint, a demonstration note on each sub-epic.
+Finish with this completion line, word for word, then the maintenance notice, both before the routine counts and links:
+
+> **Your approved project has been published.**
+>
+> Engineers can start with "Work on [work item ID]."
+
+> **Important: when the project changes**
+>
+> If requirements, architecture or company rules change significantly, or an engineer finds a specification problem, say:
+>
+> **"This changed: [describe the change or provide revised documents]."**
+>
+> Your agent will review the existing project, preserve engineer corrections and show proposed updates for approval.
+
+Then show the user the counts and the project link. Remind them of the rhythm: closing comment on every issue, a checkpoint comment after each checkpoint, a demonstration note on each sub-epic.
+
+After a release that carries an approved update, report the states separately, as `references/verification.md` lists them: draft reconciliation accepted, release approved, engineering repository update pending or available, issue updates pending or verified, board updates pending or verified, and engineer action required. Do not say "up to date" while any publication step is pending. Engineers can still hold old material in a checkout or an open conversation. Name the work items whose engineers need to act.
 
 ### 8. The engineers' skill
 
@@ -181,7 +247,7 @@ It writes `SKILL.md`, `README.md`, four references (including the Python preflig
 npx skills add https://github.com/<owner>/<repo>/tree/<branch>/<dev_skill_path> -a <agent>
 ```
 
-The line works once the folder is on `project.branch` on GitHub, so ask the user to commit and push it if it is not yet. Do not commit or push it yourself unless the user asks for that command in this chat. `references/engineers-skill-install.md` has every agent, the copy and link options and the team rollout. `references/engineers-skill-maintenance.md` says when to regenerate. The engineers review every change their agent makes.
+The line works once the folder is on `project.branch` on GitHub, so ask the user to commit and push it if it is not yet. Do not commit or push it yourself unless the user asks for that command in this chat. `references/engineers-skill-install.md` has every agent, the copy and link options and the team rollout. `references/engineers-skill-maintenance.md` says when to regenerate. An approved update regenerates the engineers' skill through the same release, so the engineers get the new specifications and approved contexts together. The engineers review every change their agent makes.
 
 ## When something fails
 
