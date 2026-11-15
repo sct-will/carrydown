@@ -394,6 +394,8 @@ Load (sized days of work against allocated capacity, per person and work unit)
   Person  Alloc  WU1             WU2             WU3             WU4             WU5            Total          
   tamsin  100%   3 of 10d (30%)  5 of 14d (36%)  6 of 10d (60%)  4 of 10d (40%)  0 of 10d       18 of 54d (33%)
   idris   60%    3 of 6d (50%)   4 of 9d (44%)   4 of 5d (74%)   0 of 6d         3 of 6d (50%)  14 of 32d (43%)
+  tamsin, 100 percent allocated: work unit 1, 3 of 10 days (30 percent); work unit 2, 5 of 14 days (36 percent); work unit 3, 6 of 10 days (60 percent); work unit 4, 4 of 10 days (40 percent); work unit 5, 0 of 10 days; total 18 of 54 days (33 percent).
+  idris, 60 percent allocated: work unit 1, 3 of 6 days (50 percent); work unit 2, 4 of 9 days (44 percent); work unit 3, 4 of 5 days (74 percent); work unit 4, 0 of 6 days; work unit 5, 3 of 6 days (50 percent); total 14 of 32 days (43 percent).
   No person is over 100 percent of allocated capacity in any work unit.
 
 Critical path (longest dependency chain to the last item)

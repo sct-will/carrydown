@@ -9,6 +9,7 @@ All notable changes to this project are written here. The format follows Keep a 
 - **The renderer keeps a released plan valid.** A preview or a write no longer records the source fingerprints in a released plan, so the next command on the sample no longer fails. It says so in one line, and a working plan still gets them.
 - **The renderer preview says nothing was written.** A dry run ends with `Dry run: nothing was written.`, and the sample's commands and [the sample run](docs/sample-run.md) separate the read-only preview from the write, which runs only in a disposable copy.
 - **The interview table is numbered.** Every question in [the plan owner guide](docs/plan-owner-guide.md#what-the-agent-asks-you) carries the step the agent announces, 0 to 6, with the optional skills question under step 2.
+- **The load report reads by ear.** After the load table, the checker's report prints one labeled sentence per person with each work unit's days and percent.
 
 ### Reconciliation and guided project updates
 
