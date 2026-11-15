@@ -8,6 +8,8 @@ If an update to an existing project stopped, because the session ended, a check 
 
 > Resume the project update.
 
+If you do not remember that phrase, or whether an update stopped, ask "What's next?" and the agent tells you where the project stands.
+
 You do not need an identifier, a command or a file name. The agent finds the saved proposal or the unfinished publication, rechecks that the sources and drafts have not changed since you reviewed them, and continues with the work that is verified as remaining. It asks you a question only when more than one consequential choice is left. If a source or a draft changed during the pause, the agent reassesses the affected part and tells you what changed. It does not apply an old proposal over newer content.
 
 Nothing you accepted is lost when an update stops. Accepted draft changes stay in your drafts, and the part that did not finish stays visible as pending.

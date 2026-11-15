@@ -656,6 +656,13 @@ class OwnerJourneyTests(unittest.TestCase):
         self.assertNotIn("| Run the same command again.", table)
         self.assertEqual(table.count("The agent runs"), 5)
 
+    def test_a_forgotten_resume_phrase_and_a_drafted_source_request_have_a_next_step(self):
+        recovery = self.page("docs/recovery.md")
+        resume = recovery.split("## Resume a project update\n", 1)[1].split("\n## ", 1)[0]
+        self.assertIn("If you do not remember that phrase, or whether an update stopped, ask \"What's next?\"", resume)
+        guide = self.page("docs/plan-owner-guide.md")
+        self.assertIn("marked \"Nothing has been sent.\", and you send it to the author yourself.", guide)
+
 
 if __name__ == "__main__":
     unittest.main()

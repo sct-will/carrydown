@@ -15,6 +15,7 @@ All notable changes to this project are written here. The format follows Keep a 
 - **Words are explained where they are met.** The setup guide lists the first words with one sentence each, the README defines ground truth, skill and dry run, the glossary has "dry run", and the interview preparation is three short paragraphs with an example answer for the demonstration question.
 - **The README names Node.js.** Its requirements list Node.js 22.20 or later for the standard installer, link the manual installation, and say that the skills check Python and Git.
 - **The sample stays a secondary, safe look.** The README says the public board and issues can be browsed without installing, and points to the sample's own page for the read-only preview, with no command in the README.
+- **Two update answers are written down.** [The recovery guide](docs/recovery.md#resume-a-project-update) says to ask "What's next?" when the resume phrase is forgotten, and the owner guide says that a drafted request to a source's author is not sent until the owner sends it.
 
 ### Reconciliation and guided project updates
 

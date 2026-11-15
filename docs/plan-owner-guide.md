@@ -320,7 +320,7 @@ Each request keeps one disposition on the issue conversation:
 
 Human comments stay as written. Nothing closes a request silently. When you resume planning or an update, the agent reads outstanding requests if you have authorized project reads. If it cannot read them, it says so. That message means the publishing skill has not read the work items yet: say "Put the plan on GitHub." or ask the agent to read the engineer requests first. The publishing skill lists the outstanding engineer requests, one line each, and records your decision on the issue, so you answer in chat, for example "Accept the request on WI-08.", and the answer is kept with the request. Only your decision counts: a disposition written by the person you named for mentions, or by the account you publish with, is recorded. One written by anyone else is listed as unverified and leaves the request as it was.
 
-An engineer's request does not change an upstream obligation. A recorded implementation note does not either. Only a released update does. A source correction needs its author's decision, and the agent never says that your original document was corrected when only a request was drafted.
+An engineer's request does not change an upstream obligation. A recorded implementation note does not either. Only a released update does. A source correction needs its author's decision, and the agent never says that your original document was corrected when only a request was drafted. The agent drafts that request in the review, marked "Nothing has been sent.", and you send it to the author yourself.
 
 ### Resume the project update
 
