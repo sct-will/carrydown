@@ -22,7 +22,9 @@ The plan is built around your team's availability and target date. You can also 
 
 **Starting a new plan?** Follow [Install carrydown and start your first plan](docs/setup.md). It covers computer setup, installation and the first conversation with your agent. If you have already installed the skills, use the shortcut at the top of that guide. The agent asks one extra question before it starts: whether everyone who can read the repository may see all of your documents and staffing notes. Most teams answer yes and nothing else changes. If some documents are confidential, read [who may see your documents](docs/setup.md#before-you-add-documents-who-may-see-them) first.
 
-**Requirements.** Python 3.9 or newer, Git, and a coding agent that supports Agent Skills. You do not have to install Python first: the skills check for it and offer to install it, after your yes. The [setup guide](docs/setup.md#before-anything-python) shows the manual steps for macOS, Windows and Linux.
+**Requirements.** A coding agent that supports Agent Skills, and Node.js 22.20 or later for the standard installer, which also uses Git. Without Node.js, use the [manual installation](docs/install-options.md#manual-install-without-nodejs). The skills also need Python 3.9 or newer and Git. They check both when they start, and offer to install Python after your yes. The [setup guide](docs/setup.md#before-anything-python) shows the manual Python steps for macOS, Windows and Linux.
+
+**Three words you meet first.** The ground truth is the set of documents your project must obey, a skill is a folder of instructions that your coding agent loads, and a dry run previews what a command would do and writes nothing. The [glossary](docs/plan-owner-guide.md#glossary) explains the others.
 
 **Have a plan to review or publish?** Continue with [Review and publish your plan](docs/plan-owner-guide.md).
 
@@ -95,7 +97,7 @@ There are still two skills you install and one skill generated for your engineer
 
 ## Explore the sample
 
-Explore carrydown's sample project board, milestone epics and work item issues. Each work item links to its specification. You can browse the sample before installing.
+Explore carrydown's sample project board, milestone epics and work item issues. Each work item links to its specification. You can browse the public board and issues before installing. With a local copy of this repository, you can also run the sample's read-only preview, which changes no file and needs no token. [The sample's own page](sample/expense-approvals/README.md#run-it) shows the command and what it prints.
 
 The sample is based on a fictional expense approvals service, so the company, the people and the dates are invented. Everything the two skills made from it is real and public in [carrydown-sample](https://github.com/sct-will/carrydown-sample): [plan.yaml](https://github.com/sct-will/carrydown-sample/blob/main/docs/spec/plan.yaml), [the nine specifications](https://github.com/sct-will/carrydown-sample/tree/main/docs/spec), [fifteen issues](https://github.com/sct-will/carrydown-sample/issues?q=is%3Aissue), [the board](https://github.com/users/sct-will/projects/2) and [the generated engineers' skill](https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev). A copy sits in [`sample/expense-approvals/`](sample/expense-approvals/) for the self test, and [a recorded run](docs/sample-run.md) shows what each script printed when the sample was carried into a throwaway repository.
 

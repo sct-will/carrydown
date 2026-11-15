@@ -625,6 +625,20 @@ class OwnerJourneyTests(unittest.TestCase):
             self.assertIn(heading, org)
         self.assertNotIn("It does not run them.", org)
 
+    def test_the_readme_names_node_the_first_words_and_the_sample_preview(self):
+        text = self.page("README.md")
+        start = text.split("## Start here\n", 1)[1].split("\n## ", 1)[0]
+        self.assertIn("Node.js 22.20 or later for the standard installer", start)
+        self.assertIn("(docs/install-options.md#manual-install-without-nodejs)", start)
+        self.assertIn("They check both when they start", start)
+        for word in ("The ground truth is", "a skill is", "a dry run previews"):
+            self.assertIn(word, start)
+        self.assertIn("(docs/plan-owner-guide.md#glossary)", start)
+        sample = text.split("## Explore the sample\n", 1)[1].split("\n## ", 1)[0]
+        self.assertIn("(sample/expense-approvals/README.md#run-it)", sample)
+        self.assertIn("read-only preview", sample)
+        self.assertNotIn("```", sample)
+
     def test_the_guide_has_dry_run_in_the_glossary_and_short_interview_paragraphs(self):
         text = self.page("docs/plan-owner-guide.md")
         self.assertRegex(text.split("## Glossary", 1)[1], r"(?m)^- \*\*Dry run\.\*\* ")

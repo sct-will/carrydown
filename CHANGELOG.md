@@ -13,6 +13,8 @@ All notable changes to this project are written here. The format follows Keep a 
 - **The output-folder refusal says what to type.** It adds that a relative folder is read from the project root and gives `my-test/ground-truth` as an example.
 - **The setup guide opens with the owner's short path.** [The setup guide](docs/setup.md) starts with what you need, where you type the installer, how you know it worked, what to say and what to have ready. Alternative installs moved to [other installation options](docs/install-options.md) and administrator work to [organization setup for private drafting](docs/organization-setup.md).
 - **Words are explained where they are met.** The setup guide lists the first words with one sentence each, the README defines ground truth, skill and dry run, the glossary has "dry run", and the interview preparation is three short paragraphs with an example answer for the demonstration question.
+- **The README names Node.js.** Its requirements list Node.js 22.20 or later for the standard installer, link the manual installation, and say that the skills check Python and Git.
+- **The sample stays a secondary, safe look.** The README says the public board and issues can be browsed without installing, and points to the sample's own page for the read-only preview, with no command in the README.
 
 ### Reconciliation and guided project updates
 
