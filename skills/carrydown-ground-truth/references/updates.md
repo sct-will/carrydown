@@ -45,7 +45,7 @@ A project with no reviewed checkpoint gets one this way, after the owner has rev
 
 ## Rendering a revised document
 
-`status` compares only the renderings that the project and its private workspace hold. A revised document that the owner names, kept anywhere else, is invisible to it until it is rendered. So when the owner's sentence names a revised document, render it first, then run `status`. "Observable inputs unchanged" right after such a sentence means the document is not rendered yet, not that nothing changed.
+`status` compares only the renderings that the project and its private workspace hold. A revised document that the owner names, kept anywhere else, is invisible to it until it is rendered. So run `status` first, as always. "Observable inputs unchanged" right after the owner named a revised document means the document is not rendered yet, not that nothing changed. Render it, then run `status` again.
 
 The version you give `--version`:
 

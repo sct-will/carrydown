@@ -434,6 +434,31 @@ class MeasureFunctionTests(unittest.TestCase):
                      "compared-before-render", "other-skill", "command-failed", "no-approval-recorded"):
             self.assertIn(want, codes)
 
+    def test_the_patch_command_is_a_known_step_and_needs_its_preview_and_the_saved_proposal(self):
+        gt = "/r/install/carrydown-ground-truth/scripts/"
+        pid = "a" * 64
+        patch = f"python3 {gt}reconcile.py patch --root . --proposal {pid} --block architecture/3.5 --item WI-03 --path x.md --from /t/x.md"
+        base = [f"python3 {gt}check_python.py", f"python3 {gt}reconcile.py status --root .",
+                f"python3 {gt}render_ground_truth.py ../revision/architecture.docx --root . --version 0.4 --dry-run",
+                f"python3 {gt}render_ground_truth.py ../revision/architecture.docx --root . --version 0.4",
+                f"python3 {gt}reconcile.py prepare --root .", f"python3 {gt}reconcile.py prepare --root . --apply"]
+        tail = [f"python3 {gt}reconcile.py check --root . --proposal {pid}", f"python3 {gt}reconcile.py apply --root . --proposal {pid}",
+                f"python3 {gt}reconcile.py apply --root . --proposal {pid} --apply"]
+
+        def log(cmds):
+            return M.parse_commands("\n".join(f"[2026-11-14T10:{i:02d}:00Z] exit=0 $ {c}" for i, c in enumerate(cmds)) + "\n")[0]
+
+        good = M.measure_deviations(log(base + [patch, patch + " --apply"] + tail), None, None, owner_transcript=False)
+        self.assertEqual([d["code"] for d in good["deviations"] if d["code"] != "missing-step"], [])
+        self.assertNotIn(patch, good["other_commands"])
+        self.assertIn("patch-write", good["sequence"])
+        unpreviewed = M.measure_deviations(log(base + [patch + " --apply"] + tail), None, None, owner_transcript=False)
+        self.assertIn("no-preview", [n["code"] for n in unpreviewed["notes"]])
+        early = M.measure_deviations(log(base[:4] + [patch, patch + " --apply"] + base[4:] + tail), None, None, owner_transcript=False)
+        self.assertIn("patch-before-proposal", [d["code"] for d in early["deviations"]])
+        late = M.measure_deviations(log(base + tail + [patch, patch + " --apply"]), None, None, owner_transcript=False)
+        self.assertIn("patch-after-apply", [d["code"] for d in late["deviations"]])
+
     def test_apply_before_the_approval_question_is_a_deviation(self):
         gt = "/r/install/carrydown-ground-truth/scripts/"
         commands = M.parse_commands(

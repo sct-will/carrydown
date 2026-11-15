@@ -47,7 +47,7 @@ Run the Python preflight (step 0, item 1). Then, on every activation and before 
 python3 <skill>/scripts/reconcile.py status --root .
 ```
 
-It reports the project state, any unfinished update and any outstanding engineer requests, and says what it could not observe. It writes nothing. Pick the response from the table. `status` sees only the renderings the project and its workspace hold. When the owner's sentence names a revised document, render it first (update path, step 2), then run `status`. "What's next?" and "Is this project up to date?" run the same command. Answer them from what it reports and from nothing else.
+It reports the project state, any unfinished update and any outstanding engineer requests, and says what it could not observe. It writes nothing. Pick the response from the table. `status` sees only the renderings the project and its workspace hold. When the owner's sentence names a revised document that is not rendered yet, `status` says "Observable inputs unchanged". Render the document then (update path, step 2) and run `status` again. "What's next?" and "Is this project up to date?" run the same command. Answer them from what it reports and from nothing else.
 
 | Observed state | Response |
 | --- | --- |

@@ -204,6 +204,8 @@ def classify(tokens):
             info["step"] = "prepare-save" if apply_flag else "prepare-preview"
         if sub == "apply":
             info["step"] = "apply-write" if apply_flag else "apply-preview"
+        if sub == "patch":
+            info["step"] = "patch-write" if apply_flag else "patch-preview"
     elif script == "render_ground_truth.py":
         info["step"] = "render-preview" if "--dry-run" in args else "render"
     elif script == "workspace.py" and args[:1] == ["checkpoint"] and len(args) > 1:
@@ -637,11 +639,19 @@ def measure_deviations(commands, run=None, approval_time=None, owner_transcript=
     for (i1, s1), (i2, s2) in zip(seen, seen[1:]):
         if i1 > i2:
             add("deviation", "out-of-order", f"{s2} ran before {s1}. The skill's order is: " + ", ".join(order))
-    # a write needs its preview first
+    # a write needs its preview first. patch is optional (reconcile.py patch records one patch record), so it is
+    # not an expected step, and a patch written without any preview is a note, not a deviation
     for write, preview in (("prepare-save", "prepare-preview"), ("apply-write", "apply-preview"), ("checkpoint-prepare-write", "checkpoint-prepare-preview"),
-                           ("checkpoint-commit-write", "checkpoint-commit-preview"), ("render", "render-preview")):
+                           ("checkpoint-commit-write", "checkpoint-commit-preview"), ("render", "render-preview"), ("patch-write", "patch-preview")):
         if write in first and (preview not in first or first[preview] > first[write]):
-            add("deviation" if write != "render" else "note", "no-preview", f"{write} ran without its preview ({preview}) first. The skill says: preview, read it, then write")
+            add("deviation" if write not in ("render", "patch-write") else "note", "no-preview",
+                f"{write} ran without its preview ({preview}) first. The skill says: preview, read it, then write")
+    if "patch-write" in first and "prepare-save" in first and first["patch-write"] < first["prepare-save"]:
+        add("deviation", "patch-before-proposal", "a patch was recorded before the proposal was saved")
+    if "patch-write" in first and "apply-write" in first:
+        late = [i for i, (c, info) in enumerate(infos) if info["step"] == "patch-write" and c["code"] == 0 and i > first["apply-write"]]
+        if late:
+            add("deviation", "patch-after-apply", "a patch was recorded after apply --apply wrote the drafts")
     if "apply-write" in first:
         checks = [i for i, (c, info) in enumerate(infos) if info["step"] == "check" and i < first["apply-write"]]
         if not checks or infos[checks[-1]][0]["code"] != 0:
