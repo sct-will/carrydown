@@ -666,7 +666,9 @@ def _():
 def _():
     ex = exported()
     spec = next(p for p in sorted(ex.files) if p.rsplit("/", 1)[-1].startswith("wi-") and b"## Decisions recorded" in ex.files[p][1] and b"## Outcome" in ex.files[p][1])
-    edited = ex.files[spec][1].decode().rstrip("\n") + "\n\n- 2027-02-01. Departed from the contract in pull request 12.\n"
+    # the first entry replaces the "None yet." placeholder, as the decision overlay requires (placeholder-kept otherwise)
+    edited = ex.files[spec][1].decode().replace("## Decisions recorded\n\nNone yet.\n", "## Decisions recorded\n\n- 2027-02-01. Departed from the contract in pull request 12.\n")
+    check(edited.encode() != ex.files[spec][1])
     case = EF.Case(ex)
     case.merge(case.open())
     refused = code_of(case, case.open(only={spec: edited.encode()}, branch="decisions"))
