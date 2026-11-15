@@ -978,7 +978,7 @@ $ python3 scripts/reconcile.py status --root .
 carrydown project status
 State: Observable inputs unchanged
 No change can be observed against a reviewed checkpoint, because none is recorded.
-Next: Nothing to update. Tell the owner what was checked and what was not observed.
+Next: Nothing to update in what this project holds. If the owner named a revised document, it is not rendered yet: render it first, then run status again. Otherwise tell the owner what was checked and what was not observed.
 
 What was checked: the working plan; the current renderings of the reviewed sources; the private workspace: reviewed checkpoints, saved updates, release and publication records.
 What was not observed:

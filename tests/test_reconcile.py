@@ -216,6 +216,14 @@ class StatusTests(Base):
         self.assertIn(R.ELSEWHERE, out)
         self.assertIn(R.OUTSTANDING_NOT_OBSERVED, out)
 
+    def test_unchanged_inputs_tell_the_agent_to_render_a_revised_document_the_owner_named_first(self):
+        """status cannot see a revised document kept outside the project, so its next action says to render it first."""
+        code, out, err = run(["status", "--root", str(ROOT / "sample" / "expense-approvals")])
+        self.assertEqual(code, 0, out + err)
+        nxt = next(line for line in out.splitlines() if line.startswith("Next: "))
+        self.assertEqual(nxt, "Next: Nothing to update in what this project holds. If the owner named a revised document, it is not "
+                              "rendered yet: render it first, then run status again. Otherwise tell the owner what was checked and what was not observed.")
+
     def test_an_unreadable_project_exits_2(self):
         code, out, err = run(["status", "--root", str(self.base / "does-not-exist")])
         self.assertEqual(code, 2)
@@ -1174,6 +1182,24 @@ class ApplyTests(Base):
         self.assertEqual(code, 0, out + err)
         self.assertFalse(lock.exists())
 
+    def test_a_lock_file_that_does_not_parse_is_refused_and_kept(self):
+        """An unreadable lock may belong to a run that is still writing it, so apply refuses instead of replacing it."""
+        change_id = self.ready()
+        for body in (b"{not json", b"", R.json_bytes({"time": "2027-02-01T00:00:00Z"})):
+            with self.subTest(body=body):
+                lock = self.proposal_dir(change_id) / "lock"
+                lock.write_bytes(body)
+                before = tree(self.root)
+                code, out, err = self.r("apply", "--proposal", change_id, "--apply")
+                self.assertEqual(code, 1, out + err)
+                self.assertIn("the lock file for this proposal is unreadable; remove it by hand if no other run is active", err)
+                self.assertIn("Nothing was written", err)
+                self.assertEqual(lock.read_bytes(), body)
+                self.assertEqual(tree(self.root), before)
+                self.assertFalse((self.proposal_dir(change_id) / "journal.json").exists())
+                self.assertFalse((self.proposal_dir(change_id) / "applied.json").exists())
+                lock.unlink()
+
     def test_the_lock_is_removed_when_the_run_fails(self):
         change_id = self.ready()
         project = R.Project(self.root)
@@ -1241,6 +1267,121 @@ class ApplyTests(Base):
     def test_apply_of_an_unknown_proposal_exits_2(self):
         code, out, err = self.r("apply", "--proposal", "e" * 64)
         self.assertEqual(code, 2)
+
+
+class PatchCommandTests(Base):
+    """reconcile.py patch: one patch record filled with the current digest, so the agent writes no script for it."""
+
+    def two_blocks(self):
+        self.make_checkpoint()
+        self.edit_reminder()
+        text = self.read(RENDERING)
+        old = "never on a report that the delegator submitted."
+        self.assertIn(old, text)
+        self.write(RENDERING, text.replace(old, "never on a report that the delegator submitted. A delegate approves up to 5,000.00.", 1))
+        change_id = self.prepare()["proposal"]
+        self.assertEqual(sorted(d["block"] for d in self.dispositions(change_id)["dispositions"]), ["architecture/3.5", "architecture/4.1"])
+        return change_id
+
+    def new_text(self, rel, old, new, name="after.md"):
+        text = self.read(rel)
+        self.assertIn(old, text)
+        path = self.base / name
+        path.write_text(text.replace(old, new), encoding="utf-8")
+        return path
+
+    def patch(self, change_id, block, item, rel, source, *more):
+        return self.r("patch", "--proposal", change_id, "--block", block, "--item", item, "--path", rel, "--from", str(source), *more)
+
+    def test_the_dry_run_writes_nothing_and_apply_records_the_digest_of_the_file_as_it_is_now(self):
+        change_id = self.prepared_update()
+        source = self.new_text(WI03, REMINDER, "after 4 business days without a decision")
+        before = (tree(self.ws), tree(self.root))
+        code, out, err = self.patch(change_id, "architecture/3.5", "WI-03", WI03, source)
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("would record the patch of project/" + WI03 + " under architecture/3.5 for WI-03: 1 line added, 1 line removed", out)
+        self.assertIn("Nothing was written. Add --apply", out)
+        self.assertEqual((tree(self.ws), tree(self.root)), before)
+        code, out, err = self.patch(change_id, "architecture/3.5", "WI-03", WI03, source, "--apply")
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("recorded the patch of project/" + WI03, out)
+        self.assertEqual(out.strip().splitlines()[-1], f"proposal: {change_id}")
+        self.assertEqual(tree(self.root), before[1], "the drafts are written only by apply")
+        record = next(d for d in self.dispositions(change_id)["dispositions"] if d["block"] == "architecture/3.5")
+        self.assertEqual((record["disposition"], record["item"]), ("update", "WI-03"))
+        self.assertEqual(record["patch"], [{"item": "WI-03", "path": WI03, "before_sha256": sha((self.root / WI03).read_bytes()),
+                                            "after_text": source.read_text(encoding="utf-8")}])
+        self.assertEqual(self.r("check", "--proposal", change_id)[0], 0)
+        self.assertEqual(self.r("apply", "--proposal", change_id, "--apply")[0], 0)
+        self.assertEqual(self.read(WI03), source.read_text(encoding="utf-8"))
+
+    def test_a_second_run_for_the_same_file_replaces_its_patch_and_another_file_is_added(self):
+        change_id = self.prepared_update()
+        first = self.new_text(WI03, REMINDER, "after 4 business days without a decision", "one.md")
+        second = self.new_text(WI03, REMINDER, "after four business days without a decision", "two.md")
+        other = self.new_text(WI06, "approval limits", "approval limits (reviewed)", "three.md")
+        self.assertEqual(self.patch(change_id, "architecture/3.5", "WI-03", WI03, first, "--apply")[0], 0)
+        code, out, err = self.patch(change_id, "architecture/3.5", "WI-03", WI03, second, "--apply")
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("replaced the patch of", out)
+        self.assertEqual(self.patch(change_id, "architecture/3.5", "WI-06", WI06, other, "--apply")[0], 0)
+        record = next(d for d in self.dispositions(change_id)["dispositions"] if d["block"] == "architecture/3.5")
+        self.assertEqual(record["item"], "WI-03, WI-06")
+        self.assertEqual([(p["path"], p["after_text"]) for p in record["patch"]],
+                         [(WI03, second.read_text(encoding="utf-8")), (WI06, other.read_text(encoding="utf-8"))])
+        code, out, err = self.r("check", "--proposal", change_id)
+        self.assertEqual(code, 0, out + err)
+
+    def test_a_file_already_patched_under_another_block_is_refused_and_the_other_block_is_named_in_context(self):
+        change_id = self.two_blocks()
+        source = self.new_text(WI06, "approval limits", "approval limits (reviewed)")
+        self.assertEqual(self.patch(change_id, "architecture/4.1", "WI-06", WI06, source, "--apply")[0], 0)
+        before = self.dispositions(change_id)
+        code, out, err = self.patch(change_id, "architecture/3.5", "WI-06", WI06, source, "--apply")
+        self.assertEqual(code, 1, out + err)
+        self.assertIn(f"project/{WI06} already has a patch under architecture/4.1. One file takes one patch: write the combined text "
+                      "with --block architecture/4.1 --also-block architecture/3.5", err)
+        self.assertEqual(self.dispositions(change_id), before)
+        code, out, err = self.patch(change_id, "architecture/4.1", "WI-06", WI06, source, "--also-block", "architecture/3.5", "--apply")
+        self.assertEqual(code, 0, out + err)
+        record = next(d for d in self.dispositions(change_id)["dispositions"] if d["block"] == "architecture/4.1")
+        self.assertEqual(record["context"], "This patch also carries the changes of architecture/3.5.")
+        self.assertEqual(len(record["patch"]), 1)
+
+    def test_refusals_write_nothing(self):
+        change_id = self.prepared_update()
+        source = self.new_text(WI03, REMINDER, "after 4 business days without a decision")
+        doc = self.dispositions(change_id)
+        cases = [
+            (("architecture/9.9", "WI-03", WI03, source), 1, "is not a changed block of this proposal"),
+            (("architecture/3.5", "three", WI03, source), 1, "--item must be a work item number"),
+            (("architecture/3.5", "WI-03", "docs/context/WI-03.md", source), 1, "cannot be patched"),
+            (("architecture/3.5", "WI-03", "../outside.md", source), 1, "leaves the project"),
+            (("architecture/3.5", "WI-03", WI03, self.root / WI03), 1, "Nothing to record"),
+            (("architecture/3.5", "WI-03", WI03, self.base / "missing.md"), 2, "is not a readable file"),
+        ]
+        for args, want, text in cases:
+            with self.subTest(args=args[:3]):
+                code, out, err = self.patch(change_id, *args, "--apply")
+                self.assertEqual(code, want, out + err)
+                self.assertIn(text, err)
+                self.assertEqual(self.dispositions(change_id), doc)
+        doc["dispositions"][0] = {"block": "architecture/3.5", "disposition": "no-impact", "reason": "r", "context": "c"}
+        self.save_dispositions(change_id, doc)
+        code, out, err = self.patch(change_id, "architecture/3.5", "WI-03", WI03, source, "--apply")
+        self.assertEqual(code, 1, out + err)
+        self.assertIn("already has the disposition no-impact", err)
+        self.assertEqual(self.dispositions(change_id), doc)
+
+    def test_an_applied_proposal_takes_no_new_patch(self):
+        change_id = self.prepared_update()
+        source = self.new_text(WI03, REMINDER, "after 4 business days without a decision")
+        self.assertEqual(self.patch(change_id, "architecture/3.5", "WI-03", WI03, source, "--apply")[0], 0)
+        self.assertEqual(self.r("apply", "--proposal", change_id, "--apply")[0], 0)
+        other = self.new_text(WI06, "approval limits", "approval limits (reviewed)", "other.md")
+        code, out, err = self.patch(change_id, "architecture/3.5", "WI-06", WI06, other, "--apply")
+        self.assertEqual(code, 1, out + err)
+        self.assertIn("already applied", err)
 
 
 class ReleasedApplyTests(Base):

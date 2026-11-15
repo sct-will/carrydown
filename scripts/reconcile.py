@@ -14,11 +14,14 @@ Commands (every one that writes is a dry run unless you pass --apply)
                                            a proposal in the private workspace (drafts/proposals/<id>/)
   check   --root . --proposal ID           is the proposal fresh, does every changed block have one valid disposition,
                                            and is every patch inside the allowed draft paths
+  patch   --root . --proposal ID --block REF --item WI-03 --path PATH --from FILE [--also-block REF] [--apply]
+                                           record one patch in dispositions.json: the whole new text of PATH is read from
+                                           FILE, and before_sha256 is the digest of PATH as it is now
   apply   --root . --proposal ID [--apply] preview, then write the accepted patches to the working drafts with a lock, a
                                            journal and a read back
 
 Every command takes --json for machine output. status exits 0 for every readable project. prepare exits 0, check
-exits 1 when it has findings, apply exits 1 when it stops. All exit 2 for a wrong argument or an unreadable project.
+exits 1 when it has findings, patch exits 1 when it refuses, apply exits 1 when it stops. All exit 2 for a wrong argument or an unreadable project.
 
 Where things are read from and written to
   The working plan and the specifications are read where the owner drafts them: the private workspace
@@ -91,7 +94,9 @@ STATES = {
                                 "Continue with carrydown-plan-to-github. The owner says: Put the plan on GitHub."),
     "release-awaiting-publication": ("Approved release awaiting publication",
                                      "Resume the existing publication with carrydown-plan-to-github."),
-    "inputs-unchanged": ("Observable inputs unchanged", "Nothing to update. Tell the owner what was checked and what was not observed."),
+    "inputs-unchanged": ("Observable inputs unchanged",
+                         "Nothing to update in what this project holds. If the owner named a revised document, it is not rendered yet: "
+                         "render it first, then run status again. Otherwise tell the owner what was checked and what was not observed."),
     "ambiguous": ("Ambiguous project or baseline", "Ask the owner which one they mean before you do anything else."),
 }
 
@@ -1670,6 +1675,166 @@ def cmd_check(a):
 
 
 # ---------------------------------------------------------------------------
+# patch
+# ---------------------------------------------------------------------------
+
+def line_counts(before, after):
+    """(lines added, lines removed) between two texts, by a line diff."""
+    import difflib
+    added = removed = 0
+    for line in difflib.unified_diff(before.splitlines(), after.splitlines(), lineterm="", n=0):
+        if line.startswith("+") and not line.startswith("+++"):
+            added += 1
+        elif line.startswith("-") and not line.startswith("---"):
+            removed += 1
+    return added, removed
+
+
+def add_item(value, item):
+    """The item field of an update disposition with item added once: "WI-03" and "WI-11" give "WI-03, WI-11"."""
+    names = [n.strip() for n in str(value or "").split(",") if n.strip()]
+    if item not in names:
+        names.append(item)
+    return ", ".join(names)
+
+
+def record_patch(project, proposal, block, item, path_text, after_text, also=()):
+    """The new dispositions document with one patch recorded, and a summary. Raises Stopped with a plain reason."""
+    if block not in {b.get("ref") for b in proposal["blocks"] if isinstance(b, dict)}:
+        raise Stopped("unknown-block", f"{block} is not a changed block of this proposal. Use a block reference that prepare printed")
+    for ref in also:
+        if ref == block or ref not in {b.get("ref") for b in proposal["blocks"] if isinstance(b, dict)}:
+            raise Stopped("unknown-block", f"--also-block {ref} is not another changed block of this proposal")
+    if not re.fullmatch(r"WI-\d+", item or ""):
+        raise Stopped("bad-item", "--item must be a work item number such as WI-03")
+    try:
+        path, key = resolve_patch_path(project, path_text)
+    except ValueError as e:
+        raise Stopped("patch-path", f"{path_text}: {e}")
+    why = path_allowed(project, path, key)
+    if why:
+        raise Stopped("patch-path", f"{key} cannot be patched: {why}")
+    current = read_regular(path)
+    if current is None:
+        raise Stopped("patch-path", f"{key} does not exist or cannot be read")
+    if len(after_text.encode("utf-8")) > MAX_PATCH_TEXT or "\x00" in after_text:
+        raise Stopped("patch-malformed", "the new text is too large or holds a NUL character")
+    if after_text.encode("utf-8") == current:
+        raise Stopped("patch-unchanged", f"the new text is the same as {key}. Nothing to record")
+    try:
+        current_text = decode_text(current)
+    except UnicodeDecodeError:
+        raise Stopped("patch-path", f"{key} is not UTF-8 text")
+    doc = {"format": FORMAT, "dispositions": [dict(r) if isinstance(r, dict) else r for r in proposal["dispositions"]]}
+    target = None
+    for r in doc["dispositions"]:
+        if not isinstance(r, dict):
+            continue
+        if r.get("block") == block:
+            if target is not None:
+                raise Stopped("duplicate-disposition", f"{block} has two dispositions. Keep one, then run this again")
+            target = r
+            continue
+        if r.get("disposition") == "update":
+            try:
+                others = patch_records(r)
+            except ValueError:
+                continue
+            for o in others:
+                try:
+                    _, other_key = resolve_patch_path(project, o.get("path"))
+                except (ValueError, Stopped):
+                    continue
+                if other_key == key:
+                    raise Stopped("patch-duplicate", f"{key} already has a patch under {r.get('block')}. One file takes one patch: write the combined "
+                                                     f"text with --block {r.get('block')} --also-block {block}")
+    record = {"item": item, "path": path_text, "before_sha256": sha256_bytes(current), "after_text": after_text}
+    if target is None:
+        target = {"block": block}
+        doc["dispositions"].append(target)
+    kind = target.get("disposition")
+    if kind in (None, "pending"):
+        for name in list(target):
+            if name != "block":
+                del target[name]
+        target.update({"disposition": "update", "item": item, "patch": [record]})
+        replaced = False
+    elif kind == "update":
+        try:
+            existing = patch_records(target)
+        except ValueError:
+            raise Stopped("patch-malformed", f"the patch of {block} cannot be read. Fix or remove it in dispositions.json, then run this again")
+        replaced = False
+        kept = []
+        for o in existing:
+            try:
+                same = resolve_patch_path(project, o.get("path"))[1] == key
+            except (ValueError, Stopped):
+                same = False
+            if same:
+                replaced = True
+                continue
+            kept.append(o)
+        target["patch"] = kept + [record]
+        target["item"] = add_item(target.get("item"), item)
+    else:
+        raise Stopped("not-an-update", f"{block} already has the disposition {kind}. Only an update carries a patch. "
+                                       "Change it to pending in dispositions.json if the block needs a patch")
+    if also:
+        context = str(target.get("context") or "").strip()
+        missing = [ref for ref in also if ref not in context]
+        if missing:
+            line = "This patch also carries the changes of " + ", ".join(missing) + "."
+            target["context"] = (context + " " + line).strip() if context else line
+    added, removed = line_counts(current_text, after_text)
+    summary = {"block": block, "item": item, "path": key, "before_sha256": record["before_sha256"],
+               "after_sha256": sha256_bytes(after_text.encode("utf-8")), "added": added, "removed": removed, "replaced": replaced,
+               "decision_conflict": bool(key.endswith(".md") and decisions_rewritten(current, after_text.encode("utf-8")))}
+    return doc, summary
+
+
+def cmd_patch(a):
+    project = Project(a.root)
+    if project.plan_error:
+        L.die(f"the plan cannot be read: {project.plan_error}", 2)
+    try:
+        proposal = load_proposal(project, a.proposal)
+    except Stopped as e:
+        L.die(e.text, 2)
+    if proposal["applied"] or proposal["journal"]:
+        L.die("this proposal was already applied, or an apply started. Its patches cannot change now. Prepare the comparison again", 1)
+    source = Path(a.from_file)
+    data = read_regular(source, MAX_PATCH_TEXT)
+    if data is None:
+        L.die(f"--from {a.from_file} is not a readable file of at most {MAX_PATCH_TEXT} bytes", 2)
+    try:
+        after_text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        L.die(f"--from {a.from_file} is not UTF-8 text", 2)
+    try:
+        doc, summary = record_patch(project, proposal, a.block, a.item, a.path, after_text, tuple(a.also_block or ()))
+        workspace_write(project, f"{PROPOSALS_DIR}/{a.proposal}/dispositions.json", json_bytes(doc), a.apply)
+    except Stopped as e:
+        L.die(e.text, 1)
+    if a.json:
+        emit_json({"command": "patch", "proposal": a.proposal, "apply": bool(a.apply), **summary})
+        return 0
+    verb = ("replaced" if summary["replaced"] else "recorded") if a.apply else ("would replace" if summary["replaced"] else "would record")
+    say(f"carrydown update: patch{'' if a.apply else '  DRY RUN (nothing will be written)'}")
+    say(f"{verb} the patch of {summary['path']} under {summary['block']} for {summary['item']}: "
+        f"{plural(summary['added'], 'line')} added, {plural(summary['removed'], 'line')} removed, "
+        f"from {short(summary['before_sha256'])} to {short(summary['after_sha256'])}")
+    if summary["decision_conflict"]:
+        say("note: this patch rewrites a decision an engineer recorded. Ask the owner, then record conflict_resolution on the disposition")
+    if not a.apply:
+        say("Nothing was written. Add --apply to record it in dispositions.json.")
+    else:
+        say("Nothing in the drafts changed. Run check, then apply after the owner approves.")
+    say(f"proposal: {a.proposal}")
+    return 0
+
+
+# ---------------------------------------------------------------------------
 # apply
 # ---------------------------------------------------------------------------
 
@@ -1709,12 +1874,16 @@ class Lock:
             try:
                 fd = os.open(str(self.path), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
             except FileExistsError:
-                holder = None
+                if attempt == 1 and not os.path.lexists(str(self.path)):
+                    continue                          # the other run finished between the two calls
                 try:
                     holder = strict_json(read_regular(self.path, 4096))
                 except ValueError:
                     holder = None
                 pid = holder.get("pid") if isinstance(holder, dict) else None
+                if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 0:
+                    raise Stopped("lock-unreadable", "the lock file for this proposal is unreadable; remove it by hand if no other run "
+                                                     f"is active (workspace:{self.rel}). Nothing was written")
                 if attempt == 1 and not pid_alive(pid, self.path):
                     try:
                         self.path.unlink()
@@ -1887,7 +2056,7 @@ def add_common(p):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    sub = ap.add_subparsers(dest="command", metavar="{status,prepare,check,apply}")
+    sub = ap.add_subparsers(dest="command", metavar="{status,prepare,check,patch,apply}")
     p = sub.add_parser("status", help="report the observed project state, the next action and what could not be observed",
                        description="Read the project and its private workspace and print the observed state as one row of the routing table, with the "
                                    "next action. Writes nothing. Exit 0 for every readable project.")
@@ -1902,6 +2071,20 @@ def main(argv=None):
                        description="Recompute every input digest, validate the dispositions and every update patch. Exit 0 only with 0 findings.")
     add_common(p)
     p.add_argument("--proposal", required=True, help="the proposal id that prepare printed")
+    p = sub.add_parser("patch", help="record one patch in the proposal's dispositions, with the current digest of the file",
+                       description="Read the whole new text of one working draft from --from and record it as a patch of the update disposition "
+                                   "of --block, with before_sha256 set to the digest of the file as it is now. A pending block becomes an update. "
+                                   "One file takes one patch, so a second run for the same file replaces its patch. A dry run unless --apply. "
+                                   "The working drafts are never written: apply does that after the owner approves.")
+    add_common(p)
+    p.add_argument("--proposal", required=True, help="the proposal id that prepare printed")
+    p.add_argument("--block", required=True, help="the changed block the patch answers, as prepare printed it, such as architecture/3.5")
+    p.add_argument("--item", required=True, help="the work item the file belongs to, such as WI-03")
+    p.add_argument("--path", required=True, help="the file to patch, relative to the drafting folder, or starting with project/ or workspace/")
+    p.add_argument("--from", dest="from_file", required=True, help="a file that holds the whole new text of --path")
+    p.add_argument("--also-block", action="append", metavar="REF",
+                   help="another changed block whose change this patch also carries. Named in the disposition's context. Repeat for more")
+    p.add_argument("--apply", action="store_true", help="record the patch. Without it this is a dry run")
     p = sub.add_parser("apply", help="apply the accepted patches to the working drafts",
                        description="Run check first and stop on any finding. Preview each write. With --apply, take a lock, write a journal, write "
                                    "each patch through the release gate when the file still holds the expected bytes, read it back, and record "
@@ -1913,7 +2096,7 @@ def main(argv=None):
     if not a.command:
         ap.print_help()
         return 0
-    return {"status": cmd_status, "prepare": cmd_prepare, "check": cmd_check, "apply": cmd_apply}[a.command](a)
+    return {"status": cmd_status, "prepare": cmd_prepare, "check": cmd_check, "patch": cmd_patch, "apply": cmd_apply}[a.command](a)
 
 
 if __name__ == "__main__":
