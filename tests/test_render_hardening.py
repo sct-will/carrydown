@@ -530,6 +530,44 @@ class DigestTests(RenderCase):
         self.assertEqual(plan.read_bytes(), before)
         self.assertFalse(self.project_rendering("architecture").stat().st_size == 0)
 
+    def render_sample(self, working, *extra):
+        """Render the sample's source in a copy of the sample: the released plan as committed
+        (working=False), or the owner's working plan in its place, as before the first release."""
+        project = copy_sample(self.tmp / ("working" if working else "released"), working=working)
+        source = project / "ground-truth" / "architecture.md"
+        run = subprocess.run([sys.executable, str(RENDER), str(source), "--root", str(project), "--out-dir", "my-test/ground-truth",
+                              "--version", "0.3", *extra], capture_output=True, text=True, timeout=120)
+        return run.returncode, run.stdout + run.stderr, project / "docs" / "spec" / "plan.yaml"
+
+    def test_a_released_plan_gets_no_digests_from_a_preview(self):
+        before = (SAMPLE / "docs" / "spec" / "plan.yaml").read_bytes()
+        code, out, plan = self.render_sample(False, "--dry-run")
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("would record", out)
+        self.assertIn("note: docs/spec/plan.yaml is a released plan, so content_sha256 and rendering_sha256 for architecture "
+                      "are not recorded in it. They are recorded in the workspace plan when the project has one", out)
+        self.assertEqual(plan.read_bytes(), before)
+        self.assertEqual(out.splitlines()[-1], "Dry run: nothing was written.")
+
+    def test_a_released_plan_gets_no_digests_from_an_explicit_write(self):
+        before = (SAMPLE / "docs" / "spec" / "plan.yaml").read_bytes()
+        code, out, plan = self.render_sample(False)
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("recorded content_sha256", out)
+        self.assertIn("note: docs/spec/plan.yaml is a released plan, so content_sha256 and rendering_sha256", out)
+        self.assertEqual(plan.read_bytes(), before)
+        self.assertTrue((plan.parents[2] / "my-test" / "ground-truth" / "architecture.md").exists())
+        self.assertNotIn("Dry run", out)
+        self.assertEqual(L.load_plan(plan, root=plan.parents[2], view="released")[1], [])
+
+    def test_the_working_plan_of_the_project_still_gets_the_digests(self):
+        code, out, plan = self.render_sample(True)
+        self.assertEqual(code, 0, out)
+        self.assertIn("recorded content_sha256 and rendering_sha256 for architecture in docs/spec/plan.yaml", out)
+        self.assertNotIn("is a released plan", out)
+        entry = self.source_entry(plan, "architecture")
+        self.assertEqual(entry["content_sha256"], sha256_bytes((SAMPLE / "ground-truth" / "architecture.md").read_bytes()))
+
     def test_an_extraction_records_the_digest_of_the_original_it_names(self):
         plan = self.set_handling(True)
         original = self.project / "docs" / "source" / "policy.txt"

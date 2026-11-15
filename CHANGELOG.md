@@ -4,6 +4,11 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ## Unreleased
 
+### Onboarding fixes
+
+- **The renderer keeps a released plan valid.** A preview or a write no longer records the source fingerprints in a released plan, so the next command on the sample no longer fails. It says so in one line, and a working plan still gets them.
+- **The renderer preview says nothing was written.** A dry run ends with `Dry run: nothing was written.`, and the sample's commands and [the sample run](docs/sample-run.md) separate the read-only preview from the write, which runs only in a disposable copy.
+
 ### Reconciliation and guided project updates
 
 These changes let a project keep its plan, specifications and engineering handoff aligned after the first release, when a source changes or an engineer finds a specification problem. They are part of the first release. Nothing had shipped, so there is no migration mode, no compatibility mode, no upgrade walkthrough and no format change made only for migration. There are still two skills you install and one skill generated for your engineers.
