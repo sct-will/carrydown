@@ -13,7 +13,7 @@ line it observed that proves the claim. It does not read test results or file da
 when every claim passes.
 
 The one acceptance item it cannot prove is the run on real GitHub. That needs a test organization and the
-owner's explicit authorization, and docs/setup.md holds its runbook, marked not yet performed. The last
+owner's explicit authorization, and docs/organization-setup.md holds its runbook, marked not yet performed. The last
 claim checks that the runbook is there and is honest about its status.
 """
 import contextlib
@@ -741,10 +741,10 @@ def _():
     return f"staging and engineering rulesets pass with App 77; {digests.stdout.strip().splitlines()[0][:80]}..."
 
 
-@claim("The real GitHub acceptance run is not performed here: docs/setup.md holds the runbook and a record table marked not yet performed")
+@claim("The real GitHub acceptance run is not performed here: docs/organization-setup.md holds the runbook and a record table marked not yet performed")
 def _():
-    text = (ROOT / "docs" / "setup.md").read_text(encoding="utf-8")
-    section = text[text.index("### Acceptance on real GitHub"):]
+    text = (ROOT / "docs" / "organization-setup.md").read_text(encoding="utf-8")
+    section = text[text.index("## Acceptance on real GitHub"):]
     check("Status: **not yet performed.**" in section and "explicitly authorizing" in section)
     rows = [l for l in section.splitlines() if l.startswith("| ") and "Not yet performed" in l]
     check(len(rows) >= 14, str(len(rows)))

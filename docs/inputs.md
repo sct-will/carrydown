@@ -47,7 +47,7 @@ The answer picks the path:
 | Where drafting happens | In the repository, as before. | In the private workspace on your machine. |
 | Where the documents can be | Where you keep them, or an ignored local `docs/source/`. | In your authorized document system, or in the workspace. Never copied into the project folder. |
 | Local files that are not committed | `.carrydown/local.yaml` (the pointer to your private workspace), `.carrydown/cache/` and `people.yaml`, all ignored by git. | The same. |
-| What you need beyond the two skills | Nothing. | The organization pieces in [organization setup for private drafting](setup.md#organization-setup-for-private-drafting) and a private staging repository. |
+| What you need beyond the two skills | Nothing. | The organization pieces in [organization setup for private drafting](organization-setup.md) and a private staging repository. |
 | Checks before you start | None. | `python3 scripts/workspace.py doctor --root .` (offline) and `python3 scripts/release.py doctor --root .` (live). Each prints a short table of what is verified, not verifiable or missing, and a missing item names its reason code. |
 
 If a document is already inside the project, the agent reports it and does not call it safe. `python3 scripts/release.py inventory --root .` lists tracked originals, renderings and staffing fields and whether they are in git history. An ignore rule keeps new files out of git and does not erase history. See [the enterprise security questions](enterprise-security.md).

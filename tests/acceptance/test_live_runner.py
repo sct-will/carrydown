@@ -617,8 +617,8 @@ class RedactionTests(Base):
 
 class RenderTests(Base):
     def setup_rows(self):
-        text = (ROOT / "docs" / "setup.md").read_text(encoding="utf-8")
-        section = text[text.index("Record the results here"):text.index("## When something does not work")]
+        text = (ROOT / "docs" / "organization-setup.md").read_text(encoding="utf-8")
+        section = text[text.index("Record the results here"):text.index("## Run it with the runner")]
         return [line for line in section.splitlines() if line.startswith("| ")][2:]
 
     def test_the_rows_match_docs_setup_in_label_and_order(self):

@@ -11,6 +11,7 @@ All notable changes to this project are written here. The format follows Keep a 
 - **The interview table is numbered.** Every question in [the plan owner guide](docs/plan-owner-guide.md#what-the-agent-asks-you) carries the step the agent announces, 0 to 6, with the optional skills question under step 2.
 - **The load report reads by ear.** After the load table, the checker's report prints one labeled sentence per person with each work unit's days and percent.
 - **The output-folder refusal says what to type.** It adds that a relative folder is read from the project root and gives `my-test/ground-truth` as an example.
+- **The setup guide opens with the owner's short path.** [The setup guide](docs/setup.md) starts with what you need, where you type the installer, how you know it worked, what to say and what to have ready. Alternative installs moved to [other installation options](docs/install-options.md) and administrator work to [organization setup for private drafting](docs/organization-setup.md).
 
 ### Reconciliation and guided project updates
 

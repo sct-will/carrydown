@@ -4,7 +4,7 @@ Start with the plain-language questions: [the enterprise security questions](ent
 
 ## Delivery modes and support labels
 
-The labels are the same as in the enterprise security questions: **supported** (implemented, documented and tested), **supported with prerequisites** (implemented and tested, but needs configuration your organization provides) and **planned** (the design exists, the feature does not). Those answers are drafts until the checklist in the notice at the top of that page is complete. In particular, the real GitHub acceptance run in [the setup guide](setup.md#acceptance-on-real-github) has not been performed.
+The labels are the same as in the enterprise security questions: **supported** (implemented, documented and tested), **supported with prerequisites** (implemented and tested, but needs configuration your organization provides) and **planned** (the design exists, the feature does not). Those answers are drafts until the checklist in the notice at the top of that page is complete. In particular, the real GitHub acceptance run in [the organization setup guide](organization-setup.md#acceptance-on-real-github) has not been performed.
 
 | Capability | Label |
 | --- | --- |
@@ -101,7 +101,7 @@ The generated engineers' skill carries `scripts/check_context.py`. It checks tha
 
 ## The independent verifier and the setup check
 
-These facts apply only to the private drafting path. [The organization setup](setup.md#organization-setup-for-private-drafting) installs the pieces. They are verification at the observed revisions. They are not a guarantee of continuous authorization.
+These facts apply only to the private drafting path. [The organization setup](organization-setup.md) installs the pieces. They are verification at the observed revisions. They are not a guarantee of continuous authorization.
 
 **What the verifier is.** `verifier/verify_release.py` runs in the tooling repository's own Actions environment, from a checkout pinned to the commit the enrollment names. The launcher keeps the policy and the code in separate folders. It reads the enrollment from the protected default branch of the tooling repository as data, then fetches the code at the pinned commit, and proves that the checkout is exactly that commit before it runs. The code never contains its own commit or the latest policy. The verifier imports only from the `scripts/` folder of its own checkout. It runs with `python3 -I`, which ignores the current folder and the Python path variables. It uses the standard library, plus the `openssl` tool to sign the App's short-lived token request.
 

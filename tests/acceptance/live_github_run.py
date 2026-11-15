@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The runner for the acceptance run on real GitHub. Standard library only.
 
-docs/setup.md ends with a runbook, "Acceptance on real GitHub", and a table that says "Not yet performed".
+docs/organization-setup.md ends with a runbook, "Acceptance on real GitHub", and a table that says "Not yet performed".
 This program turns that runbook, and the organization setup above it, into 17 steps that the plan owner runs
 once against a throwaway GitHub organization. It does the steps that a program can do, stops for the steps
 that need a person, checks the result of every step against GitHub, and appends one record per step to a
@@ -19,7 +19,7 @@ Commands
   run      Executes the steps in order. Without --apply it performs only reads and prints what each step would
            do. With --apply it writes to GitHub. It needs --throwaway, which says that the organization exists
            only for this run. It records nothing in a dry run.
-  render   Prints the table of docs/setup.md from the records, in the same rows and the same order. A row with
+  render   Prints the table of docs/organization-setup.md from the records, in the same rows and the same order. A row with
            no record stays "Not yet performed".
 
 How it touches GitHub
@@ -185,7 +185,7 @@ STEPS = [
 STEP_IDS = [s["id"] for s in STEPS]
 STEP_BY_ID = {s["id"]: s for s in STEPS}
 
-# The rows of the table in docs/setup.md, in order. The first column is copied from the document.
+# The rows of the table in docs/organization-setup.md, in order. The first column is copied from the document.
 TABLE_ROWS = [
     ("Date of the run", None),
     ("Platform and plan", ["A1"]),
@@ -2032,7 +2032,7 @@ def row_text(row):
 
 
 def render_table(records):
-    """The Markdown table of docs/setup.md, from the records: the same rows in the same order."""
+    """The Markdown table of docs/organization-setup.md, from the records: the same rows in the same order."""
     last = latest_by_step(records)
     lines = ["| Item | Record |", "| --- | --- |"]
     for label, steps in TABLE_ROWS:
@@ -2118,7 +2118,7 @@ def build_parser():
     p.add_argument("--reviewer-login", help="the login of the second account that approves the engineering pull requests")
     p.add_argument("--token-file", help="passed to release.py, which reads the owner's token itself")
     p.add_argument("--poll-seconds", type=int, default=POLL_SECONDS, help="how long to wait for a pull request to appear")
-    p = sub.add_parser("render", help="print the record table of docs/setup.md from the records")
+    p = sub.add_parser("render", help="print the record table of docs/organization-setup.md from the records")
     p.add_argument("--record", required=True)
     return ap
 

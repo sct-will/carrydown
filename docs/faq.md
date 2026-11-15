@@ -22,7 +22,7 @@ You need a coding agent, and the agent can do the rest. The first thing each ski
 
 ## What do I need installed?
 
-A coding agent, Node.js for the installer, Python for the scripts and Git. The [computer preparation steps](setup.md#prepare-your-computer) list versions and checks. Manual installation is available on the same page if you cannot use Node.js.
+A coding agent, Node.js for the installer, Python for the scripts and Git. The [computer preparation steps](setup.md#prepare-your-computer) list versions and checks. [Manual installation](install-options.md#manual-install-without-nodejs) is available if you cannot use Node.js.
 
 ## What GitHub token permissions are required?
 
@@ -57,7 +57,7 @@ No. Text already delivered, in a clone, a fork, an issue, a stored copy or an ag
 
 ## How quickly does the independent verifier notice a change?
 
-Its workflow asks GitHub for a run every five minutes, and an administrator can start it by hand. Five minutes is a requested interval and not a deadline: GitHub can delay or drop scheduled runs. GitHub does not expire a successful check, so an outage can leave an old success mergeable, and state can change between a poll and a merge. An organization that needs authorization checked at the exact moment of merge has to add its own control. This reference deployment does not claim to be one. See [the limits in the setup guide](setup.md#limits-to-state-to-your-reviewers).
+Its workflow asks GitHub for a run every five minutes, and an administrator can start it by hand. Five minutes is a requested interval and not a deadline: GitHub can delay or drop scheduled runs. GitHub does not expire a successful check, so an outage can leave an old success mergeable, and state can change between a poll and a merge. An organization that needs authorization checked at the exact moment of merge has to add its own control. This reference deployment does not claim to be one. See [the limits in the organization setup guide](organization-setup.md#limits-to-state-to-your-reviewers).
 
 ## Do hosted coding agents work?
 
@@ -65,7 +65,7 @@ They can read the approved contexts from the repository, so they need no local w
 
 ## What are the private path and the organization setup?
 
-The private path is for projects where some documents are not for everyone who can read the repository. It needs shared pieces that an organization administrator installs once: a tooling repository with the independent verifier, a private staging repository for each project, and a GitHub App that reports two required checks. The plan owner then runs a doctor command that says which pieces are verified. Without the organization's part, the private path is not available, and carrydown says so before it uploads anything. The real GitHub acceptance run of this setup has not been performed yet. See [organization setup for private drafting](setup.md#organization-setup-for-private-drafting).
+The private path is for projects where some documents are not for everyone who can read the repository. It needs shared pieces that an organization administrator installs once: a tooling repository with the independent verifier, a private staging repository for each project, and a GitHub App that reports two required checks. The plan owner then runs a doctor command that says which pieces are verified. Without the organization's part, the private path is not available, and carrydown says so before it uploads anything. The real GitHub acceptance run of this setup has not been performed yet. See [organization setup for private drafting](organization-setup.md).
 
 ## Isn't this just prompts?
 

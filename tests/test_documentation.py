@@ -248,7 +248,7 @@ class LinkCheckTests(Temp):
         self.assertEqual([w for _, _, _, w in found], ["points outside the folder"])
 
 
-PUBLIC_DOCS = ["README.md", "SECURITY.md", "docs/setup.md", "docs/security.md", "docs/faq.md", "docs/inputs.md", "docs/method.md",
+PUBLIC_DOCS = ["README.md", "SECURITY.md", "docs/setup.md", "docs/install-options.md", "docs/organization-setup.md", "docs/security.md", "docs/faq.md", "docs/inputs.md", "docs/method.md",
                "docs/plan-owner-guide.md", "docs/recovery.md", "docs/sample-run.md", "docs/enterprise-security.md",
                "docs/delivery-modes.md", "docs/recording-storyboard.md"]
 
@@ -287,7 +287,7 @@ class EnterpriseSecurityPageTests(unittest.TestCase):
 
     def test_it_links_the_security_guide_the_delivery_modes_and_the_setup_guide(self):
         text = self.text()
-        for link in ("(security.md)", "(delivery-modes.md)", "(setup.md#organization-setup-for-private-drafting)", "(setup.md#acceptance-on-real-github)"):
+        for link in ("(security.md)", "(delivery-modes.md)", "(organization-setup.md)", "(organization-setup.md#acceptance-on-real-github)"):
             self.assertIn(link, text)
 
     def test_the_security_guide_and_the_other_pages_link_to_it(self):
@@ -579,6 +579,51 @@ class MaintenanceNoticeTests(unittest.TestCase):
                 self.assertNotIn(old, guide)
         self.assertNotIn("Commit and push the export.", (ROOT / "docs" / "recovery.md").read_text(encoding="utf-8"))
         self.assertNotIn("and you commit and push them", (ROOT / "README.md").read_text(encoding="utf-8"))
+
+
+class OwnerJourneyTests(unittest.TestCase):
+    """The owner's first screen: the short path at the top of the setup guide, the split pages and the first words."""
+
+    def page(self, name):
+        return (ROOT / name).read_text(encoding="utf-8")
+
+    def test_the_setup_guide_opens_with_the_short_path_and_the_start_phrase(self):
+        lines = self.page("docs/setup.md").split("\n")
+        self.assertEqual(lines[2], "## The short path")
+        start = next(n for n, line in enumerate(lines, 1) if "Set up a project plan from these documents." in line)
+        self.assertLess(start, 40)
+        path = "\n".join(lines[:lines.index("## Words you will meet")])
+        order = [path.index(s) for s in ("**What you need.**", "**Where you type the installer.**", "**How you know it worked.**",
+                                         "**What to say to start.**", "**What to have ready.**")]
+        self.assertEqual(order, sorted(order))
+        for phrase in ("Node.js 22.20 or later", "install-options.md#manual-install-without-nodejs", "npx skills add sct-will/carrydown",
+                       "`carrydown: interview, step 0 of 6`", "plan-owner-guide.md#what-the-agent-asks-you",
+                       "#before-you-add-documents-who-may-see-them", "the skill checks Python and Git"):
+            self.assertIn(phrase, path)
+
+    def test_the_setup_guide_defines_the_first_words_in_one_sentence_each(self):
+        text = self.page("docs/setup.md")
+        words = text.split("## Words you will meet\n", 1)[1].split("\n## ", 1)[0]
+        for term in ("Agent skill", "Node.js and npx", "Ground truth", "Track", "Milestone and demonstration", "Work item", "Dry run"):
+            self.assertRegex(words, r"(?m)^- \*\*" + re.escape(term) + r"\.\*\* ", term)
+        self.assertLess(len(words.split()), 200)
+
+    def test_the_moved_sections_are_their_own_pages_and_setup_points_to_them(self):
+        setup = self.page("docs/setup.md")
+        self.assertNotIn("### Choose where to install", setup)
+        self.assertNotIn("### Step 1: create the tooling repository", setup)
+        for heading, target in (("## Other installation options", "(install-options.md)"),
+                                ("## Organization setup for private drafting", "(organization-setup.md)")):
+            pointer = setup.split(heading + "\n", 1)[1].split("\n## ", 1)[0]
+            self.assertIn(target, pointer)
+            self.assertEqual(len([line for line in pointer.split("\n") if line.strip()]), 1)
+        options = self.page("docs/install-options.md")
+        for heading in ("## Choose where to install", "## Manual install, without Node.js"):
+            self.assertIn(heading, options)
+        org = self.page("docs/organization-setup.md")
+        for heading in ("## Step 7: the owner's release commands", "## Limits to state to your reviewers", "## Acceptance on real GitHub"):
+            self.assertIn(heading, org)
+        self.assertNotIn("It does not run them.", org)
 
 
 if __name__ == "__main__":

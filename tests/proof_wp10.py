@@ -28,7 +28,7 @@ PY = sys.executable
 
 EDITED_DOCUMENTS = [
     "README.md", "CHANGELOG.md", "SECURITY.md",
-    "docs/enterprise-security.md", "docs/delivery-modes.md", "docs/setup.md", "docs/security.md", "docs/plan-owner-guide.md",
+    "docs/enterprise-security.md", "docs/delivery-modes.md", "docs/setup.md", "docs/install-options.md", "docs/organization-setup.md", "docs/security.md", "docs/plan-owner-guide.md",
     "docs/faq.md", "docs/inputs.md", "docs/method.md", "docs/recovery.md", "docs/sample-run.md", "docs/recording-storyboard.md",
     "docs/repository-metadata.md", "docs/derive-the-date.md",
     "skills/carrydown-ground-truth/SKILL.md", "skills/carrydown-plan-to-github/SKILL.md",
@@ -208,9 +208,9 @@ def main():
         exact = {"supported", "supported with prerequisites", "planned", "Supported.", "Supported with prerequisites.", "Planned."}
         claim(set(bold) <= exact, "Every support label on the security page is one of the three labels alone, with no compound label",
               f"bold labels used: {bold}")
-        setup = (ROOT / "docs" / "setup.md").read_text(encoding="utf-8")
+        setup = (ROOT / "docs" / "organization-setup.md").read_text(encoding="utf-8")
         rows = [l for l in setup.split("\n") if l.startswith("| ") and "Not yet performed" in l]
-        claim("Status: **not yet performed.**" in setup and len(rows) >= 15, "The setup guide keeps the real GitHub acceptance run marked not yet performed",
+        claim("Status: **not yet performed.**" in setup and len(rows) >= 15, "The organization setup guide keeps the real GitHub acceptance run marked not yet performed",
               f"{len(rows)} record rows say Not yet performed")
         claim(all(p in (ROOT / "docs" / "delivery-modes.md").read_text(encoding="utf-8") for p in ("Planned: unavailable in version 1", "H1. Shared constraints", "H2. The two stubs")),
               "The delivery modes page keeps Part H and marks both modes planned and unavailable", "H1, H2 and the planned status present")
