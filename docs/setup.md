@@ -2,7 +2,7 @@
 
 ## The short path
 
-1. **What you need.** A coding agent that supports Agent Skills, and Node.js 22.20 or later for the one-line installer. The installer also uses Git. If you cannot install Node.js, use the [manual install](install-options.md#manual-install-without-nodejs). You do not need to install Python first: the skill checks Python and Git when it starts, and offers to install Python after your yes.
+1. **What you need.** A coding agent that supports Agent Skills, and Node.js 22.20 or later and Git for the one-line installer. If you cannot install Node.js, use the [manual install](install-options.md#manual-install-without-nodejs). You do not need to install Python first: the skill checks Python and Git when it starts, and offers to install Python after your yes.
 2. **Where you type the installer.** In your terminal, in your project folder, once. [Open your project folder](#open-your-project-folder) shows how. Choose both skills, your agent and the project scope, as [install the two skills](#install-the-two-skills) shows:
 
    ```bash
@@ -237,9 +237,9 @@ Use the arrow keys to move through terminal menus. In a multiple-selection list,
 
 Wait until the installer reports completion and the terminal is ready for another command. You should see both skill names in its installation summary. Security scan results may also appear; the optional [security guide](security.md#what-skillssh-shows) explains them.
 
-There is no third skill to install. The first skill, `carrydown-ground-truth`, covers initial planning and later updates, and the second, `carrydown-plan-to-github`, publishes. Because this is the first release, there is no upgrade walkthrough. The generated engineers' skill is installed separately, as before.
+There is no third skill to install. The first skill, `carrydown-ground-truth`, covers initial planning and later updates, and the second, `carrydown-plan-to-github`, publishes. The generated engineers' skill is installed separately.
 
-An installer-created link may point to an installer-managed copy of a skill, not into this repository's checkout. Such a link does not necessarily update through `git pull`. A link that you create by hand into your own checkout follows that checkout. To change the installed skills, run the installer again.
+To change the installed skills later, run the installer again.
 
 If your agent is missing from the chooser, use its [complete installation command](install-options.md#choose-where-to-install). Then continue to the installation check.
 
@@ -306,8 +306,6 @@ What this means in practice:
 **You are ready when the agent begins the interview.**
 
 **Next:** [Review and publish your plan](plan-owner-guide.md). That guide helps you answer the interview, review the drafts and carry the approved plan into GitHub. It also explains what to say [when the project changes](plan-owner-guide.md#when-the-project-changes). Planning locally needs no GitHub token. When you are ready to publish, its [token section](plan-owner-guide.md#the-token) lists the exact repository and project permissions for organization-owned and user-owned boards.
-
-When you ask the agent to add the specification checker to continuous integration (CI, the automatic checks on every pull request), it runs `scaffold_spec.py --ci`. That writes the checking workflow, a pull request template with the `Work items:` and `Outside the plan:` lines, and the checker copy under `tools/carrydown/`. Each pull request then names the work items it serves, or says why it is outside the plan.
 
 ## Other installation options
 
