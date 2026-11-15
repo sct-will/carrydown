@@ -614,6 +614,12 @@ Run these steps in order, and record the outcome of each in the table.
 9. Withdraw the active request. Confirm the receipt-only pull request passes and that a content publication stays refused.
 10. Stop the scheduled workflow, wait past `check_health_max_age_seconds`, and confirm the doctor reports the scan health as missing. Restart it.
 
+Three facts to plan for before the run:
+
+- **A second GitHub account.** The engineering pull requests of steps 7 to 9 need a second account, with write access to the engineering repository, to approve and merge them. The engineering ruleset requires one approving review, the owner opens those pull requests, and GitHub does not let one person approve their own pull request.
+- **The tooling ruleset comes last.** For the same reason, in this run the ruleset that protects the tooling repository's default branch is created at the end of organization step 5, after the verifier commit, the enrollment and the attestations are merged, not in organization step 1. With one human, a reviewed pull request on the tooling repository could not be approved before that. The end state is the one the organization steps describe.
+- **An enrollment without a board target is unproven.** A run that publishes no board enrolls only the `engineering` target. Whether such an enrollment passes every check has been read in the code, not shown on real GitHub.
+
 Record the results here when the run is done.
 
 | Item | Record |
