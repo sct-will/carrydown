@@ -45,7 +45,7 @@ Export. On the "no" path it makes an isolated worktree on carrydown/request-<id>
 branch, copies only the approved files and the receipts, and commits as you; it prints the push and pull
 request commands and does not run them. On the "yes" path it copies the approved files into your
 working tree and writes the receipts; it refuses (working-copy-differs) when a file you edited differs
-from the snapshot, and leaves commit and push to you.
+from the snapshot, and the agent commits and pushes them only after you approve that in the chat.
 
 --created and --nonce exist to reproduce a release exactly (tests, the sample): --created is the UTC
 time (2027-01-20T14:03:00Z) used for the request and its events, and --nonce is the 32 hexadecimal

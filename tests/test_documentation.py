@@ -578,6 +578,8 @@ class MaintenanceNoticeTests(unittest.TestCase):
         self.assertNotIn("then commit and push as you usually do", release)
         self.assertIn("}. Next, check whether it is committed and pushed, and commit and push it only after the owner approves that in the chat.", release)
         self.assertNotIn("Commit it as you usually do.", release)
+        self.assertNotIn("leaves commit and push to you", release)
+        self.assertIn("from the snapshot, and the agent commits and pushes them only after you approve that in the chat.", release)
         guide = (ROOT / "docs" / "plan-owner-guide.md").read_text(encoding="utf-8")
         for old in ("You commit and push as you do today", "Commit and push them to the intended branch.", "Export and commit the new release first."):
             with self.subTest(old=old):
