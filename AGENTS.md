@@ -23,6 +23,7 @@ It does not write application code. Planning decisions (owners, dates, scope, or
 | `sample/expense-approvals/` | The sample: ground truth, plan, specifications, engineers' skill. |
 | `docs/` | Method, inputs, FAQ, security, setup, plan owner guide, sample pointer. |
 | `.github/` | Issue forms, pull request template, workflows. |
+| `tests/acceptance/` | The runner and its tests for the acceptance run on real GitHub. The owner runs it once against a throwaway organization. |
 
 ## Rules for working here
 

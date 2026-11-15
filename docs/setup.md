@@ -628,6 +628,19 @@ Record the results here when the run is done.
 | Scan health and scheduler behavior (step 10) | Not yet performed |
 | Sanitized check outcomes (ids and reason codes only) | Not yet performed |
 
+#### Run it with the runner
+
+The repository carries a runner for this section: `tests/acceptance/live_github_run.py`. It covers the seven organization setup steps and the ten acceptance steps above, in order. It does what a program can do, stops for what needs a person, checks each result through `gh api`, and appends one record per step to a file. It needs the `gh` command line tool, signed in as an owner of the throwaway organization. It never reads, prints or logs a token, it never deletes a resource, and it refuses an organization unless you pass `--throwaway`.
+
+```bash
+python3 tests/acceptance/live_github_run.py doctor --org NAME
+python3 tests/acceptance/live_github_run.py plan
+python3 tests/acceptance/live_github_run.py run --org NAME --throwaway --record run.jsonl --apply
+python3 tests/acceptance/live_github_run.py render --record run.jsonl
+```
+
+`doctor` prints which preconditions are verified. `plan` lists the 17 steps and marks which are automatic and which need a person. `run` without `--apply` only reads. With `--apply` it writes to the throwaway organization, and the plan owner authorizes that explicitly first. The run pauses at each human step, prints what to do and what to confirm, waits for you to press enter, and checks the state again before it goes on. Those steps are creating the verifier App in a browser, vouching for the attestations, approving the staging pull requests as the owner, and approving and merging the engineering pull requests with a second account, because GitHub does not let an author approve their own pull request. A run that stops resumes with the same command, and `--from STEP` starts at a step. `render` prints the table above from the records, with the same rows in the same order. Paste it in place of the table. A row with no record stays "Not yet performed".
+
 ## When something does not work
 
 ### The install command is missing or blocked
