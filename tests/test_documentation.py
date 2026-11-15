@@ -649,6 +649,13 @@ class OwnerJourneyTests(unittest.TestCase):
         prose = [p for p in section.split("\n\n") if p and not p.startswith(("|", "#"))]
         self.assertLess(max(len(p.split()) for p in prose), 100)
 
+    def test_the_recovery_table_has_the_agent_run_the_retries(self):
+        text = self.page("docs/recovery.md")
+        table = text.split("## Resume an interrupted release", 1)[1].split("\n## ", 1)[0]
+        self.assertNotRegex(table, r"\| Run `")
+        self.assertNotIn("| Run the same command again.", table)
+        self.assertEqual(table.count("The agent runs"), 5)
+
 
 if __name__ == "__main__":
     unittest.main()
