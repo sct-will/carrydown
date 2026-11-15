@@ -1095,20 +1095,28 @@ def recorded_digests(workspace):
     """Every digest inside a recorded checkpoint: the rendering digests in workspace.yaml and, read from git,
     the digest of each file of each checkpoint. A checkpoint that cannot be read from git still contributes
     the digests in its record. Returns a set. Used before a rendering is replaced."""
-    out = set()
+    return set(recorded_digest_checkpoints(workspace))
+
+
+def recorded_digest_checkpoints(workspace):
+    """{digest: checkpoint id} for every digest recorded_digests finds. A digest in several checkpoints names the
+    newest one. The renderer names that checkpoint when it does not copy a rendering a checkpoint already holds."""
+    out = {}
     try:
         records = checkpoint_records(workspace)
     except CheckpointProblem:
         return out
     for r in records:
-        out |= {s["sha256"] for s in r["sources"]}
+        found = {s["sha256"] for s in r["sources"]}
         try:
             run = _git(workspace, "show", f"{r['commit']}:{CHECKPOINT_DIR}/{r['id']}/checkpoint.json")
             if run.returncode == 0:
                 meta = json.loads(run.stdout.decode("utf-8"))
-                out |= {f["sha256"] for f in meta.get("files", []) if isinstance(f, dict) and isinstance(f.get("sha256"), str)}
+                found |= {f["sha256"] for f in meta.get("files", []) if isinstance(f, dict) and isinstance(f.get("sha256"), str)}
         except (CheckpointProblem, ValueError, UnicodeDecodeError):
-            continue
+            pass
+        for digest in found:
+            out[digest] = r["id"]
     return out
 
 

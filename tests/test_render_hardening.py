@@ -707,6 +707,9 @@ class PreviousRenderingTests(RenderCase):
         self.assertEqual(self.history(), [])
         self.assertNotIn("preserved", out)
         self.assertNotIn("warning:", out)
+        recorded = [ln for ln in out.splitlines() if "already recorded" in ln]
+        self.assertEqual(recorded, [f"previous rendering of architecture already recorded in the reviewed checkpoint {prepared['id'][:12]}"])
+        self.assertLess(out.index("already recorded"), out.index("wrote docs/ground-truth/architecture.md"))
         self.assertEqual((self.workspace / "workspace.yaml").read_bytes(), record_before)       # rendering is not review
         self.assertEqual(len(W.checkpoint_records(self.workspace)), 1)
         # the new rendering is not in any checkpoint, so replacing it keeps it
@@ -714,7 +717,31 @@ class PreviousRenderingTests(RenderCase):
             code, out = self.render(self.project / "ground-truth" / "architecture.md", "--version", "9.2")
         self.assertEqual(code, 0, out)
         self.assertEqual(len(self.history()), 1)
+        self.assertNotIn("already recorded", out)
         self.assertEqual((self.workspace / "workspace.yaml").read_bytes(), record_before)
+
+    def test_a_replaced_rendering_names_its_previous_version_and_a_kept_version_gets_the_next_minor_number(self):
+        self.set_handling(True)
+        source = self.project / "ground-truth" / "architecture.md"
+        self.assertEqual(self.render(source, "--version", "0.3")[0], 0)
+        code, out = self.render(source, "--version", "0.3")
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("previous rendering of architecture: version", out)        # nothing replaced, nothing to say
+        source.write_text(source.read_text(encoding="utf-8") + "\n## 99. Added\n\nNew rule.\n", encoding="utf-8")
+        code, out = self.render(source, "--version", "0.3", "--dry-run")
+        self.assertEqual(code, 0, out)
+        self.assertIn("previous rendering of architecture: version 0.3\n", out)
+        self.assertIn("note: architecture changed but keeps version 0.3. If the document's own version line did not change, use --version 0.4.", out)
+        code, out = self.render(source, "--version", "0.4")
+        self.assertEqual(code, 0, out)
+        self.assertIn("previous rendering of architecture: version 0.3\n", out)
+        self.assertNotIn("keeps version", out)
+
+    def test_the_next_minor_number(self):
+        self.assertEqual([R.next_minor(v) for v in ("0.3", "1", "2.4.1", "v1.9", "unversioned", "")], ["0.4", "1.1", "2.5", "1.10", None, None])
+        header = R.header_comment("architecture.docx", "0.3", "2027-01-02").encode("utf-8") + b"\n\n# Title\n"
+        self.assertEqual(R.previous_version(header), "0.3")
+        self.assertIsNone(R.previous_version(b"# no header\n"))
 
     def test_a_history_copy_that_the_gate_refuses_stops_the_render_before_anything_is_replaced(self):
         self.set_handling(True)

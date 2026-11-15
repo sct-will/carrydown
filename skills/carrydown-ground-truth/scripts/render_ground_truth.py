@@ -1527,16 +1527,39 @@ def read_previous(path):
 
 
 def checkpointed_digests(workspace):
-    """The digests of every file inside a recorded source checkpoint of the workspace, or an empty set when
-    the checkpoint code is not there or its records cannot be read."""
+    """{digest: checkpoint id} of every file inside a recorded source checkpoint of the workspace, or an empty
+    mapping when the checkpoint code is not there or its records cannot be read."""
     try:
         import workspace as W
     except ImportError:
-        return set()
+        return {}
     try:
-        return W.recorded_digests(workspace)
+        return W.recorded_digest_checkpoints(workspace)
     except (OSError, ValueError, L.YamlError, L.TextError):
-        return set()
+        return {}
+
+
+_HEADER_VERSION = re.compile(r'^<!-- Generated from "(?:.*?)" version (.+?) on \d{4}-\d{2}-\d{2}\.')
+_VERSION_NUMBER = re.compile(r"^[vV]?(\d+)(?:\.(\d+))?(?:\.\d+)*$")
+
+
+def previous_version(old_bytes):
+    """The version recorded in the header of an earlier rendering, or None when it cannot be read."""
+    try:
+        first = old_bytes.decode("utf-8").lstrip("\ufeff").split("\n", 1)[0]
+    except UnicodeDecodeError:
+        return None
+    m = _HEADER_VERSION.match(first)
+    return m.group(1).strip() if m else None
+
+
+def next_minor(version):
+    """The previous version with its minor number incremented: 0.3 gives 0.4, 1 gives 1.1, 2.4.1 gives 2.5.
+    None when the version is not a number, such as unversioned."""
+    m = _VERSION_NUMBER.match(str(version or "").strip())
+    if not m:
+        return None
+    return f"{int(m.group(1))}.{int(m.group(2) or 0) + 1}"
 
 
 def plan_preservation(rendered, workspace):
@@ -1545,7 +1568,7 @@ def plan_preservation(rendered, workspace):
     (history path, bytes) still to write, unkept is the list of names whose previous rendering is replaced
     with no private workspace to keep it in. A file that is new, unchanged, or already inside a recorded
     checkpoint needs nothing."""
-    kept, copies, unkept = [], [], []
+    kept, copies, unkept, in_checkpoint = [], [], [], []
     recorded = None
     for job, figs, notes, findings, text, index_txt, n_head in rendered:
         wrote_any = False
@@ -1561,6 +1584,8 @@ def plan_preservation(rendered, workspace):
             if recorded is None:
                 recorded = checkpointed_digests(workspace)
             if digest in recorded:
+                if suffix == ".md":
+                    in_checkpoint.append((job["name"], recorded[digest]))
                 continue
             target = Path(workspace).resolve() / HISTORY_FOLDER / f"{job['name']}.{digest[:12]}{suffix}"
             have = read_previous(target)
@@ -1573,7 +1598,26 @@ def plan_preservation(rendered, workspace):
             unkept.append(job["name"])
         elif wrote_any:
             kept.append(job["name"])
-    return kept, copies, unkept
+    return kept, copies, unkept, in_checkpoint
+
+
+def version_notes(rendered, version):
+    """One line per replaced rendering that names its previous version, plus a note when the new rendering
+    keeps that version although its content changed. The agent picks the version without asking the owner."""
+    lines = []
+    for job, figs, notes, findings, text, index_txt, n_head in rendered:
+        old = read_previous(job["out_md"])
+        if old is None or old == text.encode("utf-8"):
+            continue
+        before = previous_version(old)
+        if before is None:
+            continue
+        lines.append(f"previous rendering of {job['name']}: version {before}")
+        if before == str(version).strip():
+            nxt = next_minor(before)
+            hint = f" If the document's own version line did not change, use --version {nxt}." if nxt else ""
+            lines.append(f"note: {job['name']} changed but keeps version {before}.{hint}")
+    return lines
 
 
 def main(argv=None):
@@ -1793,7 +1837,7 @@ def main(argv=None):
 
     # keep the previous rendering privately before this run replaces it. Rendering is not review: no checkpoint changes.
     try:
-        kept, copies, unkept = plan_preservation(rendered, workspace)
+        kept, copies, unkept, in_checkpoint = plan_preservation(rendered, workspace)
     except ValueError as e:
         return fail(f"the previous rendering cannot be kept: {e}")
 
@@ -1816,6 +1860,11 @@ def main(argv=None):
     for name in unkept:
         print(f"warning: there is no private workspace, so the previous rendering of {name} {'would not be' if a.dry_run else 'was not'} preserved. "
               "The checkpoint cannot be compared with it later. Create the workspace with workspace.py init")
+    for name, checkpoint in in_checkpoint:
+        if name not in kept:
+            print(f"previous rendering of {name} already recorded in the reviewed checkpoint {checkpoint[:12]}")
+    for line in version_notes(rendered, a.version):
+        print(line)
 
     verb = "would write" if a.dry_run else "wrote"
     digests = {}
