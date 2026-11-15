@@ -129,9 +129,9 @@ After the finished set passes step 6, load `templates/plan-review-prompt.md` and
 
 ### 8. Review and hand off
 
-Show the user the index, review tables, updated load table and checker result. Review the files with them as the engineer who will build each item. Record unresolved decisions and accepted risks, verify accepted repairs and ask for final plan approval: "The plan and specifications are correct." Then suggest `carrydown-plan-to-github` with the sentence "Put the plan on GitHub." That skill releases the approved plan and then publishes it, as one step for the user. Nothing reaches the engineers or GitHub before the release. Do not run `release.py` from this skill.
+Show the user the index, review tables, updated load table and checker result. Review the files with them as the engineer who will build each item. Record unresolved decisions and accepted risks, verify accepted repairs and ask for final plan approval: "The plan and specifications are correct." Then suggest `carrydown-plan-to-github` with the sentence "Put the plan on GitHub." This skill commits nothing, so tell the owner that the plan is not committed or pushed yet and that "Put the plan on GitHub." releases it and asks before it pushes anything. That skill releases the approved plan and then publishes it, as one step for the user. Nothing reaches the engineers or GitHub before the release. Do not run `release.py` from this skill.
 
-Close step 8 with this completion line, word for word, then the maintenance notice below it, both before any routine counts or links:
+Open step 8 with this completion line, word for word, then the maintenance notice below it, both before the index, any routine counts or links and the final approval question:
 
 > **Your plan is ready for review.**
 >
