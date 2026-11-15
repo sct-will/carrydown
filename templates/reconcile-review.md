@@ -33,7 +33,7 @@ Owner reads. Group the rows. Each row names the decision that makes the question
 | Kind | Item | What needs deciding | Choices |
 | --- | --- | --- | --- |
 
-Kinds: conflict (an engineer correction against the revised source), completed work (finished work the change may affect), deferral (a change the owner chooses not to apply now), added work (new scope that needs an explicit planning decision), request (an engineer clarification request the owner accepts, declines or defers), unresolved (a missing decision or evidence).
+Kinds: conflict (an engineer correction against the revised source), completed work (finished work the change may affect), deferral (a change the owner chooses not to apply now), added work (new scope that needs an explicit planning decision), plan (a planning decision the change raises: milestone criteria, dates or order), request (an engineer clarification request the owner accepts, declines or defers, or a drafted note to a source owner, marked "Nothing has been sent."), unresolved (a missing decision or evidence).
 
 ## Disclosure effects
 

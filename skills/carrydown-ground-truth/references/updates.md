@@ -21,7 +21,7 @@ On the source side, the script compares the previously reviewed rendering of eac
 | Current content equals previous approved content | Prepare a focused patch. |
 | An engineer edit and the source change are compatible | Keep both. Explain the result in one sentence. |
 | They conflict | Show both texts and the source passage. Ask the owner. Do not overwrite either. |
-| An engineer correction shows a defect in the source | Draft a correction request for the source owner. The specification keeps the correction. |
+| An engineer correction shows a defect in the source | Draft a correction request for the source owner, as a note in the review's "Decisions needed" table (see "Engineer conflicts and source corrections"). The specification keeps the correction. |
 | Historical content is incomplete | Say what is missing and require review. |
 
 Never rewrite a whole specification because regeneration is easier. A patch touches only the lines that must change.
@@ -42,6 +42,26 @@ A project with no reviewed checkpoint gets one this way, after the owner has rev
 2. `workspace.py checkpoint prepare --root . --descriptor <workspace>/drafts/proposals/CHANGE_ID/descriptor.json --rendering-dir <renderings folder>`, read the preview, then the same command with `--apply`. The renderings folder is `docs/ground-truth` on the yes answer and `<workspace>/renderings` on the no answer. It prints the checkpoint id.
 3. `workspace.py checkpoint commit --root . --id CHECKPOINT_ID`, read the preview, then with `--apply`. It commits through an isolated index with the owner's git identity, reads the commit back and only then records it in `workspace.yaml`.
 4. If a release is active, bind the checkpoint to it (see "After the owner accepts", step 3). The next `status` compares against this checkpoint.
+
+## Rendering a revised document
+
+`status` compares only the renderings that the project and its private workspace hold. A revised document that the owner names, kept anywhere else, is invisible to it until it is rendered. So when the owner's sentence names a revised document, render it first, then run `status`. "Observable inputs unchanged" right after such a sentence means the document is not rendered yet, not that nothing changed.
+
+The version you give `--version`:
+
+1. The document's own version line, when it changed.
+2. Otherwise the previous rendering's version with its minor number incremented: 0.3 becomes 0.4, 1 becomes 1.1.
+3. Never ask the owner. The number does not change the comparison.
+
+Run the renderer with `--dry-run` first. For each rendering it would replace it prints:
+
+| Line | What it means |
+| --- | --- |
+| `previous rendering of <name>: version <v>` | The version of the rendering it replaces. Start from it. |
+| `note: <name> changed but keeps version <v>. ...` | Your `--version` repeats the previous one although the content changed. Use the number the note gives, unless the document's own version line says otherwise. |
+| `preserved the previous rendering of <name> privately in workspace:renderings/history/` | The previous rendering was copied to the private history before it was replaced. |
+| `previous rendering of <name> already recorded in the reviewed checkpoint <id>` | A reviewed checkpoint already holds the previous rendering, so nothing needed copying. |
+| `warning: there is no private workspace, so the previous rendering of <name> was not preserved. ...` | Tell the owner. The checkpoint cannot be compared with it later. |
 
 ## What counts as changed
 
@@ -79,7 +99,19 @@ A removed requirement does not delete issues and does not rewrite completion his
 | `defer` | `consequence`, `affected` and `remaining` |
 | `unresolved` | `missing` |
 
-A `patch` is one record or a list of records, each exactly `{"item", "path", "before_sha256", "after_text"}`. `path` is relative to the drafting folder (the project on the yes answer, `<workspace>/drafts` on the no answer), or starts with `project/` or `workspace/`. `before_sha256` is the SHA-256 of the file as it is now, so read the file, compute its digest and write `after_text` from that exact text. `after_text` is the whole new file. One file takes one patch, so combine changes to the same file. Only the working plan and the specification Markdown files can be patched. Generated and approved files, the released plan, workspace history and links are refused.
+A `patch` is one record or a list of records, each exactly `{"item", "path", "before_sha256", "after_text"}`. `path` is relative to the drafting folder (the project on the yes answer, `<workspace>/drafts` on the no answer), or starts with `project/` or `workspace/`. `before_sha256` is the SHA-256 of the file as it is now, and `after_text` is the whole new file, written from that exact text. One file takes one patch, so combine changes to the same file.
+
+Do not compute the digest or write the record by hand. Write the whole new text of the file to a temporary file outside the project, then let the patch command fill in the record:
+
+```bash
+python3 <skill>/scripts/reconcile.py patch --root . --proposal CHANGE_ID --block BLOCK --item WI-03 --path PATH --from NEW_TEXT_FILE
+```
+
+It is a dry run until you add `--apply`. It reads the digest of `PATH` as it is now, turns a `pending` block into an `update`, adds the item to the disposition's `item` and replaces the earlier patch of the same file. It refuses a path that cannot be patched, a block that is not in the proposal, a block with another disposition and a file that already has a patch under another block. It writes only `dispositions.json`. The working drafts change only at `apply`.
+
+**One file changed by several blocks.** File its one patch under the block that causes the largest change, and name the other blocks with `--also-block BLOCK`. The command writes them into that disposition's `context`. Each other block still needs its own disposition: `update` with its own patches when it changes other files. When its whole effect sits in a patch filed under another block, give it `no-impact` with the reason "its change is in the patch for PATH filed under BLOCK", so the review shows it as covered and not as unaffected.
+
+**Items you read and left unchanged.** Dispositions are per block. The reason each candidate item stays as it is goes in the review's "Reviewed and unchanged" table, one row per item, not in `dispositions.json`. Only the working plan and the specification Markdown files can be patched. Generated and approved files, the released plan, workspace history and links are refused.
 
 A patch that rewrites or removes a decision entry an engineer recorded is a `decision-conflict` finding. After the owner decides the conflict, record the decision in plain words as `conflict_resolution` on that disposition, and `check` accepts it. A patch that keeps every recorded entry and changes other text needs no `conflict_resolution`. After a release, the release gate lets such a patch replace a specification that holds an engineer's entry only because the proposal recorded that exact file. If the file changes again before `apply`, prepare again.
 
@@ -89,13 +121,15 @@ The prepare command prints a compact index with one row per work item: identifie
 
 1. Read the changed material first, with the surrounding source rules it depends on.
 2. Read the whole index once. Do not skip rows. Direct consumers come from citations. Indirect consumers come from shared obligations, contracts, integration points and conventions.
-3. Name candidate items and say why each is a candidate, including indirect ones.
-4. Read the full specification of every candidate, and the contracts it uses.
-5. An excerpt is not enough to say "no impact" when the omitted words could matter. The index records omitted word counts. Open the full item in that case.
+3. Name candidate items and say why each is a candidate, including indirect ones. Tell the owner how many candidates there are before you read further.
+4. Read the full specification of every candidate, and the contracts it uses. Read only those in full. Do not read every specification of the project.
+5. Expand further only when the evidence is incomplete. An excerpt is not enough to say "no impact" when the omitted words could matter. The index records omitted word counts. Open the full item in that case, and add it to the candidates you name.
 6. Propose a patch only where content must change. A direct citation can still need no patch.
 7. Apply this to architecture and requirements changes as well as governance and standards. A source category ranks where to look first. It never excludes anything.
 
 A scheduling dependency alone does not mean the consumer's specification changes. Distinguish the relationship types.
+
+Completion state is `unknown` for every row, because this skill reads nothing from GitHub. That is expected, not a fault. An engineer's dated entry under "Decisions recorded" is evidence that the item may be finished. When a changed block touches such an item, "assess completed work" becomes a row of the review's "Decisions needed" table with that evidence, and the owner decides the follow-up.
 
 New obligations are assessed even when nothing cites them. Check new uncited obligations, resolved conflicts, changes of applicability or precedence, and completed work.
 
@@ -122,6 +156,8 @@ After you draft the patches and the dispositions, run a separate reasoning pass.
 
 Fold each accepted finding into the proposal and run the check again. Findings are input for the owner's review. People decide substantive interpretation. This pass does not need another provider, a hosted service or automatic delegation.
 
+The pass may run as a separate agent. Give it read access only. Its reads are its own and are not part of the owner's command record of this update. Say in the review that the pass ran as a separate agent.
+
 ## The consolidated review
 
 Use `templates/reconcile-review.md`. Lead with the counts sentence, in plain words and only for counts above zero. For example: "Two specifications need updates. One completed item needs a follow-up decision. One engineer correction conflicts with the revised source." Then show the proposed patches, the evidence for unchanged work, the decisions needed, the disclosure effects and the next action. Keep the technical record out of the conversation. Offer it if the owner asks.
@@ -132,7 +168,7 @@ Settle real conflicts before you ask for the final approval. Combine compatible 
 
 An engineer's correction stays in the working draft until the owner decides. When it conflicts with the revised source, the owner chooses one of three things: keep the correction and ask the source owner to fix the source, take the revised source and discard the correction, or write a new passage. Record the choice in the review.
 
-A source correction needs the source owner's decision. If you draft a request to the source owner, say "I drafted a request. The source document is unchanged." Never say the document was corrected when only a request was drafted.
+A source correction needs the source owner's decision. The concrete artifact is a drafted note in the review's "Decisions needed" table, kind `request`, addressed to the source owner: what the source says, what is ambiguous or wrong, and the question to settle. Add the sentence "Nothing has been sent." The owner decides whether to send it. That note is enough. Say "I drafted a request. The source document is unchanged." Never say the document was corrected when only a request was drafted.
 
 ## Engineer clarification requests
 
@@ -158,7 +194,7 @@ Say what was observed. A repository that did not change says nothing about a sou
 
 ## After the owner accepts
 
-1. Run the apply command as a preview, read it and show the owner which files will change. Then run it with `--apply`. A proposal with no patch is recorded as applied too.
+1. Run the apply command as a preview, read it and show the owner which files will change. Then run it with `--apply`. A proposal with no patch is recorded as applied too. If you run the checker afterward, a staffing finding (such as `people.yaml has no entry for person ...`) belongs to the owner's people file in the private workspace. The update does not fix it: name it to the owner in one line and leave `people.yaml` alone.
 2. Record the accepted source checkpoint from the same proposal, each command as a preview first and then with `--apply`:
 
    ```bash

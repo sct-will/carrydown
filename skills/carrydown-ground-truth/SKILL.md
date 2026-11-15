@@ -47,7 +47,7 @@ Run the Python preflight (step 0, item 1). Then, on every activation and before 
 python3 <skill>/scripts/reconcile.py status --root .
 ```
 
-It reports the project state, any unfinished update and any outstanding engineer requests, and says what it could not observe. It writes nothing. Pick the response from the table. "What's next?" and "Is this project up to date?" run the same command. Answer them from what it reports and from nothing else.
+It reports the project state, any unfinished update and any outstanding engineer requests, and says what it could not observe. It writes nothing. Pick the response from the table. `status` sees only the renderings the project and its workspace hold. When the owner's sentence names a revised document, render it first (update path, step 2), then run `status`. "What's next?" and "Is this project up to date?" run the same command. Answer them from what it reports and from nothing else.
 
 | Observed state | Response |
 | --- | --- |
@@ -57,7 +57,7 @@ It reports the project state, any unfinished update and any outstanding engineer
 | Unfinished update | Resume the saved proposal ("Resume the project update."). |
 | Accepted drafts awaiting release | Continue with `carrydown-plan-to-github`: "Put the plan on GitHub." |
 | Approved release awaiting publication | Resume the existing publication with `carrydown-plan-to-github`. |
-| Observable inputs unchanged | State what was checked and any observation limits. |
+| Observable inputs unchanged | State what was checked and any observation limits. If the owner named a revised document, it is not rendered yet: render it (update path, step 2) and run `status` again. |
 | Ambiguous project or baseline | Ask which one the user means. |
 
 Routing works after this skill activates. It is not a startup event, and it does not replace the deterministic checks at script, work item and pull request boundaries. Ask only when the project, the source set or the baseline is ambiguous.
@@ -119,7 +119,7 @@ When a specification finds a conflict inside the ground truth, the ground truth 
 python3 <skill>/scripts/check_specs.py --root .
 ```
 
-Fix every finding. `references/checker.md` explains each check and how to add the checker to continuous integration. Offer that to the user. Re-run `scaffold_spec.py --refresh-headers --apply` after any change to dates, owners or dependencies.
+Fix every finding. During an update, a staffing finding (such as `people.yaml has no entry for person ...`) belongs to the owner's people file in the private workspace. The update path does not fix it: tell the owner in one line and leave `people.yaml` alone. `references/checker.md` explains each check and how to add the checker to continuous integration. Offer that to the user. Re-run `scaffold_spec.py --refresh-headers --apply` after any change to dates, owners or dependencies.
 
 When identity or provenance validation fails, run `python3 <skill>/scripts/plan_repair.py --root .` for a concrete recovery preview. Resolve its choices with the plan owner, preview again with `--decisions PATH`, then add `--apply` after approval. Whole-document source coverage requires confirmation. Apply refreshes generated material and reruns validation. The skill carries the scaffold and skill generator for these local refreshes. Never invent sections to clear a finding.
 
@@ -167,7 +167,7 @@ What counts as a significant change. Assess it when it could alter:
 An editorial change takes a lighter path. A small edit to a number, an exception, a condition or a prohibition can still have broad consequences, so read it before you call it editorial.
 
 1. Establish the comparison. Identify the project, the active release, the reviewed source checkpoint, the owner's working drafts, the changed sources or the engineer's request, and any unfinished update. Use the drafting location rules above. Never overwrite the released plan as though it were the working draft. Never scaffold a replacement project. If `status` shows outstanding engineer requests, show them first and let the owner decide each one (`references/updates.md`, "Engineer clarification requests").
-2. Detect changed content. Render the revised sources with the renderer of step 2 and a new `--version`. Before it replaces a rendering it keeps the previous one in the private workspace and prints `preserved the previous rendering of ...`. A `warning:` line instead means there is no private workspace to keep it in, so tell the owner. Then preview the comparison and save it:
+2. Detect changed content. Render the revised sources with the renderer of step 2 and a new `--version`. Take the version from the document's own version line when it changed. Otherwise increment the minor number of the previous rendering's version (0.3 becomes 0.4). Never ask the owner. The dry run prints `previous rendering of <name>: version <v>`, and a `note:` with the next number when your `--version` repeats it. Before the renderer replaces a rendering it keeps the previous one in the private workspace and prints `preserved the previous rendering of ...`. When a reviewed checkpoint already holds that rendering it prints `previous rendering of <name> already recorded in the reviewed checkpoint <id>` instead, and nothing needs keeping. A `warning:` line means there is no private workspace to keep it in, so tell the owner. Then preview the comparison and save it:
 
    ```bash
    python3 <skill>/scripts/reconcile.py prepare --root .
@@ -175,10 +175,16 @@ An editorial change takes a lighter path. A small edit to a number, an exception
    ```
 
    Its last line is `proposal: <id>`. That id is `CHANGE_ID` in the next commands. The proposal is saved in `<workspace>/drafts/proposals/<id>/`, with `dispositions.json`, where you record the decisions, and `descriptor.json`, which the checkpoint step uses. If no reviewed checkpoint exists, say the missing checkpoint sentence in `references/updates.md` and establish the first checkpoint as it says ("The first checkpoint"). Keep the owner's own words about what changed. An engineer's correction or an accepted request is a changed input too.
-3. Assess impact. Read the changed material, the source rules around it and the compact index the command printed. Name every candidate item, direct or indirect, then read the full candidate specifications and the contracts they use. Tell the owner the size of what you will read, labeled approximate. Assess uncited obligations, not only cited ones. An unobserved source is not current because the repository is unchanged.
-4. Reconcile three versions: the previous approved content, the current working content with engineer corrections, and the proposed content. Patch only what must change. Keep compatible engineer edits. Show conflicts and never overwrite them. A drafted request to a source owner is not a corrected document.
-5. Account for every changed block with one disposition: update existing work, add work, assess completed work, no downstream impact, defer or unresolved. "No proposed patch" is not "no impact". Write them in the proposal's `dispositions.json`, replacing each `pending` placeholder. `references/updates.md` ("The proposal files") has the format and the patch record.
-6. Run the independent review pass, with the prompt in `references/updates.md`. It is a separate reasoning pass that sees the original changed blocks, not only your summary. Fold in accepted findings, then run:
+3. Assess impact. Read the changed material, the source rules around it and the compact index the command printed. Name every candidate item from the index first, direct or indirect, and tell the owner how many there are and the size of what you will read, labeled approximate. Then read in full only those candidate specifications and the contracts they use. Read another specification in full only when the evidence for a row is incomplete, such as a truncated excerpt that could matter. Assess uncited obligations, not only cited ones. An unobserved source is not current because the repository is unchanged. Completion state is `unknown` for every item, because this skill reads nothing from GitHub. That is expected. An engineer's dated entry under "Decisions recorded" is evidence that the item may be finished: then "assess completed work" becomes a row of the review's "Decisions needed" table for the owner.
+4. Reconcile three versions: the previous approved content, the current working content with engineer corrections, and the proposed content. Patch only what must change. Keep compatible engineer edits. Show conflicts and never overwrite them. When the source itself is ambiguous or wrong, propose a correction for the source owner as a drafted note in the review's "Decisions needed" table, addressed to the source owner, with the sentence "Nothing has been sent." The owner decides whether to send it. That note is enough. A drafted request to a source owner is not a corrected document.
+5. Account for every changed block with one disposition: update existing work, add work, assess completed work, no downstream impact, defer or unresolved. "No proposed patch" is not "no impact". Write them in the proposal's `dispositions.json`, replacing each `pending` placeholder. Record each patch with the patch command, which fills in the digest of the file as it is now. `NEW_TEXT_FILE` is a temporary file outside the project that holds the whole new text of the file. Never edit the working draft itself:
+
+   ```bash
+   python3 <skill>/scripts/reconcile.py patch --root . --proposal CHANGE_ID --block architecture/3.5 --item WI-03 --path docs/spec/m2-route-to-approvers/wi-03-routing-engine.md --from NEW_TEXT_FILE
+   ```
+
+   Preview it, then add `--apply`. One file takes one patch. When several blocks change one file, file the patch under the block with the largest change and add `--also-block` for each other block. Reasons for items you read and left unchanged go in the review's "Reviewed and unchanged" table, not in the dispositions. `references/updates.md` ("The proposal files") has the format, the patch record and the rule for several blocks.
+6. Run the independent review pass, with the prompt in `references/updates.md`. It is a separate reasoning pass that sees the original changed blocks, not only your summary. It may run as a separate agent. Fold in accepted findings, then run:
 
    ```bash
    python3 <skill>/scripts/reconcile.py check --root . --proposal CHANGE_ID
