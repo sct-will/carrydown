@@ -25,7 +25,7 @@ Each of the six states is reported on its own, with one of its two values: draft
 | Engineering repository update: pending | The approved files are not yet on the branch that engineers fetch. | Commit and push the export. Until then, engineers do not see the update. |
 | Issue updates: pending | Some issue updates are not written or not read back. | Resume. Updates that were read back and match are skipped, and nothing is created twice. |
 | Board updates: pending | The board fields do not yet match the plan. | Resume. The board is verified separately from the issues. |
-| Engineer action: required | The update is published and an engineer must review it. | Nobody is notified. The affected engineer's next run of the check on the work item shows the approved delta. The engineer reviews what changed and reassesses the implementation plan before continuing. |
+| Engineer action: required | The update is published and an engineer must review it. | carrydown notifies nobody. The affected engineer's next run of the check on the work item shows the approved delta. The engineer reviews what changed and reassesses the implementation plan before continuing. |
 
 The technical recoveries behind these states are in [resume an interrupted release](#resume-an-interrupted-release) and [reconcile published issues and the board](#reconcile-published-issues-and-the-board).
 

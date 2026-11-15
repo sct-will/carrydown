@@ -337,7 +337,7 @@ The agent reports each state on its own and does not say "up to date" while a re
 - Board updates: pending, or verified.
 - Engineer action: required, with the work items, or none. The engineers of those items act, not you.
 
-Engineers are not notified. Nothing is pushed or sent to them. After the release is published, an engineer's next run of the check for a work item shows the approved delta: which files and passages changed since their last check. An engineer who does not pull or does not run the check keeps the earlier material, so tell the team when the timing matters.
+carrydown does not notify engineers. Nothing is pushed or sent to them. GitHub may notify people who watch an updated issue, which is not a delivery guarantee. After the release is published, an engineer's next run of the check for a work item shows the approved delta: which files and passages changed since their last check. An engineer who does not pull or does not run the check keeps the earlier material, so tell the team when the timing matters.
 
 When a work item has an approved update, an engineer sees a notice such as: **Action required: WI-03 has an approved update.** Delegated approval behavior and one acceptance criterion changed. Review the update and reassess your implementation plan before continuing.
 

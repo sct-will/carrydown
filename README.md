@@ -85,7 +85,7 @@ In more detail, and before any name for it: your agent looks at what changed, fi
 
 **One approval, then one more sentence.** Your approval of the review accepts the changes to the drafts. It publishes nothing. "Put the plan on GitHub." is a separate sentence: the publishing skill then shows what would be shared, with whom and where, and asks for that disclosure approval on its own line before it writes anything.
 
-**How engineers learn of an update.** Nothing is pushed or sent to them. After the update is released and published, an engineer's next run of the check for a work item shows the approved delta: the files and passages that changed since their last check. An engineer who does not pull or does not run the check keeps the earlier material, so tell the team when the timing matters.
+**How engineers learn of an update.** Nothing is pushed or sent to them. GitHub may notify people who watch an updated issue, which is not a delivery guarantee. After the update is released and published, an engineer's next run of the check for a work item shows the approved delta: the files and passages that changed since their last check. An engineer who does not pull or does not run the check keeps the earlier material, so tell the team when the timing matters.
 
 Repository checks assess the material they can observe. For sources kept elsewhere, provide the revised material. A configured integration can add automatic observation later. The owner guidance also prompts review when the team makes significant decisions. When you are unsure whether a change is significant, say it anyway: the agent assesses it.
 
