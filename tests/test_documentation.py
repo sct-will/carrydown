@@ -532,5 +532,39 @@ class MaintenanceNoticeTests(unittest.TestCase):
         self.assertIn("An approved update regenerates the engineers' skill through the existing release.", maintenance)
 
 
+    def test_the_agent_runs_the_commit_and_push_check_and_asks_one_approval(self):
+        pub = (ROOT / "skills" / "carrydown-plan-to-github" / "SKILL.md").read_text(encoding="utf-8")
+        step = pub.split("### 4. Preflight", 1)[1].split("### 5.", 1)[0]
+        check = step.split("**Dry run.**", 1)[0]
+        self.assertIn("Run these checks yourself, from the project root. They only read, so they need no approval:", check)
+        for command in ("git status --porcelain docs", "git fetch origin <branch>", "git log origin/<branch>..HEAD --oneline -- docs"):
+            self.assertIn(command, check)
+        self.assertIn("Tell the owner what you found in one plain sentence each, not the commands", check)
+        self.assertIn("ask one approval in the chat. It is a separate question, after the disclosure and external-write lines of step 3", check)
+        self.assertIn("Do nothing before a clear yes.", check)
+        self.assertLess(check.index("Do nothing before a clear yes."), check.index("On the yes, commit only the released files"))
+        self.assertIn("Never force a push", check)
+        for old in ("Ask the user to run these commands", "Do not run them yourself", "unless the user asks for that command in this chat",
+                    "ask the user to run the check again"):
+            with self.subTest(old=old):
+                self.assertNotIn(old, pub)
+
+    def test_the_token_prompt_stays_with_the_owner(self):
+        pub = (ROOT / "skills" / "carrydown-plan-to-github" / "SKILL.md").read_text(encoding="utf-8")
+        step = pub.split("### 2. Token", 1)[1].split("### 3.", 1)[0]
+        self.assertIn("Print this command for the user to run in their own terminal. Do not run it yourself.", step)
+        self.assertIn("python3 <skill>/scripts/github_token.py --repo owner/name", step)
+        self.assertIn("come back to the chat", step)
+
+    def test_the_release_completion_line_and_the_owner_pages_describe_the_agent_commit(self):
+        self.assertIn("commit and push them only after the owner approves that in the chat", (ROOT / "scripts" / "release.py").read_text(encoding="utf-8"))
+        guide = (ROOT / "docs" / "plan-owner-guide.md").read_text(encoding="utf-8")
+        for old in ("You commit and push as you do today", "Commit and push them to the intended branch.", "Export and commit the new release first."):
+            with self.subTest(old=old):
+                self.assertNotIn(old, guide)
+        self.assertNotIn("Commit and push the export.", (ROOT / "docs" / "recovery.md").read_text(encoding="utf-8"))
+        self.assertNotIn("and you commit and push them", (ROOT / "README.md").read_text(encoding="utf-8"))
+
+
 if __name__ == "__main__":
     unittest.main()

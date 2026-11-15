@@ -108,7 +108,7 @@ request db2d1727f7cc97302be9aaaf17e9e6d0ce4c7eb1168d25ac7cc0db9aadebe802  releas
   docs/spec/plan.yaml becomes the released plan. Your working plan, with its comments, moves to the private workspace as drafts/plan.yaml, where the scripts find it from now on.
 Exported 1 file(s) and 1 receipt(s) into your working tree. Review them with git status, then commit and push as you usually do.
 
-Released. Ask the owner to commit and push these files as they do today. Then the GitHub step publishes from this release.
+Released. Next, check whether these files are committed and pushed, and commit and push them only after the owner approves that in the chat. Then the GitHub step publishes from this release.
 [exit 0]
 ```
 

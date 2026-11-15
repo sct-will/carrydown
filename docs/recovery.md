@@ -22,7 +22,7 @@ Each of the six states is reported on its own, with one of its two values: draft
 | --- | --- | --- |
 | Draft reconciliation: accepted | You accepted the proposed changes to the plan and specifications. Nothing is released or published yet. | Say "Put the plan on GitHub." The publishing skill shows a release preview and asks for your approvals. |
 | Release: approved | The release is approved for its audience and destinations. The earlier release stays active until the new one is. | The exported files are committed and pushed, then the issue and board updates follow. |
-| Engineering repository update: pending | The approved files are not yet on the branch that engineers fetch. | Commit and push the export. Until then, engineers do not see the update. |
+| Engineering repository update: pending | The approved files are not yet on the branch that engineers fetch. | The agent checks the branch, names the files and asks your approval to commit and push them. Until then, engineers do not see the update. |
 | Issue updates: pending | Some issue updates are not written or not read back. | Resume. Updates that were read back and match are skipped, and nothing is created twice. |
 | Board updates: pending | The board fields do not yet match the plan. | Resume. The board is verified separately from the issues. |
 | Engineer action: required | The update is published and an engineer must review it. | carrydown notifies nobody. The affected engineer's next run of the check on the work item shows the approved delta. The engineer reviews what changed and reassesses the implementation plan before continuing. |
@@ -39,7 +39,7 @@ That sentence means what it says. The agent can still use the citations that the
 
 ## Repair local identities and source references
 
-Run these commands from the project root. Replace `<skill>` with either installed carrydown skill folder.
+The agent runs these commands from the project root and shows you each preview. They are listed so you can see what happens. `<skill>` is either installed carrydown skill folder.
 
 ```bash
 python3 <skill>/scripts/plan_repair.py --root .
@@ -50,7 +50,7 @@ The preview lists changed records, affected references and a plan diff. Exactly 
 
 Different checkpoints on one date require confirmation of a combined checkpoint. Its proposed name and joint check retain both records. Its date stays the same. The question and confirmed action name every affected item checkpoint and milestone demonstration reference. No source is selected just because it is first in a list.
 
-When choices remain, the command returns 1 without writing. It prints JSON records with `path`, `question` and `options`, then asks for one combined decision. Save a JSON mapping from each path to the selected concrete option:
+When choices remain, the command returns 1 without writing. It prints JSON records with `path`, `question` and `options`, then asks for one combined decision. The agent saves your choices as a JSON mapping from each path to the selected concrete option:
 
 ```json
 {

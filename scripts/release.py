@@ -1136,7 +1136,7 @@ def cmd_release(a):
     if rc:
         return rc
     say("")
-    say("Released. Ask the owner to commit and push these files as they do today. Then the GitHub step publishes from this release.")
+    say("Released. Next, check whether these files are committed and pushed, and commit and push them only after the owner approves that in the chat. Then the GitHub step publishes from this release.")
     return 0
 
 

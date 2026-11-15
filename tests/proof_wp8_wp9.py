@@ -384,7 +384,7 @@ def _(base):
     apply_at = text.index("github_sync.py --root . --repo owner/name --create-epic --apply")
     check(pre < first_git < apply_at, (pre, first_git, apply_at))
     check(inventory < pre, "the inventory is not the first migration step")
-    check("Do not ask the user to commit or push anything before the preflight has passed." in text)
+    check("Do not commit or push anything, or ask the user to approve it, before the preflight has passed." in text)
     return f"--preflight at character {pre}, the commit and push check at {first_git}, the first --apply at {apply_at}; the inventory comes first at {inventory}"
 
 
