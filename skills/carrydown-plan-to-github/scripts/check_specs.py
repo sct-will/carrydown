@@ -937,25 +937,33 @@ def report(plan):
     by_person = {}
     for pid, mnum, sized, cap, pct in (L.load_rows(plan) if staffed else []):
         by_person.setdefault(pid, []).append((mnum, sized, cap, pct))
+    sentences = []      # the table's values again, one labeled sentence per person, for a screen reader
     for pid, p in (people.items() if staffed else []):
-        cells, tot_sized, tot_cap = [], 0.0, 0.0
+        cells, tot_sized, tot_cap, said = [], 0.0, 0.0, []
         for mnum, sized, cap, pct in by_person.get(pid, []):
             if sized == 0:
                 cells.append(f"0 of {cap:.0f}d")
+                said.append(f"work unit {mnum}, 0 of {cap:.0f} days")
             else:
                 flag = "  OVER" if (pct is not None and pct > 100) else ""
                 cells.append(f"{sized:g} of {cap:.0f}d ({pct:.0f}%){flag}" if pct not in (None, float("inf")) else f"{sized:g} of 0d (no capacity){flag or '  OVER'}")
+                said.append(f"work unit {mnum}, {sized:g} of {cap:.0f} days ({pct:.0f} percent{', over' if flag else ''})" if pct not in (None, float("inf"))
+                            else f"work unit {mnum}, {sized:g} of 0 days (no capacity, over)")
                 if pct is None or pct > 100:
                     over.append((pid, mnum, sized, cap, pct))
             tot_sized += sized
             tot_cap += cap
         tot = f"{tot_sized:g} of {tot_cap:.0f}d" + (f" ({100 * tot_sized / tot_cap:.0f}%)" if tot_cap else "")
         rows.append([pid, f"{p.get('allocation', 100)}%"] + cells + [tot])
+        said.append(f"total {tot_sized:g} of {tot_cap:.0f} days" + (f" ({100 * tot_sized / tot_cap:.0f} percent)" if tot_cap else ""))
+        sentences.append(f"{pid}, {p.get('allocation', 100)} percent allocated: {'; '.join(said)}.")
     widths = [max(len(str(r[i])) for r in [head] + rows) for i in range(len(head))]
     if staffed:
         print("  " + "  ".join(h.ljust(w) for h, w in zip(head, widths)))
         for r in rows:
             print("  " + "  ".join(str(c).ljust(w) for c, w in zip(r, widths)))
+        for s in sentences:
+            print("  " + s)
     if not staffed:
         pass
     elif over:

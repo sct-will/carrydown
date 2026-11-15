@@ -351,6 +351,21 @@ class ObsoleteInstructionTests(unittest.TestCase):
         self.assertEqual(self.search(r"(every|within|in) (five|5)[- ]minutes?\b(?! is a requested)"), [])
 
 
+class InterviewNumberingTests(unittest.TestCase):
+    def test_the_guide_numbers_every_question_with_the_steps_of_the_skill(self):
+        skill = (ROOT / "skills" / "carrydown-ground-truth" / "references" / "interview.md").read_text(encoding="utf-8")
+        steps = [(int(n), int(of)) for n, of in re.findall(r"(?m)^## Step (\d+) of (\d+)\. ", skill)]
+        last = steps[-1][1]
+        self.assertEqual(steps, [(n, last) for n in range(last + 1)])
+        guide = (ROOT / "docs" / "plan-owner-guide.md").read_text(encoding="utf-8")
+        section = guide[guide.index("## What the agent asks you"):]
+        section = section[:section.index("\n## ", 3)]
+        self.assertIn(f"`carrydown: interview, step N of {last}`", section)
+        rows = [m.group(1) for m in re.finditer(r"(?m)^\| (\d+(?:, optional)?) \|", section)]
+        self.assertEqual(sorted({int(r.split(",")[0]) for r in rows}), list(range(last + 1)), rows)
+        self.assertEqual(len(rows), len(re.findall(r"(?m)^\| (?!Step |---)", section)), "a question row has no step number")
+
+
 class MaintenanceNoticeTests(unittest.TestCase):
     """The notice, the completion lines and the action phrases have one source, templates/maintenance-notice.md.
     The copies in the two skills and in the specification README template must match it word for word, the two

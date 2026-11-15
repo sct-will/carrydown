@@ -1,5 +1,7 @@
 # A recorded run of the sample
 
+The first stage you can run alone, with no agent and no token, is [section 3, render the ground truth](#3-render-the-ground-truth).
+
 The run was made against a private throwaway repository that was used only for this test. Names and project links below are placeholders.
 
 This page records a real run of the carrydown skills on the sample project `sample/expense-approvals/`, against a throwaway private repository, from the renderer to the project board. It shows what each script prints so you know what to expect before you run it on your own material.
@@ -238,29 +240,39 @@ Token check passed.
 
 ## 3. Render the ground truth
 
-A dry run first, then the write. The sample source is Markdown. The Word example is a small made-up file with a table, a list, a code block and a figure.
+This is the first stage of a plan: it turns the source document into the rendering that the specifications cite. A dry run first, then the write. The sample source is Markdown. The Word example is a small made-up file with a table, a list, a code block and a figure.
 
 ```text
 $ python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --version 0.3 --date 2026-10-24 --dry-run
 would write docs/ground-truth/architecture.md: 344 lines, 31 headings, 0 figures
 would write docs/ground-truth/architecture.index.txt
 1 document(s) checked
+note: docs/spec/plan.yaml is a released plan, so content_sha256 and rendering_sha256 for architecture are not recorded in it. They are recorded in the workspace plan when the project has one
+Dry run: nothing was written.
 [exit 0]
 ```
 
-```text
-$ python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --version 0.3 --date 2026-10-24
-wrote docs/ground-truth/architecture.md: 344 lines, 31 headings, 0 figures
-wrote docs/ground-truth/architecture.index.txt
-1 document(s) rendered
-[exit 0]
-```
+The note line is about fingerprints of the source. The plan keeps a fingerprint of the source and of its rendering, so a later change is noticed, but the sample's plan is the released plan, which keeps none. On a working plan the same dry run prints `would record content_sha256 and rendering_sha256 for architecture` in its place.
 
 ```text
 $ python3 scripts/render_ground_truth.py interface-addendum.docx --root . --version 0.1 --dry-run   # a Word file with a table, a list, code and a figure
 would write docs/ground-truth/addendum.md: 41 lines, 5 headings, 1 figures
 would write docs/ground-truth/addendum.index.txt
 1 document(s) checked
+Dry run: nothing was written.
+[exit 0]
+```
+
+### Write the rendering (this changes the sample)
+
+Without `--dry-run` the renderer writes the rendering and its index over the shipped ones. Run it only in a disposable copy of the sample. The released plan stays as it is.
+
+```text
+$ python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --version 0.3 --date 2026-10-24
+wrote docs/ground-truth/architecture.md: 344 lines, 31 headings, 0 figures
+wrote docs/ground-truth/architecture.index.txt
+1 document(s) rendered
+note: docs/spec/plan.yaml is a released plan, so content_sha256 and rendering_sha256 for architecture are not recorded in it. They are recorded in the workspace plan when the project has one
 [exit 0]
 ```
 
@@ -382,6 +394,8 @@ Load (sized days of work against allocated capacity, per person and work unit)
   Person  Alloc  WU1             WU2             WU3             WU4             WU5            Total          
   tamsin  100%   3 of 10d (30%)  5 of 14d (36%)  6 of 10d (60%)  4 of 10d (40%)  0 of 10d       18 of 54d (33%)
   idris   60%    3 of 6d (50%)   4 of 9d (44%)   4 of 5d (74%)   0 of 6d         3 of 6d (50%)  14 of 32d (43%)
+  tamsin, 100 percent allocated: work unit 1, 3 of 10 days (30 percent); work unit 2, 5 of 14 days (36 percent); work unit 3, 6 of 10 days (60 percent); work unit 4, 4 of 10 days (40 percent); work unit 5, 0 of 10 days; total 18 of 54 days (33 percent).
+  idris, 60 percent allocated: work unit 1, 3 of 6 days (50 percent); work unit 2, 4 of 9 days (44 percent); work unit 3, 4 of 5 days (74 percent); work unit 4, 0 of 6 days; work unit 5, 3 of 6 days (50 percent); total 14 of 32 days (43 percent).
   No person is over 100 percent of allocated capacity in any work unit.
 
 Critical path (longest dependency chain to the last item)

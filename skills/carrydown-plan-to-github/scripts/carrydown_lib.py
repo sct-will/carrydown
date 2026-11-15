@@ -421,7 +421,9 @@ def inside(root, path, what="output"):
     target = Path(path)
     target = (target if target.is_absolute() else base / target).resolve()
     if target != base and base not in target.parents:
-        die(f"the {what} path {path} is outside the project folder {base}, so nothing was written")
+        hint = (". A relative --out-dir is read from the project root (--root). Give a folder inside it, such as my-test/ground-truth"
+                if what == "--out-dir" else "")
+        die(f"the {what} path {path} is outside the project folder {base}, so nothing was written{hint}")
     return target
 
 

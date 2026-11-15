@@ -1910,6 +1910,11 @@ def main(argv=None):
         ws_plan = Path(workspace) / "drafts" / "plan.yaml" if workspace is not None else None
         if ws_plan is not None and L.exists(ws_plan):
             target, where = ws_plan, "the workspace plan"
+        elif yes_path and ctx["where"] == "project" and L.plan_mode(ctx["plan"]) == "released":
+            # the released plan holds no digest (validate_plan refuses one), so it is never written to
+            print(f"note: {rel(Path(ctx['path']).resolve())} is a released plan, so content_sha256 and rendering_sha256 for "
+                  f"{', '.join(sorted(digests))} are not recorded in it. They are recorded in the workspace plan when the project has one")
+            target, where = None, None
         elif yes_path and ctx["where"] == "project":
             target, where = ctx["path"], rel(Path(ctx["path"]).resolve())
         else:
@@ -1930,6 +1935,8 @@ def main(argv=None):
                     print(f"recorded content_sha256 and rendering_sha256 for {', '.join(done)} in {where}")
                 for sid in missing:
                     print(f"note: source {sid} is not in {where}; its digests were not recorded")
+    if a.dry_run:
+        print("Dry run: nothing was written.")
     return 0
 
 

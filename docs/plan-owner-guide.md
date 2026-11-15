@@ -51,18 +51,18 @@ The steps are in [when the project changes](#when-the-project-changes).
 
 ## What the agent asks you
 
-The interview starts with step 0, the question about who may see your documents, and then has six steps. Replies start with `carrydown: interview, step N of 6`, with the current step number in place of `N`. These questions tell you what to have ready:
+The interview starts with step 0, the question about who may see your documents, and then has six steps. Replies start with `carrydown: interview, step N of 6`, with the current step number in place of `N`. The step column gives that number for each question. These questions tell you what to have ready:
 
-| The agent asks | You answer with |
-| --- | --- |
-| Step 0, before it renders anything or asks about people: can everyone who can read this repository see all of these documents and your staffing notes? | Yes or no. On no, which documents are restricted (the default is all of them), who may approve sharing them (GitHub logins, the default is you) and whether the raw inputs are kept after a release (the default is kept, in the private workspace and never in the repository). |
-| Which documents must the project obey, and which wins if two disagree? | File paths, and the winner |
-| Who does the work, which part of the system does each person own, from when, and at what share of their time? | Names, a track each (a lane of work one engineer owns, such as back end or front end), allocation percentages, start dates, days off. The agent saves these to a private file on your machine, and the plan holds only ids and tracks. |
-| Should skills or work preferences influence the proposed assignments? | Optional skills and preferred work for any or all engineers. Leave them out when unknown. |
-| When must it ship, or how many weeks do you have? | A date, a number of weeks, or "derive the date" |
-| Which repository, and which coding agents do the engineers use? | owner/repo and the agents |
-| What must the stakeholders see at each milestone demonstration to call it done? | Their words, which become acceptance criteria |
-| How is the code built, tested and merged here? | The commands and the branch rule |
+| Step | The agent asks | You answer with |
+| --- | --- | --- |
+| 0 | Before it renders anything or asks about people: can everyone who can read this repository see all of these documents and your staffing notes? | Yes or no. On no, which documents are restricted (the default is all of them), who may approve sharing them (GitHub logins, the default is you) and whether the raw inputs are kept after a release (the default is kept, in the private workspace and never in the repository). |
+| 1 | Which documents must the project obey, and which wins if two disagree? | File paths, and the winner |
+| 2 | Who does the work, which part of the system does each person own, from when, and at what share of their time? | Names, a track each (a lane of work one engineer owns, such as back end or front end), allocation percentages, start dates, days off. The agent saves these to a private file on your machine, and the plan holds only ids and tracks. |
+| 2, optional | Should skills or work preferences influence the proposed assignments? | Optional skills and preferred work for any or all engineers. Leave them out when unknown. |
+| 3 | When must it ship, or how many weeks do you have? | A date, a number of weeks, or "derive the date" |
+| 4 | Which repository will hold the issues? | owner/repo |
+| 5 | Which coding agents do the engineers use, and what must the stakeholders see at each milestone demonstration to call it done? | The agents, and the stakeholders' words, which become acceptance criteria |
+| 6 | How is the code built, tested and merged here? | The commands and the branch rule |
 
 Your source files are required. Give the agent the technical document and broader context where you keep them. You do not need to copy them into the project, and a confidential document should stay where it is. If you want a local folder, use `docs/source/` and put it in `.gitignore` first. The agent inventories Word, Markdown, plain text, PDF, image and other readable files, then creates reviewable Markdown renderings. It reports a file that is already inside the project without calling it safe. It identifies unreadable files and continues with the rest. It stops only when no intended source can be processed. On the yes answer it writes the renderings under `docs/ground-truth/`. On the no answer it writes every rendering into the private workspace, including those of documents you call shareable. For what each answer means in practice, read [who may see your documents](setup.md#before-you-add-documents-who-may-see-them). Team size, allocation and target dates can be undecided. If you have a team and no date, the agent derives a date. If you have a date and no team, it proposes the capacity needed. If neither is known, it proposes a starting point and asks you to confirm it. Skills and work preferences are always optional. If you supply them, the agent proposes a best match and explains it. If they are missing or unclear, the agent uses the default assignment approach and continues.
 
