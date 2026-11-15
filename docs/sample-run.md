@@ -128,7 +128,7 @@ detectors: no findings (this does not prove safety)
 $ python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-06      # the engineers' check
 carrydown: approved context for WI-06 is ready
 Read docs/context/wi-06.md. Do not open docs/ground-truth/ or any source.
-baseline: request 59151c0c1a4033a36b7b1137f8a4ce0c7d9c1bafb1f190319e021a0ee009ec98, specification 6f3e13ccb352a77994e98abd912aecd2d4f78ac81d9043ccfaaf34a61cbcac0a
+baseline: request 7dfeeabf0bf51b3f3c50a1cd9d8a9e9807433a3ab86d34d071be7fa78bd106ac, specification 6f3e13ccb352a77994e98abd912aecd2d4f78ac81d9043ccfaaf34a61cbcac0a
 [exit 0]
 ```
 
@@ -996,10 +996,11 @@ carrydown update: compare changed sources
 A previous complete source checkpoint is unavailable. Review the current sources to establish one. Earlier uncited changes cannot be assessed automatically.
 architecture: 30 sections cannot be compared, because there is no earlier checkpoint. Treat each as unassessable history and review the current source with the owner.
 0 changed block(s) in 0 source(s); 0 direct consumer(s); index: 20591 bytes, 2016 words, about 5148 tokens (approximate)
+18 fields of the index are truncated excerpts (1556 words left out). Read the full specification before you conclude no impact for such a row.
 
-The full record is in the private workspace, folder drafts/proposals/6b3fffe052b282b9b8ff2b21fc60922edba5a50e40284602f098d15917a6cb3f/ (inputs, blocks, consumers, the index, dispositions).
+The full record is in the private workspace, folder drafts/proposals/98a870d767c021f8ffbdf1364fec806dc7eb9ca389d4f47ec8dbd11ff57e9900/ (inputs, blocks, consumers, the index, dispositions).
 When the owner accepts the sources, descriptor.json in that folder is the descriptor for workspace.py checkpoint prepare.
-proposal: 6b3fffe052b282b9b8ff2b21fc60922edba5a50e40284602f098d15917a6cb3f
+proposal: 98a870d767c021f8ffbdf1364fec806dc7eb9ca389d4f47ec8dbd11ff57e9900
 [exit 0]
 ```
 
@@ -1069,8 +1070,9 @@ The new rendering replaced the working copy, but the reviewed rendering is safe 
 $ python3 scripts/reconcile.py prepare --root .
 carrydown update: compare changed sources  DRY RUN (nothing will be written)
 2 changed block(s) in 1 source(s); 7 direct consumer(s); index: 20591 bytes, 2016 words, about 5148 tokens (approximate)
-  architecture/3.5  modified  was "3.5 Routing", now "3.5 Routing"  formatting only: no
-  architecture/4.1  modified  was "4.1 GOV-1 Approval limits and separation of duties", now "4.1 GOV-1 Approval limits and separation of duties"  formatting only: no
+18 fields of the index are truncated excerpts (1556 words left out). Read the full specification before you conclude no impact for such a row.
+  architecture/3.5  modified  "3.5 Routing" (heading unchanged)  formatting only: no
+  architecture/4.1  modified  "4.1 GOV-1 Approval limits and separation of duties" (heading unchanged)  formatting only: no
 
 Direct consumers (who cites a changed block):
   block                        work item relationship       cites     working copy
@@ -1087,7 +1089,7 @@ Direct consumers (who cites a changed block):
   architecture/4.1 also touches, without citing it (a scheduling or integration link alone needs no rewrite): WI-03 (dependency, integration), WI-07 (integration), WI-11 (dependency)
 
 Nothing was written. Add --apply to save the proposal in the private workspace.
-proposal: bcb1656ed6f562559afe5946bacfeb91ba57c0aedc0bb48d6ba6269e5f7cd340
+proposal: c0bc37cd5d5561504f22273efe542d7cc4e6f3e4b4b9c73b2748505aa079b26e
 [exit 0]
 ```
 
@@ -1102,7 +1104,7 @@ $ python3 scripts/reconcile.py check --root . --proposal <proposal>
 carrydown update: check
   - pending-disposition: architecture/3.5 still has a pending disposition. Decide it with the owner before applying
   - pending-disposition: architecture/4.1 still has a pending disposition. Decide it with the owner before applying
-carrydown: proposal bcb1656ed6f562559afe5946bacfeb91ba57c0aedc0bb48d6ba6269e5f7cd340 has 2 finding(s)
+carrydown: proposal c0bc37cd5d5561504f22273efe542d7cc4e6f3e4b4b9c73b2748505aa079b26e has 2 finding(s)
 [exit 1]
 ```
 
@@ -1145,7 +1147,7 @@ The filled `dispositions.json` follows. The agent wrote both records and showed 
 ```text
 $ python3 scripts/reconcile.py check --root . --proposal <proposal>
 carrydown update: check
-carrydown: proposal bcb1656ed6f562559afe5946bacfeb91ba57c0aedc0bb48d6ba6269e5f7cd340 has 0 finding(s)
+carrydown: proposal c0bc37cd5d5561504f22273efe542d7cc4e6f3e4b4b9c73b2748505aa079b26e has 0 finding(s)
 [exit 0]
 ```
 
@@ -1161,14 +1163,14 @@ carrydown update: apply  DRY RUN (nothing will be written)
   would change project/docs/spec/m2-route-to-approvers/wi-03-routing-engine.md  (23b6e60ae3ca to 695d5b0b290d, 13913 bytes)
   would change project/docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md  (f5192fe752fb to e733c540dd5c, 14401 bytes)
 Nothing was written. Add --apply to write these changes.
-proposal: bcb1656ed6f562559afe5946bacfeb91ba57c0aedc0bb48d6ba6269e5f7cd340
+proposal: c0bc37cd5d5561504f22273efe542d7cc4e6f3e4b4b9c73b2748505aa079b26e
 [exit 0]
 
 $ python3 scripts/reconcile.py apply --root . --proposal <proposal> --apply
 carrydown update: applied 2 patches now and checked 2 patches by reading it back.
 The working drafts are changed. The released copy is not. Nothing is published.
 Next: record the accepted source checkpoint with workspace.py checkpoint (preview first), then say: Put the plan on GitHub.
-proposal: bcb1656ed6f562559afe5946bacfeb91ba57c0aedc0bb48d6ba6269e5f7cd340
+proposal: c0bc37cd5d5561504f22273efe542d7cc4e6f3e4b4b9c73b2748505aa079b26e
 [exit 0]
 ```
 
@@ -1213,7 +1215,7 @@ Meanwhile an engineer works on WI-04 in a clone of the repository, with the engi
 $ python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-04
 carrydown: approved context for WI-04 is ready
 Read docs/context/wi-04.md. Do not open docs/ground-truth/ or any source.
-baseline: request 59151c0c1a4033a36b7b1137f8a4ce0c7d9c1bafb1f190319e021a0ee009ec98, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7
+baseline: request 7dfeeabf0bf51b3f3c50a1cd9d8a9e9807433a3ab86d34d071be7fa78bd106ac, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7
 [exit 0]
 ```
 
@@ -1234,7 +1236,7 @@ The check, run offline with `--no-refresh`, still exits 0. It shows the note and
 $ python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-04 --no-refresh
 carrydown: approved context for WI-04 is ready
 Read docs/context/wi-04.md. Do not open docs/ground-truth/ or any source.
-baseline: request 59151c0c1a4033a36b7b1137f8a4ce0c7d9c1bafb1f190319e021a0ee009ec98, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7
+baseline: request 7dfeeabf0bf51b3f3c50a1cd9d8a9e9807433a3ab86d34d071be7fa78bd106ac, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7
 note: 1 new note(s) under Decisions recorded in your copy of the specification. They are not an approval. The plan owner reviews them
 warning: freshness not confirmed; within offline grace
 [exit 0]
@@ -1277,7 +1279,7 @@ Work item: WI-04, Approver inbox and decisions.
 Place: "Outcome" and "Acceptance criteria" in docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md.
 Problem: The specification lists the reports waiting for the caller. FR-8 in the approved context says "The delegate sees the approver's inbox for that range." Neither text says who the approval step is assigned to when the approver has named a delegate, or whether a decision by one of them removes the report from the other's inbox.
 Proposed question: Is the step assigned to both the approver and the delegate, and does the first decision close it?
-Baseline: request 59151c0c1a4033a36b7b1137f8a4ce0c7d9c1bafb1f190319e021a0ee009ec98, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7.
+Baseline: request 7dfeeabf0bf51b3f3c50a1cd9d8a9e9807433a3ab86d34d071be7fa78bd106ac, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7.
 Unaffected work: The inbox page, the decision dialog and the error display do not depend on the answer and can continue. The delegate case of the inbox waits.
 Next action for the plan owner: Decide accepted, declined or deferred on this issue.
 ```

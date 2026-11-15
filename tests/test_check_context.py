@@ -64,6 +64,7 @@ RESTRICTED = "carrydown: WI-06 has a restricted destination that this project do
 SPEC_MISMATCH = "carrydown: the specification for WI-06 does not match its approved release"
 MIXED = "carrydown: the approved inputs for WI-06 come from more than one release"
 OFFLINE_WARNING = "freshness not confirmed; within offline grace"
+KIND_LINE = {code: first.format(id="<ID>") for code, first, _ in CC.KINDS.values()}
 SPEC_FILE = "docs/spec/m3-enforce-policy/wi-06-limits-and-duties.md"
 
 
@@ -772,6 +773,77 @@ class ApprovedInputsLocalTests(LocalProject):
         self.write_receipt(self.root, rid, data)
         self.assertEqual(self.passes(receipt=CC.parse_receipt(data))[0], 0)
 
+    def assert_two_active(self, code_lines, where):
+        code, lines = code_lines
+        self.assertEqual((code, lines[0]), (15, MIXED), lines)
+        self.assertEqual(lines[1], reason_line("two-active-releases"))
+        self.assertIn("The plan owner must supersede or withdraw one of them", lines[1])
+        self.assertEqual(lines[2], f"file: {where}")
+        self.assertLessEqual(len(lines), 4)
+        text = "\n".join(lines)
+        for forbidden in (str(self.base), "Sole approver", "Routing", "Harbor", "company-governance"):
+            self.assertNotIn(forbidden, text)
+
+    def test_two_active_receipts_that_disagree_on_one_input_are_exit_15(self):
+        """Design 10.1: two unlinked active releases that disagree are ambiguous, even when the files match one of them."""
+        readme = "docs/spec/README.md"
+        # a copy of the active receipt under another request id, with one digest altered and nothing else
+        copy = json.loads(self.receipt)
+        copy["request_id"] = "a" * 64
+        for entry in copy["artifacts"]:
+            if entry["path"] == readme:
+                entry["sha256"] = "c" * 64
+        self.write_receipt(self.root, copy["request_id"], json.dumps(copy).encode("utf-8"))
+        self.assertIsNotNone(CC.parse_receipt((self.root / "docs/release" / f"{'a' * 64}.receipt.json").read_bytes()))
+        with mock.patch.object(CC, "refresh") as fetch:
+            self.assert_two_active(self.run_check(self.root), readme)
+        fetch.assert_not_called()
+        # a real second release with other bytes for one shared file, the checkout holding the first
+        (self.root / "docs/release" / f"{'a' * 64}.receipt.json").unlink()
+        rid_b, data_b = build_receipt(dict(self.files, **{readme: PROJECT[readme] + b"\nNewer conventions.\n"}), nonce="b2" * 16)
+        self.write_receipt(self.root, rid_b, data_b)
+        self.assert_two_active(self.run_check(self.root, refresh=False), readme)
+        # the same when the checkout holds the second release's file instead
+        (self.root / readme).write_bytes(PROJECT[readme] + b"\nNewer conventions.\n")
+        self.assert_two_active(self.run_check(self.root, refresh=False), readme)
+
+    def test_a_second_active_receipt_for_other_context_bytes_is_exit_15(self):
+        """An active release that lists this item's context with other bytes is a second release in force for it."""
+        ctx = "docs/context/wi-06.md"
+        rid_b, data_b = build_receipt(dict(self.files, **{ctx: self.files[ctx] + b"\nA newer rule.\n"}), nonce="b2" * 16)
+        self.write_receipt(self.root, rid_b, data_b)
+        self.assert_two_active(self.run_check(self.root, refresh=False), ctx)
+
+    def test_two_active_receipts_that_agree_on_every_input_use_the_newest(self):
+        rid_b, data_b = build_receipt(self.files, nonce="b2" * 16, created="2027-01-25T09:00:00Z")
+        self.assertNotEqual(rid_b, self.rid)
+        self.write_receipt(self.root, rid_b, data_b)
+        code, lines = self.passes(receipt=CC.parse_receipt(data_b))
+        self.assertEqual(code, 0, lines)
+        self.assertEqual(lines[2], f"baseline: request {rid_b}, specification {H_FILE(SPEC_FILE)}")
+        local = CC.local_receipts(self.root)
+        md, js = (self.root / "docs/context/wi-06.md").read_bytes(), (self.root / "docs/context/wi-06.bundle.json").read_bytes()
+        ctx = {"docs/context/wi-06.md": (CC.sha256(md), len(md)), "docs/context/wi-06.bundle.json": (CC.sha256(js), len(js))}
+        chosen, _ = CC.choose(self.root, local, ctx, "WI-06", False)
+        self.assertEqual(chosen["request_id"], rid_b)
+
+    def test_an_ended_receipt_that_disagrees_is_not_a_second_active_release(self):
+        """[G4] Supersession and withdrawal are unchanged: only active receipts can make the release ambiguous."""
+        readme = "docs/spec/README.md"
+        changed = dict(self.files, **{readme: PROJECT[readme] + b"\nOlder conventions.\n"})
+        for state, kw in (("superseded", {"superseded_by": self.rid}), ("withdrawn", {})):
+            rid_old, data_old = build_receipt(changed, state=state, nonce="c3" * 16, created="2027-01-10T09:00:00Z", **kw)
+            self.write_receipt(self.root, rid_old, data_old)
+            code, lines = self.passes()
+            self.assertEqual(code, 0, (state, lines))
+            self.assertEqual(lines[2], f"baseline: request {self.rid}, specification {H_FILE(SPEC_FILE)}")
+            (self.root / "docs/release" / f"{rid_old}.receipt.json").unlink()
+        # and the checkout holding the ended release's file is still told that file changed, as before
+        rid_old, data_old = build_receipt(changed, state="superseded", superseded_by=self.rid, nonce="c3" * 16)
+        self.write_receipt(self.root, rid_old, data_old)
+        (self.root / readme).write_bytes(changed[readme])
+        self.assert_spec_block(self.run_check(self.root, refresh=False), "input-changed", readme)
+
     def test_an_ended_release_is_stale_before_any_file_is_judged(self):
         rid, data = build_receipt(self.files, state="withdrawn")
         self.write_receipt(self.root, rid, data)
@@ -1110,6 +1182,15 @@ class CommandLineTests(OriginTests):
         run = self.run_script("--help")
         self.assertEqual(run.returncode, 0)
         self.assertIn("not a security control", run.stdout)
+        # each of the six messages of the module docstring is in --help beside its exit code
+        documented = re.findall(r"^  (1[0-5])  (carrydown: .+)$", CC.__doc__, re.M)
+        self.assertEqual([code for code, _ in documented], ["10", "11", "12", "13", "14", "15"])
+        for code, text in documented:
+            self.assertIn(f"  {code}  {text}", run.stdout.splitlines())
+            self.assertEqual(KIND_LINE[int(code)], text)
+        self.assertRegex(run.stdout, r"(?m)^  2   a wrong argument")
+        self.assertRegex(run.stdout, r"(?m)^  3   the Python that runs it is older than 3\.9")
+        self.assertFalse(any(line.startswith("carrydown:") for line in run.stdout.splitlines()))
         self.assertEqual(self.run_script().returncode, 2)
         self.assertEqual(self.run_script("WI-06", "--root", str(self.base / "nowhere")).returncode, 2)
 

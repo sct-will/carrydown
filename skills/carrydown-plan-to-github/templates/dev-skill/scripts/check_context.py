@@ -26,8 +26,10 @@ What it checks, in this order
      plan, the specification folder README, the generated skill's SKILL.md and README.md, and the
      specification of every other work item that the specification names under "Integration points"
      or "References" (the whole shared file, which is the conservative reading). Files that match
-     different receipts, or two active receipts that each cover a different part, are exit 15. A
-     missing, ambiguous, unlisted or changed file is exit 14.
+     different receipts, or two active receipts that each cover a different part, are exit 15. Two
+     active receipts that list this item and disagree on any of these files are exit 15 too, even when
+     your files match one of them: only one release can be in force. A missing, ambiguous, unlisted or
+     changed file is exit 14.
      A specification may differ from its approved bytes only by the decision overlay, and only where the
      project lets engineers record decisions: new dated entries under "Decisions recorded", with every
      earlier entry unchanged. The approved bytes are read from git history, and only a version whose
@@ -330,6 +332,7 @@ REASONS = {
     "boundary-malformed": "the heading Decisions recorded is missing, repeated or at another level",
     "encoding-invalid": "a new note under Decisions recorded is not valid text",
     "inputs-from-different-releases": "the files you hold match different releases, so no one release covers them all",
+    "two-active-releases": "two active releases list this work item and disagree. The plan owner must supersede or withdraw one of them",
 }
 
 
@@ -636,11 +639,26 @@ def evaluate(root, receipt, inputs, cache):
     return rows
 
 
+def disagreement(receipts, paths):
+    """The first of paths that the receipts list with different digests or lengths, or that some of them
+    do not list at all, or None when they all agree on every one."""
+    for path in paths:
+        listed = set()
+        for r in receipts:
+            entry = {a["path"]: a for a in r["artifacts"]}.get(path)
+            listed.add(None if entry is None else (entry["sha256"], entry["bytes"]))
+        if len(listed) > 1:
+            return path
+    return None
+
+
 def choose(root, local, ctx, tag, restricted):
     """(receipt, rows): the one receipt that is active and lists the context and every other approved
     input with matching digests. Raises Block when there is none: missing (10) when no receipt lists the
     context, stale (11) when only ended ones do, mixed (15) when the files match different active
-    receipts, and spec (14) when a file matches none."""
+    receipts or when two active receipts that list this item disagree on any approved input, and spec
+    (14) when a file matches none. Active receipts that agree on every input are one release in effect,
+    and the newest is used."""
     matching = [r for r in local.values() if lists(r, ctx)]
     if not matching:
         raise Block("missing")
@@ -652,16 +670,24 @@ def choose(root, local, ctx, tag, restricted):
     inputs = local_inputs(root, tag)
     cache = {}
     rows = {r["request_id"]: evaluate(root, r, inputs, cache) for r in active}
+    # every active receipt that lists this item's context files, whatever digests it gives them
+    claims = [r for r in local.values() if r["state"] == "active" and all(p in {a["path"] for a in r["artifacts"]} for p in ctx)]
+    paths = list(ctx)
+    for r in active:
+        paths += [row[0] for row in rows[r["request_id"]] if row[0] not in paths]
+    split = disagreement(claims, paths) if len(claims) > 1 else None
     full = [r for r in active if all(row[1] in OKAY for row in rows[r["request_id"]])]
-    if full:
+    if full and split is None:
         best = newest(full)
         return best, rows[best["request_id"]]
     seen = {}
     for r in active:
         for row in rows[r["request_id"]]:
             seen.setdefault(row[0], []).append(row[1])
-    if all(any(s in OKAY for s in states) for states in seen.values()):
+    if not full and all(any(s in OKAY for s in states) for states in seen.values()):
         raise Block("mixed", "inputs-from-different-releases")
+    if split is not None:
+        raise Block("mixed", "two-active-releases", split)
     best = newest(active)
     for row in rows[best["request_id"]]:
         if row[1] not in OKAY:
@@ -994,12 +1020,27 @@ def repository_top(start):
     return Path(top) if top and os.path.isdir(top) else Path(start)
 
 
+def help_epilog():
+    """The exit codes for --help: each of the six codes with its message, then 2 and 3."""
+    lines = ["exit status:", "  0   the inputs are ready to read"]
+    for code, first, _ in sorted(KINDS.values()):
+        lines.append(f"  {code}  {first.format(id='<ID>')}")
+    lines += ["  2   a wrong argument (no line starts with carrydown:)",
+              "  3   the Python that runs it is older than 3.9 (no line starts with carrydown:)",
+              "",
+              "A line `warning: freshness not confirmed; within offline grace` means the inputs passed but the",
+              "default branch could not be reached."]
+    return "\n".join(lines)
+
+
 def main(argv=None, now=None):
     ap = argparse.ArgumentParser(
-        description="Check that the approved inputs of one work item can be used: its context, its specification and the files "
-                    "they depend on. Prints a short block and exits 0, "
-                    "or prints one of six carrydown messages and exits 10, 11, 12, 13, 14 or 15. "
-                    "It is a convenience check for the engineer, not a security control.")
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="Check that the approved inputs of one work item can be used: its context, its\n"
+                    "specification and the files they depend on. Prints a short block and exits 0, or\n"
+                    "prints one of six carrydown messages and exits 10, 11, 12, 13, 14 or 15.\n"
+                    "It is a convenience check for the engineer, not a security control.",
+        epilog=help_epilog())
     ap.add_argument("id", help="the work item id, such as WI-03")
     ap.add_argument("--root", help="the repository (default: the top of the git repository you are in)")
     ap.add_argument("--no-refresh", action="store_true", help="do not run git fetch. Follow the offline grace rule")
