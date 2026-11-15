@@ -493,6 +493,34 @@ class MaintenanceNoticeTests(unittest.TestCase):
             self.assertRegex(text, r"(?m)^\| " + state + r" \|", state)
         self.assertIn("approximate", text)
 
+    def test_the_six_update_states_have_one_set_of_names_on_every_page(self):
+        """The owner guide, the recovery guide and both skills' references name the six states the same way."""
+        names = ("draft reconciliation", "release", "engineering repository update", "issue updates", "board updates", "engineer action")
+        pages = {
+            "plan-owner-guide.md": ROOT / "docs" / "plan-owner-guide.md",
+            "recovery.md": ROOT / "docs" / "recovery.md",
+            "updates.md": ROOT / "skills" / "carrydown-ground-truth" / "references" / "updates.md",
+            "verification.md": ROOT / "skills" / "carrydown-plan-to-github" / "references" / "verification.md",
+        }
+        for label, page in pages.items():
+            text = page.read_text(encoding="utf-8").lower()
+            for name in names:
+                with self.subTest(page=label, state=name):
+                    self.assertIn(name, text)
+            for old in ("draft changes accepted", "| draft accepted |", "| repository update pending |", "| issues pending |", "| board pending |"):
+                with self.subTest(page=label, old=old):
+                    self.assertNotIn(old, text)
+
+    def test_the_readme_and_the_guide_say_how_to_hand_over_a_document_and_that_one_approval_does_not_publish(self):
+        for page in (ROOT / "README.md", ROOT / "docs" / "plan-owner-guide.md"):
+            text = page.read_text(encoding="utf-8")
+            with self.subTest(page=page.name):
+                self.assertIn("This changed: the revised architecture document is at ~/Documents/architecture.docx.", text)
+                self.assertIn("you do not need to move it into the project", text.replace("You do not", "you do not"))
+                self.assertRegex(text, r"accepts the (changes to the )?drafts\. It (publishes nothing|does not publish anything)\.")
+                self.assertIn("Nothing is pushed or sent to them.", text)
+                self.assertIn("next run of the check for a work item shows the approved delta", text)
+
     def test_the_verification_and_maintenance_pages_carry_the_states_and_the_old_material_caveat(self):
         pub = ROOT / "skills" / "carrydown-plan-to-github" / "references"
         verification = (pub / "verification.md").read_text(encoding="utf-8")

@@ -16,16 +16,16 @@ Nothing you accepted is lost when an update stops. Accepted draft changes stay i
 
 ### Where a project update can stand
 
-Each state is reported on its own. The agent does not say "up to date" while a required step is pending, and it does not claim that every engineer has received or understood the update.
+Each of the six states is reported on its own, with one of its two values: draft reconciliation (accepted, or not yet accepted), release (approved, or not yet approved), engineering repository update (pending, or available), issue updates (pending, or verified), board updates (pending, or verified) and engineer action (required, or none). The table shows the value that needs something next. The agent does not say "up to date" while a required step is pending, and it does not claim that every engineer has received or understood the update.
 
 | State | What it means | What happens next |
 | --- | --- | --- |
-| Draft accepted | You accepted the proposed changes to the plan and specifications. Nothing is released or published yet. | The agent hands the drafts to the publishing skill for a release preview and your approvals. |
-| Release approved | The release is approved for its audience and destinations. The earlier release stays active until the new one is. | The exported files are committed and pushed, then the issue and board updates follow. |
-| Repository update pending | The approved files are not yet on the branch that engineers fetch. | Commit and push the export. Until then, engineers do not see the update. |
-| Issues pending | Some issue updates are not written or not read back. | Resume. Updates that were read back and match are skipped, and nothing is created twice. |
-| Board pending | The board fields do not yet match the plan. | Resume. The board is verified separately from the issues. |
-| Engineer action required | The update is published and an engineer must review it. | The affected engineer sees an action notice on the work item, reviews what changed and reassesses the implementation plan before continuing. |
+| Draft reconciliation: accepted | You accepted the proposed changes to the plan and specifications. Nothing is released or published yet. | Say "Put the plan on GitHub." The publishing skill shows a release preview and asks for your approvals. |
+| Release: approved | The release is approved for its audience and destinations. The earlier release stays active until the new one is. | The exported files are committed and pushed, then the issue and board updates follow. |
+| Engineering repository update: pending | The approved files are not yet on the branch that engineers fetch. | Commit and push the export. Until then, engineers do not see the update. |
+| Issue updates: pending | Some issue updates are not written or not read back. | Resume. Updates that were read back and match are skipped, and nothing is created twice. |
+| Board updates: pending | The board fields do not yet match the plan. | Resume. The board is verified separately from the issues. |
+| Engineer action: required | The update is published and an engineer must review it. | Nobody is notified. The affected engineer's next run of the check on the work item shows the approved delta. The engineer reviews what changed and reassesses the implementation plan before continuing. |
 
 The technical recoveries behind these states are in [resume an interrupted release](#resume-an-interrupted-release) and [reconcile published issues and the board](#reconcile-published-issues-and-the-board).
 

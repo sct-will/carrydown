@@ -252,6 +252,8 @@ Say what changed, in your own words:
 
 > This changed: [describe the change or provide revised documents].
 
+Open your agent in the project's own folder. To hand over a revised document, name where it is in the same sentence, for example "This changed: the revised architecture document is at ~/Documents/architecture.docx." Keep it where you keep your sources: you do not need to move it into the project. You can also describe the change in words or paste the changed passage.
+
 You do not need to name a skill or a script. If the agent does not take the update path, name the skill, as the table at the top of this guide shows. The agent starts from the existing project. It does not start a new plan, and it does not overwrite the released plan as though it were your working draft. It asks only when the project or the source set is ambiguous.
 
 ### What counts as a significant change
@@ -265,9 +267,9 @@ A change needs assessment if it could alter any of these:
 - Delivery dates, staffing capacity, dependencies or scope.
 - The validity of work already completed.
 
-Editorial changes can take a lighter path. A small edit to a number, an exception, a condition or a prohibition can still have broad consequences, so the agent treats a changed quantity, exception or negation as potentially meaningful.
+Editorial changes can take a lighter path. A small edit to a number, an exception, a condition or a prohibition can still have broad consequences, so the agent treats a changed quantity, exception or negation as potentially meaningful. The agent assesses the change, not you: when you are unsure, say it anyway. The agent does not watch documents kept in another system, so tell it when one of them changes.
 
-At each milestone review, ask the team:
+At each milestone review, you ask the team:
 
 > "Have any source decisions, requirements, constraints or implementation findings changed since the last review?"
 
@@ -277,19 +279,21 @@ This is a prompt for a person. It is not an automatic approval, and it does not 
 
 For an ordinary update, with the revised material available and no unresolved conflict, you say one sentence, see one consolidated review and give one final approval. You type no script command and handle no internal identifier.
 
+That final approval accepts the drafts. It does not publish anything. Publishing is the next sentence, "Put the plan on GitHub.", and the publishing skill asks for its own approvals then: what may be disclosed, to whom and where, and whether it may write to GitHub. To approve, say so in your own words, for example "Approve the update."
+
 The review opens with a plain summary, for example: "Two specifications need updates. One completed item needs a follow-up decision. One engineer correction conflicts with the revised source." It then shows:
 
 - The proposed patches, each one small and focused, never a whole specification rewritten because regenerating it is easier.
 - Why each other candidate was reviewed and left unchanged.
 - How an engineer's compatible correction was preserved, and which corrections conflict.
 - The decisions that need you, and what each choice would affect.
-- What would be disclosed, to whom and where, and the next publication step.
+- Whether the update changes what would be disclosed, to whom and where. The disclosure approval itself comes later, from the publishing skill.
 
-Every change the agent found in the sources receives a disposition: update existing work, add work, assess completed work, no downstream impact with the reason, defer with the accepted consequence, or unresolved with the missing decision named. "No proposed patch" does not mean "no impact". A removed requirement does not delete an issue or rewrite what was completed. You decide any follow-up.
+Every change the agent found in the sources receives a disposition, its recorded outcome: update existing work, add work, assess completed work (check whether finished work still holds), no downstream impact with the reason, defer with the accepted consequence, or unresolved with the missing decision named. "No proposed patch" does not mean "no impact". A removed requirement does not delete an issue or rewrite what was completed. You decide any follow-up.
 
 A conflict, a missing decision or an approval your organization requires can mean one more question. Each such question names the consequential decision that makes it necessary. Distinct permissions stay distinct: approving an update to the drafts is not permission to disclose it or to write to GitHub.
 
-The agent reads the compact index of all work items, then the full specifications of the candidates. It says what it checked and what it could not observe. It does not claim to have found every affected item, and an independent review pass looks again at the original changes, the claimed lack of impact and the proposed patches. People decide what the changes mean.
+The agent reads the compact index of all work items, then the full specifications of the candidates. It says what it checked and what it could not observe. When it lists something it could not observe, such as a source kept elsewhere, give it that material or accept the limit. It does not claim to have found every affected item, and an independent review pass looks again at the original changes, the claimed lack of impact and the proposed patches before you see the review. You do not run that pass or wait for it separately. People decide what the changes mean.
 
 The agent keeps a private copy of each source version you reviewed, in your private workspace on your machine, so that it can compare the next change with it. [The security guide](security.md#local-source-history) says what that copy holds and what deleting a raw input does not erase. If a previous complete source checkpoint is missing, the agent says what it cannot compare and asks you to review the current sources to establish one. In that case earlier uncited changes cannot be assessed automatically.
 
@@ -310,7 +314,7 @@ Each request keeps one disposition on the issue conversation:
 | `declined` | You decided against it. The reason stays with the request. |
 | `deferred` | You decided to wait. The consequence you accepted and the affected work stay visible. |
 
-Human comments stay as written. Nothing closes a request silently. When you resume planning or an update, the agent reads outstanding requests if you have authorized project reads. If it cannot read them, it says so. The publishing skill lists the outstanding engineer requests, one line each, and records your decision on the issue, so you answer in chat and the answer is kept with the request. Only your decision counts: a disposition written by the person you named for mentions, or by the account you publish with, is recorded. One written by anyone else is listed as unverified and leaves the request as it was.
+Human comments stay as written. Nothing closes a request silently. When you resume planning or an update, the agent reads outstanding requests if you have authorized project reads. If it cannot read them, it says so. That message means the publishing skill has not read the work items yet: say "Put the plan on GitHub." or ask the agent to read the engineer requests first. The publishing skill lists the outstanding engineer requests, one line each, and records your decision on the issue, so you answer in chat, for example "Accept the request on WI-08.", and the answer is kept with the request. Only your decision counts: a disposition written by the person you named for mentions, or by the account you publish with, is recorded. One written by anyone else is listed as unverified and leaves the request as it was.
 
 An engineer's request does not change an upstream obligation. A recorded implementation note does not either. Only a released update does. A source correction needs its author's decision, and the agent never says that your original document was corrected when only a request was drafted.
 
@@ -320,18 +324,20 @@ If an update stopped, say:
 
 > Resume the project update.
 
-The agent finds the saved proposal or the unfinished publication and continues from what is verified. It asks you only when more than one consequential choice remains. Before it writes anything, it checks the sources and drafts again, because an input that changed during the review needs a new assessment. [Recover a plan or publication](recovery.md#resume-a-project-update) lists the states an update can stop in.
+If you do not remember whether an update stopped, ask "What's next?" or "Is this project up to date?". The agent finds the saved proposal or the unfinished publication and continues from what is verified. It first tells you where things stand. It asks you only when more than one consequential choice remains. Before it writes anything, it checks the sources and drafts again, because an input that changed during the review needs a new assessment. [Recover a plan or publication](recovery.md#resume-a-project-update) lists the states an update can stop in.
 
 ### When the update is finished
 
-The agent reports each state on its own and does not say "up to date" while a required step is pending:
+The agent reports each state on its own and does not say "up to date" while a required step is pending. These are the six states, with the values each can take. [Recover a plan or publication](recovery.md#where-a-project-update-can-stand) explains what each one means.
 
-- Draft changes accepted.
-- Release approved.
-- Engineering repository update pending or available.
-- Issue updates pending or verified.
-- Board updates pending or verified.
-- Engineer action required.
+- Draft reconciliation: accepted, or not yet accepted.
+- Release: approved, or not yet approved.
+- Engineering repository update: pending, or available.
+- Issue updates: pending, or verified.
+- Board updates: pending, or verified.
+- Engineer action: required, with the work items, or none. The engineers of those items act, not you.
+
+Engineers are not notified. Nothing is pushed or sent to them. After the release is published, an engineer's next run of the check for a work item shows the approved delta: which files and passages changed since their last check. An engineer who does not pull or does not run the check keeps the earlier material, so tell the team when the timing matters.
 
 When a work item has an approved update, an engineer sees a notice such as: **Action required: WI-03 has an approved update.** Delegated approval behavior and one acceptance criterion changed. Review the update and reassess your implementation plan before continuing.
 
@@ -367,7 +373,7 @@ A new request replaces the active one in a single reviewed step. You can also ap
 
 Export and commit the new release first. The synchronization scripts match existing issues, add new items and leave existing bodies unchanged unless an update is requested. Ask the agent to show which bodies it would rewrite. Approve the issue and board updates after their previews. The ordinary sync does not delete issues or change issue titles. After a second-pass review, the separate `github_repair.py` command can preview and repair generated titles, the plan owner's assignment, track labels and parent links using the saved pre-repair plan. Human title changes and retired work require your decision. Read the [published-plan repair procedure](../skills/carrydown-plan-to-github/references/plan-review-repair.md) before applying it.
 
-If specifications or engineering conventions changed, ask the agent to refresh the engineers' skill too. Review, commit and push that change, then have the engineers update their installed copy.
+If specifications or engineering conventions changed, the release regenerates the engineers' skill with the other approved files, so there is no separate step. Engineers whose installed copy does not follow their checkout install it again, as the engineers' README says.
 
 ## If something goes wrong
 
@@ -393,6 +399,9 @@ For installation problems, use the [setup guide's troubleshooting](setup.md#when
 - **Reconciliation.** The step in which your agent compares revised sources or an engineer's correction with the reviewed sources and the current work, prepares focused corrections and shows conflicts for your decision.
 - **Source checkpoint.** A private copy of the source renderings you reviewed, kept in your private workspace, that the next change is compared with.
 - **Disposition.** The recorded outcome for one changed source passage or one engineer request, such as updated, no downstream impact, deferred or unresolved.
+- **Working drafts.** Your copy of the plan and specifications that an update changes. The released plan is what engineers see. It changes only with a new release.
+- **Proposal.** The saved comparison of one update, kept in your private workspace, so an interrupted update can resume.
+- **Baseline.** The approved release and specification an engineer started from. The engineers' check prints it.
 - **Agent Skills.** An open format for packaging instructions for a coding agent as a folder with a `SKILL.md` file.
 - **Epic.** A parent GitHub issue that stands for the whole project.
 - **Sub-epic.** An issue for one milestone, placed under the Epic.

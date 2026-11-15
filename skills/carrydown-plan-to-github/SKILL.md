@@ -226,7 +226,7 @@ Finish with this completion line, word for word, then the maintenance notice, bo
 
 Then show the user the counts and the project link. Remind them of the rhythm: closing comment on every issue, a checkpoint comment after each checkpoint, a demonstration note on each sub-epic.
 
-After a release that carries an approved update, report the states separately, as `references/verification.md` lists them: draft reconciliation accepted, release approved, engineering repository update pending or available, issue updates pending or verified, board updates pending or verified, and engineer action required. Do not say "up to date" while any publication step is pending. Engineers can still hold old material in a checkout or an open conversation. Name the work items whose engineers need to act.
+After a release that carries an approved update, report the six states separately, by the names and values `references/verification.md` lists: draft reconciliation (accepted, or not yet accepted), release (approved, or not yet approved), engineering repository update (pending, or available), issue updates (pending, or verified), board updates (pending, or verified) and engineer action (required, with the work items, or none). Do not say "up to date" while any publication step is pending. Engineers can still hold old material in a checkout or an open conversation. Name the work items whose engineers need to act.
 
 ### 8. The engineers' skill
 

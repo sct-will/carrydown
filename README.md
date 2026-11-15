@@ -49,9 +49,13 @@ Ordinary language is the normal entry point. You do not need to learn the names 
 | Start a work item | "Work on WI-03." |
 | Raise a specification problem | "This specification seems wrong because [explanation]." |
 
+When an engineer raises a problem, the agent drafts a request and shows it. It is not sent until the engineer posts it.
+
+The first owner row is for a project that has no plan yet. For a project that already has one, use the third row, even when you bring revised documents.
+
 The plan owner uses the two installed skills, engineers use the generated project skill, and stakeholders review milestone outcomes.
 
-If your agent does not pick up the right skill, name it:
+If your agent does not pick up the right skill, name it. This is a fallback, not the main phrase:
 
 > "Use carrydown-ground-truth to update this existing project."
 
@@ -77,7 +81,13 @@ Projects change after planning. A requirement is revised, a company rule changes
 
 In more detail, and before any name for it: your agent looks at what changed, finds the work that the change could touch, and checks the work an engineer has already corrected. It keeps those corrections when they fit the change and shows you the ones that conflict. You see one review, decide, and approve. Nothing is rewritten because regenerating it would be easier. The same path serves a changed source and an engineer's report that a specification seems wrong. The method pages call this step reconciliation.
 
-Repository checks assess the material they can observe. For sources kept elsewhere, provide the revised material. A configured integration can add automatic observation later. The owner guidance also prompts review when the team makes significant decisions.
+**How to hand over a revised document.** Open your agent in the project's own folder, the one your plan was made in. Then name where the revised file is in the same sentence, for example: "This changed: the revised architecture document is at ~/Documents/architecture.docx." Keep the file where you keep your sources. You do not need to move it into the project. You can also describe the change in words or paste the changed passage. The agent reads and compares before it shows you anything, so the review takes a while to appear.
+
+**One approval, then one more sentence.** Your approval of the review accepts the changes to the drafts. It publishes nothing. "Put the plan on GitHub." is a separate sentence: the publishing skill then shows what would be shared, with whom and where, and asks for that disclosure approval on its own line before it writes anything.
+
+**How engineers learn of an update.** Nothing is pushed or sent to them. After the update is released and published, an engineer's next run of the check for a work item shows the approved delta: the files and passages that changed since their last check. An engineer who does not pull or does not run the check keeps the earlier material, so tell the team when the timing matters.
+
+Repository checks assess the material they can observe. For sources kept elsewhere, provide the revised material. A configured integration can add automatic observation later. The owner guidance also prompts review when the team makes significant decisions. When you are unsure whether a change is significant, say it anyway: the agent assesses it.
 
 There are still two skills you install and one skill generated for your engineers. The first skill, `carrydown-ground-truth`, now covers initial planning and updates. It does not watch your documents, and an update starts when you say so. The [owner guide](docs/plan-owner-guide.md#when-the-project-changes) lists what counts as a significant change, what the one review shows and how to resume an interrupted update.
 

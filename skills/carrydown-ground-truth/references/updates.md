@@ -53,6 +53,8 @@ The version you give `--version`:
 2. Otherwise the previous rendering's version with its minor number incremented: 0.3 becomes 0.4, 1 becomes 1.1.
 3. Never ask the owner. The number does not change the comparison.
 
+The renderer matches a file to its source by the file name, and names the rendering after it. A revised file whose name is not the source id, such as `architecture-v0.4.docx` for the source `architecture`, takes both `--source-id architecture` and `--name architecture`. With `--source-id` alone it writes a second rendering beside the first. Check that the dry run says `would write docs/ground-truth/architecture.md` (or the rendering's usual name in the workspace).
+
 Run the renderer with `--dry-run` first. For each rendering it would replace it prints:
 
 | Line | What it means |

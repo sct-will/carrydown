@@ -207,7 +207,7 @@ An editorial change takes a lighter path. A small edit to a number, an exception
 
    `CHECKPOINT_ID` is the id `checkpoint prepare` prints. Never hand edit a file under `docs/context/` or `docs/release/`.
 9. Hand off. Tell the owner to say "Put the plan on GitHub." That skill releases and publishes the accepted drafts. The previous release stays active until then. Earlier approval covers only its unchanged scope.
-10. Report the distinct states, each as pending or done: draft reconciliation accepted, release approved, engineering repository update, issue updates, board updates and engineer action required. Do not say "up to date" while a publication step is pending. Say that engineers can still hold old material in a checkout or an open conversation. `references/updates.md` has the exact list.
+10. Report the six states by these names, each with one of its values: draft reconciliation (accepted, or not yet accepted), release (approved, or not yet approved), engineering repository update (pending, or available), issue updates (pending, or verified), board updates (pending, or verified) and engineer action (required, with the work items, or none). Do not say "up to date" while a publication step is pending. Say that engineers can still hold old material in a checkout or an open conversation. `references/updates.md` has the exact list.
 
 Ask only when the answer is ambiguous and the choice changes the result. Each question names the decision that makes it necessary. Do not ask for what you already know.
 
