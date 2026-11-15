@@ -71,11 +71,13 @@ class CheckpointCase(unittest.TestCase):
         self.root = base / "engineering"
         shutil.copytree(FIXTURE, self.root)
         env = {"HOME": str(self.home), "USERPROFILE": str(self.home), "XDG_CONFIG_HOME": str(self.home / "xdg"),
-               "GIT_CONFIG_NOSYSTEM": "1"}
+               "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"}
         env.update(IDENTITY)
         patch = mock.patch.dict(os.environ, env)
         patch.start()
         self.addCleanup(patch.stop)
+        for name in ("GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT", "EMAIL"):   # no identity reaches git from the caller's environment
+            os.environ.pop(name, None)
         code, out, err = run_main(["init", "--root", str(self.root), "--slug", "confidential-fixture", "--answer", "no", "--apply"])
         self.assertEqual(code, 0, out + err)
         self.workspace = self.home / ".carrydown" / "workspaces" / "confidential-fixture"

@@ -69,8 +69,14 @@ class World:
         self.log = self.tmp / "calls.jsonl"
         self.record = self.tmp / "run.jsonl"
         (self.tmp / "home").mkdir()
+        # A fixed commit identity in a global configuration file of its own, as the rest of the suite does, so the doctor's
+        # identity row does not depend on the person's own configuration, on HOME or on the checkout's local configuration.
+        self.gitconfig = self.tmp / "gitconfig"
+        self.gitconfig.write_text("[user]\n\tname = Test Owner\n\temail = owner@example.com\n")
         self.env = {"PATH": str(self.bin) + os.pathsep + os.environ.get("PATH", ""), "FAKE_GH_STATE": str(self.state),
-                    "FAKE_GH_LOG": str(self.log), "HOME": str(self.tmp / "home")}
+                    "FAKE_GH_LOG": str(self.log), "HOME": str(self.tmp / "home"), "USERPROFILE": str(self.tmp / "home"),
+                    "XDG_CONFIG_HOME": str(self.tmp / "home" / "xdg"), "GIT_CONFIG_GLOBAL": str(self.gitconfig),
+                    "GIT_CONFIG_NOSYSTEM": "1", "GIT_TERMINAL_PROMPT": "0"}
 
     def seed(self, app=True, **extra):
         state = {"user": {"login": "will-test", "id": 101}, "org": ORG, "repos": {}, "plan": "team"}
@@ -126,7 +132,8 @@ class Base(unittest.TestCase):
         patcher = mock.patch.dict(os.environ, self.world.env)
         patcher.start()
         self.addCleanup(patcher.stop)
-        os.environ.pop("CARRYDOWN_GITHUB_TOKEN", None)
+        for name in ("CARRYDOWN_GITHUB_TOKEN", "GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT"):
+            os.environ.pop(name, None)
         self.seed()
 
     def seed(self, app=True, **extra):
@@ -187,6 +194,17 @@ class PlanTests(Base):
 
 
 class DoctorTests(Base):
+    def setUp(self):
+        """The doctor reads the commit identity in the folder it runs from. Run it from a folder outside every repository, so a
+        checkout's local configuration cannot supply or hide the identity, and the result is the same in a fresh clone."""
+        super().setUp()
+        self.outside = self.tmp / "outside"
+        self.outside.mkdir()
+        os.environ["GIT_CEILING_DIRECTORIES"] = str(self.tmp)
+        here = os.getcwd()
+        os.chdir(self.outside)
+        self.addCleanup(os.chdir, here)
+
     def test_missing_gh_prints_the_install_lines_and_exits_1(self):
         empty = self.tmp / "empty"
         empty.mkdir()
@@ -208,6 +226,23 @@ class DoctorTests(Base):
         self.assertIn("will-test", out)
         self.assertIsNone(TOKEN_SHAPE.search(out))
         self.assertTrue(all(read_only(c["args"]) for c in self.calls()), [c["args"] for c in self.calls() if not read_only(c["args"])])
+
+    def test_doctor_without_a_commit_identity_is_not_ready(self):
+        empty = self.tmp / "empty-gitconfig"
+        empty.write_text("")
+        self.world.env["GIT_CONFIG_GLOBAL"] = str(empty)
+        code, out = self.main(["doctor", "--org", ORG])
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r"git identity\s+not verified\s+run git config --global user.name and user.email")
+        self.assertIn("Not ready.", out)
+
+    def test_doctor_with_a_name_and_no_email_is_not_ready(self):
+        half = self.tmp / "half-gitconfig"
+        half.write_text("[user]\n\tname = Test Owner\n")
+        self.world.env["GIT_CONFIG_GLOBAL"] = str(half)
+        code, out = self.main(["doctor", "--org", ORG])
+        self.assertEqual(code, 1, out)
+        self.assertRegex(out, r"git identity\s+not verified")
 
     def test_not_signed_in_is_not_verified(self):
         self.seed(auth="none")
