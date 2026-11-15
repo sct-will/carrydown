@@ -51,7 +51,7 @@ The steps are in [when the project changes](#when-the-project-changes).
 
 ## What the agent asks you
 
-The interview starts with step 0, the question about who may see your documents, and then has six steps. Replies start with `carrydown: interview, step N of 6`, with the current step number in place of `N`. The step column gives that number for each question. These questions tell you what to have ready:
+The interview starts with step 0, the question about who may see your documents, and then has six steps. Replies start with `carrydown: interview, step N of 6`, with the current step number in place of `N`. The step column gives that number for each question. These questions tell you what to have ready. [Words you will meet](setup.md#words-you-will-meet) explains the terms in one sentence each, and the [glossary](#glossary) has the rest.
 
 | Step | The agent asks | You answer with |
 | --- | --- | --- |
@@ -61,10 +61,14 @@ The interview starts with step 0, the question about who may see your documents,
 | 2, optional | Should skills or work preferences influence the proposed assignments? | Optional skills and preferred work for any or all engineers. Leave them out when unknown. |
 | 3 | When must it ship, or how many weeks do you have? | A date, a number of weeks, or "derive the date" |
 | 4 | Which repository will hold the issues? | owner/repo |
-| 5 | Which coding agents do the engineers use, and what must the stakeholders see at each milestone demonstration to call it done? | The agents, and the stakeholders' words, which become acceptance criteria |
+| 5 | Which coding agents do the engineers use, and what must the stakeholders see at each milestone demonstration to call it done? | The agents, and the stakeholders' words, which become acceptance criteria. For example: "an approver can approve a submitted report from their inbox". |
 | 6 | How is the code built, tested and merged here? | The commands and the branch rule |
 
-Your source files are required. Give the agent the technical document and broader context where you keep them. You do not need to copy them into the project, and a confidential document should stay where it is. If you want a local folder, use `docs/source/` and put it in `.gitignore` first. The agent inventories Word, Markdown, plain text, PDF, image and other readable files, then creates reviewable Markdown renderings. It reports a file that is already inside the project without calling it safe. It identifies unreadable files and continues with the rest. It stops only when no intended source can be processed. On the yes answer it writes the renderings under `docs/ground-truth/`. On the no answer it writes every rendering into the private workspace, including those of documents you call shareable. For what each answer means in practice, read [who may see your documents](setup.md#before-you-add-documents-who-may-see-them). Team size, allocation and target dates can be undecided. If you have a team and no date, the agent derives a date. If you have a date and no team, it proposes the capacity needed. If neither is known, it proposes a starting point and asks you to confirm it. Skills and work preferences are always optional. If you supply them, the agent proposes a best match and explains it. If they are missing or unclear, the agent uses the default assignment approach and continues.
+Your source files are required. Give the agent the technical document and broader context where you keep them. You do not need to copy them into the project, and a confidential document should stay where it is. If you want a local folder, use `docs/source/` and put it in `.gitignore` first.
+
+The agent inventories Word, Markdown, plain text, PDF, image and other readable files, then creates reviewable Markdown renderings. It reports a file that is already inside the project without calling it safe. It identifies unreadable files and continues with the rest. It stops only when no intended source can be processed. On the yes answer it writes the renderings under `docs/ground-truth/`. On the no answer it writes every rendering into the private workspace, including those of documents you call shareable. For what each answer means in practice, read [who may see your documents](setup.md#before-you-add-documents-who-may-see-them).
+
+Team size, allocation and target dates can be undecided. If you have a team and no date, the agent derives a date. If you have a date and no team, it proposes the capacity needed. If neither is known, it proposes a starting point and asks you to confirm it. Skills and work preferences are always optional. If you supply them, the agent proposes a best match and explains it. If they are missing or unclear, the agent uses the default assignment approach and continues.
 
 Allocation is the share of each person's working time available for this plan. The agent assumes 100 percent and asks you to confirm. For someone available three days in five, say 60 percent. Mention start dates, days off, breaks, work owned outside the team and any existing parent epic. An epic is the parent GitHub issue for the whole plan.
 
@@ -390,6 +394,7 @@ For installation problems, use the [setup guide's troubleshooting](setup.md#when
 ## Glossary
 
 - **Ground truth.** The document or documents the project must obey, such as an architecture document, requirements, rules and standards.
+- **Dry run.** A preview of what a command would do. It writes nothing. The agent shows you the dry run and asks before the real run writes anything.
 - **Private workspace.** An owner-only, versioned folder on your machine, outside the project. It holds the staffing file, restricted documents and their renderings, drafts and every release record. Carrydown never copies it anywhere.
 - **Approved context.** One file per work item, `docs/context/<id>.md`, with the exact text of the source sections the item cites. You approve it for everyone who can read the repository.
 - **Release.** Approved content, named by its release id, together with one permission decision, named by its request id.

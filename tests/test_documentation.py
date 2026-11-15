@@ -625,6 +625,16 @@ class OwnerJourneyTests(unittest.TestCase):
             self.assertIn(heading, org)
         self.assertNotIn("It does not run them.", org)
 
+    def test_the_guide_has_dry_run_in_the_glossary_and_short_interview_paragraphs(self):
+        text = self.page("docs/plan-owner-guide.md")
+        self.assertRegex(text.split("## Glossary", 1)[1], r"(?m)^- \*\*Dry run\.\*\* ")
+        section = text[text.index("## What the agent asks you"):]
+        section = section[:section.index("\n## ", 3)]
+        self.assertIn("(setup.md#words-you-will-meet)", section)
+        self.assertIn("an approver can approve a submitted report from their inbox", section)
+        prose = [p for p in section.split("\n\n") if p and not p.startswith(("|", "#"))]
+        self.assertLess(max(len(p.split()) for p in prose), 100)
+
 
 if __name__ == "__main__":
     unittest.main()
