@@ -108,7 +108,7 @@ request db2d1727f7cc97302be9aaaf17e9e6d0ce4c7eb1168d25ac7cc0db9aadebe802  releas
 40 approved repository file(s), 1 receipt(s). Evidence: local owner approval, not authenticated
 1 file(s) and 1 receipt(s) would be written; 39 already match.
   docs/spec/plan.yaml becomes the released plan. Your working plan, with its comments, moves to the private workspace as drafts/plan.yaml, where the scripts find it from now on.
-Exported 1 file(s) and 1 receipt(s) into your working tree. Review them with git status, then commit and push as you usually do.
+Exported 1 file(s) and 1 receipt(s) into your working tree. Next, check whether they are committed and pushed, and commit and push them only after the owner approves that in the chat.
 
 Released. Next, check whether these files are committed and pushed, and commit and push them only after the owner approves that in the chat. Then the GitHub step publishes from this release.
 [exit 0]

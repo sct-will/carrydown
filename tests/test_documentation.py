@@ -572,7 +572,10 @@ class MaintenanceNoticeTests(unittest.TestCase):
         self.assertIn("come back to the chat", step)
 
     def test_the_release_completion_line_and_the_owner_pages_describe_the_agent_commit(self):
-        self.assertIn("commit and push them only after the owner approves that in the chat", (ROOT / "scripts" / "release.py").read_text(encoding="utf-8"))
+        release = (ROOT / "scripts" / "release.py").read_text(encoding="utf-8")
+        self.assertIn("commit and push them only after the owner approves that in the chat", release)
+        self.assertIn("into your working tree. Next, check whether they are committed and pushed, and commit and push them only after the owner approves that in the chat.", release)
+        self.assertNotIn("then commit and push as you usually do", release)
         guide = (ROOT / "docs" / "plan-owner-guide.md").read_text(encoding="utf-8")
         for old in ("You commit and push as you do today", "Commit and push them to the intended branch.", "Export and commit the new release first."):
             with self.subTest(old=old):

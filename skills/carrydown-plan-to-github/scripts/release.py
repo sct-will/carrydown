@@ -1627,7 +1627,7 @@ def export_yes(a, project, ev, items, previous, plan_rel):
         write_file(root, rel, data, mode, ev, "release", dest_for(ev, rel))
     for rel, data in sorted(receipts.items()):
         write_file(root, rel, data, "100644", ev, "release", "engineering-repo")
-    say(f"Exported {len(writes)} file(s) and {len(receipts)} receipt(s) into your working tree. Review them with git status, then commit and push as you usually do.")
+    say(f"Exported {len(writes)} file(s) and {len(receipts)} receipt(s) into your working tree. Next, check whether they are committed and pushed, and commit and push them only after the owner approves that in the chat.")
     return 0
 
 
