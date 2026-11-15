@@ -398,6 +398,18 @@ class DestinationTests(RenderCase):
         self.assertIn("outside the project folder", out)
         self.assertFalse((self.tmp / "elsewhere").exists())
 
+    def test_the_out_dir_refusal_says_where_a_relative_folder_is_read_from(self):
+        code, out = self.render(self.project / "ground-truth" / "architecture.md", "--out-dir", self.tmp / "elsewhere", "--dry-run")
+        self.assertEqual(code, 2, out)
+        self.assertIn(f"is outside the project folder {self.project.resolve()}, so nothing was written. "
+                      "A relative --out-dir is read from the project root (--root). Give a folder inside it, such as my-test/ground-truth", out)
+        self.assertNotIn("Dry run: nothing was written.", out)
+        # the example works, and so does an absolute path inside the project
+        for out_dir in ("my-test/ground-truth", self.project / "my-test" / "absolute"):
+            code, out = self.render(self.project / "ground-truth" / "architecture.md", "--out-dir", out_dir, "--dry-run")
+            self.assertEqual(code, 0, out)
+            self.assertNotIn("outside the project folder", out)
+
     def test_a_source_kept_in_the_workspace_renderings_is_not_overwritten(self):
         kept = self.workspace / "renderings" / "company-governance.md"
         shutil.copy(FIXTURE / "ground-truth" / "company-governance.md", kept)

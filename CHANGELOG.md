@@ -10,6 +10,7 @@ All notable changes to this project are written here. The format follows Keep a 
 - **The renderer preview says nothing was written.** A dry run ends with `Dry run: nothing was written.`, and the sample's commands and [the sample run](docs/sample-run.md) separate the read-only preview from the write, which runs only in a disposable copy.
 - **The interview table is numbered.** Every question in [the plan owner guide](docs/plan-owner-guide.md#what-the-agent-asks-you) carries the step the agent announces, 0 to 6, with the optional skills question under step 2.
 - **The load report reads by ear.** After the load table, the checker's report prints one labeled sentence per person with each work unit's days and percent.
+- **The output-folder refusal says what to type.** It adds that a relative folder is read from the project root and gives `my-test/ground-truth` as an example.
 
 ### Reconciliation and guided project updates
 
