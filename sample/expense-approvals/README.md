@@ -39,18 +39,15 @@ The owner's side of the sample is a test fixture in the main carrydown repositor
 
 ## Run it
 
-From the root of the main carrydown repository. These commands change nothing. They check the sample, report on its plan, preview the renderer and the GitHub sync, and rebuild the release in a temporary folder to compare it. None of them needs a token or the network.
+From the root of the main carrydown repository. That is the folder you cloned the carrydown repository into, the one that holds `scripts/` and `sample/`: open a terminal there, or `cd` into it. These commands change nothing. They check the sample, report on its plan, preview the renderer and the GitHub sync, and rebuild the release in a temporary folder to compare it. None of them needs a token or the network.
+
+Start with the renderer preview. It is the first stage of a plan, rendering the ground truth. A rendering is the Markdown copy of a source document, with stable section numbers, that the plan and the specifications cite.
 
 ```bash
-python3 scripts/check_specs.py --root sample/expense-approvals
-python3 scripts/check_specs.py --root sample/expense-approvals --view released
-python3 scripts/check_specs.py --root sample/expense-approvals --report --people sample/expense-approvals/people.yaml
 python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --version 0.3 --date 2026-10-24 --dry-run
-python3 scripts/github_sync.py --root sample/expense-approvals --offline
-python3 tests/rebuild_sample_release.py --check
 ```
 
-The renderer preview is the first stage of a plan, rendering the ground truth. It prints what it would write and ends with the line that says nothing was written:
+It prints what it would write and ends with the line that says nothing was written:
 
 ```text
 would write docs/ground-truth/architecture.md: 344 lines, 31 headings, 0 figures
@@ -61,6 +58,36 @@ Dry run: nothing was written.
 ```
 
 The note means the released plan keeps no fingerprint of the source. The owner's working plan, in the private workspace, keeps it, so a later change to the source is noticed.
+
+Then the other five. The check of the sample's plan and its nine specifications:
+
+```bash
+python3 scripts/check_specs.py --root sample/expense-approvals
+```
+
+The same check as a fresh clone sees it, the released plan against its approved contexts and receipts:
+
+```bash
+python3 scripts/check_specs.py --root sample/expense-approvals --view released
+```
+
+The schedule, the load table and the critical path, with the staffing file for the capacity, dates and names checks:
+
+```bash
+python3 scripts/check_specs.py --root sample/expense-approvals --report --people sample/expense-approvals/people.yaml
+```
+
+The GitHub sync preview, from the plan alone:
+
+```bash
+python3 scripts/github_sync.py --root sample/expense-approvals --offline
+```
+
+The release rebuilt in a temporary folder and compared byte for byte with what the repository holds:
+
+```bash
+python3 tests/rebuild_sample_release.py --check
+```
 
 The `--offline` form of `github_sync.py` shows the plan without reading GitHub. To see the release commands on a throwaway copy of the sample, with the owner's working plan in place, read the first section of [the recorded run](https://github.com/sct-will/carrydown/blob/main/docs/sample-run.md) in the main repository: it shows `release.py release`, the one command of the yes path, as a dry run and with `--apply`, with what each prints.
 

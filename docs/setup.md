@@ -2,7 +2,7 @@
 
 ## The short path
 
-1. **What you need.** A coding agent that supports Agent Skills, and Node.js 22.20 or later and Git for the one-line installer. If you cannot install Node.js, use the [manual install](install-options.md#manual-install-without-nodejs). You do not need to install Python first: the skill checks Python and Git when it starts, and offers to install Python after your yes.
+1. **What you need.** A coding agent that supports Agent Skills, and Node.js 22.20 or later and Git for the one-line installer. To check them by hand, the steps for [macOS](#macos), [Windows](#windows) and [Linux](#linux) show the command for each. If you cannot install Node.js, use the [manual install](install-options.md#manual-install-without-nodejs). You do not need to install Python first: the skill checks Python and Git when it starts, and offers to install Python after your yes.
 2. **Where you type the installer.** In your terminal, in your project folder, once. [Open your project folder](#open-your-project-folder) shows how. Choose both skills, your agent and the project scope, as [install the two skills](#install-the-two-skills) shows:
 
    ```bash
