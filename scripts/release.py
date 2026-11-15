@@ -1748,7 +1748,7 @@ def cmd_export_state(a):
             say("Dry run: nothing was written. Add --apply.")
             return 0
         write_file(root, own_path, ev.receipts[own_path], "100644", ev, "state-only", "engineering-repo")
-        say(f"Rewrote {own_path}. Commit it as you usually do.")
+        say(f"Rewrote {own_path}. Next, check whether it is committed and pushed, and commit and push it only after the owner approves that in the chat.")
         return 0
     name, email = identity(project)
     if not (name and email):
