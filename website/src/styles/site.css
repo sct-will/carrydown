@@ -131,6 +131,11 @@ body.site {
   flex-wrap: wrap;
   gap: 12px;
 }
+.site .license {
+  margin: 14px 0 0;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
 .site h2.how {
   margin: 96px 0 16px;
 }
@@ -333,6 +338,72 @@ body.site {
   line-height: 1.6;
 }
 
+/* Home: What you get. One panel with two columns of rows, an amber check on each. The intro and the
+ * closing line run the full measure, like the Try it out section. */
+.site .wyg-intro {
+  margin: 0 0 32px;
+  color: var(--ink-muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+.site .wyg-panel {
+  padding: 8px 28px;
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  background: var(--cream-raised);
+}
+.site .wyg-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 40px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.site .wyg-list li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--border);
+}
+.site .wyg-list li:nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+.site .wyg-check {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
+  fill: none;
+  stroke: var(--amber-ink);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.site .wyg-list h3 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  line-height: 1.35;
+}
+.site .wyg-path {
+  color: var(--teal);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  font-weight: 500;
+}
+.site .wyg-list p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.site .wyg-more {
+  margin: 24px 0 0;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
 /* Reflow */
 @media (min-width: 1200px) {
   .site .flow-frame {
@@ -398,6 +469,18 @@ body.site {
   .site .tiles {
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
+  }
+  .site .wyg-panel {
+    padding: 4px 18px;
+  }
+  .site .wyg-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .site .wyg-list li:nth-last-child(-n + 2) {
+    border-bottom: 1px solid var(--border);
+  }
+  .site .wyg-list li:last-child {
+    border-bottom: 0;
   }
   .site .tile-arrow {
     justify-self: center;

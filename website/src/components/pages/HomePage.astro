@@ -5,7 +5,7 @@ import HowItWorks from '../HowItWorks.astro';
 import TranslationNote from '../TranslationNote.astro';
 import { getStrings } from '../../i18n';
 import { localePath } from '../../lib/paths';
-import { repoUrl, sampleBoardUrl } from '../../../site.config.mjs';
+import { sampleBoardUrl } from '../../../site.config.mjs';
 
 interface Props {
   locale?: string;
@@ -17,6 +17,12 @@ const c = h.carrydown;
 // The product name in the intro is set in the accent color: the text is split on it and it is put back as a span.
 const introParts = c.intro.split('carrydown');
 const tileLinks = [sampleBoardUrl, localePath(locale, '/docs/setup/')];
+// The way in: the Start here section of the docs' first page, and its How it works section. The reader
+// stays in the docs for the installation.
+const startHereUrl = `${localePath(locale, '/docs/')}#start-here`;
+const howItWorksUrl = `${localePath(locale, '/docs/')}#how-it-works`;
+const w = h.whatYouGet;
+const whatYouGetUrl = `${localePath(locale, '/docs/')}#what-you-get`;
 ---
 
 <SiteLayout title={h.title} description={h.description} locale={locale} kind="home">
@@ -27,9 +33,10 @@ const tileLinks = [sampleBoardUrl, localePath(locale, '/docs/setup/')];
         <div class="hero-main">
           <h1 class="r25">{h.h1.map((line) => <span class="h1-line">{line}</span>)}</h1>
           <div class="actions">
-            <a class="btn primary" href={repoUrl}>{h.buttons.try}</a>
+            <a class="btn primary" href={startHereUrl}>{h.buttons.try}</a>
             <a class="btn secondary" href={sampleBoardUrl}>{h.buttons.sample}</a>
           </div>
+          <p class="license">{h.license}</p>
         </div>
         <div class="hero-side">
           <p class="defn">{h.definition}</p>
@@ -38,7 +45,7 @@ const tileLinks = [sampleBoardUrl, localePath(locale, '/docs/setup/')];
       </div>
 
       <h2 class="how">{h.howHeading}</h2>
-      <p class="how-intro">{h.paragraph}</p>
+      <p class="how-intro">{h.paragraph} {h.learnMore.before}<a href={howItWorksUrl}>{h.learnMore.link}</a>{h.learnMore.after}</p>
       <div class="flow-frame">
         <HowItWorks locale={locale} />
       </div>
@@ -57,9 +64,9 @@ const tileLinks = [sampleBoardUrl, localePath(locale, '/docs/setup/')];
   <section id="carrydown">
     <div class="wrap">
       <h2 class="cd-h">{c.heading}</h2>
-      <p class="cd-intro">{introParts.map((part, i) => (<>{i > 0 && <a class="accent" href={repoUrl}>carrydown</a>}{part}</>))}</p>
+      <p class="cd-intro">{introParts.map((part, i) => (<>{i > 0 && <a class="accent" href={startHereUrl}>carrydown</a>}{part}</>))}</p>
       <div class="cd-cta">
-        <a class="btn primary" href={repoUrl}>{c.tryButton}</a>
+        <a class="btn primary" href={startHereUrl}>{c.tryButton}</a>
         <div class="cmd">
           <code id="install-command">{c.installCommand}</code>
           <button
@@ -108,6 +115,30 @@ const tileLinks = [sampleBoardUrl, localePath(locale, '/docs/setup/')];
         ))}
       </ol>
       <p class="cd-note">{c.reviewNote}</p>
+    </div>
+  </section>
+
+  <section id="what-you-get">
+    <div class="wrap">
+      <h2>{w.heading}</h2>
+      <p class="wyg-intro">{w.intro}</p>
+      <div class="wyg-panel">
+        <ul class="wyg-list" role="list">
+          {w.items.map((item) => (
+            <li>
+              <svg class="wyg-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M8 12.5l2.7 2.7L16 9.5"></path>
+              </svg>
+              <div>
+                <h3>{item.title}{item.path && <>{' '}{w.inWord ? `${w.inWord} ` : ''}<span class="wyg-path">{item.path}</span></>}</h3>
+                <p>{item.body}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <p class="wyg-more">{w.more.before}<a href={whatYouGetUrl}>{w.more.link}</a>{w.more.after}</p>
     </div>
   </section>
 </SiteLayout>

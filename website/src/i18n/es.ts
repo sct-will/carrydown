@@ -213,10 +213,14 @@ export const es: Strings = {
     paragraph:
       'Su equipo aporta los documentos del proyecto, los requisitos y las decisiones sobre personas y plazos. Su agente de IA usa esta verdad de referencia para crear un plan conectado, una especificación por cada elemento de trabajo e incidencias de GitHub que enlazan cada especificación y citan las secciones de los documentos en que se basa. Su agente de IA también genera un agent skill específico del proyecto que lleva la especificación, las decisiones que la sustentan y las secciones citadas hasta el agente de programación de cada ingeniero. Cuando cambia un documento, usted revisa una sola actualización.',
     buttons: {
-      try: 'Probarlo en GitHub',
+      try: 'Empiece aquí',
       sample: 'Ver los resultados del agente de IA de un proyecto de ejemplo',
     },
+    /** A small line under the buttons. */
+    license: 'Código abierto bajo Apache 2.0.',
     howHeading: 'Cómo funciona',
+    /** The last sentence under How it works; the middle word is the link to the README section. */
+    learnMore: { before: 'Más información ', link: 'aquí', after: '.' },
     sideParagraphs: [
       'Cuando los ingenieros escriben las especificaciones por separado, la calidad varía y las especificaciones se desvían a medida que el proyecto cambia.',
       'Carried-context development vincula cada especificación a la misma verdad de referencia, cita las fuentes y entrega cada cambio aprobado a cada agente de programación.',
@@ -242,7 +246,7 @@ export const es: Strings = {
       heading: 'Pruébelo',
       intro:
         'Carried-context development es un enfoque de desarrollo con agentes, y hay más de una forma de implementarlo. carrydown es la implementación de referencia: dos Agent Skills que usted instala, un tercero que genera para sus ingenieros y las comprobaciones que validan cada cita. Es de código abierto bajo Apache 2.0 y funciona con el agente de programación que su equipo ya usa.',
-      tryButton: 'Probarlo en GitHub',
+      tryButton: 'Empiece aquí',
       installCommand: en.home.carrydown.installCommand,
       copy: 'Copiar',
       copied: 'Copiado',
@@ -289,6 +293,25 @@ export const es: Strings = {
         },
       ],
       reviewNote: 'Las partes interesadas, los responsables del proyecto y los responsables de ingeniería ven cada hito y deciden si se supera o no. La revisión humana es explícitamente parte del método.',
+    },
+    /** The What you get section: the outputs, summarized from the README's list, and a link to the full list in the docs. */
+    whatYouGet: {
+      heading: 'Lo que obtiene',
+      intro:
+        'Su agente de IA genera estos elementos con los skills de carrydown. Cada elemento de trabajo puede citar secciones de una o más fuentes, y las fechas y la capacidad se comprueban contra el equipo nombrado.',
+      /** The word between a title and the path that follows it, where there is one. */
+      inWord: 'en',
+      items: [
+        { title: 'Un plan', path: 'docs/spec/plan.yaml', body: 'Hitos, líneas de trabajo, responsables y fechas ajustados a sus personas y su tiempo, con una razón escrita para cada hito.' },
+        { title: 'Una especificación por elemento de trabajo', path: '', body: 'La pieza de trabajo más pequeña que un ingeniero puede terminar y mostrar, que cita sus secciones y se comprueba contra el plan en cada pull request.' },
+        { title: 'Un contexto aprobado por elemento de trabajo', path: 'docs/context/', body: 'El texto exacto de las secciones que cita el elemento y las decisiones que lo sustentan, aprobados por usted. La única parte de sus documentos que llega a los agentes de los ingenieros.' },
+        { title: 'Un recibo de publicación', path: 'docs/release/', body: 'Un pequeño archivo público que nombra la publicación aprobada, su estado y su caducidad.' },
+        { title: 'Un informe de segunda revisión', path: '', body: 'Cobertura, evidencia, razonamiento y riesgo, con sus decisiones y las comprobaciones de las correcciones aceptadas.' },
+        { title: 'Incidencias de GitHub', path: '', body: 'Una por elemento de trabajo bajo una subépica por hito, cada una indicando al agente del ingeniero qué leer.' },
+        { title: 'Un tablero de GitHub Projects', path: '', body: 'Unidades de trabajo, líneas, fechas y puntos de control rellenados.' },
+        { title: 'El skill de agente de IA del ingeniero', path: '', body: 'Generado a partir de sus especificaciones y confirmado en su repositorio. Un ingeniero empieza un elemento de trabajo nombrándolo, por ejemplo «Work on [work item ID]», y el agente de programación lee primero la especificación y el contexto aprobado de ese elemento.' },
+      ],
+      more: { before: 'Dónde va cada archivo está en la documentación, en ', link: 'What you get', after: '.' },
     },
   },
 

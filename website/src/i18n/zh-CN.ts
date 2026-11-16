@@ -190,10 +190,14 @@ export const zhCN: Strings = {
     paragraph:
       '你的团队提供项目文档、需求，以及关于人员和截止日期的决策。你的 AI 代理以这些基准事实为依据，创建一份相互关联的计划、每个工作项的规格，以及链接各自规格并引用其背后文档章节的 GitHub issue。你的 AI 代理还会生成一个项目专用的 agent skill，把规格、工作背后的决策和所引用的章节传递给每位工程师的编码代理。文档发生变化时，你只需审阅一次更新。',
     buttons: {
-      try: '在 GitHub 上试用',
+      try: '从这里开始',
       sample: '查看示例项目的 AI 代理产出',
     },
+    /** A small line under the buttons. */
+    license: '以 Apache 2.0 开源。',
     howHeading: '工作原理',
+    /** The last sentence under How it works; the middle word is the link to the README section. */
+    learnMore: { before: '更多信息请看', link: '这里', after: '。' },
     sideParagraphs: [
       '工程师各自独立撰写规格时，质量参差不齐，规格也会随着项目的变化而彼此偏离。',
       'Carried-context development 把每份规格绑定到同一个基准事实，引用来源，并把每一项获批的变更交付给每个编码代理。',
@@ -219,7 +223,7 @@ export const zhCN: Strings = {
       heading: '试一试',
       intro:
         'Carried-context development 是一种智能体开发方法，实现它的方式不止一种。carrydown 是参考实现：你安装的两个 Agent Skills，它为你的工程师生成的第三个，以及验证每一处引用的检查。它以 Apache 2.0 开源，可与你的团队已经在用的编码代理配合使用。',
-      tryButton: '在 GitHub 上试用',
+      tryButton: '从这里开始',
       installCommand: en.home.carrydown.installCommand,
       copy: '复制',
       copied: '已复制',
@@ -266,6 +270,25 @@ export const zhCN: Strings = {
         },
       ],
       reviewNote: '利益相关方、项目负责人和工程经理观看每个里程碑并决定通过与否。人工审核是这一方法明确的一部分。',
+    },
+    /** The What you get section: the outputs, summarized from the README's list, and a link to the full list in the docs. */
+    whatYouGet: {
+      heading: '你会得到什么',
+      intro:
+        '你的 AI 代理用 carrydown 的 skill 生成这些产出。每个工作项都可以引用一个或多个来源的章节，日期和产能会对照指定的团队进行核对。',
+      /** The word between a title and the path that follows it, where there is one. */
+      inWord: '位于',
+      items: [
+        { title: '一份计划', path: 'docs/spec/plan.yaml', body: '里程碑、工作线、负责人和日期按你的人员和时间来安排，每个里程碑都写明理由。' },
+        { title: '每个工作项一份规格', path: '', body: '工程师能够完成并展示的最小工作单元，引用其依据的章节，并在每次拉取请求时对照计划检查。' },
+        { title: '每个工作项一份已批准的上下文', path: 'docs/context/', body: '工作项所引用章节的原文和背后的决策，由你批准。这是你的文档中唯一会到达工程师代理的部分。' },
+        { title: '一份发布回执', path: 'docs/release/', body: '一个小的公开文件，写明已批准的发布、其状态和有效期。' },
+        { title: '一份二次审阅报告', path: '', body: '覆盖范围、证据、推理和风险，加上你的决定以及对已接受修复的检查。' },
+        { title: 'GitHub issue', path: '', body: '每个工作项一个，归在每个里程碑的子史诗之下，每个都告诉工程师的代理该读什么。' },
+        { title: '一个 GitHub 项目看板', path: '', body: '工作单元、工作线、日期和检查点均已填好。' },
+        { title: '工程师的 AI 代理 skill', path: '', body: '由你的规格生成并提交到你的仓库。工程师通过点名来开始一个工作项，例如“Work on [work item ID]”，编码代理会先读取该工作项的规格和已批准的上下文。' },
+      ],
+      more: { before: '每个文件放在哪里，见文档中的 ', link: 'What you get', after: '。' },
     },
   },
 

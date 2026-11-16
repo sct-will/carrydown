@@ -216,10 +216,14 @@ export const en = {
     paragraph:
       'Your team provides the project documents, the requirements and the decisions about people and deadlines. Your AI agent uses this ground truth to create a connected plan, a spec for every work item, and GitHub issues that link each spec and cite the document sections behind it. Your AI agent also generates a project-specific agent skill that carries the spec, the decisions behind the work and the cited sections to each engineer’s coding agent. When a document changes, you review one update.',
     buttons: {
-      try: 'Try it on GitHub',
+      try: 'Start here',
       sample: 'See a sample project’s AI agent outputs',
     },
+    /** A small line under the buttons. */
+    license: 'Open source under Apache 2.0.',
     howHeading: 'How it works',
+    /** The last sentence under How it works; the middle word is the link to the README section. */
+    learnMore: { before: 'Learn more ', link: 'here', after: '.' },
     sideParagraphs: [
       'When engineers write specs independently, quality varies and the specs drift apart as the project changes.',
       'Carried-context development ties every spec to the same ground truth, cites the sources, and delivers every approved change to every coding agent.',
@@ -245,7 +249,7 @@ export const en = {
       heading: 'Try it out',
       intro:
         'Carried-context development is an approach to agentic development, and there is more than one way to implement it. carrydown is the reference implementation: two Agent Skills you install, a third it generates for your engineers, and the checks that validate every citation. It is open source under Apache 2.0 and works with the coding agent your team already uses.',
-      tryButton: 'Try it on GitHub',
+      tryButton: 'Start here',
       installCommand: 'npx skills add sct-will/carrydown',
       copy: 'Copy',
       copied: 'Copied',
@@ -292,6 +296,25 @@ export const en = {
         },
       ],
       reviewNote: 'Stakeholders, project owners and engineering managers watch each milestone and decide pass or fail. Human-in-the-loop review is explicitly part of the method.',
+    },
+    /** The What you get section: the outputs, summarized from the README's list, and a link to the full list in the docs. */
+    whatYouGet: {
+      heading: 'What you get',
+      intro:
+        'Your AI agent generates these with the carrydown skills. Every work item can cite sections from one or more sources, with dates and capacity checked against the named team.',
+      /** The word between a title and the path that follows it, where there is one. */
+      inWord: 'in',
+      items: [
+        { title: 'A plan', path: 'docs/spec/plan.yaml', body: 'Milestones, tracks, owners and dates fitted to your people and time, with a reason for every milestone.' },
+        { title: 'One specification per work item', path: '', body: 'The smallest piece of work an engineer can finish and show, citing its sections and checked against the plan on every pull request.' },
+        { title: 'One approved context per work item', path: 'docs/context/', body: 'The exact source text the item cites and the decisions behind it, approved by you. The only part of your documents that reaches the engineers’ agents.' },
+        { title: 'A release receipt', path: 'docs/release/', body: 'A small public file naming the approved release, its state and its expiry.' },
+        { title: 'A second-pass review report', path: '', body: 'Coverage, evidence, reasoning and risk, with your decisions and the checks on accepted repairs.' },
+        { title: 'GitHub issues', path: '', body: 'One per work item under a sub-epic per milestone, each telling the engineer’s agent what to read.' },
+        { title: 'A GitHub Project board', path: '', body: 'Work units, tracks, dates and checkpoints filled in.' },
+        { title: 'The engineer’s AI agent skill', path: '', body: 'Generated from your specifications and committed in your repository. An engineer starts a work item by naming it, for example “Work on [work item ID]”, and the coding agent reads that item’s specification and approved context before it touches code.' },
+      ],
+      more: { before: 'Where each file goes is in the docs, under ', link: 'What you get', after: '.' },
     },
   },
 

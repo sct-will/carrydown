@@ -213,10 +213,14 @@ export const de: Strings = {
     paragraph:
       'Ihr Team liefert die Projektdokumente, die Anforderungen und die Entscheidungen zu Personen und Terminen. Ihr KI-Agent nutzt diese Faktengrundlage, um einen verbundenen Plan, eine Spezifikation für jedes Arbeitspaket und GitHub-Issues zu erstellen, die jede Spezifikation verlinken und die dahinterstehenden Dokumentabschnitte belegen. Ihr KI-Agent generiert außerdem einen projektspezifischen Agent Skill, der die Spezifikation, die Entscheidungen dahinter und die belegten Abschnitte zum Coding-Agenten jedes Entwicklers trägt. Wenn sich ein Dokument ändert, prüfen Sie eine einzige Aktualisierung.',
     buttons: {
-      try: 'Auf GitHub ausprobieren',
+      try: 'Hier starten',
       sample: 'KI-Agent-Ergebnisse eines Beispielprojekts ansehen',
     },
+    /** A small line under the buttons. */
+    license: 'Open Source unter Apache 2.0.',
     howHeading: 'So funktioniert es',
+    /** The last sentence under How it works; the middle word is the link to the README section. */
+    learnMore: { before: 'Mehr dazu ', link: 'hier', after: '.' },
     sideParagraphs: [
       'Wenn Entwickler Spezifikationen unabhängig voneinander schreiben, schwankt die Qualität, und die Spezifikationen driften auseinander, während sich das Projekt ändert.',
       'Carried-context development bindet jede Spezifikation an dieselbe Faktengrundlage, belegt die Quellen und trägt jede freigegebene Änderung zu jedem Coding-Agenten.',
@@ -242,7 +246,7 @@ export const de: Strings = {
       heading: 'Probieren Sie es aus',
       intro:
         'Carried-context development ist ein Ansatz für agentische Entwicklung, und es gibt mehr als einen Weg, ihn umzusetzen. carrydown ist die Referenzimplementierung: zwei Agent Skills, die Sie installieren, ein dritter, den sie für Ihre Entwickler generiert, und die Prüfungen, die jeden Beleg validieren. Sie ist Open Source unter Apache 2.0 und arbeitet mit dem Coding-Agenten, den Ihr Team bereits nutzt.',
-      tryButton: 'Auf GitHub ausprobieren',
+      tryButton: 'Hier starten',
       installCommand: en.home.carrydown.installCommand,
       copy: 'Kopieren',
       copied: 'Kopiert',
@@ -289,6 +293,25 @@ export const de: Strings = {
         },
       ],
       reviewNote: 'Stakeholder, Projektverantwortliche und Engineering-Manager sehen sich jeden Meilenstein an und entscheiden über bestanden oder nicht bestanden. Die Prüfung durch Menschen ist ausdrücklich Teil der Methode.',
+    },
+    /** The What you get section: the outputs, summarized from the README's list, and a link to the full list in the docs. */
+    whatYouGet: {
+      heading: 'Was Sie bekommen',
+      intro:
+        'Ihr KI-Agent erzeugt diese Ergebnisse mit den carrydown-Skills. Jedes Arbeitspaket kann Abschnitte aus einer oder mehreren Quellen belegen, und Termine und Kapazität werden gegen das benannte Team geprüft.',
+      /** The word between a title and the path that follows it, where there is one. */
+      inWord: 'in',
+      items: [
+        { title: 'Ein Plan', path: 'docs/spec/plan.yaml', body: 'Meilensteine, Tracks, Verantwortliche und Termine, an Ihre Leute und Ihre Zeit angepasst, mit einer Begründung für jeden Meilenstein.' },
+        { title: 'Eine Spezifikation pro Arbeitspaket', path: '', body: 'Das kleinste Stück Arbeit, das ein Entwickler abschließen und vorführen kann, mit Belegen auf seine Abschnitte und bei jedem Pull Request gegen den Plan geprüft.' },
+        { title: 'Ein freigegebener Kontext pro Arbeitspaket', path: 'docs/context/', body: 'Der genaue Quelltext der belegten Abschnitte und die Entscheidungen dahinter, von Ihnen freigegeben. Der einzige Teil Ihrer Dokumente, der die Agenten der Entwickler erreicht.' },
+        { title: 'Eine Release-Quittung', path: 'docs/release/', body: 'Eine kleine öffentliche Datei, die das freigegebene Release, seinen Zustand und sein Ablaufdatum nennt.' },
+        { title: 'Ein Bericht der zweiten Prüfung', path: '', body: 'Abdeckung, Belege, Begründung und Risiko, mit Ihren Entscheidungen und den Prüfungen der angenommenen Korrekturen.' },
+        { title: 'GitHub-Issues', path: '', body: 'Eines pro Arbeitspaket unter einem Sub-Epic pro Meilenstein, und jedes sagt dem Agenten des Entwicklers, was er lesen soll.' },
+        { title: 'Ein GitHub-Projektboard', path: '', body: 'Arbeitseinheiten, Tracks, Termine und Checkpoints ausgefüllt.' },
+        { title: 'Der KI-Agent-Skill des Entwicklers', path: '', body: 'Aus Ihren Spezifikationen generiert und in Ihrem Repository committet. Ein Entwickler startet ein Arbeitspaket, indem er es nennt, zum Beispiel „Work on [work item ID]“, und der Coding-Agent liest zuerst die Spezifikation und den freigegebenen Kontext dieses Pakets.' },
+      ],
+      more: { before: 'Wo jede Datei liegt, steht in der Doku unter ', link: 'What you get', after: '.' },
     },
   },
 

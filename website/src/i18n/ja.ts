@@ -205,10 +205,14 @@ export const ja: Strings = {
     paragraph:
       'チームは、プロジェクトの文書、要件、人や期限についての決定を用意します。AIエージェントはこのグラウンドトゥルースを使って、つながった計画、作業項目ごとの仕様、各仕様へのリンクと根拠となる文書セクションの引用を持つ GitHub イシューを作ります。AIエージェントはさらに、仕様、その背後にある決定、引用されたセクションを各エンジニアのコーディングエージェントへ届ける、プロジェクト専用のエージェントスキルも生成します。文書が変わったときは、ひとつの更新をレビューするだけです。',
     buttons: {
-      try: 'GitHub で試す',
+      try: 'ここから始める',
       sample: 'サンプルプロジェクトのAIエージェントの成果物を見る',
     },
+    /** A small line under the buttons. */
+    license: 'Apache 2.0 のオープンソースです。',
     howHeading: '仕組み',
+    /** The last sentence under How it works; the middle word is the link to the README section. */
+    learnMore: { before: '詳しくは', link: 'こちら', after: '。' },
     sideParagraphs: [
       'エンジニアが仕様をそれぞれ別々に書くと、品質はばらつき、プロジェクトの変化とともに仕様は離れていきます。',
       'Carried-context development は、すべての仕様を同じグラウンドトゥルースに結びつけ、出典を引用し、承認されたすべての変更をすべてのコーディングエージェントに届けます。',
@@ -234,7 +238,7 @@ export const ja: Strings = {
       heading: '試してみる',
       intro:
         'Carried-context development はエージェント開発のアプローチであり、実装方法はひとつではありません。carrydown はそのリファレンス実装です。インストールする二つの Agent Skills、エンジニア向けに生成される三つ目、そしてすべての引用を検証するチェックで構成されます。Apache 2.0 のオープンソースで、チームがすでに使っているコーディングエージェントで動きます。',
-      tryButton: 'GitHub で試す',
+      tryButton: 'ここから始める',
       installCommand: en.home.carrydown.installCommand,
       copy: 'コピー',
       copied: 'コピーしました',
@@ -281,6 +285,25 @@ export const ja: Strings = {
         },
       ],
       reviewNote: 'ステークホルダー、プロジェクトオーナー、エンジニアリングマネージャーが各マイルストーンを見て、合格か不合格かを判断します。人によるレビューは、明示的にこの方法の一部です。',
+    },
+    /** The What you get section: the outputs, summarized from the README's list, and a link to the full list in the docs. */
+    whatYouGet: {
+      heading: '得られるもの',
+      intro:
+        'AIエージェントが carrydown のスキルでこれらを生成します。各作業項目は一つ以上の出典のセクションを引用でき、日付と作業量は指名されたチームに照らして確認されます。',
+      /** The word between a title and the path that follows it, where there is one. */
+      inWord: '',
+      items: [
+        { title: '計画', path: 'docs/spec/plan.yaml', body: 'マイルストーン、トラック、担当者、期日を、あなたの人と時間に合わせて決め、各マイルストーンに理由を添えます。' },
+        { title: '作業項目ごとの仕様', path: '', body: 'エンジニアが完了して見せられる最小の作業単位です。根拠のセクションを引用し、プルリクエストごとに計画と照合されます。' },
+        { title: '作業項目ごとの承認済みコンテキスト', path: 'docs/context/', body: '項目が引用する出典の正確な本文と、その背後の決定を、あなたが承認したものです。エンジニアのエージェントに届く、文書の唯一の部分です。' },
+        { title: 'リリースの受領記録', path: 'docs/release/', body: '承認されたリリース、その状態と有効期限を記した小さな公開ファイルです。' },
+        { title: '二次レビューの報告書', path: '', body: 'カバレッジ、根拠、理由、リスクに、あなたの決定と、受け入れた修正のチェックを添えたものです。' },
+        { title: 'GitHub イシュー', path: '', body: 'マイルストーンごとのサブエピックの下に作業項目ごとに一つ。それぞれがエンジニアのエージェントに何を読むべきかを伝えます。' },
+        { title: 'GitHub プロジェクトボード', path: '', body: '作業単位、トラック、期日、チェックポイントが入力済みです。' },
+        { title: 'エンジニアのAIエージェントスキル', path: '', body: 'あなたの仕様から生成され、リポジトリにコミットされます。エンジニアは作業項目を名指しして始めます。たとえば「Work on [work item ID]」と言えば、コーディングエージェントはまずその項目の仕様と承認済みコンテキストを読みます。' },
+      ],
+      more: { before: '各ファイルの置き場所はドキュメントの ', link: 'What you get', after: ' にあります。' },
     },
   },
 

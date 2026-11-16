@@ -3,7 +3,7 @@
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import TranslationNote from '../TranslationNote.astro';
 import { getStrings } from '../../i18n';
-import { repoUrl } from '../../../site.config.mjs';
+import { localePath } from '../../lib/paths';
 import '../../styles/pages.css';
 
 interface Props {
@@ -11,6 +11,7 @@ interface Props {
 }
 const { locale = 'en' } = Astro.props;
 const t = getStrings(locale);
+const startHereUrl = `${localePath(locale, '/docs/')}#start-here`;
 const f = t.faq;
 // The literal text --apply is set in monospace wherever it appears.
 const parts = (text: string) => text.split('--apply');
@@ -51,7 +52,7 @@ const parts = (text: string) => text.split('--apply');
           })
         }
       </ul>
-      <p class="page-action"><a class="btn primary" href={repoUrl}>{t.home.buttons.try}</a></p>
+      <p class="page-action"><a class="btn primary" href={startHereUrl}>{t.home.buttons.try}</a></p>
     </div>
   </section>
 </SiteLayout>
