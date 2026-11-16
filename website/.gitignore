@@ -2,3 +2,9 @@ node_modules/
 dist/
 .astro/
 tests/screenshots/
+
+# Generated from the repository's Markdown by scripts/build-docs.mjs. Not committed.
+src/content/docs/docs/
+src/content/docs/*/docs/
+src/assets/docs/
+src/generated/docs-manifest.json
