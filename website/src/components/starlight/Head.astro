@@ -1,0 +1,13 @@
+---
+// Keeps Starlight's own head tags and adds the robots tag, the image tags, the JSON-LD and the
+// analytics tag the other pages get from the site layout. Registered in astro.config.mjs as
+// components.Head.
+import Default from '@astrojs/starlight/components/Head.astro';
+import Seo from '../Seo.astro';
+import Analytics from '../Analytics.astro';
+const { locale, entry } = Astro.locals.starlightRoute;
+---
+
+<Default {...Astro.props}><slot /></Default>
+<Seo title={entry.data.title} description={entry.data.description ?? ''} locale={locale ?? 'en'} kind="docs" />
+<Analytics />

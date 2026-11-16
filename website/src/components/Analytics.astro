@@ -1,4 +1,20 @@
 ---
-// The analytics seam. The metadata work fills this in with the GoatCounter tag, gated on
-// goatcounterCode in site.config.mjs. Empty means nothing is loaded.
+// GoatCounter, cookie free. The script loads only when goatcounterCode in site.config.mjs is set.
+// Nothing else is loaded or recorded.
+import { goatcounterCode } from '../../site.config.mjs';
+
+const code = String(goatcounterCode ?? '').trim();
+// A GoatCounter code is a short lowercase name. Anything else is a typo, so the page loads nothing.
+const valid = /^[a-z0-9][a-z0-9-]*$/.test(code);
 ---
+
+{
+  valid && (
+    <script
+      is:inline
+      async
+      data-goatcounter={`https://${code}.goatcounter.com/count`}
+      src="https://gc.zgo.at/count.js"
+    />
+  )
+}

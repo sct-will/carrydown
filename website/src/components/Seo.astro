@@ -1,6 +1,82 @@
 ---
-// The SEO seam. The metadata work fills this in: robots meta, canonical, Open Graph, Twitter card,
-// hreflang and JSON-LD. The layout renders it inside <head> on every page and passes the page's
-// title, description and locale.
-// interface Props { title: string; description: string; locale: string; kind?: string }
+// Search and sharing metadata. The layout renders this inside <head> on every page and the docs head
+// override renders it for the docs. Everything comes from Astro.url and the locale strings.
+//
+// kind "docs" is the Starlight case: Starlight already writes the title, the canonical link and the
+// basic Open Graph tags, so this component adds only the robots tag, the image tags and the JSON-LD.
+import { INDEXING_ENABLED, siteName } from '../../site.config.mjs';
+import { withBase, stripBase } from '../lib/paths';
+import { locales } from '../i18n';
+import { pageMeta, routes, definitionSentence, faqItems } from '../seo/pages';
+import { buildGraph, toScriptJson } from '../seo/jsonld';
+
+interface Props {
+  title?: string;
+  description?: string;
+  locale?: string;
+  kind?: string;
+}
+const { title: titleProp = siteName, description: descriptionProp = '', locale = 'en', kind = 'page' } = Astro.props;
+
+const origin = Astro.site ?? new URL(Astro.url.origin);
+const pageUrl = new URL(Astro.url.pathname, origin).href;
+const siteUrl = new URL(withBase('/'), origin).href;
+const imageUrl = new URL(withBase('/og-image.png'), origin).href;
+
+// A page that the map knows gets the map's text. Any other page keeps what the layout received.
+const route = stripBase(Astro.url.pathname, [...locales]);
+const key = routes[route];
+const mapped = key ? pageMeta(locale, key) : undefined;
+const title = mapped?.title ?? titleProp;
+const description = mapped?.description ?? descriptionProp;
+
+const ogLocale: Record<string, string> = {
+  en: 'en_US',
+  de: 'de_DE',
+  fr: 'fr_FR',
+  ja: 'ja_JP',
+  es: 'es_ES',
+  'pt-BR': 'pt_BR',
+  'zh-CN': 'zh_CN',
+};
+const imageAlt = 'Carried context: Context that travels with the work.';
+
+const graph = buildGraph({
+  kind,
+  siteName,
+  siteUrl,
+  pageUrl,
+  title,
+  description,
+  language: locale,
+  definition: kind === 'definition' ? definitionSentence(locale) : undefined,
+  faq: kind === 'faq' ? faqItems(locale) : undefined,
+});
+const isDocs = kind === 'docs';
 ---
+
+{!INDEXING_ENABLED && <meta name="robots" content="noindex, nofollow" />}
+{
+  !isDocs && (
+    <>
+      <link rel="canonical" href={pageUrl} />
+      <meta property="og:type" content="website" />
+      <meta property="og:site_name" content={siteName} />
+      <meta property="og:title" content={title} />
+      <meta property="og:description" content={description} />
+      <meta property="og:url" content={pageUrl} />
+      <meta property="og:locale" content={ogLocale[locale] ?? locale} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={title} />
+      <meta name="twitter:description" content={description} />
+    </>
+  )
+}
+<meta property="og:image" content={imageUrl} />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={imageAlt} />
+<meta name="twitter:image" content={imageUrl} />
+<meta name="twitter:image:alt" content={imageAlt} />
+<script type="application/ld+json" set:html={toScriptJson(graph)} />
