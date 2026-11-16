@@ -1,0 +1,9 @@
+---
+// Keeps Starlight's own footer (edit link, last updated, previous and next) and adds the site footer.
+import Default from '@astrojs/starlight/components/Footer.astro';
+import SiteFooter from '../SiteFooter.astro';
+const locale = Astro.locals.starlightRoute.locale ?? 'en';
+---
+
+<Default {...Astro.props}><slot /></Default>
+<SiteFooter locale={locale} />

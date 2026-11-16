@@ -1,0 +1,13 @@
+---
+// Placeholder. The pages and languages work replaces this with the settled page.
+import SiteLayout from '../layouts/SiteLayout.astro';
+import { en } from '../i18n/en';
+const title = en.nav.definition;
+---
+
+<SiteLayout title={title} description={en.stub.body} kind="definition">
+  <div class="wrap page">
+    <h1>{title}</h1>
+    <p>{en.stub.body}</p>
+  </div>
+</SiteLayout>

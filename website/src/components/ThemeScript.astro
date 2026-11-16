@@ -1,0 +1,17 @@
+---
+// Runs before first paint so the saved theme applies without a flash. It also marks the page as
+// script-enabled, which the narrow-screen menu needs.
+---
+
+<script is:inline>
+  (function () {
+    var d = document.documentElement;
+    d.classList.add('js');
+    try {
+      var t = localStorage.getItem('cc-theme');
+      // Starlight pages ship data-theme="dark" as a fallback, so Auto must remove it.
+      if (t === 'dark' || t === 'light') d.dataset.theme = t;
+      else d.removeAttribute('data-theme');
+    } catch (e) {}
+  })();
+</script>

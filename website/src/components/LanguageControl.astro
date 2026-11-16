@@ -1,0 +1,18 @@
+---
+import { getStrings, locales } from '../i18n';
+interface Props {
+  locale?: string;
+}
+const { locale = 'en' } = Astro.props;
+const t = getStrings(locale);
+// Placeholder. The language work fills this in: one option per locale, and a change that opens the
+// same page in the chosen locale. Today only English exists, so the list has one option.
+const options = locales.map((code) => ({ code, label: getStrings(code).label }));
+---
+
+<div class="control select">
+  <label class="sr-only" for="language-select">{t.controls.languageLabel}</label>
+  <select id="language-select" data-language-select>
+    {options.map((o) => <option value={o.code} selected={o.code === locale}>{o.label}</option>)}
+  </select>
+</div>

@@ -1,0 +1,50 @@
+---
+// The shared layout for the pages outside the docs: skip link, header, main, footer, and the seams for
+// SEO and analytics. The docs use Starlight's layout with the same header and footer components.
+import '../styles/tokens.css';
+import '../styles/chrome.css';
+import '../styles/site.css';
+import ThemeScript from '../components/ThemeScript.astro';
+import Seo from '../components/Seo.astro';
+import Analytics from '../components/Analytics.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { getStrings } from '../i18n';
+import { withBase } from '../lib/paths';
+
+interface Props {
+  title: string;
+  description: string;
+  locale?: string;
+  /** Passed to the SEO seam, for example "home", "definition", "faq", "accessibility". */
+  kind?: string;
+}
+const { title, description, locale = 'en', kind = 'page' } = Astro.props;
+const t = getStrings(locale);
+---
+
+<!doctype html>
+<html lang={t.lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+    <link rel="icon" type="image/png" sizes="32x32" href={withBase('/favicon-32.png')} />
+    <link rel="apple-touch-icon" href={withBase('/apple-touch-icon.png')} />
+    <ThemeScript />
+    <Seo title={title} description={description} locale={locale} kind={kind} />
+    <Analytics />
+  </head>
+  <body class="site">
+    <a class="skip-link" href="#main">{t.site.skipLink}</a>
+    <header>
+      <SiteHeader locale={locale} />
+    </header>
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <SiteFooter locale={locale} />
+  </body>
+</html>

@@ -1,0 +1,33 @@
+---
+import Mark from './Mark.astro';
+import { getStrings } from '../i18n';
+import { localePath } from '../lib/paths';
+import { repoUrl } from '../../site.config.mjs';
+
+interface Props {
+  locale?: string;
+}
+const { locale = 'en' } = Astro.props;
+const t = getStrings(locale);
+const links = [
+  { label: t.nav.definition, href: localePath(locale, '/definition/') },
+  { label: t.nav.github, href: repoUrl },
+  { label: t.nav.docs, href: localePath(locale, '/docs/') },
+  { label: t.nav.faq, href: localePath(locale, '/faq/') },
+  { label: t.nav.accessibility, href: localePath(locale, '/accessibility/') },
+];
+---
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <nav aria-label={t.footer.label}>
+      <ul class="site-footer__links">
+        {links.map((l) => <li><a href={l.href}>{l.label}</a></li>)}
+      </ul>
+    </nav>
+    <p class="site-footer__copyright">
+      <Mark size={18} />
+      <span>{t.footer.copyright}</span>
+    </p>
+  </div>
+</footer>

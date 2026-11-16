@@ -1,0 +1,83 @@
+---
+import Mark from './Mark.astro';
+import ThemeControl from './ThemeControl.astro';
+import LanguageControl from './LanguageControl.astro';
+import { getStrings, locales } from '../i18n';
+import { localePath, stripBase } from '../lib/paths';
+import { repoUrl } from '../../site.config.mjs';
+
+interface Props {
+  locale?: string;
+  /** Docs pages give the bar the full width, to line up with Starlight's sidebar. */
+  wide?: boolean;
+}
+const { locale = 'en', wide = false } = Astro.props;
+const t = getStrings(locale);
+const route = stripBase(Astro.url.pathname, [...locales]);
+const links = [
+  { label: t.nav.definition, href: localePath(locale, '/definition/'), match: '/definition/' },
+  { label: t.nav.github, href: repoUrl, match: '' },
+  { label: t.nav.docs, href: localePath(locale, '/docs/'), match: '/docs/' },
+  { label: t.nav.faq, href: localePath(locale, '/faq/'), match: '/faq/' },
+];
+const isCurrent = (match: string) => match !== '' && route.startsWith(match);
+---
+
+<div class:list={['site-header', { 'site-header--wide': wide }]} data-site-header>
+  <div class="site-header__bar">
+    <a class="brand" href={localePath(locale, '/')}>
+      <Mark size={24} />
+      <span>{t.site.name}</span>
+    </a>
+    <button
+      type="button"
+      class="menu-button"
+      aria-expanded="false"
+      aria-controls="site-header-panel"
+      data-menu-button
+    >
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+        <path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+      <span>{t.nav.menu}</span>
+    </button>
+    <div class="site-header__panel" id="site-header-panel" data-menu-panel>
+      <nav aria-label={t.nav.label}>
+        <ul class="nav-links">
+          {links.map((l) => (
+            <li>
+              <a href={l.href} aria-current={isCurrent(l.match) ? 'page' : undefined}>{l.label}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div class="controls">
+        <ThemeControl locale={locale} />
+        <LanguageControl locale={locale} />
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Under 768 px the nav and controls sit behind the Menu button. Without script they stay visible.
+  const header = document.querySelector<HTMLElement>('[data-site-header]');
+  const button = header?.querySelector<HTMLButtonElement>('[data-menu-button]');
+  const panel = header?.querySelector<HTMLElement>('[data-menu-panel]');
+  if (header && button && panel) {
+    const set = (open: boolean) => {
+      button.setAttribute('aria-expanded', String(open));
+      panel.toggleAttribute('data-open', open);
+    };
+    button.addEventListener('click', () => set(button.getAttribute('aria-expanded') !== 'true'));
+    header.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && button.getAttribute('aria-expanded') === 'true') {
+        set(false);
+        button.focus();
+      }
+    });
+    matchMedia('(min-width: 768px)').addEventListener('change', (e) => {
+      if (e.matches) set(false);
+    });
+  }
+</script>
