@@ -4,9 +4,11 @@
 import '../styles/tokens.css';
 import '../styles/chrome.css';
 import '../styles/site.css';
+import '../styles/locales.css';
 import ThemeScript from '../components/ThemeScript.astro';
 import Seo from '../components/Seo.astro';
 import Analytics from '../components/Analytics.astro';
+import Hreflang from '../components/Hreflang.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { getStrings } from '../i18n';
@@ -24,7 +26,7 @@ const t = getStrings(locale);
 ---
 
 <!doctype html>
-<html lang={t.lang}>
+<html lang={t.lang} dir={t.dir}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -33,6 +35,7 @@ const t = getStrings(locale);
     <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
     <link rel="icon" type="image/png" sizes="32x32" href={withBase('/favicon-32.png')} />
     <link rel="apple-touch-icon" href={withBase('/apple-touch-icon.png')} />
+    <Hreflang />
     <ThemeScript />
     <Seo title={title} description={description} locale={locale} kind={kind} />
     <Analytics />

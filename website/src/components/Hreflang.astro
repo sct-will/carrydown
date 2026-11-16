@@ -1,0 +1,13 @@
+---
+// hreflang alternates for the page being built: one per locale, plus x-default for English. Absolute
+// URLs, built from the site origin and the base path. Docs pages get theirs from Starlight.
+import { localeList, defaultLocale, locales } from '../i18n';
+import { localePath, stripBase } from '../lib/paths';
+
+const route = stripBase(Astro.url.pathname, [...locales]);
+const origin = Astro.site ? Astro.site.origin : '';
+const url = (code: string) => origin + localePath(code, route);
+---
+
+{localeList.map((l) => <link rel="alternate" hreflang={l.hreflang} href={url(l.code)} />)}
+<link rel="alternate" hreflang="x-default" href={url(defaultLocale)} />

@@ -1,18 +1,140 @@
 ---
-import { getStrings, locales } from '../i18n';
+// The language control: a disclosure button with one link per locale. Each link goes to the same page in
+// that locale. It works with the keyboard (Enter or Space opens it, Tab moves through the links, Escape
+// closes it) and without script, because it is a native details element and plain links.
+import { getStrings, localeList, locales } from '../i18n';
+import { localePath, stripBase } from '../lib/paths';
+
 interface Props {
   locale?: string;
 }
 const { locale = 'en' } = Astro.props;
 const t = getStrings(locale);
-// Placeholder. The language work fills this in: one option per locale, and a change that opens the
-// same page in the chosen locale. Today only English exists, so the list has one option.
-const options = locales.map((code) => ({ code, label: getStrings(code).label }));
+const route = stripBase(Astro.url.pathname, [...locales]);
+const current = localeList.find((l) => l.code === locale) ?? localeList[0];
 ---
 
-<div class="control select">
-  <label class="sr-only" for="language-select">{t.controls.languageLabel}</label>
-  <select id="language-select" data-language-select>
-    {options.map((o) => <option value={o.code} selected={o.code === locale}>{o.label}</option>)}
-  </select>
-</div>
+<details class="control lang" data-language-menu>
+  <summary>
+    <span class="sr-only">{t.controls.languageLabel}: </span><span lang={current.lang}>{current.label}</span>
+  </summary>
+  <ul class="lang-list" role="list">
+    {
+      localeList.map((l) => (
+        <li>
+          <a
+            href={localePath(l.code, route)}
+            lang={l.lang}
+            hreflang={l.hreflang}
+            aria-current={l.code === locale ? 'true' : undefined}
+          >
+            {l.label}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</details>
+
+<script>
+  // Close the list on Escape, on a click outside it, and when focus leaves it.
+  document.querySelectorAll<HTMLDetailsElement>('details[data-language-menu]').forEach((menu) => {
+    const summary = menu.querySelector('summary');
+    menu.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && menu.open) {
+        menu.open = false;
+        summary?.focus();
+      }
+    });
+    menu.addEventListener('focusout', (e) => {
+      const next = e.relatedTarget as Node | null;
+      if (menu.open && next && !menu.contains(next)) menu.open = false;
+    });
+    document.addEventListener('click', (e) => {
+      if (menu.open && !menu.contains(e.target as Node)) menu.open = false;
+    });
+  });
+</script>
+
+<style>
+  .lang {
+    position: relative;
+    display: inline-block;
+    font-size: 0.85rem;
+  }
+  summary {
+    display: inline-flex;
+    align-items: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 32px 0 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--cream-raised);
+    color: var(--ink);
+    cursor: pointer;
+    list-style: none;
+    white-space: nowrap;
+  }
+  summary::-webkit-details-marker {
+    display: none;
+  }
+  summary::after {
+    content: '';
+    position: absolute;
+    inset-inline-end: 12px;
+    top: 50%;
+    margin-top: -2px;
+    border-inline: 4px solid transparent;
+    border-top: 5px solid var(--ink);
+    pointer-events: none;
+  }
+  .lang[open] summary::after {
+    border-top: 0;
+    border-bottom: 5px solid var(--ink);
+  }
+  .lang-list {
+    position: absolute;
+    inset-inline-end: 0;
+    top: calc(100% + 6px);
+    z-index: 30;
+    min-width: 100%;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    border: 1px solid var(--border-strong);
+    border-radius: 8px;
+    background: var(--cream-raised);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  }
+  .lang-list a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: 4px;
+    color: var(--ink);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .lang-list a:hover {
+    background: var(--teal-soft);
+  }
+  .lang-list a[aria-current='true'] {
+    font-weight: 700;
+    box-shadow: inset 3px 0 0 var(--amber);
+  }
+  @media (max-width: 767.98px) {
+    .lang {
+      display: block;
+    }
+    summary {
+      display: flex;
+    }
+    .lang-list {
+      position: static;
+      margin-top: 6px;
+      box-shadow: none;
+    }
+  }
+</style>

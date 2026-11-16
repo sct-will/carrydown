@@ -1,0 +1,66 @@
+/* Language-specific type. Latin text uses Inter. Chinese and Japanese pages put the system's CJK fonts
+ * after Inter, so Latin words and numbers stay in Inter and the characters get a native face. The
+ * diagram, the docs and the pages all read --font-body, so one override covers them. */
+
+:root:lang(ja) {
+  --font-body: 'Inter Variable', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', 'Yu Gothic', Meiryo,
+    'Noto Sans CJK JP', 'Noto Sans JP', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+:root:lang(zh-CN) {
+  --font-body: 'Inter Variable', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Microsoft YaHei',
+    'Noto Sans CJK SC', 'Noto Sans SC', 'WenQuanYi Micro Hei', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+:root:lang(ja) body.site,
+:root:lang(zh-CN) body.site {
+  line-height: 1.75;
+}
+:root:lang(ja) {
+  line-break: strict;
+}
+/* Capitals and tracking mean nothing for these scripts. */
+:root:lang(ja) .site .vals .eb,
+:root:lang(zh-CN) .site .vals .eb,
+:root:lang(ja) .site .tile .n,
+:root:lang(zh-CN) .site .tile .n,
+:root:lang(ja) .site .label-top,
+:root:lang(zh-CN) .site .label-top,
+:root:lang(ja) .site .compare td::before,
+:root:lang(zh-CN) .site .compare td::before {
+  letter-spacing: 0;
+}
+:root:lang(ja) .site h1,
+:root:lang(ja) .site h2,
+:root:lang(zh-CN) .site h1,
+:root:lang(zh-CN) .site h2 {
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+/* Long words in German, French, Spanish and Portuguese: hyphenate on narrow screens, and break a word
+ * that still does not fit rather than push the page sideways. */
+body.site {
+  overflow-wrap: break-word;
+}
+@media (max-width: 767.98px) {
+  :root:not(:lang(en)):not(:lang(ja)):not(:lang(zh-CN)) body.site {
+    hyphens: auto;
+  }
+}
+
+/* Between the phone menu and the full desktop bar the header is tight, and a longer language name (for
+ * example "Português (Brasil)") needs the room. Close up the gaps so the bar never pushes the page
+ * sideways. */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .site-header__bar {
+    column-gap: 12px;
+  }
+  .site-header__panel {
+    gap: 12px;
+  }
+  .nav-links a {
+    padding-inline: 8px;
+  }
+  .controls {
+    gap: 6px;
+  }
+}
