@@ -259,8 +259,10 @@ header.header {
 .site-footer__links {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 16px;
-  margin: 0 0 8px;
+  /* 6 px between the 8 px side paddings gives the 22 px spacing of the design, and the negative margin
+   * keeps the first word on the text edge. The padding keeps every link at least 44 px wide. */
+  gap: 0 6px;
+  margin: 0 0 8px -8px;
   padding: 0;
   list-style: none;
   font-size: 0.95rem;
@@ -268,8 +270,10 @@ header.header {
 .site-footer__links a {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   min-width: 44px;
   min-height: 44px;
+  padding-inline: 8px;
   color: var(--teal);
   text-underline-offset: 0.18em;
 }
