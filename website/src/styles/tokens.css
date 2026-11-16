@@ -1,0 +1,115 @@
+/* Design tokens for carried-context.dev. The values come from specs/carried-context-site/final/base.css
+ * and design-tokens.md: a light cream set and a dark navy "Ink" set.
+ *
+ * Which set applies:
+ *   - theme control on Auto (no data-theme attribute): the system preference decides.
+ *   - data-theme="dark" or data-theme="light" on <html>: the visitor's choice wins.
+ * The Starlight variables at the end point the documentation at the same tokens.
+ */
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+:root {
+  --cream: #f6f3ec;
+  --cream-raised: #fbf7f0;
+  --cream-deep: #f3efe6;
+  --paper: #ffffff;
+  --border: #e4dfd2;
+  --border-strong: #857e6e;
+  --ink: #1f2a44;
+  --ink-muted: #5b6472;
+  --teal: #2a6f6f;
+  --teal-strong: #205757;
+  --teal-stroke: #3c8c8c;
+  --teal-soft: #e6f0f0;
+  --on-teal: #ffffff;
+  --amber: #e8a33d;
+  --amber-deep: #9a6209;
+  /* The only amber that carries text, lines of the diagram and small markers. */
+  --amber-ink: #9a6209;
+  --amber-soft: #fbebd0;
+  --grid: rgba(31, 42, 68, 0.06);
+
+  --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, Menlo, Consolas, monospace;
+  --measure: 1120px;
+  --gutter: clamp(16px, 4vw, 32px);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --cream: #0f1420;
+    --cream-raised: #171e2e;
+    --cream-deep: #131927;
+    --paper: #1b2336;
+    --border: #2a3346;
+    --border-strong: #66739a;
+    --ink: #eef1f6;
+    --ink-muted: #a9b2c3;
+    --teal: #5fb8b8;
+    --teal-strong: #7ccaca;
+    --teal-stroke: #5fb8b8;
+    --teal-soft: #1b2f36;
+    --on-teal: #0f1420;
+    --amber-deep: #f0be6b;
+    --amber-ink: #e8a33d;
+    --amber-soft: #2e2616;
+    --grid: rgba(243, 239, 230, 0.06);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --cream: #0f1420;
+  --cream-raised: #171e2e;
+  --cream-deep: #131927;
+  --paper: #1b2336;
+  --border: #2a3346;
+  --border-strong: #66739a;
+  --ink: #eef1f6;
+  --ink-muted: #a9b2c3;
+  --teal: #5fb8b8;
+  --teal-strong: #7ccaca;
+  --teal-stroke: #5fb8b8;
+  --teal-soft: #1b2f36;
+  --on-teal: #0f1420;
+  --amber-deep: #f0be6b;
+  --amber-ink: #e8a33d;
+  --amber-soft: #2e2616;
+  --grid: rgba(243, 239, 230, 0.06);
+  color-scheme: dark;
+}
+
+/* Starlight (the /docs/ pages) reads these. They are unlayered, so they win over its own defaults in
+ * both themes. */
+:root {
+  --sl-font: var(--font-body);
+  --sl-font-mono: var(--font-mono);
+  --sl-color-white: var(--ink);
+  --sl-color-gray-1: var(--ink);
+  --sl-color-gray-2: var(--ink);
+  --sl-color-gray-3: var(--ink-muted);
+  --sl-color-gray-4: var(--ink-muted);
+  --sl-color-gray-5: var(--border-strong);
+  --sl-color-gray-6: var(--cream-raised);
+  --sl-color-gray-7: var(--cream-deep);
+  --sl-color-black: var(--cream);
+  --sl-color-accent-low: var(--teal-soft);
+  --sl-color-accent: var(--teal);
+  --sl-color-accent-high: var(--teal-strong);
+  --sl-color-text: var(--ink);
+  --sl-color-text-accent: var(--teal);
+  --sl-color-text-invert: var(--on-teal);
+  --sl-color-bg: var(--cream);
+  --sl-color-bg-nav: var(--cream);
+  --sl-color-bg-sidebar: var(--cream);
+  --sl-color-bg-inline-code: var(--cream-raised);
+  --sl-color-bg-accent: var(--teal);
+  --sl-color-hairline-light: var(--border);
+  --sl-color-hairline: var(--border);
+  --sl-color-hairline-shade: var(--border);
+  --sl-nav-height: 4rem;
+  --sl-menu-button-size: 2.75rem;
+}
