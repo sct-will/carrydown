@@ -1,0 +1,175 @@
+---
+// The How it works diagram. Two variants of the same content, both built from the strings in
+// src/i18n/en.ts so they translate: a wide drawing (an inline SVG, from final/diagram-c8.svg) and,
+// under 760 px, a stacked variant in HTML and CSS with the same colors. CSS shows one at a time, so
+// only one is in the accessibility tree. Both carry the same aria-label.
+import { getStrings } from '../i18n';
+
+interface Props {
+  locale?: string;
+}
+const d = getStrings(Astro.props.locale).diagram;
+---
+
+<div class="flow">
+  <svg class='flow-wide' viewBox='0 0 1100 400' xmlns='http://www.w3.org/2000/svg' role='img' aria-label={d.ariaLabel}><text class='up' x='0' y='16' text-anchor='start' font-size='11' font-weight='600' fill='var(--ink-muted)'>{d.provideHeading}</text><text class='up' x='600' y='16' text-anchor='start' font-size='11' font-weight='600' fill='var(--ink-muted)'>{d.generatesHeading}</text><rect x='0' y='40' width='282' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4'/><text x='16' y='73.0' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.documents}</text><text x='16' y='94.0' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.documentsNote}</text><line class='ln' x1='282' y1='76' x2='330' y2='76' stroke-width='1.6'/><rect x='0' y='136' width='282' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4'/><text x='16' y='169.0' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.decisions}</text><text x='16' y='190.0' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.decisionsNote}</text><line class='ln' x1='282' y1='172' x2='330' y2='172' stroke-width='1.6'/><rect x='0' y='300' width='282' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4' stroke-dasharray="5 5"/><text x='16' y='320' text-anchor='start' font-size='11' font-weight='600' class='eb up'>{d.later}</text><text x='16' y='342' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.changed}</text><text x='16' y='361' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.changedNote}</text><line class='ln' x1='282' y1='336' x2='330' y2='336' stroke-width='1.6' stroke-dasharray="5 5"/><line class='ln' x1='330' y1='76' x2='330' y2='200' stroke-width='1.6'/><line class='ln' x1='330' y1='200' x2='330' y2='336' stroke-width='1.6' stroke-dasharray="5 5"/><line class='ln' x1='330' y1='200' x2='392' y2='200' stroke-width='1.6'/><text x='450' y='128' text-anchor='middle' font-size='14' font-weight='700' class='tl'>{d.agent}</text><circle cx='450' cy='200' r='58' fill='var(--cream-raised)' class='tk' stroke-width='2'/><path class='tl' d='M446.4 178.4 C 446.4 195.68, 453.12 202.4, 470.4 202.4 C 453.12 202.4, 446.4 209.12, 446.4 226.4 C 446.4 209.12, 439.67999999999995 202.4, 422.4 202.4 C 439.67999999999995 202.4, 446.4 195.68, 446.4 178.4 Z'/><path class='tl' d='M464.88 175.04 C 464.88 182.29760000000002, 467.7024 185.12, 474.96 185.12 C 467.7024 185.12, 464.88 187.9424, 464.88 195.20000000000002 C 464.88 187.9424, 462.0576 185.12, 454.8 185.12 C 462.0576 185.12, 464.88 182.29760000000002, 464.88 175.04 Z'/><text x='450' y='290' text-anchor='middle' font-size='13' font-weight='400' fill='var(--ink)'>{d.agentVerbs[0]}</text><text x='450' y='308' text-anchor='middle' font-size='13' font-weight='400' fill='var(--ink)'>{d.agentVerbs[1]}</text><line class='ln' x1='508' y1='200' x2='580' y2='200' stroke-width='1.6'/><line class='ln' x1='580' y1='70' x2='580' y2='334' stroke-width='1.6'/><line class='ln' x1='580' y1='70' x2='600' y2='70' stroke-width='1.6'/><rect x='600' y='34' width='330' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4'/><text x='616' y='54' text-anchor='start' font-size='11' font-weight='600' class='eb up'>{d.plans}</text><text x='616' y='76' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.plansTitle}</text><text x='616' y='95' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.plansNote}</text><line class='ln' x1='580' y1='158' x2='600' y2='158' stroke-width='1.6'/><rect x='600' y='122' width='330' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4'/><text x='616' y='142' text-anchor='start' font-size='11' font-weight='600' class='eb up'>{d.writes}</text><text x='616' y='164' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.writesTitle}</text><text x='616' y='183' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.writesNote}</text><line class='ln' x1='580' y1='246' x2='600' y2='246' stroke-width='1.6'/><rect x='600' y='210' width='330' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4'/><text x='616' y='230' text-anchor='start' font-size='11' font-weight='600' class='eb up'>{d.opens}</text><text x='616' y='252' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.opensTitle}</text><text x='616' y='271' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.opensNote}</text><line class='ln' x1='580' y1='334' x2='600' y2='334' stroke-width='1.6'/><rect x='600' y='298' width='330' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4'/><text x='616' y='318' text-anchor='start' font-size='11' font-weight='600' class='eb up'>{d.generates}</text><text x='616' y='340' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.generatesTitle}</text><text x='616' y='359' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.generatesNote}</text><text class='up' x='1022' y='258' text-anchor='middle' font-size='11' font-weight='600' fill='var(--ink-muted)'>{d.engineers[0]}</text><text class='up' x='1022' y='272' text-anchor='middle' font-size='11' font-weight='600' fill='var(--ink-muted)'>{d.engineers[1]}</text><line class='ln' x1='930' y1='334' x2='966' y2='334' stroke-width='1.6'/><line class='ln' x1='966' y1='296' x2='966' y2='372' stroke-width='1.6'/><line class='ln' x1='966' y1='296' x2='992' y2='296' stroke-width='1.6'/><circle cx='1006' cy='296' r='14' fill='var(--cream-raised)' stroke='var(--ink)' stroke-width='1.5'/><circle cx='1006' cy='292' r='4.5' fill='var(--ink)'/><path d='M998 306 a8 7 0 0 1 16 0 z' fill='var(--ink)'/><circle cx='1038' cy='296' r='11' fill='var(--cream-raised)' class='tk' stroke-width='1.5'/><path class='tl' d='M1037.1 290.6 C 1037.1 294.92, 1038.78 296.6, 1043.1 296.6 C 1038.78 296.6, 1037.1 298.28000000000003, 1037.1 302.6 C 1037.1 298.28000000000003, 1035.42 296.6, 1031.1 296.6 C 1035.42 296.6, 1037.1 294.92, 1037.1 290.6 Z'/><path class='tl' d='M1041.72 289.76 C 1041.72 291.57439999999997, 1042.43 292.28, 1044.24 292.28 C 1042.43 292.28, 1041.72 292.9856, 1041.72 294.79999999999995 C 1041.72 292.9856, 1041.01 292.28, 1039.2 292.28 C 1041.01 292.28, 1041.72 291.57439999999997, 1041.72 289.76 Z'/><line class='ln' x1='966' y1='334' x2='992' y2='334' stroke-width='1.6'/><circle cx='1006' cy='334' r='14' fill='var(--cream-raised)' stroke='var(--ink)' stroke-width='1.5'/><circle cx='1006' cy='330' r='4.5' fill='var(--ink)'/><path d='M998 344 a8 7 0 0 1 16 0 z' fill='var(--ink)'/><circle cx='1038' cy='334' r='11' fill='var(--cream-raised)' class='tk' stroke-width='1.5'/><path class='tl' d='M1037.1 328.6 C 1037.1 332.92, 1038.78 334.6, 1043.1 334.6 C 1038.78 334.6, 1037.1 336.28000000000003, 1037.1 340.6 C 1037.1 336.28000000000003, 1035.42 334.6, 1031.1 334.6 C 1035.42 334.6, 1037.1 332.92, 1037.1 328.6 Z'/><path class='tl' d='M1041.72 327.76 C 1041.72 329.57439999999997, 1042.43 330.28, 1044.24 330.28 C 1042.43 330.28, 1041.72 330.9856, 1041.72 332.79999999999995 C 1041.72 330.9856, 1041.01 330.28, 1039.2 330.28 C 1041.01 330.28, 1041.72 329.57439999999997, 1041.72 327.76 Z'/><line class='ln' x1='966' y1='372' x2='992' y2='372' stroke-width='1.6'/><circle cx='1006' cy='372' r='14' fill='var(--cream-raised)' stroke='var(--ink)' stroke-width='1.5'/><circle cx='1006' cy='368' r='4.5' fill='var(--ink)'/><path d='M998 382 a8 7 0 0 1 16 0 z' fill='var(--ink)'/><circle cx='1038' cy='372' r='11' fill='var(--cream-raised)' class='tk' stroke-width='1.5'/><path class='tl' d='M1037.1 366.6 C 1037.1 370.92, 1038.78 372.6, 1043.1 372.6 C 1038.78 372.6, 1037.1 374.28000000000003, 1037.1 378.6 C 1037.1 374.28000000000003, 1035.42 372.6, 1031.1 372.6 C 1035.42 372.6, 1037.1 370.92, 1037.1 366.6 Z'/><path class='tl' d='M1041.72 365.76 C 1041.72 367.57439999999997, 1042.43 368.28, 1044.24 368.28 C 1042.43 368.28, 1041.72 368.9856, 1041.72 370.79999999999995 C 1041.72 368.9856, 1041.01 368.28, 1039.2 368.28 C 1041.01 368.28, 1041.72 367.57439999999997, 1041.72 365.76 Z'/></svg>
+  <div class="flow-stack" role="img" aria-label={d.ariaLabel}>
+    <div class="fs-group">
+      <p class="fs-heading">{d.provideHeading}</p>
+      <div class="fs-card"><strong>{d.documents}</strong><span>{d.documentsNote}</span></div>
+      <div class="fs-card"><strong>{d.decisions}</strong><span>{d.decisionsNote}</span></div>
+      <div class="fs-card fs-later"><em>{d.later}</em><strong>{d.changed}</strong><span>{d.changedNote}</span></div>
+    </div>
+    <div class="fs-link" aria-hidden="true"></div>
+    <div class="fs-group fs-agent">
+      <svg viewBox="392 142 116 116" width="96" height="96" aria-hidden="true" focusable="false">
+        <circle cx='450' cy='200' r='58' fill='var(--cream-raised)' class='tk' stroke-width='2'/><path class='tl' d='M446.4 178.4 C 446.4 195.68, 453.12 202.4, 470.4 202.4 C 453.12 202.4, 446.4 209.12, 446.4 226.4 C 446.4 209.12, 439.67999999999995 202.4, 422.4 202.4 C 439.67999999999995 202.4, 446.4 195.68, 446.4 178.4 Z'/><path class='tl' d='M464.88 175.04 C 464.88 182.29760000000002, 467.7024 185.12, 474.96 185.12 C 467.7024 185.12, 464.88 187.9424, 464.88 195.20000000000002 C 464.88 187.9424, 462.0576 185.12, 454.8 185.12 C 462.0576 185.12, 464.88 182.29760000000002, 464.88 175.04 Z'/>
+      </svg>
+      <p class="fs-agent-name">{d.agent}</p>
+      <p class="fs-verbs">{d.agentVerbs[0]} {d.agentVerbs[1]}</p>
+    </div>
+    <div class="fs-link" aria-hidden="true"></div>
+    <div class="fs-group">
+      <p class="fs-heading">{d.generatesHeading}</p>
+      <div class="fs-card"><em>{d.plans}</em><strong>{d.plansTitle}</strong><span>{d.plansNote}</span></div>
+      <div class="fs-card"><em>{d.writes}</em><strong>{d.writesTitle}</strong><span>{d.writesNote}</span></div>
+      <div class="fs-card"><em>{d.opens}</em><strong>{d.opensTitle}</strong><span>{d.opensNote}</span></div>
+      <div class="fs-card"><em>{d.generates}</em><strong>{d.generatesTitle}</strong><span>{d.generatesNote}</span></div>
+      <p class="fs-heading fs-engineers">{d.engineers[0]} {d.engineers[1]}</p>
+      <div class="fs-people">
+        {[0, 1, 2].map(() => (
+          <svg viewBox="992 281 60 30" width="60" height="30" aria-hidden="true" focusable="false">
+            <circle cx='1006' cy='296' r='14' fill='var(--cream-raised)' stroke='var(--ink)' stroke-width='1.5'/><circle cx='1006' cy='292' r='4.5' fill='var(--ink)'/><path d='M998 306 a8 7 0 0 1 16 0 z' fill='var(--ink)'/><circle cx='1038' cy='296' r='11' fill='var(--cream-raised)' class='tk' stroke-width='1.5'/><path class='tl' d='M1037.1 290.6 C 1037.1 294.92, 1038.78 296.6, 1043.1 296.6 C 1038.78 296.6, 1037.1 298.28000000000003, 1037.1 302.6 C 1037.1 298.28000000000003, 1035.42 296.6, 1031.1 296.6 C 1035.42 296.6, 1037.1 294.92, 1037.1 290.6 Z'/><path class='tl' d='M1041.72 289.76 C 1041.72 291.57439999999997, 1042.43 292.28, 1044.24 292.28 C 1042.43 292.28, 1041.72 292.9856, 1041.72 294.79999999999995 C 1041.72 292.9856, 1041.01 292.28, 1039.2 292.28 C 1041.01 292.28, 1041.72 291.57439999999997, 1041.72 289.76 Z'/>
+          </svg>
+        ))}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .flow {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .flow-wide {
+    display: block;
+    width: 100%;
+    height: auto;
+    font-family: var(--font-body);
+  }
+  .flow-stack {
+    display: none;
+  }
+  .flow-wide .up,
+  .fs-heading {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .flow-wide .eb {
+    fill: var(--amber-ink);
+  }
+  .flow-wide .ln {
+    stroke: var(--amber-ink);
+    fill: none;
+  }
+  .tl {
+    fill: var(--teal);
+  }
+  .tk {
+    stroke: var(--teal);
+  }
+
+  /* Under 760 px: three stacked groups. Nothing here goes below 12 px. */
+  @media (max-width: 759.98px) {
+    .flow-wide {
+      display: none;
+    }
+    .flow-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .fs-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .fs-heading {
+      margin: 0;
+      color: var(--ink-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .fs-card {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 12px 16px;
+      border: 1.4px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--cream-raised);
+      color: var(--ink);
+      text-align: start;
+    }
+    .fs-card strong {
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+    .fs-card span {
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+    .fs-card em {
+      font-size: 0.75rem;
+      font-style: normal;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--amber-ink);
+    }
+    .fs-later {
+      border-style: dashed;
+    }
+    .fs-link {
+      align-self: center;
+      width: 2px;
+      height: 32px;
+      margin: 8px 0;
+      background: var(--amber-ink);
+    }
+    .fs-agent {
+      align-items: center;
+      text-align: center;
+      gap: 4px;
+    }
+    .fs-agent svg {
+      display: block;
+    }
+    .fs-agent-name {
+      margin: 4px 0 0;
+      color: var(--teal);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .fs-verbs {
+      margin: 0;
+      color: var(--ink);
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+    .fs-engineers {
+      margin-top: 12px;
+      text-align: center;
+    }
+    .fs-people {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+    .fs-people svg {
+      display: block;
+    }
+  }
+</style>
