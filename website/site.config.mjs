@@ -22,4 +22,4 @@ export const base = customDomain ? '/' : '/carrydown';
 export const siteName = 'Carried-context development';
 export const repoUrl = 'https://github.com/sct-will/carrydown';
 export const sampleBoardUrl = 'https://github.com/users/sct-will/projects/2';
-export const accessibilityEmail = 'accessibility@carried-context.dev';
+export const accessibilityEmail = 'accessibility@carriedcontext.dev';

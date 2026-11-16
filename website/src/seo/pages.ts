@@ -37,7 +37,7 @@ const englishDefaults: Record<PageKey, PageMeta> = {
   },
   accessibility: {
     title: 'Accessibility statement',
-    description: 'The accessibility statement for carried-context.dev: what the site supports, how it was checked and how to report a problem.',
+    description: 'The accessibility statement for carriedcontext.dev: what the site supports, how it was checked and how to report a problem.',
   },
 };
 
