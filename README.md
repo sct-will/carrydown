@@ -2,6 +2,10 @@
 
 carrydown is an open source project for planning and engineering handoffs with artificial intelligence (AI) coding agents. Your agent uses two carrydown skills to turn agreed project sources into a project plan, specifications, GitHub epics and issues, and a project board. The sources can include architecture, requirements, governance rules, development standards and company context. The last step generates a project-specific skill for your engineers' coding agents.
 
+**Keep your team aligned as the project changes.**
+
+Tell your agent what changed or where a specification seems wrong. It identifies potentially affected work, preserves engineer corrections and carries approved updates into the engineering handoff.
+
 The name reflects the idea: carry agreed decisions and rules down into the plan, the GitHub work and the instructions your engineers’ coding agents use.
 
 **That generated skill is the handoff.** An engineer installs it once, then names a work item. The skill directs their coding agent to read the specification, the source sections it cites and the project conventions before planning the code.
@@ -10,7 +14,7 @@ The plan is built around your team's availability and target date. You can also 
 
 [![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
 
-[Start here](#start-here) | [FAQ](#frequently-asked-questions) | [How it works](#how-it-works) | [Explore the sample](#explore-the-sample) | [What you get](#what-you-get) | [AI governance](#how-does-carrydown-support-ai-governance) | [Contributing and license](#contributing-and-license)
+[Start here](#start-here) | [What to say](#what-to-say) | [FAQ](#frequently-asked-questions) | [How it works](#how-it-works) | [Explore the sample](#explore-the-sample) | [What you get](#what-you-get) | [AI governance](#how-does-carrydown-support-ai-governance) | [Contributing and license](#contributing-and-license)
 
 <br />
 
@@ -18,9 +22,44 @@ The plan is built around your team's availability and target date. You can also 
 
 **Starting a new plan?** Follow [Install carrydown and start your first plan](docs/setup.md). It covers computer setup, installation and the first conversation with your agent. If you have already installed the skills, use the shortcut at the top of that guide. The agent asks one extra question before it starts: whether everyone who can read the repository may see all of your documents and staffing notes. Most teams answer yes and nothing else changes. If some documents are confidential, read [who may see your documents](docs/setup.md#before-you-add-documents-who-may-see-them) first.
 
-**Requirements.** Python 3.9 or newer, Git, and a coding agent that supports Agent Skills. You do not have to install Python first: the skills check for it and offer to install it, after your yes. The [setup guide](docs/setup.md#before-anything-python) shows the manual steps for macOS, Windows and Linux.
+**Requirements.** A coding agent that supports Agent Skills, and Node.js 22.20 or later for the standard installer, which also uses Git. Without Node.js, use the [manual installation](docs/install-options.md#manual-install-without-nodejs). The skills also need Python 3.9 or newer and Git. They check both when they start, and offer to install Python after your yes. The [setup guide](docs/setup.md#before-anything-python) shows the manual Python steps for macOS, Windows and Linux.
+
+**Three words you meet first.** The ground truth is the set of documents your project must obey, a skill is a folder of instructions that your coding agent loads, and a dry run previews what a command would do and writes nothing. The [glossary](docs/plan-owner-guide.md#glossary) explains the others.
 
 **Have a plan to review or publish?** Continue with [Review and publish your plan](docs/plan-owner-guide.md).
+
+**The project changed after planning?** Read [when the project changes](#when-the-project-changes) and say what changed.
+
+<br />
+
+## What to say
+
+Ordinary language is the normal entry point. You do not need to learn the names of the skills or the scripts.
+
+**Plan owner**
+
+| What you want to do | What to say |
+| --- | --- |
+| Create a plan | "Set up a project plan from these documents." |
+| Publish the approved plan | "Put the plan on GitHub." |
+| Update an existing project | "This changed: [describe the change or provide revised documents]." |
+
+**Engineers**
+
+| What you want to do | What to say |
+| --- | --- |
+| Start a work item | "Work on WI-03." |
+| Raise a specification problem | "This specification seems wrong because [explanation]." |
+
+When an engineer raises a problem, the agent drafts a request and shows it. It is not sent until the engineer posts it.
+
+The first owner row is for a project that has no plan yet. For a project that already has one, use the third row, even when you bring revised documents.
+
+The plan owner uses the two installed skills, engineers use the generated project skill, and stakeholders review milestone outcomes.
+
+If your agent does not pick up the right skill, name it. This is a fallback, not the main phrase:
+
+> "Use carrydown-ground-truth to update this existing project."
 
 <br />
 
@@ -32,14 +71,33 @@ The plan is built around your team's availability and target date. You can also 
 
 1. **Plan for your team.** Tell the agent where the ground truth is. It can include Word, Markdown, plain text, PDF and image files for architecture, requirements, governance rules, development standards and company context. The agent inventories the files and creates reviewable Markdown renderings. It reports files it cannot read and continues with the sources it can process. Put higher-precedence sources first when they can conflict. If you know the team size and target project duration, include them. You may also supply each engineer's skills and preferred work. The agent uses them to propose best-match tracks and assignments, explains tradeoffs, and falls back to the default assignment approach when the information is missing or unclear. The `carrydown-ground-truth` skill interviews you, then drafts a plan and one specification per work item around your constraints. Each engineer has a track, or lane of work. Each milestone ends with an integrated demonstration. Names, skills, days off and allocation are kept in a private file on your machine, not in the plan. Confidential documents can stay outside the project: the first question the agent asks decides whether drafting happens in the repository or in a private workspace.
 2. **Challenge, repair and approve.** After the normal checks, the agent makes a separate adversarial pass over the completed plan and specifications. It looks for missing scope, resource conflicts, dependency errors and better sequencing. Review its coverage and risk tables in `docs/spec/plan-review.md`, then let the agent apply the repairs you accept. You decide the owners, dates, scope and order.
-3. **Publish to GitHub.** Say "Put the plan on GitHub." The `carrydown-plan-to-github` skill shows a short preview of what will be shared, with whom and where, and asks in one prompt whether those outputs may be shared and whether it may create the GitHub items. It then writes the approved files, a small receipt and the engineers' skill, and you commit and push them. After dry runs it creates a parent epic for the plan, a sub-epic for each milestone, an issue linking to each work item's specification, and the board.
+3. **Publish to GitHub.** Say "Put the plan on GitHub." The `carrydown-plan-to-github` skill shows a short preview of what will be shared, with whom and where, and asks in one prompt whether those outputs may be shared and whether it may create the GitHub items. It then writes the approved files, a small receipt and the engineers' skill, and commits and pushes them after a separate yes from you. After dry runs it creates a parent epic for the plan, a sub-epic for each milestone, an issue linking to each work item's specification, and the board.
 4. **Start a work item.** Each engineer installs the generated skill once, then names the work item identifier, for example, "Work on [work item ID]". The skill checks that the item's approved context is intact and current. Its agent then reads the specification, the approved context and the project conventions before planning the code. The approved context holds the exact text of the source sections the item cites, and nothing else from your documents. Every reader of the repository can read it, so only text approved for all of them is ever in it. The generated skill is named after the project.
+5. **Update when the project changes.** Say "This changed: [describe the change or provide revised documents]." The `carrydown-ground-truth` skill compares the change with the reviewed sources and the current work, and the plan owner approves the update. The `carrydown-plan-to-github` skill then carries it into the engineering handoff.
+
+<br />
+
+## When the project changes
+
+Projects change after planning. A requirement is revised, a company rule changes, or an engineer finds that a specification does not fit the implementation. The ground-truth skill compares that information with the reviewed sources and current work. It prepares focused corrections and shows conflicts to the plan owner. After approval, the existing publishing skill carries the update into the engineering handoff.
+
+In more detail, and before any name for it: your agent looks at what changed, finds the work that the change could touch, and checks the work an engineer has already corrected. It keeps those corrections when they fit the change and shows you the ones that conflict. You see one review, decide, and approve. Nothing is rewritten because regenerating it would be easier. The same path serves a changed source and an engineer's report that a specification seems wrong. The method pages call this step reconciliation.
+
+**How to hand over a revised document.** Open your agent in the project's own folder, the one your plan was made in. Then name where the revised file is in the same sentence, for example: "This changed: the revised architecture document is at ~/Documents/architecture.docx." Keep the file where you keep your sources. You do not need to move it into the project. You can also describe the change in words or paste the changed passage. The agent reads and compares before it shows you anything, so the review takes a while to appear.
+
+**One approval, then one more sentence.** Your approval of the review accepts the changes to the drafts. It publishes nothing. "Put the plan on GitHub." is a separate sentence: the publishing skill then shows what would be shared, with whom and where, and asks for that disclosure approval on its own line before it writes anything.
+
+**How engineers learn of an update.** Nothing is pushed or sent to them. GitHub may notify people who watch an updated issue, which is not a delivery guarantee. After the update is released and published, an engineer's next run of the check for a work item shows the approved delta: the files and passages that changed since their last check. An engineer who does not pull or does not run the check keeps the earlier material, so tell the team when the timing matters.
+
+Repository checks assess the material they can observe. For sources kept elsewhere, provide the revised material. A configured integration can add automatic observation later. The owner guidance also prompts review when the team makes significant decisions. When you are unsure whether a change is significant, say it anyway: the agent assesses it.
+
+There are still two skills you install and one skill generated for your engineers. The first skill, `carrydown-ground-truth`, now covers initial planning and updates. It does not watch your documents, and an update starts when you say so. The [owner guide](docs/plan-owner-guide.md#when-the-project-changes) lists what counts as a significant change, what the one review shows and how to resume an interrupted update.
 
 <br />
 
 ## Explore the sample
 
-Explore carrydown's sample project board, milestone epics and work item issues. Each work item links to its specification. You can browse the sample before installing.
+Explore carrydown's sample project board, milestone epics and work item issues. Each work item links to its specification. You can browse the public board and issues before installing. With a local copy of this repository, you can also run the sample's read-only preview, which changes no file and needs no token. [The sample's own page](sample/expense-approvals/README.md#run-it) shows the command and what it prints.
 
 The sample is based on a fictional expense approvals service, so the company, the people and the dates are invented. Everything the two skills made from it is real and public in [carrydown-sample](https://github.com/sct-will/carrydown-sample): [plan.yaml](https://github.com/sct-will/carrydown-sample/blob/main/docs/spec/plan.yaml), [the nine specifications](https://github.com/sct-will/carrydown-sample/tree/main/docs/spec), [fifteen issues](https://github.com/sct-will/carrydown-sample/issues?q=is%3Aissue), [the board](https://github.com/users/sct-will/projects/2) and [the generated engineers' skill](https://github.com/sct-will/carrydown-sample/tree/main/docs/dev/skills/expense-approvals-dev). A copy sits in [`sample/expense-approvals/`](sample/expense-approvals/) for the self test, and [a recorded run](docs/sample-run.md) shows what each script printed when the sample was carried into a throwaway repository.
 
@@ -67,6 +125,14 @@ Your AI agent generates these artifacts using the carrydown skills. The plan rec
 - **GitHub issues**, one per work item under a sub-epic per milestone, each telling the engineer's agent what to read.
 - **A GitHub Project board** with work units, tracks, dates and checkpoints filled in.
 - **The engineers' skill**, generated from your specifications and committed in your repository, so "Work on [work item ID]" tells the coding agent to check and read that item's specification and approved context before touching code.
+
+> **Important: when the project changes**
+>
+> If requirements, architecture or company rules change significantly, or an engineer finds a specification problem, say:
+>
+> **"This changed: [describe the change or provide revised documents]."**
+>
+> Your agent will review the existing project, preserve engineer corrections and show proposed updates for approval.
 
 The plan and specifications stay in version control, with source citations, recorded planning decisions and automated consistency checks. Your team reviews the generated work and approves what is shared and what is published. These provide a practical foundation for governing AI-generated planning and engineering handoffs.
 
@@ -139,6 +205,34 @@ Missing, partial or unclear staffing context never blocks planning or becomes a 
 </details>
 
 <details>
+<summary>What do I say when the project changes?</summary>
+
+Say "This changed: [describe the change or provide revised documents]." Your agent reviews the existing project, preserves engineer corrections and shows proposed updates for your approval. If the agent does not pick up the update path, say "Use carrydown-ground-truth to update this existing project." Read [when the project changes](#when-the-project-changes).
+
+</details>
+
+<details>
+<summary>Does it watch my documents?</summary>
+
+No. carrydown does not run a file watcher and does not poll your document system. An update starts when you tell your agent what changed and provide the revised material. Configured integrations that observe sources automatically are planned for later, and they could only raise an observation for you to review. The owner guide also asks, at each milestone review, whether any source decisions, requirements, constraints or implementation findings have changed.
+
+</details>
+
+<details>
+<summary>What happens to an engineer's recorded decision when the source changes?</summary>
+
+It is preserved, or it is shown to you as a conflict. When an engineer's decision and the revised source fit together, the update keeps both and explains the result. When they conflict, the agent shows you both sides and nothing is overwritten until you decide.
+
+</details>
+
+<details>
+<summary>Can it tell me every affected item?</summary>
+
+No. It assesses what it can observe. It checks the work that cites the changed material, then reads a compact index of every work item, then reads the full specifications of the candidates and expands further when the evidence is incomplete. It reports what it could not observe. It does not claim complete discovery, so your review of the proposed update still matters.
+
+</details>
+
+<details>
 <summary>Who makes the final planning decisions?</summary>
 
 The plan owner does. The agent drafts the plan, checks it, performs the second-pass review and applies accepted repairs. A person approves the owners, dates, scope, order and GitHub publication.
@@ -154,7 +248,7 @@ You do not need a token to plan locally. Publishing issues and a project board r
 
 [Read the full FAQ](docs/faq.md) for setup, source formats, planning, GitHub permissions and ongoing changes.
 
-[Recover a plan or publication](docs/recovery.md) for identity choices, source references, issue reconciliation and resumable board updates.
+[Recover a plan or publication](docs/recovery.md) for identity choices, source references, issue reconciliation and resumable board updates. If an update stopped partway, say "Resume the project update." and read [resume a project update](docs/recovery.md#resume-a-project-update).
 
 <br />
 

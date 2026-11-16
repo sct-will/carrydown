@@ -496,7 +496,7 @@ def _(base):
     run = subprocess.run([PY, str(ROOT / "tests" / "rebuild_sample_release.py"), "--check"], capture_output=True, text=True, timeout=300)
     check(run.returncode == 0, run.stdout + run.stderr)
     project = base / "clone"
-    copy_sample(project)
+    copy_sample(project, working=False)
     F.init_git(project)
     F.sh(["git", "add", "-A"], project)
     F.sh(["git", "commit", "-q", "-m", "sample"], project)

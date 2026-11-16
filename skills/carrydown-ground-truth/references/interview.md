@@ -7,7 +7,7 @@ Run this interview before you write anything. The user may be a product manager,
 ## The two inputs
 
 1. **The ground truth documents.** Required. Step 1 below. Without them you do not draft anything, and you say so.
-2. **The project constraints.** Optional, in any combination. After the documents, ask one question: "What constraints do you have? The people, the target date or weeks, both, or neither for now." Steps 2 and 3 below collect the details.
+2. **The project constraints.** Optional, in any combination. After the documents, ask one question: "What constraints do you have? The people, the target date or weeks, both, or neither for now." Steps 2 and 3 below collect the details, and ask there only what this answer left open.
 
 The rule: if the user gives the people and a target, the plan fits them. If the user gives one, you back into the other. If the user gives neither, you propose a default and ask. Name the mode you are in (Fit, Derive the date, Derive the capacity, or Neither given) so the user knows what you will do. The modes are in `planning.md`.
 
@@ -74,7 +74,7 @@ Ask.
    Then ask which parts of the system each track touches, a few words each, such as "web client", "notification worker" or "export job". These become the themes. The plan keeps each person on one theme at a time, so they switch context less.
 3. Optional: should engineers' skills or work preferences influence the proposed tracks and assignments? If yes, collect each person's skills and preferences in the project lead's words. If no, unknown or incomplete, move on without a warning or finding. Do not infer either from a title or name. These inputs guide a best match; they never block planning. If their meaning or application is unclear, use the default assignment rules based on track ownership, capacity, dependencies and reduced context switching.
 4. When does each person start, and which days are they off?
-   Then, in one line, confirm the percent allocation: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" Do not ask for a figure per person unless the answer is no. If the answer is no, ask for the figure for each person who is lower. A person at 60 percent has three working days in five for this plan.
+   Then, in one line, confirm the percent allocation, unless the user already gave each person's share: "I will assume everyone is allocated full time to this plan. Is that right, or should any of them be lower?" Do not ask for a figure per person unless the answer is no. If the answer is no, ask for the figure for each person who is lower. A person at 60 percent has three working days in five for this plan.
 5. Is there anyone who advises and owns no items, such as someone from security or the author of a policy?
 
 Explain: staffing details are personal, so they are not written to `plan.yaml`. They go to `people.yaml` in the private workspace that step 0 created, one entry per person with the same id as in the plan. `plan.yaml` holds the ids and tracks only. The checker merges the two when the owner runs it, and keeps names out of the specifications so the files stay valid when people change. Show the user the path where you save the file; that is the one visible change.
@@ -145,7 +145,7 @@ Ask.
 4. Are there rules for secrets, logs or personal data that every change must obey?
 5. Where does the existing code live that the work touches, if any?
 
-These answers become the definition of done in every issue and in the engineers' skill.
+These answers become the definition of done in every issue and in the engineers' skill. If a command is not known yet, set it to `""` in `conventions`, not to the template's example or a placeholder, because an empty command is left out of the definition of done, and say in the summary that it is still open.
 
 ## The summary to read back
 

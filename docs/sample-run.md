@@ -1,5 +1,7 @@
 # A recorded run of the sample
 
+The first stage you can run alone, with no agent and no token, is [section 3, render the ground truth](#3-render-the-ground-truth).
+
 The run was made against a private throwaway repository that was used only for this test. Names and project links below are placeholders.
 
 This page records a real run of the carrydown skills on the sample project `sample/expense-approvals/`, against a throwaway private repository, from the renderer to the project board. It shows what each script prints so you know what to expect before you run it on your own material.
@@ -12,13 +14,14 @@ How it was made.
 - The sample dates have since moved so that every item has slack before its checkpoint, and the plan gained its rationale. The write blocks below show the earlier dates. The blocks that need no GitHub account show the current ones.
 - The blocks that need no GitHub account were run again with the current scripts: the help text, the token walkthrough, the renderer, the scaffold, the checker, the dry runs (with `--offline`, so they read nothing from GitHub) and the engineers' skill. The blocks that talk to GitHub are as recorded in the original run: the token check, the writes, the second runs, the verifications and the independent count.
 - Section 0 below is new and was run with the current scripts. The GitHub blocks in sections 2, 6 and 7 were recorded before releases existed, so they show the legacy project flow. A project with a release policy publishes from the approved release instead: the dry runs begin with the destination preflight, which prints one visibility line for each target, and then list the payloads and the request id. Those blocks have not been recorded again, because that needs a real repository and a token.
+- Section 10 is new and was run with the current scripts in a throwaway copy of the sample. It records an update after planning: a changed source, the review of its effects, an engineer's correction and a drafted request that is labeled not sent. It makes no GitHub call.
 - The scripts took about three and a half minutes in total, most of it pauses that keep GitHub from rate limiting the writes. Reading the dry runs takes longer than running the scripts.
 
 Each GitHub step shows the dry run first and the write second. A second run of each write step finds everything in place and creates nothing.
 
 ## 0. The release, run on the sample
 
-This section was run again with the current scripts, in a throwaway copy of the sample, against the loopback mock of GitHub that the tests use (`tests/mock/mockgh.py`) in place of github.com, so it needs no real token and no network. The ids in it differ from the committed receipt, which `tests/rebuild_sample_release.py` makes with a fixed time and request nonce. The sample answers yes to the one question, so its fictional documents are approved for everyone who can read the repository. It shows what a project holds before and after a release, and which commands print what. The private path, with a staging repository and the independent verifier, needs an organization's setup and has not been run on real GitHub. [The setup guide](setup.md#organization-setup-for-private-drafting) says so.
+This section was run again with the current scripts, in a throwaway copy of the sample, against the loopback mock of GitHub that the tests use (`tests/mock/mockgh.py`) in place of github.com, so it needs no real token and no network. The ids in it differ from the committed receipt, which `tests/rebuild_sample_release.py` makes with a fixed time and request nonce. The sample answers yes to the one question, so its fictional documents are approved for everyone who can read the repository. It shows what a project holds before and after a release, and which commands print what. The private path, with a staging repository and the independent verifier, needs an organization's setup and has not been run on real GitHub. [The organization setup guide](organization-setup.md) says so.
 
 **What the sample is.** The committed sample is a project after its release. Its `docs/spec/plan.yaml` is the released plan: ids and tracks for the people, and for each source only an id, a display name and a version. It holds no source path, no classification, no digest and no personal fact. The two documents in the sample, the original `ground-truth/architecture.md` and its rendering, and the fictional `people.yaml`, are public fixtures. They are here so the sample can show every step. A real project does not copy staffing records or confidential originals into git, and the sample's `.gitignore` carries the same four lines that `scaffold_spec.py --init` writes: `docs/source/`, `people.yaml`, `.carrydown/local.yaml` and `.carrydown/cache/`.
 
@@ -105,9 +108,9 @@ request db2d1727f7cc97302be9aaaf17e9e6d0ce4c7eb1168d25ac7cc0db9aadebe802  releas
 40 approved repository file(s), 1 receipt(s). Evidence: local owner approval, not authenticated
 1 file(s) and 1 receipt(s) would be written; 39 already match.
   docs/spec/plan.yaml becomes the released plan. Your working plan, with its comments, moves to the private workspace as drafts/plan.yaml, where the scripts find it from now on.
-Exported 1 file(s) and 1 receipt(s) into your working tree. Review them with git status, then commit and push as you usually do.
+Exported 1 file(s) and 1 receipt(s) into your working tree. Next, check whether they are committed and pushed, and commit and push them only after the owner approves that in the chat.
 
-Released. Ask the owner to commit and push these files as they do today. Then the GitHub step publishes from this release.
+Released. Next, check whether these files are committed and pushed, and commit and push them only after the owner approves that in the chat. Then the GitHub step publishes from this release.
 [exit 0]
 ```
 
@@ -124,12 +127,14 @@ detectors: no findings (this does not prove safety)
 ```
 
 ```text
-$ python3 scripts/check_context.py WI-06      # the engineers' check, from docs/dev/skills/expense-approvals-dev/
+$ python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-06      # the engineers' check
+carrydown: approved context for WI-06 is ready
 Read docs/context/wi-06.md. Do not open docs/ground-truth/ or any source.
+baseline: request 7dfeeabf0bf51b3f3c50a1cd9d8a9e9807433a3ab86d34d071be7fa78bd106ac, specification 6f3e13ccb352a77994e98abd912aecd2d4f78ac81d9043ccfaaf34a61cbcac0a
 [exit 0]
 ```
 
-The engineers' check refreshes with `git fetch` of the default branch, so it needs the clone to have an `origin`. The line "people overlay not loaded" is expected: the capacity, date and name checks run on the owner's machine, where `people.yaml` is.
+The engineers' check prints a short block when the inputs are ready, with the `baseline:` line that a rule clarification request quotes. When the approved inputs changed since the engineer's last check for the item, it adds the approved delta after the block. Otherwise it stops with one of six messages (exits 10 to 15). It refreshes with `git fetch` of the default branch, so it needs the clone to have an `origin`. The line "people overlay not loaded" in the checker output above is expected: the capacity, date and name checks run on the owner's machine, where `people.yaml` is.
 
 ## 1. The scripts answer --help
 
@@ -235,29 +240,39 @@ Token check passed.
 
 ## 3. Render the ground truth
 
-A dry run first, then the write. The sample source is Markdown. The Word example is a small made-up file with a table, a list, a code block and a figure.
+This is the first stage of a plan: it turns the source document into the rendering that the specifications cite. A dry run first, then the write. The sample source is Markdown. The Word example is a small made-up file with a table, a list, a code block and a figure.
 
 ```text
 $ python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --version 0.3 --date 2026-10-24 --dry-run
 would write docs/ground-truth/architecture.md: 344 lines, 31 headings, 0 figures
 would write docs/ground-truth/architecture.index.txt
 1 document(s) checked
+note: docs/spec/plan.yaml is a released plan, so content_sha256 and rendering_sha256 for architecture are not recorded in it. They are recorded in the workspace plan when the project has one
+Dry run: nothing was written.
 [exit 0]
 ```
 
-```text
-$ python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --version 0.3 --date 2026-10-24
-wrote docs/ground-truth/architecture.md: 344 lines, 31 headings, 0 figures
-wrote docs/ground-truth/architecture.index.txt
-1 document(s) rendered
-[exit 0]
-```
+The note line is about fingerprints of the source. The plan keeps a fingerprint of the source and of its rendering, so a later change is noticed, but the sample's plan is the released plan, which keeps none. On a working plan the same dry run prints `would record content_sha256 and rendering_sha256 for architecture` in its place.
 
 ```text
 $ python3 scripts/render_ground_truth.py interface-addendum.docx --root . --version 0.1 --dry-run   # a Word file with a table, a list, code and a figure
 would write docs/ground-truth/addendum.md: 41 lines, 5 headings, 1 figures
 would write docs/ground-truth/addendum.index.txt
 1 document(s) checked
+Dry run: nothing was written.
+[exit 0]
+```
+
+### Write the rendering (this changes the sample)
+
+Without `--dry-run` the renderer writes the rendering and its index over the shipped ones. Run it only in a disposable copy of the sample. The released plan stays as it is.
+
+```text
+$ python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --version 0.3 --date 2026-10-24
+wrote docs/ground-truth/architecture.md: 344 lines, 31 headings, 0 figures
+wrote docs/ground-truth/architecture.index.txt
+1 document(s) rendered
+note: docs/spec/plan.yaml is a released plan, so content_sha256 and rendering_sha256 for architecture are not recorded in it. They are recorded in the workspace plan when the project has one
 [exit 0]
 ```
 
@@ -379,6 +394,8 @@ Load (sized days of work against allocated capacity, per person and work unit)
   Person  Alloc  WU1             WU2             WU3             WU4             WU5            Total          
   tamsin  100%   3 of 10d (30%)  5 of 14d (36%)  6 of 10d (60%)  4 of 10d (40%)  0 of 10d       18 of 54d (33%)
   idris   60%    3 of 6d (50%)   4 of 9d (44%)   4 of 5d (74%)   0 of 6d         3 of 6d (50%)  14 of 32d (43%)
+  tamsin, 100 percent allocated: work unit 1, 3 of 10 days (30 percent); work unit 2, 5 of 14 days (36 percent); work unit 3, 6 of 10 days (60 percent); work unit 4, 4 of 10 days (40 percent); work unit 5, 0 of 10 days; total 18 of 54 days (33 percent).
+  idris, 60 percent allocated: work unit 1, 3 of 6 days (50 percent); work unit 2, 4 of 9 days (44 percent); work unit 3, 4 of 5 days (74 percent); work unit 4, 0 of 6 days; work unit 5, 3 of 6 days (50 percent); total 14 of 32 days (43 percent).
   No person is over 100 percent of allocated capacity in any work unit.
 
 Critical path (longest dependency chain to the last item)
@@ -953,6 +970,335 @@ description length: 248 characters (target under 250, limit 1024)
 0 file(s) would be written. Dry run. Add --apply to write.
 [exit 0]
 ```
+
+## 10. An update after planning
+
+Projects change after planning. This section records the update path of `carrydown-ground-truth` on the sample, with real output. The story is fictional. The finance policy team revises the delegated approval rule in the architecture document, and an engineer meets the same gap in a specification.
+
+How it was made.
+
+- The commands ran in a throwaway copy of the sample with its owner workspace, in a temporary home folder, the way `tests/rebuild_sample_release.py` wires the fixture. The copy was released first with the real release commands, so it holds the same receipt as the committed sample. The committed sample was not touched.
+- A local bare repository served as `origin`, so the engineer's `git fetch` needed no network. Nothing was sent to GitHub, and no token was read.
+- The sample's release counts as published here. The recording made no GitHub call, so the journal that the publishing skill would have written was created by hand. Without it, `status` answers "Approved release awaiting publication".
+- The plan owner never types these commands. The agent runs them and explains the result in plain words. They are shown so you know what each prints. Paths in the workspace are shortened to `<workspace>`, and the proposal and checkpoint ids are the real ones.
+- Not recorded here: the new release and its publication. They are the ordinary steps of sections 0, 6 and 7. The engineer's view of the approved delta after that release has no recording yet.
+
+### The reviewed starting point
+
+The owner asks "Is this project up to date?". The agent runs `status`. It has never recorded a reviewed checkpoint of the sources, so it cannot compare anything, and it says so.
+
+```text
+$ python3 scripts/reconcile.py status --root .
+carrydown project status
+State: Observable inputs unchanged
+No change can be observed against a reviewed checkpoint, because none is recorded.
+Next: Nothing to update in what this project holds. If the owner named a revised document, it is not rendered yet: render it first, then run status again. Otherwise tell the owner what was checked and what was not observed.
+
+What was checked: the working plan; the current renderings of the reviewed sources; the private workspace: reviewed checkpoints, saved updates, release and publication records.
+What was not observed:
+  Outstanding engineer requests were not observed: the publishing skill's authorized read has not run.
+  A previous complete source checkpoint is unavailable. Review the current sources to establish one. Earlier uncited changes cannot be assessed automatically.
+  Sources kept elsewhere were not observed. Only the renderings held in this project or in the private workspace were checked.
+[exit 0]
+```
+
+The owner reviews the current architecture rendering with the agent and accepts it. That review becomes the first checkpoint. `prepare --apply` saves a proposal, and the proposal folder holds the descriptor of the sources that the checkpoint command needs. Nothing is compared yet, because there is nothing to compare with.
+
+```text
+$ python3 scripts/reconcile.py prepare --root . --apply
+carrydown update: compare changed sources
+A previous complete source checkpoint is unavailable. Review the current sources to establish one. Earlier uncited changes cannot be assessed automatically.
+architecture: 30 sections cannot be compared, because there is no earlier checkpoint. Treat each as unassessable history and review the current source with the owner.
+0 changed block(s) in 0 source(s); 0 direct consumer(s); index: 20591 bytes, 2016 words, about 5148 tokens (approximate)
+18 fields of the index are truncated excerpts (1556 words left out). Read the full specification before you conclude no impact for such a row.
+
+The full record is in the private workspace, folder drafts/proposals/98a870d767c021f8ffbdf1364fec806dc7eb9ca389d4f47ec8dbd11ff57e9900/ (inputs, blocks, consumers, the index, dispositions).
+When the owner accepts the sources, descriptor.json in that folder is the descriptor for workspace.py checkpoint prepare.
+proposal: 98a870d767c021f8ffbdf1364fec806dc7eb9ca389d4f47ec8dbd11ff57e9900
+[exit 0]
+```
+
+The checkpoint is recorded in two steps, each one a preview first. `prepare` copies the reviewed rendering into the private workspace. `commit` stores it in the workspace's own git history through an isolated index, reads it back, and only then records it in `workspace.yaml`. Nothing is pushed.
+
+```text
+$ python3 scripts/workspace.py checkpoint prepare --root . --descriptor <workspace>/drafts/proposals/<proposal>/descriptor.json --rendering-dir docs/ground-truth
+checkpoint 7d51dd0871a0cc0fa42ebe6573842977202ad1869bd5be7e2643c5a765972446  DRY RUN (nothing was written)
+  would write workspace:renderings/reviewed/architecture/architecture.index.txt
+  would write workspace:renderings/reviewed/architecture/architecture.md
+  would write workspace:drafts/checkpoints/7d51dd0871a0cc0fa42ebe6573842977202ad1869bd5be7e2643c5a765972446/descriptor.json
+  would write workspace:drafts/checkpoints/7d51dd0871a0cc0fa42ebe6573842977202ad1869bd5be7e2643c5a765972446/checkpoint.json
+Add --apply to write these files. Then commit the checkpoint with: workspace.py checkpoint commit --id 7d51dd0871a0cc0fa42ebe6573842977202ad1869bd5be7e2643c5a765972446 --apply
+[exit 0]
+```
+
+```text
+$ python3 scripts/workspace.py checkpoint prepare --root . --descriptor <workspace>/drafts/proposals/<proposal>/descriptor.json --rendering-dir docs/ground-truth --apply
+checkpoint 7d51dd0871a0cc0fa42ebe6573842977202ad1869bd5be7e2643c5a765972446
+  wrote workspace:renderings/reviewed/architecture/architecture.index.txt
+  wrote workspace:renderings/reviewed/architecture/architecture.md
+  wrote workspace:drafts/checkpoints/7d51dd0871a0cc0fa42ebe6573842977202ad1869bd5be7e2643c5a765972446/descriptor.json
+  wrote workspace:drafts/checkpoints/7d51dd0871a0cc0fa42ebe6573842977202ad1869bd5be7e2643c5a765972446/checkpoint.json
+[exit 0]
+
+$ python3 scripts/workspace.py checkpoint commit --root . --id <checkpoint>
+checkpoint 7d51dd0871a0cc0fa42ebe6573842977202ad1869bd5be7e2643c5a765972446  DRY RUN (nothing was committed)
+would commit 4 file(s) from renderings/reviewed/ and drafts/checkpoints/ through an isolated index, then read the commit back and record it in workspace.yaml
+Add --apply to commit.
+[exit 0]
+
+$ python3 scripts/workspace.py checkpoint commit --root . --id <checkpoint> --apply
+checkpoint 7d51dd0871a0cc0fa42ebe6573842977202ad1869bd5be7e2643c5a765972446 committed and read back. Recorded in workspace.yaml
+[exit 0]
+```
+
+### A source changes
+
+The finance policy team revises the architecture document, which is the source of truth. Two edits. Section 3.5, routing, gets a fifth rule: when an approver has a delegate record that covers the day of routing, the step goes to the approver and the delegate, and the first decision closes it. Section 4.1, the governance rule GOV-1, has item 4 split into two sentences. The owner edits the original, so the original is the source of truth, and renders it again as version 0.4.
+
+```text
+$ git diff -- ground-truth/architecture.md
+@@ -134,6 +134,7 @@ Rules that apply to every route.
+ 3. A reminder goes to the current approver after 3 business days without a decision. After 5 business days the step escalates to the next person up the reporting line, and the audit trail records the escalation.
+ 4. The routing result is stored as approval_step rows and does not change after routing, except by escalation.
++5. If an approver in a step has a delegate record that covers the day of routing, the step is assigned to the approver and to the delegate. Either one may decide it, and the first decision closes the step.
+
+@@ -148,7 +149,7 @@ Owner: the finance policy team. Applies to every decision, in every environment.
+ 3. The people in the steps of one report must all be different people.
+-4. A delegate may act only for dates inside the delegate record, and never on a report that the delegator submitted.
++4. A delegate acts only for dates inside the delegate record. A delegate never acts on a report that the delegator submitted.
+ 5. Limits per step. A line manager's approval counts only for a base total up to 5,000.00. A department head's approval counts up to 25,000.00. Nothing above 25,000.00 can be approved in the service (section 3.5).
+```
+
+```text
+$ python3 scripts/render_ground_truth.py ground-truth/architecture.md --root . --version 0.4 --date 2027-02-10
+wrote docs/ground-truth/architecture.md: 345 lines, 31 headings, 0 figures
+wrote docs/ground-truth/architecture.index.txt
+1 document(s) rendered
+recorded content_sha256 and rendering_sha256 for architecture in the workspace plan
+[exit 0]
+```
+
+The new rendering replaced the working copy, but the reviewed rendering is safe in the checkpoint, so the agent can compare the two. The agent runs `prepare` as a dry run first. It prints the counts sentence, one line for each changed block, and the work items that cite a changed block. It also names the items that a block touches without citing it. A scheduling or integration link alone needs no rewrite, so the agent reads those items instead of patching them.
+
+```text
+$ python3 scripts/reconcile.py prepare --root .
+carrydown update: compare changed sources  DRY RUN (nothing will be written)
+2 changed block(s) in 1 source(s); 7 direct consumer(s); index: 20591 bytes, 2016 words, about 5148 tokens (approximate)
+18 fields of the index are truncated excerpts (1556 words left out). Read the full specification before you conclude no impact for such a row.
+  architecture/3.5  modified  "3.5 Routing" (heading unchanged)  formatting only: no
+  architecture/4.1  modified  "4.1 GOV-1 Approval limits and separation of duties" (heading unchanged)  formatting only: no
+
+Direct consumers (who cites a changed block):
+  block                        work item relationship       cites     working copy
+  architecture/3.5             WI-03     citation           3.5       matches the released copy
+  architecture/3.5             WI-06     citation           3.5       matches the released copy
+  architecture/3.5             WI-08     citation           3.5       matches the released copy
+  architecture/3.5             WI-11     citation           3.5       matches the released copy
+  architecture/4.1             WI-01     contract           -         matches the released copy
+  architecture/4.1             WI-02     contract           -         matches the released copy
+  architecture/4.1             WI-04     citation           4.1       matches the released copy
+  architecture/4.1             WI-06     citation           4.1       matches the released copy
+  architecture/4.1             WI-08     citation           4.1       matches the released copy
+  architecture/3.5 also touches, without citing it (a scheduling or integration link alone needs no rewrite): WI-01 (dependency, integration), WI-02 (integration), WI-04 (dependency, integration), WI-07 (dependency, integration), WI-09 (dependency, integration)
+  architecture/4.1 also touches, without citing it (a scheduling or integration link alone needs no rewrite): WI-03 (dependency, integration), WI-07 (integration), WI-11 (dependency)
+
+Nothing was written. Add --apply to save the proposal in the private workspace.
+proposal: c0bc37cd5d5561504f22273efe542d7cc4e6f3e4b4b9c73b2748505aa079b26e
+[exit 0]
+```
+
+The same command with `--apply` saves the proposal in the private workspace: the inputs and their digests, the changed blocks, the consumers, the impact index and a `dispositions.json` that starts with every block marked `pending`. The impact index lists every work item, so the agent can look beyond the citations. Here the routing rule also reaches the approver inbox, WI-04, which does not cite section 3.5.
+
+### One disposition for every changed block
+
+The agent reads the changed text and the work items that depend on it, then proposes one disposition for each block. Until it does, `check` refuses the proposal and names what is missing.
+
+```text
+$ python3 scripts/reconcile.py check --root . --proposal <proposal>
+carrydown update: check
+  - pending-disposition: architecture/3.5 still has a pending disposition. Decide it with the owner before applying
+  - pending-disposition: architecture/4.1 still has a pending disposition. Decide it with the owner before applying
+carrydown: proposal c0bc37cd5d5561504f22273efe542d7cc4e6f3e4b4b9c73b2748505aa079b26e has 2 finding(s)
+[exit 1]
+```
+
+The filled `dispositions.json` follows. The agent wrote both records and showed them in one review to the owner, who accepted them. The block 3.5 is an `update`. It carries two patches, the routing specification (WI-03) and the inbox specification (WI-04), each with the digest of the file it was written against and the full text after the change. The block 4.1 is `no-impact`, with the reason and the context that supports it. Here the long fields are shortened. A patch holds the whole text of the file.
+
+```json
+{
+  "format": 1,
+  "dispositions": [
+    {
+      "block": "architecture/3.5",
+      "disposition": "update",
+      "item": "WI-03",
+      "patch": [
+        {
+          "item": "WI-03",
+          "path": "docs/spec/m2-route-to-approvers/wi-03-routing-engine.md",
+          "before_sha256": "23b6e60ae3ca...",
+          "after_text": "<the whole file, 13913 characters>"
+        },
+        {
+          "item": "WI-04",
+          "path": "docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md",
+          "before_sha256": "f5192fe752fb...",
+          "after_text": "<the whole file, 14401 characters>"
+        }
+      ],
+      "note": "Routing assigns a step to the approver and the delegate (WI-03). The inbox lists it for both (WI-04). WI-06, WI-08 and WI-11 cite section 3.5 and were read. Their text does not conflict with a second person on a step."
+    },
+    {
+      "block": "architecture/4.1",
+      "disposition": "no-impact",
+      "reason": "Item 4 was split into two sentences. The rule is the same: the delegate dates and the delegator's own report.",
+      "context": "WI-04, WI-06 and WI-08 cite 4.1. WI-06 states both conditions in its rule 4 and its GOV-1.4 acceptance criterion, and WI-08 leaves the decision to GOV-1.4 on the server."
+    }
+  ]
+}
+```
+
+```text
+$ python3 scripts/reconcile.py check --root . --proposal <proposal>
+carrydown update: check
+carrydown: proposal c0bc37cd5d5561504f22273efe542d7cc4e6f3e4b4b9c73b2748505aa079b26e has 0 finding(s)
+[exit 0]
+```
+
+Zero findings means the proposal is fresh, every changed block has exactly one valid disposition, every patch stays inside the allowed draft paths and no patch rewrites a recorded decision. It does not mean the update is right. The owner decides that, in the one consolidated review.
+
+### Applying the accepted update
+
+After the owner says yes, the agent runs `apply` as a preview, reads it, then writes. Each write goes through the release gate as a draft write, only when the file still holds the digest the patch was written against, and is read back.
+
+```text
+$ python3 scripts/reconcile.py apply --root . --proposal <proposal>
+carrydown update: apply  DRY RUN (nothing will be written)
+  would change project/docs/spec/m2-route-to-approvers/wi-03-routing-engine.md  (23b6e60ae3ca to 695d5b0b290d, 13913 bytes)
+  would change project/docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md  (f5192fe752fb to e733c540dd5c, 14401 bytes)
+Nothing was written. Add --apply to write these changes.
+proposal: c0bc37cd5d5561504f22273efe542d7cc4e6f3e4b4b9c73b2748505aa079b26e
+[exit 0]
+
+$ python3 scripts/reconcile.py apply --root . --proposal <proposal> --apply
+carrydown update: applied 2 patches now and checked 2 patches by reading it back.
+The working drafts are changed. The released copy is not. Nothing is published.
+Next: record the accepted source checkpoint with workspace.py checkpoint (preview first), then say: Put the plan on GitHub.
+proposal: c0bc37cd5d5561504f22273efe542d7cc4e6f3e4b4b9c73b2748505aa079b26e
+[exit 0]
+```
+
+Each patch changed only the lines it needed. This is the difference in WI-03, a new rule and a new acceptance criterion. The WI-04 patch added one acceptance criterion in the same way.
+
+```text
+$ git diff -- docs/spec/m2-route-to-approvers/wi-03-routing-engine.md
+@@ -63,6 +63,7 @@ Routing, section 3.5. The routing engine builds the steps when a report moves fr
+ 4. The routing result is stored as approval_step rows and does not change after routing, except by escalation.
++5. If an approver in a step has a delegate record that covers the day of routing, the step is assigned to the approver and to the delegate. Either one may decide it, and the first decision closes the step.
+
+@@ -91,6 +92,7 @@ Decision request `{ "decision": "approve", "comment": "" }`. `decision` is `appr
+ - [ ] When an approver is the submitter, the step moves up the reporting line (`tests/routing.engine.test.js`).
++- [ ] When the approver of a step has a delegate record that covers the day of routing, the step is assigned to both people, and the first decision closes it (`tests/routing.engine.test.js`).
+```
+
+The owner has accepted the revised source, so the agent records the new reviewed checkpoint with the same two steps as before, then asks `status` where things stand. The working drafts now differ from the active release, and the next action belongs to the publishing skill.
+
+```text
+$ python3 scripts/workspace.py checkpoint commit --root . --id <checkpoint> --apply
+checkpoint c5fb6851fd32998e14c5b1e21854bb842ac065f05d5b56044f2b96c896b61bfa committed and read back. Recorded in workspace.yaml
+[exit 0]
+
+$ python3 scripts/reconcile.py status --root .
+carrydown project status
+State: Accepted drafts awaiting release
+2 files of the working drafts differ from the active release.
+Next: Continue with carrydown-plan-to-github. The owner says: Put the plan on GitHub.
+
+What was checked: the working plan; the current renderings of the reviewed sources; the private workspace: reviewed checkpoints, saved updates, release and publication records.
+What was not observed:
+  Outstanding engineer requests were not observed: the publishing skill's authorized read has not run.
+  Sources kept elsewhere were not observed. Only the renderings held in this project or in the private workspace were checked.
+[exit 0]
+```
+
+### An engineer corrects a specification
+
+Meanwhile an engineer works on WI-04 in a clone of the repository, with the engineers' skill. The first command for every item is the check. A good fetch records the engineer's baseline for the item.
+
+```text
+$ python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-04
+carrydown: approved context for WI-04 is ready
+Read docs/context/wi-04.md. Do not open docs/ground-truth/ or any source.
+baseline: request 7dfeeabf0bf51b3f3c50a1cd9d8a9e9807433a3ab86d34d071be7fa78bd106ac, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7
+[exit 0]
+```
+
+The sample lets engineers record decisions. While the owner's update is still in progress, the engineer records one departure under "Decisions recorded" in the same pull request. It is the first entry, so it replaces the `None yet.` line.
+
+```text
+$ git diff docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md
+@@ -152,4 +152,4 @@ The counterpart items on the Workflow track are WI-03 Approval routing engine, w
+ ## Decisions recorded
+ 
+-None yet.
++- 2027-02-22. Until the plan owner answers the request about delegates, the inbox lists only the steps assigned to the caller (pull request 14).
+```
+
+The check, run offline with `--no-refresh`, still exits 0. It shows the note and says it is not an approval. It also says the freshness was not confirmed, because the engineer's last refresh is inside the offline grace period.
+
+```text
+$ python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-04 --no-refresh
+carrydown: approved context for WI-04 is ready
+Read docs/context/wi-04.md. Do not open docs/ground-truth/ or any source.
+baseline: request 7dfeeabf0bf51b3f3c50a1cd9d8a9e9807433a3ab86d34d071be7fa78bd106ac, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7
+note: 1 new note(s) under Decisions recorded in your copy of the specification. They are not an approval. The plan owner reviews them
+warning: freshness not confirmed; within offline grace
+[exit 0]
+```
+
+Anything else is not a decision note. When the engineer edits an acceptance criterion, which is approved text, the check exits 14 and says what to do.
+
+```text
+$ python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-04 --no-refresh   # after editing an acceptance criterion
+carrydown: the specification for WI-04 does not match its approved release
+reason: the specification differs from its approved text outside Decisions recorded. Only new dated decision entries may be added there (body-changed)
+file: docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md
+Restore the approved file, or ask the plan owner. If a rule looks wrong, draft a Rule clarification request. Do not edit an approved specification outside what this project allows.
+[exit 14]
+```
+
+An edit to an earlier approved entry gets the same exit 14, with the reason `entry-edited`. The committed sample has no approved entry, because every "Decisions recorded" section still says `None yet.`. The run below is from a temporary copy in which an engineer's entry in WI-03 was merged, the owner's update kept it, and the update was released (`release.py prepare`, `approve --local` and `export`, as the sample rebuild does). An engineer then edits that approved entry.
+
+```text
+$ python3 docs/dev/skills/expense-approvals-dev/scripts/check_context.py WI-03 --no-refresh   # after editing the approved old entry
+carrydown: the specification for WI-03 does not match its approved release
+reason: an earlier entry under Decisions recorded was changed or removed. Only new entries may be added (entry-edited)
+file: docs/spec/m2-route-to-approvers/wi-03-routing-engine.md
+Restore the approved file, or ask the plan owner. If a rule looks wrong, draft a Rule clarification request. Do not edit an approved specification outside what this project allows.
+[exit 14]
+```
+
+### The engineer's request, not sent
+
+The engineer's note records what they did. It does not change a rule. For that the engineer says to the agent:
+
+> This specification seems wrong because the inbox spec lists the reports waiting for the caller, and the approved text says a delegate sees the approver's inbox, but it never says who the step is assigned to.
+
+The generated skill drafts a `Rule clarification request` from the fields its `SKILL.md` lists, quoting only what the approved context holds, with the baseline from the last check. The sample names no recipient for requests, so the draft is addressed to the plan owner. The text below was written by hand from those fields. It is **not sent**: the skill holds no token, posts nothing by itself, and the engineer has not yet said yes to posting.
+
+```text
+Rule clarification request
+
+Work item: WI-04, Approver inbox and decisions.
+Place: "Outcome" and "Acceptance criteria" in docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md.
+Problem: The specification lists the reports waiting for the caller. FR-8 in the approved context says "The delegate sees the approver's inbox for that range." Neither text says who the approval step is assigned to when the approver has named a delegate, or whether a decision by one of them removes the report from the other's inbox.
+Proposed question: Is the step assigned to both the approver and the delegate, and does the first decision close it?
+Baseline: request 7dfeeabf0bf51b3f3c50a1cd9d8a9e9807433a3ab86d34d071be7fa78bd106ac, specification f5192fe752fb21fe57a468d18592d4652eb71b78d40ba7c7ff1a6c1c48e512a7.
+Unaffected work: The inbox page, the decision dialog and the error display do not depend on the answer and can continue. The delegate case of the inbox waits.
+Next action for the plan owner: Decide accepted, declined or deferred on this issue.
+```
+
+Until the plan owner decides, the request stays `pending`. In the story above, the owner's decision is the source change at the start of this section. The publishing skill lists the outstanding requests and records the decision on the issue. Then the agent carries the owner's accepted decision into the update.
 
 ## What the API did not set
 

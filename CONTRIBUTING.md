@@ -58,9 +58,15 @@ python3 scripts/github_project.py --root sample/expense-approvals --offline
 | `scripts/github_project.py` | The GitHub Project board. |
 | `scripts/github_repair.py` | Separate, previewed repairs to existing issue metadata after an accepted plan review. |
 | `scripts/generate_dev_skill.py` | The engineers' skill folder. |
+| `scripts/reconcile.py` | Agent-facing orchestration of a project update: state, preparation, checks and application of accepted draft changes. Local only, and it calls no model service. |
+| `scripts/reconcile_core.py` | The pure comparison helpers that `reconcile.py` uses. Standard library only, and no network or token code. |
+| `scripts/decision_overlay.py` | The validator for permitted decision notes, shared by the engineers' check and the independent verifier. |
+| `scripts/workspace.py` | The private workspace. Its `checkpoint` subcommand records and reads back a reviewed source checkpoint. |
 | `scripts/selftest.py` | The repository's own checks, with no token. |
 | `scripts/lint_prose.py` | The prose style checks. |
 | `scripts/sync_skill_assets.py` | Maintainers: copy scripts and templates into each skill folder. |
+
+The reconciliation scripts are interfaces for the agent and for maintainers. They are not owner instructions. Do not put them, or the internal identifiers they print, in the README action tables, in owner-facing warnings or in the recovery steps for plan owners. The owner says "This changed: [describe the change or provide revised documents]." and "Resume the project update.", and the agent runs the scripts.
 
 Every script has `--help`. Every script that writes to GitHub is a dry run unless you pass `--apply`. The scaffold and the skill generator write local files in the project only with `--apply`; the renderer writes them unless you pass `--dry-run`. The installer copies only a skill's folder, so each skill carries its own copy of the scripts and templates it runs. The top-level `scripts/` and `templates/` are the canonical copies.
 
@@ -71,9 +77,23 @@ You need Python 3.9 or later. Node.js 22.20 or later is needed only for the skil
 ```bash
 python3 scripts/selftest.py
 python3 scripts/lint_prose.py
+python3 scripts/check_specs.py --root sample/expense-approvals --report
+python3 -m unittest discover -s tests -v
+python3 scripts/sync_skill_assets.py --check
 ```
 
 `selftest.py` does the following. It compiles every script, checks that the skill copies are current, runs the specification checker on the sample, and runs every script's `--help` and its dry run against the sample. It is the test expectation for a change: the dry run on the sample must still pass. `lint_prose.py` checks the style rules below.
+
+After you change a canonical script or template, preview the copies, read the preview, then apply:
+
+```bash
+python3 scripts/sync_skill_assets.py
+python3 scripts/sync_skill_assets.py --apply
+```
+
+The unit tests install each skill into a temporary folder outside the checkout and run its scripts, so a skill that needs a file it does not carry fails the build. Two things stay fixed. There are exactly two skills you install, and `carrydown-plan-to-github` is the only skill that carries the GitHub client, the token reader and the release publication code. A change to a script that `carrydown-ground-truth` carries must not add a network call, a token read or an import of a publishing module. Put a comparison helper that both skills need in a shared local module.
+
+The stronger specification check and the decision overlay validator land together. The engineers' check and the independent verifier must agree on one behavior, so a pull request that changes how one reads the "Decisions recorded" section, the receipt entries or the inputs of a work item changes the other in the same pull request, with tests for both. There is no old mode and no new mode.
 
 If you change the checker, the plan format or a template, also regenerate the sample outputs you affect and run the checker on the sample again:
 

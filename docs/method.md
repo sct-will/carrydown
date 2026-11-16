@@ -4,6 +4,10 @@ An AI agent plans the project around real people, including optional skills and 
 
 The carrydown skills carry an agreed set of ground-truth sources down into a governed plan. The set can combine technical documents, requirements, governance rules, standards and company context in several file formats. The plan has one specification per work item, a set of GitHub issues, a project board and the engineers' skill that every issue links to. This optional reference explains the planning rules and why they matter. The plan owner and engineers make the decisions; the skills draft and check the files.
 
+**Keep your team aligned as the project changes.**
+
+Tell your agent what changed or where a specification seems wrong. It identifies potentially affected work, preserves engineer corrections and carries approved updates into the engineering handoff.
+
 The idea is old in systems engineering, where it is called flow-down: a requirement at the top is traced to every part below it. The carrydown skills apply the same idea to software work done with coding agents. Agreed context follows one traceable line through the plan, the specifications, the issues, the board and the agent.
 
 ## The five steps
@@ -17,6 +21,38 @@ The idea is old in systems engineering, where it is called flow-down: a requirem
 | 5. Start a work item | Each engineer installs the engineers' skill once and names the work item identifier, for example, "Work on [work item ID]". The skill checks the item's approved context. The agent reads the specification, the approved context and the conventions, then plans the code. | Engineers show, the stakeholders decide | Code, closing comments with evidence, checkpoint comments and a demonstration note on each sub-epic. |
 
 Planning decisions stay with the plan owner. The agent drafts, validates and populates. It does not decide who does what, when, or in which order.
+
+The five steps are not a one-way line. Step 1 also covers changes after the first release, as the next section explains. There are still two skills you install and one skill generated for your engineers. The first skill now covers initial planning and updates.
+
+## When the project changes
+
+Projects change after planning. A requirement is revised, a company rule changes, or an engineer finds that a specification does not fit the implementation. The ground-truth skill compares that information with the reviewed sources and current work. It prepares focused corrections and shows conflicts to the plan owner. After approval, the existing publishing skill carries the update into the engineering handoff.
+
+Repository checks assess the material they can observe. For sources kept elsewhere, provide the revised material. A configured integration can add automatic observation later. The owner guidance also prompts review when the team makes significant decisions.
+
+The method names this step reconciliation. It compares three versions of the downstream content: the previously approved content from the existing release, the current content including any engineer correction, and the proposed content that follows from the revised source or the accepted clarification.
+
+| Situation | What happens |
+| --- | --- |
+| The current content is unchanged since approval | The agent prepares a focused patch. |
+| An engineer's edit and the source change fit together | Both are kept, and the review explains the result. |
+| They conflict | The plan owner sees the conflict and decides. Nothing is overwritten first. |
+| An engineer's correction exposes a defect in a source | The agent proposes a correction for the source's owner. The original document is not changed by carrydown. |
+| History is incomplete | The review says what is uncertain and asks for a person's review. |
+
+**Every observed change is accounted for.** Each changed passage in a source receives a disposition: update existing work, add work, assess completed work, no downstream impact with a reason, defer with the accepted consequence, or unresolved with the missing decision named. A passage with no proposed patch is not therefore a passage with no impact. A removed requirement does not delete an issue or rewrite what was completed. The plan owner decides any follow-up.
+
+**Impact is assessed beyond the citations.** A changed rule can matter to an item that never cited it. The agent finds direct consumers by citation, then reads a compact index with one row for every work item: its scope, acceptance criteria, sources, shared contracts, dependencies and recorded decisions, each excerpted to a stated length. It names candidates, reads their complete specifications and expands when an excerpt cannot support a conclusion of no impact. Source category sets the order of investigation, not whether an item is looked at. A scheduling dependency alone does not make an item a consumer of a changed rule. A separate pass then reviews the original changes against the proposed patches and the claimed lack of impact. Scripts check the accounting, and people decide what a change means.
+
+**Engineer decisions survive.** Where a project allows engineers to append to "Decisions recorded", those entries are validated against the approved specification, and they feed the review. An entry cannot change a contract or an acceptance obligation on its own. That needs the plan owner's review and a released update. An engineer who finds a specification problem raises a request instead. It reaches the plan owner as a mention or an assigned issue, and it keeps one disposition: pending, accepted, declined or deferred.
+
+**Source history stays private.** The agent compares a change with the source versions the plan owner last reviewed. It keeps those versions in the private workspace's own git history, and the workflow never pushes them or places them in a release. Rendering a new version of a source does not make it the reviewed one. If a previous complete checkpoint is unavailable, the agent says that the comparison is incomplete and asks the plan owner to review the current sources.
+
+**What "up to date" means.** It means that, for the sources the agent could observe, each change has a recorded disposition, the plan owner approved the update, and every required publication step has been verified. It does not mean that the agent saw sources it was not given, that no impact was missed, or that every engineer has received or understood the update. An offline checkout and an active coding conversation can hold earlier material. Until a publication step is verified, the agent reports it as pending and does not say "up to date".
+
+**Observation limits.** The scripts compare the material in the repository and the private workspace. They do not watch a document system, and a change in who may read a source is outside what they can see. The plan owner provides the revised material, and the milestone review prompt asks whether anything has changed. Checks at script, work item and pull request boundaries cover the work the agent does not run itself. A skill that tells an agent to run a check is an instruction until the check runs.
+
+What the plan owner does is in [the plan owner guide](plan-owner-guide.md#when-the-project-changes). What stops partway and how it resumes is in [recover a plan or publication](recovery.md#resume-a-project-update).
 
 ## Releasing the plan
 

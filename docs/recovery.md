@@ -2,9 +2,46 @@
 
 Recovery starts with a concrete preview. Local repairs write only with `--apply`. GitHub repairs also require separate approval for each run. They never delete or close duplicate issues. Owners, dates, scope and order stay with the plan owner.
 
+## Resume a project update
+
+If an update to an existing project stopped, because the session ended, a check failed or a publication step was interrupted, say:
+
+> Resume the project update.
+
+If you do not remember that phrase, or whether an update stopped, ask "What's next?" and the agent tells you where the project stands.
+
+You do not need an identifier, a command or a file name. The agent finds the saved proposal or the unfinished publication, rechecks that the sources and drafts have not changed since you reviewed them, and continues with the work that is verified as remaining. It asks you a question only when more than one consequential choice is left. If a source or a draft changed during the pause, the agent reassesses the affected part and tells you what changed. It does not apply an old proposal over newer content.
+
+Nothing you accepted is lost when an update stops. Accepted draft changes stay in your drafts, and the part that did not finish stays visible as pending.
+
+**A failure does not authorize a reset, a forced approval, a blind retry or the removal of human work.** The agent does not delete issues, labels, projects or repositories, and it keeps human comments and text outside the managed parts of an issue. If a managed part was changed on GitHub since publication, the run stops and asks for your decision.
+
+### Where a project update can stand
+
+Each of the six states is reported on its own, with one of its two values: draft reconciliation (accepted, or not yet accepted), release (approved, or not yet approved), engineering repository update (pending, or available), issue updates (pending, or verified), board updates (pending, or verified) and engineer action (required, or none). The table shows the value that needs something next. The agent does not say "up to date" while a required step is pending, and it does not claim that every engineer has received or understood the update.
+
+| State | What it means | What happens next |
+| --- | --- | --- |
+| Draft reconciliation: accepted | You accepted the proposed changes to the plan and specifications. Nothing is released or published yet. | Say "Put the plan on GitHub." The publishing skill shows a release preview and asks for your approvals. |
+| Release: approved | The release is approved for its audience and destinations. The earlier release stays active until the new one is. | The exported files are committed and pushed, then the issue and board updates follow. |
+| Engineering repository update: pending | The approved files are not yet on the branch that engineers fetch. | The agent checks the branch, names the files and asks your approval to commit and push them. Until then, engineers do not see the update. |
+| Issue updates: pending | Some issue updates are not written or not read back. | Resume. Updates that were read back and match are skipped, and nothing is created twice. |
+| Board updates: pending | The board fields do not yet match the plan. | Resume. The board is verified separately from the issues. |
+| Engineer action: required | The update is published and an engineer must review it. | carrydown notifies nobody. The affected engineer's next run of the check on the work item shows the approved delta. The engineer reviews what changed and reassesses the implementation plan before continuing. |
+
+The technical recoveries behind these states are in [resume an interrupted release](#resume-an-interrupted-release) and [reconcile published issues and the board](#reconcile-published-issues-and-the-board).
+
+### When a previous source checkpoint is missing
+
+An update compares the new sources with the source versions you last reviewed. Those versions are kept privately, in your private workspace. If they are not there, because the workspace was moved or an earlier review never recorded them, the agent says:
+
+> A previous complete source checkpoint is unavailable. Review the current sources to establish one. Earlier uncited changes cannot be assessed automatically.
+
+That sentence means what it says. The agent can still use the citations that the plan records, and you can review the current sources so that later changes have something to be compared with. It cannot discover what changed in the past outside those citations. Deleting raw inputs or clearing a workspace does not make the missing history reappear, so keep the workspace and its backups under your organization's retention rules.
+
 ## Repair local identities and source references
 
-Run these commands from the project root. Replace `<skill>` with either installed carrydown skill folder.
+The agent runs these commands from the project root and shows you each preview. They are listed so you can see what happens. `<skill>` is either installed carrydown skill folder.
 
 ```bash
 python3 <skill>/scripts/plan_repair.py --root .
@@ -15,7 +52,7 @@ The preview lists changed records, affected references and a plan diff. Exactly 
 
 Different checkpoints on one date require confirmation of a combined checkpoint. Its proposed name and joint check retain both records. Its date stays the same. The question and confirmed action name every affected item checkpoint and milestone demonstration reference. No source is selected just because it is first in a list.
 
-When choices remain, the command returns 1 without writing. It prints JSON records with `path`, `question` and `options`, then asks for one combined decision. Save a JSON mapping from each path to the selected concrete option:
+When choices remain, the command returns 1 without writing. It prints JSON records with `path`, `question` and `options`, then asks for one combined decision. The agent saves your choices as a JSON mapping from each path to the selected concrete option:
 
 ```json
 {
@@ -68,17 +105,17 @@ Both apply paths verify after writing and return nonzero for required drift. Run
 
 ## Resume an interrupted release
 
-A release has five places where it can stop. Each one resumes by the request id and the event id that the commands print, never by regenerating anything. Run the command that stopped again, after reading its dry run. Every command repeats its checks first, so a retry cannot skip a failed verification.
+A release has five places where it can stop. Each one resumes by the request id and the event id that the commands print, never by regenerating anything. The agent runs the command that stopped again, after you read its dry run. Every command repeats its checks first, so a retry cannot skip a failed verification.
 
 None of these recoveries deletes a resource, forces an activation, regenerates approved bytes to clear a mismatch, or bypasses a failed verification. Version 1 has no such command, and a refusal with a reason code means the state is not one the process may continue from. When that happens, prepare a new request.
 
 | Where it stopped | What is true | How to resume |
 | --- | --- | --- |
-| **Candidate upload.** The push to the private staging repository was interrupted, or the wait for the pull request timed out. | The candidate is private and pending. It is not approved. A timeout prints `candidate uploaded; approval request pending`. | Run `release.py approve --root . --request <request id> --github --apply` again. It finds the existing branch `request/<request id>` and its pull request, and opens no second request. It refuses an existing branch with different content and never force-pushes. The activation batch is saved, so a retry uploads the same event. |
-| **Pending review.** The pull request is open and nobody has approved it. | Nothing is approved. Export refuses (`approval-not-found` or `approver-not-authorized`). The staging check stays red until an authorized review of the final revision exists. | Review and approve the final revision in GitHub and merge it with a merge commit. A commit added after your review dismisses it, and you approve the new revision. Then export. |
-| **Export.** The copy into the engineering repository stopped. | The staging approval is unchanged. Nothing in the engineering repository is approved by a partial copy, and the verifier checks the result. | Run `release.py export --root . --request <request id> --apply` again. Files that already match are skipped, so it makes no duplicate. On the shared path a file you edited since the release stops it with `working-copy-differs`. On the private path it removes only a leftover branch that points exactly at the base commit and restarts in a clean isolated copy, and it refuses an unrelated existing branch. A missing workspace snapshot is rebuilt from the verified staging objects. |
-| **Publication.** `github_sync.py` or `github_project.py` stopped after some writes. | The journal in the workspace, `publication/<request id>.journal.json`, records each target as started or completed, with the digest of what was sent. | Run the same command again. It re-verifies the approval, reads each completed target back and skips the ones that match. It creates nothing twice. If a managed field was changed on GitHub it stops with `target changed since publication: <key>` for your decision and never rewrites it. |
-| **Receipt state.** A replacement or a withdrawal merged in staging, but the receipt update did not reach the engineering repository. | Staging state is authoritative at once for owner-side writes, and every content publisher refuses a withdrawn request. Engineers learn the new state only when the receipt reaches the default branch they fetch. | Run `release.py export-state --root . --request <request id> --apply` again. It regenerates only receipts that were already published and creates no new event. It writes nothing else, and a spec added to a state-only change is refused. Until the receipt-only pull request merges, say that propagation is pending. A pull request that is open, or a clone that is offline, does not show the change. |
+| **Candidate upload.** The push to the private staging repository was interrupted, or the wait for the pull request timed out. | The candidate is private and pending. It is not approved. A timeout prints `candidate uploaded; approval request pending`. | The agent runs `release.py approve --root . --request <request id> --github --apply` again, with the request id the command printed. It finds the existing branch `request/<request id>` and its pull request, and opens no second request. It refuses an existing branch with different content and never force-pushes. The activation batch is saved, so a retry uploads the same event. |
+| **Pending review.** The pull request is open and nobody has approved it. | Nothing is approved. Export refuses (`approval-not-found` or `approver-not-authorized`). The staging check stays red until an authorized review of the final revision exists. | Review and approve the final revision in GitHub and merge it with a merge commit. A commit added after your review dismisses it, and you approve the new revision. Then the agent exports. |
+| **Export.** The copy into the engineering repository stopped. | The staging approval is unchanged. Nothing in the engineering repository is approved by a partial copy, and the verifier checks the result. | The agent runs `release.py export --root . --request <request id> --apply` again. Files that already match are skipped, so it makes no duplicate. On the shared path a file you edited since the release stops it with `working-copy-differs`. On the private path it removes only a leftover branch that points exactly at the base commit and restarts in a clean isolated copy, and it refuses an unrelated existing branch. A missing workspace snapshot is rebuilt from the verified staging objects. |
+| **Publication.** `github_sync.py` or `github_project.py` stopped after some writes. | The journal in the workspace, `publication/<request id>.journal.json`, records each target as started or completed, with the digest of what was sent. | The agent runs the same command again. It re-verifies the approval, reads each completed target back and skips the ones that match. It creates nothing twice. If a managed field was changed on GitHub it stops with `target changed since publication: <key>` for your decision and never rewrites it. |
+| **Receipt state.** A replacement or a withdrawal merged in staging, but the receipt update did not reach the engineering repository. | Staging state is authoritative at once for owner-side writes, and every content publisher refuses a withdrawn request. Engineers learn the new state only when the receipt reaches the default branch they fetch. | The agent runs `release.py export-state --root . --request <request id> --apply` again. It regenerates only receipts that were already published and creates no new event. It writes nothing else, and a spec added to a state-only change is refused. Until the receipt-only pull request merges, say that propagation is pending. A pull request that is open, or a clone that is offline, does not show the change. |
 
 If the same content needs a second approval after a withdrawal or for another audience, that is a new request with a fresh nonce. It does not reuse the old one, and the old terminal history stays.
 

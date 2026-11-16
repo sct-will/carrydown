@@ -325,6 +325,75 @@ class GateDecisionTests(TempCase):
         self.assertEqual((d.allowed, d.code), (False, "working-copy-differs"))
         self.assertEqual(self.check("draft", "docs/spec/not-released.md", ZERO).outcome, "allow")
 
+    def saved_update(self, rel, before, after_text, *, inputs_digest=None, pending=False, extra_block=False, tamper=False, patch_path=None):
+        """Write a saved update proposal into the workspace the way reconcile.py prepare and the owner's review do,
+        and return its id."""
+        import json
+        self.saved = getattr(self, "saved", 0) + 1          # each saved proposal of a test gets its own id
+        inputs = json.dumps({"format": 1, "checkpoint": f"test-{self.saved}", "inputs": {"project/" + rel: inputs_digest or before}},
+                            indent=2).encode() + b"\n"
+        change_id = RS.sha256_bytes(inputs)
+        folder = self.ws / "drafts" / "proposals" / change_id
+        folder.mkdir(parents=True)
+        (folder / "inputs.json").write_bytes(inputs + (b" " if tamper else b""))
+        blocks = [{"ref": "architecture/3.5"}] + ([{"ref": "architecture/3.6"}] if extra_block else [])
+        (folder / "blocks.json").write_text(json.dumps({"format": 1, "blocks": blocks}), encoding="utf-8")
+        records = [{"block": "architecture/3.5", "disposition": "update", "item": "WI-01",
+                    "patch": {"item": "WI-01", "path": patch_path or rel, "before_sha256": before, "after_text": after_text}}]
+        if pending:
+            records.append({"block": "architecture/3.7", "disposition": "pending"})
+        (folder / "dispositions.json").write_text(json.dumps({"format": 1, "dispositions": records}), encoding="utf-8")
+        return change_id
+
+    def test_a_reviewed_update_patch_may_replace_a_working_copy_an_engineer_annotated(self):
+        rel = "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
+        path = self.root / rel
+        annotated = path.read_bytes().replace(b"None yet.", b"- 2026-11-10. Kept the queue name (pull request 12).")
+        self.assertNotEqual(annotated, path.read_bytes())
+        path.write_bytes(annotated)
+        self.assertEqual(self.check("draft", rel, ZERO).code, "working-copy-differs")
+        current = RS.sha256_bytes(annotated)
+        after = annotated.decode("utf-8") + "\nOne more reviewed line.\n"
+        after_sha = RS.sha256_text(after)
+        change_id = self.saved_update(rel, current, after)
+        d = self.check("draft", rel, after_sha, update_proposal=change_id)
+        self.assertEqual((d.allowed, d.outcome), (True, "allow"))
+        self.assertEqual(self.check("draft", rel, after_sha, update_proposal=change_id, dry_run=True).allowed, True)
+
+    def test_anything_short_of_a_reviewed_update_keeps_working_copy_differs(self):
+        rel = "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
+        path = self.root / rel
+        approved = RS.sha256_bytes(path.read_bytes())
+        annotated = path.read_bytes() + b"\n- 2026-11-10. A note.\n"
+        path.write_bytes(annotated)
+        current = RS.sha256_bytes(annotated)
+        after = annotated.decode("utf-8") + "x\n"
+        after_sha = RS.sha256_text(after)
+        cases = {
+            "a before digest that is stale (the approved bytes, not the working copy now)":
+                (self.saved_update(rel, approved, after, inputs_digest=current), after_sha),
+            "an after digest that is not the patch": (self.saved_update(rel, current, after + "y"), after_sha),
+            "saved inputs that record another digest of the file": (self.saved_update(rel, current, after, inputs_digest=approved), after_sha),
+            "a patch of another file": (self.saved_update(rel, current, after, patch_path="docs/spec/README.md"), after_sha),
+            "a pending disposition": (self.saved_update(rel, current, after, pending=True), after_sha),
+            "a changed block with no disposition": (self.saved_update(rel, current, after, extra_block=True), after_sha),
+            "saved inputs that no longer add up to the id": (self.saved_update(rel, current, after + "z", tamper=True), RS.sha256_text(after + "z")),
+            "an id with no saved proposal": ("e" * 64, after_sha),
+            "an id that is not an id": ("../../etc", after_sha),
+        }
+        for label, (change_id, digest) in cases.items():
+            with self.subTest(label):
+                d = self.check("draft", rel, digest, update_proposal=change_id)
+                self.assertEqual((d.allowed, d.code), (False, "working-copy-differs"))
+        applied = self.saved_update(rel, current, after + "w")
+        (self.ws / "drafts" / "proposals" / applied / "applied.json").write_text("{}", encoding="utf-8")
+        d = self.check("draft", rel, RS.sha256_text(after + "w"), update_proposal=applied)
+        self.assertEqual((d.allowed, d.code), (False, "working-copy-differs"), "an applied proposal is not applied twice")
+        # the reviewed update changes no other answer: a release write still needs a verified context
+        good = self.saved_update(rel, current, after + "v")
+        d = RG.check("release", rel, RS.sha256_text(after + "v"), "engineering-repo", str(self.root), update_proposal=good)
+        self.assertEqual(d.code, "not-approved")
+
     def test_the_working_plan_that_is_the_draft_of_the_released_plan_is_not_a_difference(self):
         self.assertEqual(self.check("draft", "docs/spec/plan.yaml", ZERO).outcome, "allow")
 

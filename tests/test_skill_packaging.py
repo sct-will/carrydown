@@ -35,6 +35,7 @@ FIXTURE = ROOT / "tests" / "fixtures" / "confidential-project"
 
 # (skill, script, arguments, text the output must hold). The first four rows are the commands that
 # scripts/selftest.py runs for the installed-skill step. Add a row when a skill gains a script.
+# The reconcile.py rows are the ones scripts/selftest.py runs from the installed copies too.
 SMOKE = [
     (GROUND_TRUTH, "check_specs.py", ["--root", "{sample}", "--quiet"], ()),
     (PLAN_TO_GITHUB, "github_sync.py", ["--root", "{sample}", "--offline", "--show-body", "3"], ()),
@@ -62,6 +63,11 @@ SMOKE = [
     (GROUND_TRUTH, "release_gate.py", ["--help"], ("The release gate",)),
     (GROUND_TRUTH, "release_verify.py", ["--help"], ("Verification of releases",)),
     (PLAN_TO_GITHUB, "release_verify.py", ["--help"], ("Verification of releases",)),
+    # the update path ships in both skills. The sample has no private workspace, so status says what it could not observe
+    (GROUND_TRUTH, "reconcile.py", ["status", "--root", "{sample}"], ("No private workspace was found", "Sources kept elsewhere were not observed")),
+    (PLAN_TO_GITHUB, "reconcile.py", ["status", "--root", "{sample}"], ("No private workspace was found", "Sources kept elsewhere were not observed")),
+    (GROUND_TRUTH, "reconcile.py", ["--help"], ("Update an existing project",)),
+    (PLAN_TO_GITHUB, "reconcile.py", ["--help"], ("Update an existing project",)),
 ]
 
 LIBRARIES = ("carrydown_lib.py",)
@@ -214,6 +220,55 @@ class SkillPackagingTests(unittest.TestCase):
             for name in names:
                 self.assertNotIn(name, local, name)
                 self.assertNotIn(name, NETWORK_MODULES, name)
+
+    # The update path ships in both skills, and its import closure never reaches network or token code.
+    FORBIDDEN = ("github_client.py", "github_token.py", "release_github.py", "release.py")
+
+    def test_there_are_exactly_two_installed_skills(self):
+        self.assertEqual(sorted(p.name for p in (ROOT / "skills").iterdir() if p.is_dir()), sorted(SKILLS))
+        self.assertEqual(sorted(SYNC.NEEDS), sorted(SKILLS))
+
+    def test_both_skills_carry_the_update_path_and_its_pieces(self):
+        for skill in SKILLS:
+            names = self.scripts(skill)
+            for need in ("reconcile.py", "reconcile_core.py", "decision_overlay.py", "workspace.py", "release_gate.py", "compile_bundles.py"):
+                with self.subTest(skill=skill, script=need):
+                    self.assertIn(need, names)
+        for name in ("maintenance-notice.md", "reconcile-review.md"):
+            self.assertTrue((self.copy[GROUND_TRUTH] / "templates" / name).is_file(), name)
+        self.assertTrue((self.copy[PLAN_TO_GITHUB] / "templates" / "maintenance-notice.md").is_file())
+
+    def test_the_update_path_closure_reaches_no_network_or_token_module(self):
+        for name in ("reconcile.py", "reconcile_core.py"):
+            closed = SYNC.closure([name])
+            with self.subTest(script=name):
+                for bad in self.FORBIDDEN:
+                    self.assertNotIn(bad, closed, bad)
+                self.assertFalse([m for m in closed if m.startswith("github_")])
+        self.assertEqual(SYNC.update_path_problems(), [])
+
+    def test_the_inventory_check_fails_when_the_update_path_would_import_the_client(self):
+        real = SYNC.imported_modules
+
+        def with_client(path):
+            names = set(real(path))
+            if path.name == "reconcile.py":
+                names.add("github_client")
+            return names
+
+        SYNC.imported_modules = with_client
+        try:
+            found = SYNC.update_path_problems()
+        finally:
+            SYNC.imported_modules = real
+        self.assertTrue(any("github_client.py" in line for line in found), found)
+
+    def test_the_overlay_and_the_engineers_check_are_both_carried_where_needed(self):
+        self.assertTrue((ROOT / "scripts" / "decision_overlay.py").is_file())
+        self.assertIn("dev-skill/scripts/check_context.py", SYNC.NEEDS[PLAN_TO_GITHUB]["templates"])
+        for skill in SKILLS:
+            self.assertIn("decision_overlay.py", SYNC.closure(SYNC.NEEDS[skill]["scripts"]))
+        self.assertTrue((self.copy[PLAN_TO_GITHUB] / "templates" / "dev-skill" / "scripts" / "check_context.py").is_file())
 
 
 if __name__ == "__main__":

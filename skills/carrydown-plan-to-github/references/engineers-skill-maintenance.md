@@ -31,6 +31,12 @@ python3 <skill>/scripts/generate_dev_skill.py --root . --only references --apply
 
 `--only references` replaces the three files under `references/` and nothing else, so it needs no `--force`. It leaves `SKILL.md` and `README.md` alone, so your hand edits stay. Pass `--force` without `--only` only when you want a fresh `SKILL.md` and `README.md`. Keep a copy of hand edits first, or regenerate into a scratch folder and merge.
 
+## Regeneration after an approved update
+
+An approved update regenerates the engineers' skill through the existing release. You do not run a second step. The release rebuilds the approved contexts and the references from the accepted drafts, keeps your hand edits to `SKILL.md` and `README.md`, and exports them with the other approved files. Engineers get the new specifications, contexts and skill in one commit.
+
+Engineers can still hold old material. An offline checkout, a copy of the skill installed before the update and an open agent conversation do not change by themselves. After the release, tell the engineers whose work items changed to update their checkout through the normal reviewed repository update and to ask their agent to reread the approved changes before they continue. Do not say every engineer has the update.
+
 ## What the issues say
 
 The sync script writes a line into every GitHub issue that points to the skill folder on the branch and tells the engineer to ask their agent to work on the item's id. Keep `project.dev_skill_path` stable once issues exist. If you move the folder, update `project.dev_skill_path` and run `github_sync.py --update-bodies`.

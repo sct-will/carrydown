@@ -7,7 +7,8 @@ Output, under project.dev_skill_path in plan.yaml
   references/work-items.md         the index of work items with dates, dependencies and file paths
   references/contracts.md          the headings of every Contract or Protocol section, by item, and each item's approved context
   references/ground-truth-map.md   the source sections inside the approved contexts, by source id and section number
-  scripts/check_context.py         the engineer's check: local validity, freshness, expiry (offline except one fetch)
+  scripts/check_context.py         the engineer's check: local validity, the specification and shared files against the
+                                   receipt, the decision overlay, freshness, expiry, the approved delta (offline except one fetch)
   scripts/check_python.py          the Python 3.9 check that runs first (a copy of the canonical script, offline)
   references/preflight.md          the preflight page: detect the system, check Python, offer to install it
 
@@ -219,18 +220,49 @@ CHANGES_REQUEST_ONLY = """Do not edit a bundle, a receipt, a source or an approv
 - Your next check picks up the new release."""
 
 
+DECISION_NOTES_ALLOWED = (
+    'Decision notes. Write each note under "Decisions recorded" as `- YYYY-MM-DD. What you did and why (pull request NN).` The first note replaces the line '
+    '`None yet.`. Add notes only at the end of that section. Never edit or remove an earlier note, and change nothing else in the file: the check exits 14 on '
+    'any other edit, and the independent check on pull requests also fails a note that has no pull request number. A note records a departure. It does not '
+    'change a contract or an acceptance criterion: that needs the plan owner and a new release, so raise it as a request.')
+DECISION_NOTES_REQUEST_ONLY = ('This project does not take decision notes in a specification. Every change to a rule goes through a request to the plan owner, '
+                               'and the check exits 14 on any edit of an approved specification.')
+
+CLARIFICATION_DEFAULT = ('The plan owner has not named a recipient for requests, and this skill does not know the owner\'s login. Address the request to "the plan owner" '
+                         'in a comment on the issue of the work item. Do not guess a person from the name of the organization or the repository.')
+_LOGIN = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})\Z")
+
+
+def clarification_routing(plan):
+    """The sentence that says where an engineer's Rule clarification request goes, from the optional released plan key
+    project.clarification (channel mention with a login, or channel issue with an issue number). Without a usable block it
+    says the request goes to the work item's issue for the plan owner. A recipient is never guessed."""
+    block = (plan.get("project") or {}).get("clarification")
+    if isinstance(block, dict):
+        login, number = block.get("login"), block.get("issue")
+        if block.get("channel") == "mention" and isinstance(login, str) and _LOGIN.match(login):
+            return (f'The plan owner named the recipient. Post the request as a comment on the issue of the work item, addressed to `@{login}`, '
+                    'the login the plan owner approved for this purpose. Do not mention anyone else.')
+        if block.get("channel") == "issue" and isinstance(number, int) and not isinstance(number, bool) and number > 0:
+            return (f'The plan owner named issue #{number} for these requests. Post the request there as a comment, and put the work item id on its first line. '
+                    'Do not open a new issue for it.')
+    return CLARIFICATION_DEFAULT
+
+
 def align_edits(rel, text, engineer_edits):
     """text of a kept (hand-edited) SKILL.md or README.md with the generated wording of the other mode
     swapped for the wording of engineer_edits, where the generated wording is still there word for word.
     A sentence the owner rewrote is left alone. Other files and an unknown mode are returned unchanged."""
     if engineer_edits not in L.ENGINEER_EDITS:
         return text
-    pairs = {"SKILL.md": (DECISIONS_ALLOWED, DECISIONS_REQUEST_ONLY), "README.md": (CHANGES_ALLOWED, CHANGES_REQUEST_ONLY)}.get(rel)
+    pairs = {"SKILL.md": ((DECISIONS_ALLOWED, DECISIONS_REQUEST_ONLY), (DECISION_NOTES_ALLOWED, DECISION_NOTES_REQUEST_ONLY)),
+             "README.md": ((CHANGES_ALLOWED, CHANGES_REQUEST_ONLY),)}.get(rel)
     if pairs is None:
         return text
-    allowed, request_only = pairs
-    old, new = (allowed, request_only) if engineer_edits == "request-only" else (request_only, allowed)
-    return text.replace(old, new)
+    for allowed, request_only in pairs:
+        old, new = (allowed, request_only) if engineer_edits == "request-only" else (request_only, allowed)
+        text = text.replace(old, new)
+    return text
 
 
 def engineer_edits_of(plan, override=None):
@@ -339,6 +371,10 @@ def skill_makers(plan, root, bundles=None, engineer_edits=None):
         "item_count": len(plan["items"]), "skill_path": skill_path, "skill_path_win": skill_path.replace("/", "\\"),
         "tree_url": L.github_tree_url(plan, skill_path) if proj.get("repo") else "<repository tree url for this folder>",
         "decisions_step": DECISIONS_REQUEST_ONLY if request_only else DECISIONS_ALLOWED,
+        "decision_notes": DECISION_NOTES_REQUEST_ONLY if request_only else DECISION_NOTES_ALLOWED,
+        "clarification_routing": clarification_routing(plan),
+        # filled into scripts/check_context.py: the same policy the wording above states, and the skill folder it checks
+        "engineer_edits": "request-only" if request_only else "allowed",
         "change_requests": CHANGES_REQUEST_ONLY if request_only else CHANGES_ALLOWED,
     }
     return {

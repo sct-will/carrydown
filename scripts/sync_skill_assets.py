@@ -15,7 +15,9 @@ sample/expense-approvals/tools/carrydown/. It is refreshed and checked here too.
 The GitHub client (github_client.py, the only module with network or token code) ships only
 with carrydown-plan-to-github. The check fails if it, or any other script that is not in a
 skill's list, turns up in another skill, and if any copy of carrydown_lib.py under skills/
-differs from scripts/carrydown_lib.py.
+differs from scripts/carrydown_lib.py. It also fails if the update path (reconcile.py) would
+pull in the GitHub client, a token reader or the release modules, or if a skill that carries it
+lacks decision_overlay.py, or the plan-to-github skill lacks the engineers' check template.
 
 Usage
   python3 scripts/sync_skill_assets.py            copy files (dry run: shows what would change)
@@ -23,6 +25,7 @@ Usage
   python3 scripts/sync_skill_assets.py --check    exit 1 if any copy is out of date
 """
 import argparse
+import ast
 import re
 import shutil
 import sys
@@ -32,14 +35,18 @@ REPO = Path(__file__).resolve().parent.parent
 
 NEEDS = {
     "carrydown-ground-truth": {
-        "scripts": ["render_ground_truth.py", "scaffold_spec.py", "check_specs.py", "plan_repair.py", "release_schema.py", "workspace.py", "compile_bundles.py", "check_python.py"],
+        "scripts": ["render_ground_truth.py", "scaffold_spec.py", "check_specs.py", "plan_repair.py", "release_schema.py", "workspace.py", "compile_bundles.py", "check_python.py",
+                    "reconcile.py", "reconcile_core.py", "decision_overlay.py"],
         "references": ["preflight.md"],
-        "templates": ["plan.yaml", "spec.md", "milestone.md", "spec-README.md", "closing-comment.md", "checkpoint-comment.md", "check-specs-workflow.yml", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md", "staging/open-release-request.yml", "staging/ruleset.json"],
+        "templates": ["plan.yaml", "spec.md", "milestone.md", "spec-README.md", "closing-comment.md", "checkpoint-comment.md", "check-specs-workflow.yml", "pull-request-template.md", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md", "staging/open-release-request.yml", "staging/ruleset.json",
+                      "maintenance-notice.md", "reconcile-review.md"],
     },
     "carrydown-plan-to-github": {
-        "scripts": ["github_token.py", "github_sync.py", "github_project.py", "github_repair.py", "github_client.py", "check_specs.py", "generate_dev_skill.py", "plan_repair.py", "release_schema.py", "compile_bundles.py", "release.py", "release_github.py", "check_python.py"],
+        "scripts": ["github_token.py", "github_sync.py", "github_project.py", "github_repair.py", "github_client.py", "check_specs.py", "generate_dev_skill.py", "plan_repair.py", "release_schema.py", "compile_bundles.py", "release.py", "release_github.py", "check_python.py",
+                    "reconcile.py", "reconcile_core.py", "decision_overlay.py"],
         "references": ["preflight.md"],
-        "templates": ["issue-body.md", "projections.yaml", "closing-comment.md", "checkpoint-comment.md", "dev-skill/SKILL.md.tmpl", "dev-skill/README.md.tmpl", "dev-skill/scripts/check_context.py", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md", "plan.yaml", "spec.md", "milestone.md", "spec-README.md", "check-specs-workflow.yml"],
+        "templates": ["issue-body.md", "projections.yaml", "closing-comment.md", "checkpoint-comment.md", "dev-skill/SKILL.md.tmpl", "dev-skill/README.md.tmpl", "dev-skill/scripts/check_context.py", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md", "plan.yaml", "spec.md", "milestone.md", "spec-README.md", "check-specs-workflow.yml",
+                      "maintenance-notice.md"],
     },
 }
 
@@ -83,6 +90,38 @@ def plan():
     return out
 
 
+def imported_modules(path):
+    """Every module name the file imports, from its syntax tree (import and from-import, at any depth)."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    names = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names |= {a.name.split(".")[0] for a in node.names}
+        elif isinstance(node, ast.ImportFrom):
+            names.add((node.module or "").split(".")[0])
+    return names
+
+
+def update_path_problems():
+    """The update path (reconcile.py) must stay free of network and token code in every skill that carries it, and
+    the pieces it and the engineers' check share must be carried where they are needed."""
+    out = []
+    for name in ("reconcile.py", "reconcile_core.py"):
+        direct = {f"{m}.py" for m in imported_modules(REPO / "scripts" / name)}
+        for mod in sorted(set(closure([name])) | direct):
+            if mod in ONLY_IN or mod.startswith("github_") or mod == "release_github.py":
+                out.append(f"{name} would pull in {mod}, which holds network or token code. The update path must not import it")
+    for skill, need in NEEDS.items():
+        if "reconcile.py" in need["scripts"] and "decision_overlay.py" not in closure(need["scripts"]):
+            out.append(f"{skill} carries reconcile.py but not decision_overlay.py")
+    if "dev-skill/scripts/check_context.py" not in NEEDS["carrydown-plan-to-github"]["templates"]:
+        out.append("carrydown-plan-to-github must carry templates/dev-skill/scripts/check_context.py, the engineers' check")
+    for rel in ("scripts/decision_overlay.py", "templates/dev-skill/scripts/check_context.py"):
+        if not (REPO / rel).is_file():
+            out.append(f"missing: {rel}")
+    return out
+
+
 def problems():
     """Copies that must not exist or must match, beyond the plan: a module outside the skill
     that may ship it, a script no skill lists, and any carrydown_lib.py under skills/ that
@@ -97,6 +136,7 @@ def problems():
     for f in sorted((REPO / "skills").glob("*/scripts/*.py")):
         if f not in wanted:
             out.append(f"not expected: {f.relative_to(REPO)}. Remove it by hand")
+    out += update_path_problems()
     canonical = (REPO / "scripts" / "carrydown_lib.py").read_bytes()
     for f in sorted((REPO / "skills").rglob("carrydown_lib.py")):
         if f not in wanted and f.read_bytes() != canonical:

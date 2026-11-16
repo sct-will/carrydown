@@ -34,7 +34,7 @@ Go through this with the user before you call the skill done.
 - [ ] The table of skills folders matches the agents the engineers use.
 - [ ] It says the specification folder is canonical.
 - [ ] It says what a bundle holds, that every reader of the repository can read every bundle, and that the check is a convenience in the engineer's own checkout and not a security control.
-- [ ] It lists the four block messages with what to do, the offline grace rule and that a new clone needs one successful refresh first, and the Windows form of the command.
+- [ ] It lists the six block messages (exits 10 to 15) with what to do, says the ready block prints a `baseline:` line and that a release change shows an approved delta, the offline grace rule and that a new clone needs one successful refresh first, and the Windows form of the command.
 
 ## Smoke test
 

@@ -14,13 +14,23 @@ What the gate decides
   draft       allowed when the owner answered yes to the one question and the file is derived only from
               sources approved for everyone who reads the repository. Otherwise deny(drafting-is-private).
               Once a request is active, a draft write to a file the request approved is refused with
-              working-copy-differs when the file no longer holds the approved bytes.
+              working-copy-differs when the file no longer holds the approved bytes, unless the write is
+              a reviewed update (update_proposal, below).
   candidate   always allowed.
   release     allowed only with a verified context made by release_verify.authorize_content no more than
               60 seconds ago, for an active, unexpired request under current policy, whose target
               identities match and whose manifest lists the artifact or payload digest.
   state-only  allowed only with a verified state context, for a receipt path that context names, with the
               digest of the exact terminal projection.
+A reviewed update is the one way a draft write may replace a working copy that differs from the approved
+bytes, for example a specification that holds an engineer's appended decision entry. The caller names
+the saved update proposal by its id (update_proposal). The id is not trusted: the gate reads the owner's
+own proposal under <workspace>/drafts/proposals/<id>/ and allows the write only when the saved inputs
+still add up to the id, the proposal is not applied, every changed block has a disposition and none is
+pending, the saved inputs record this file with the digest it holds now, and an update disposition holds
+a patch for this file whose before digest is the digest of the working copy now and whose after text has
+the digest being written. Anything else keeps working-copy-differs. The rest of the update check
+(every input still fresh, the patch rules) is reconcile.py check, which apply runs just before.
 A receipt, a caller-supplied flag and a plain dict are never a context. The gate has no command-line
 option and no environment variable that changes a decision, and none will be added. Each allowed write
 appends one line (time, request id, decision, write class, artifact path, no content) to
@@ -302,7 +312,77 @@ def _working_matches(state, root, artifact_path, approved_sha):
     return False
 
 
-def _check_draft(state, artifact_path, destination, root, request_id, verified_context):
+PROPOSALS_DIR = "drafts/proposals"
+MAX_PROPOSAL_BYTES = 16 * 1024 * 1024
+
+
+def _read_proposal_file(folder, name):
+    """The bytes of a regular file of a saved update proposal, or None. A link or a large file is None."""
+    path = os.path.join(folder, name)
+    if os.path.islink(path) or not os.path.isfile(path) or os.path.getsize(path) > MAX_PROPOSAL_BYTES:
+        return None
+    with open(path, "rb") as handle:
+        return handle.read()
+
+
+def _patch_list(patch):
+    if isinstance(patch, str):
+        try:
+            patch = RS.loads_strict(patch)
+        except RS.SchemaError:
+            return []
+    if isinstance(patch, dict):
+        patch = [patch]
+    return [p for p in patch if isinstance(p, dict)] if isinstance(patch, list) else []
+
+
+def _reviewed_update(state, root, path, content_digest, change_id):
+    """True when the saved update proposal change_id holds a reviewed patch of path: see the module text.
+    Every read is of the owner's own workspace; nothing the caller passes besides the id is believed."""
+    if not state.workspace or not isinstance(change_id, str) or len(change_id) != 64 \
+            or any(c not in "0123456789abcdef" for c in change_id):
+        return False
+    folder = os.path.join(state.workspace, *PROPOSALS_DIR.split("/"), change_id)
+    if os.path.islink(folder) or not os.path.isdir(folder) or os.path.lexists(os.path.join(folder, "applied.json")):
+        return False
+    working = os.path.join(os.path.abspath(str(root)), path)
+    if os.path.islink(working) or not os.path.isfile(working):
+        return False
+    try:
+        raw = _read_proposal_file(folder, "inputs.json")
+        if raw is None or RS.sha256_bytes(raw) != change_id:
+            return False
+        inputs = RS.loads_strict(raw)
+        blocks = RS.loads_strict(_read_proposal_file(folder, "blocks.json") or b"null")
+        dispositions = RS.loads_strict(_read_proposal_file(folder, "dispositions.json") or b"null")
+        current = RS.sha256_file(working)
+    except (RS.SchemaError, OSError, ValueError):
+        return False
+    if not (isinstance(inputs, dict) and isinstance(inputs.get("inputs"), dict) and isinstance(blocks, dict)
+            and isinstance(blocks.get("blocks"), list) and isinstance(dispositions, dict)
+            and isinstance(dispositions.get("dispositions"), list)):
+        return False
+    if inputs["inputs"].get("project/" + path) != current:
+        return False
+    records = [r for r in dispositions["dispositions"] if isinstance(r, dict)]
+    decided = {r.get("block") for r in records if isinstance(r.get("disposition"), str) and r["disposition"] != "pending"}
+    if any(r.get("disposition") == "pending" for r in records):
+        return False
+    refs = {b.get("ref") for b in blocks["blocks"] if isinstance(b, dict)}
+    if not refs <= decided:
+        return False
+    for record in records:
+        if record.get("disposition") != "update":
+            continue
+        for patch in _patch_list(record.get("patch")):
+            after = patch.get("after_text")
+            if patch.get("path") in (path, "project/" + path) and patch.get("before_sha256") == current \
+                    and isinstance(after, str) and RS.sha256_text(after) == content_digest:
+                return True
+    return False
+
+
+def _check_draft(state, artifact_path, destination, root, request_id, verified_context, content_digest=None, update_proposal=None):
     path = str(artifact_path).replace("\\", "/")
     if path in UNSOURCED_DRAFTS:
         return None
@@ -320,7 +400,8 @@ def _check_draft(state, artifact_path, destination, root, request_id, verified_c
         return "state-history-invalid"
     if rid is not None:
         approved = manifest.get("repo/" + path)
-        if approved is not None and not _working_matches(state, root, path, approved):
+        if approved is not None and not _working_matches(state, root, path, approved) \
+                and not (update_proposal is not None and _reviewed_update(state, root, path, content_digest, update_proposal)):
             return "working-copy-differs"
     return None
 
@@ -381,7 +462,7 @@ def _check_state_only(state, artifact_path, content_digest, request_id, ctx, now
 
 
 def check(write_class, artifact_path, content_digest, destination, root, *,
-          request_id=None, event_id=None, verified_context=None, dry_run=False):
+          request_id=None, event_id=None, verified_context=None, dry_run=False, update_proposal=None):
     """Ask whether a write is permitted. Call this before every write outside the private workspace.
 
     write_class is one of WRITE_CLASSES. artifact_path is the file, relative to root, or the payload path
@@ -394,6 +475,10 @@ def check(write_class, artifact_path, content_digest, destination, root, *,
     for a state-only write, the context of authorize_state_receipt. For a draft write it may be a dict
     with source_classification, which can only narrow the answer: a rendering of a source that is not
     repo-readers or public is denied. Nothing else counts as a context.
+
+    update_proposal is, for a draft write only, the id of the saved update proposal whose reviewed patch this
+    write is. The gate verifies it against the owner's workspace (see the module text); it can only let a
+    reviewed patch replace a working copy that differs from the approved bytes, and changes no other answer.
 
     dry_run is True when the caller only previews the write: the decision is the same, and the gate log
     gets no line, so the log never records an allowed write that did not happen.
@@ -416,7 +501,7 @@ def check(write_class, artifact_path, content_digest, destination, root, *,
     if state.enrolled and not state.pointer_ok:
         return _deny(state, request_id, write_class, artifact_path, "policy-pointer-mismatch")
     if write_class == "draft":
-        code = _check_draft(state, artifact_path, destination, root, request_id, verified_context)
+        code = _check_draft(state, artifact_path, destination, root, request_id, verified_context, content_digest, update_proposal)
     elif write_class == "release":
         if state.handling is None and state.enrolled:
             code = "enrolled-project-missing-handling"

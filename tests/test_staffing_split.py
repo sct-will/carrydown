@@ -375,6 +375,29 @@ class CheckerTests(WithTemp):
                      "Every sized item fits between its last dependency and its complete_by date."):
             self.assertIn(want, out)
 
+    def test_the_load_table_is_followed_by_one_labeled_sentence_per_person(self):
+        code, out, err = check(["--root", SAMPLE, "--report", "--people", PEOPLE])
+        self.assertEqual(code, 0, out + err)
+        lines = out.splitlines()
+        first = lines.index("  tamsin, 100 percent allocated: work unit 1, 3 of 10 days (30 percent); work unit 2, 5 of 14 days (36 percent); "
+                            "work unit 3, 6 of 10 days (60 percent); work unit 4, 4 of 10 days (40 percent); work unit 5, 0 of 10 days; "
+                            "total 18 of 54 days (33 percent).")
+        self.assertTrue(lines[first - 1].startswith("  idris   60%"), lines[first - 1])
+        self.assertEqual(lines[first + 1], "  idris, 60 percent allocated: work unit 1, 3 of 6 days (50 percent); work unit 2, 4 of 9 days (44 percent); "
+                         "work unit 3, 4 of 5 days (74 percent); work unit 4, 0 of 6 days; work unit 5, 3 of 6 days (50 percent); "
+                         "total 14 of 32 days (43 percent).")
+        self.assertEqual(lines[first + 2], "  No person is over 100 percent of allocated capacity in any work unit.")
+
+    def test_the_labeled_sentence_says_over_where_the_table_says_over(self):
+        with tempfile.TemporaryDirectory(prefix="carrydown-load-") as tmp:
+            people = Path(tmp) / "people.yaml"
+            people.write_text(PEOPLE.read_text(encoding="utf-8").replace("allocation: 100 ", "allocation: 20  ", 1), encoding="utf-8")
+            code, out, err = check(["--root", SAMPLE, "--report", "--people", people])
+        sentence = next((ln for ln in out.splitlines() if ln.startswith("  tamsin, 20 percent allocated: ")), None)
+        self.assertIsNotNone(sentence, out + err)
+        self.assertIn("work unit 3, 6 of 2 days (300 percent, over)", sentence)
+        self.assertIn("  OVER", out)
+
     def test_json_output_stays_one_object_without_the_note(self):
         code, out, err = check(["--root", SAMPLE, "--json"])
         self.assertEqual(code, 0, out + err)

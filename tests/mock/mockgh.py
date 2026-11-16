@@ -83,9 +83,15 @@ class State:
         self.issues.append(iss)
         return iss
 
-    def add_comment(self, number, body, login=LOGIN):
+    def add_comment(self, number, body, login=LOGIN, created_at=None, repository="o/r"):
+        """A comment on issue number. Its link and creation time look as GitHub's do, so a test can read the id from
+        the link (issuecomment-ID) and compute an age. created_at is an ISO 8601 UTC time, now when left out."""
+        import time
         lst = self.comments.setdefault(number, [])
-        c = {"id": 5000 + sum(len(v) for v in self.comments.values()), "body": body, "html_url": "c", "user": {"login": login}}
+        cid = 5000 + sum(len(v) for v in self.comments.values())
+        c = {"id": cid, "body": body, "html_url": f"https://github.com/{repository}/issues/{number}#issuecomment-{cid}",
+             "issue_url": f"https://api.github.com/repos/{repository}/issues/{number}", "user": {"login": login},
+             "created_at": created_at or time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
         lst.append(c)
         return c
 
@@ -260,7 +266,7 @@ class H(BaseHTTPRequestHandler):
             n = int(m.group(1))
             if method == "GET":
                 return self.page(S.comments.get(n, []), q, p)
-            return self.send(201, S.add_comment(n, self.body()["body"]))
+            return self.send(201, S.add_comment(n, self.body()["body"], repository="/".join(p.split("/")[2:4])))
         m = re.fullmatch(base + r"/issues/comments/(\d+)", p)
         if m:
             cid = int(m.group(1))

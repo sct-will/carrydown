@@ -521,6 +521,8 @@ class WorkspaceInitTests(TempProject):
         retention = L.load_file(self.workspace / "retention.yaml")
         self.assertEqual((retention["raw_inputs"], retention["history"]), ("keep", "keep"))
         self.assertIn("does not remove them from any backup, remote or copy made earlier", retention["limits"])
+        self.assertIn("Reconciliation keeps earlier reviewed renderings privately", retention["limits"])
+        self.assertIn("does not erase rendering history, backups or earlier copies", retention["limits"])
         doc, problems = L.load_people_file(self.workspace / "people.yaml")
         self.assertEqual((doc, problems), ({"people": [], "advisors": []}, []))
 
@@ -740,6 +742,41 @@ class WorkspaceStatusAndDoctorTests(TempProject):
             self.assertEqual(rows[name][0], "ok", (name, rows[name]))
         self.assertIn("offline", out.splitlines()[0])
         self.assertIn("plan_format 2, workspace view, handling migrated; valid", rows["plan schema"][1])
+
+    def test_status_and_doctor_report_no_checkpoint_yet_without_failing(self):
+        self.init()
+        code, out, err = run_main(["status", "--root", str(self.root)])
+        self.assertEqual(code, 0, out + err)
+        self.assertIn("source checkpoints: 0", out)
+        self.assertNotIn("latest checkpoint", out)
+        level, detail = self.rows()["checkpoints"]
+        self.assertEqual(level, "ok")
+        self.assertIn("none recorded yet", detail)
+        self.assertEqual(W.latest_checkpoint(self.workspace), None)
+        self.assertEqual(W.checkpoint_for_sources(self.workspace, ["architecture"]), None)
+
+    def test_doctor_fails_on_an_unreadable_checkpoint_list_and_says_so_without_content(self):
+        self.init()
+        path = self.workspace / "workspace.yaml"
+        path.write_text(path.read_text(encoding="utf-8") + "checkpoints: nonsense\n", encoding="utf-8")
+        level, detail = self.rows()["checkpoints"]
+        self.assertEqual(level, "FAIL")
+        self.assertIn("checkpoint-mismatch", detail)
+
+    def test_checkpoint_help_lists_the_actions_and_every_writing_action_has_apply(self):
+        code, out, err = run_main(["checkpoint", "--help"])
+        self.assertEqual(code, 0)
+        for action in ("prepare", "commit", "bind", "list"):
+            self.assertIn(action, out)
+        for action in ("prepare", "commit", "bind"):
+            code, out, err = run_main(["checkpoint", action, "--help"])
+            self.assertEqual(code, 0)
+            self.assertIn("--apply", out)
+
+    def test_checkpoint_without_a_workspace_stops_with_the_fixed_code(self):
+        code, out, err = run_main(["checkpoint", "list", "--root", str(self.root)])
+        self.assertEqual(code, 2)
+        self.assertIn("workspace-unavailable", err)
 
     def test_doctor_without_a_workspace_fails_on_the_pointer_and_the_ignore_rule(self):
         rows = self.rows()

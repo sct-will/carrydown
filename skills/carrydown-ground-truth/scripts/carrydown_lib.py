@@ -421,7 +421,9 @@ def inside(root, path, what="output"):
     target = Path(path)
     target = (target if target.is_absolute() else base / target).resolve()
     if target != base and base not in target.parents:
-        die(f"the {what} path {path} is outside the project folder {base}, so nothing was written")
+        hint = (". A relative --out-dir is read from the project root (--root). Give a folder inside it, such as my-test/ground-truth"
+                if what == "--out-dir" else "")
+        die(f"the {what} path {path} is outside the project folder {base}, so nothing was written{hint}")
     return target
 
 
@@ -742,6 +744,10 @@ CLASSIFICATIONS = ("repo-readers", "restricted", "public")
 RETAIN_VALUES = ("keep", "delete-after-release")
 HANDLING_STATES = ("legacy", "migrated")
 ENGINEER_EDITS = ("allowed", "request-only")
+# project.clarification: where an engineer's Rule clarification request goes. The owner approves the login or
+# the issue number for publication; the block is optional. channel mention needs login, channel issue needs issue.
+CLARIFICATION_KEYS = ("channel", "login", "issue")
+CLARIFICATION_CHANNELS = ("mention", "issue")
 HANDLING_KEYS = ("policy_version", "repo_audience_approved", "approvers", "retain_raw_inputs", "state",
                  "downstream", "offline_grace_days", "engineer_edits")
 RELEASED_HANDLING_KEYS = ("policy_version", "repo_audience_approved", "state", "offline_grace_days", "engineer_edits")
@@ -860,6 +866,8 @@ def type_problems(plan):
         P.append(f"project.handling must be a mapping of keys, got {_kind(handling)}")
     elif isinstance(handling, dict) and handling.get("downstream") is not None and not isinstance(handling["downstream"], dict):
         P.append(f"project.handling.downstream must be a mapping of keys, got {_kind(handling['downstream'])}")
+    if proj.get("clarification") is not None and not isinstance(proj["clarification"], dict):
+        P.append(f"project.clarification must be a mapping of keys, got {_kind(proj['clarification'])}")
     ep = proj.get("epic")
     if ep is not None and not _is_int(ep) and not (isinstance(ep, str) and re.fullmatch(r"[0-9]{1,18}", ep.strip())):
         P.append(f"project.epic must be an issue number or null, got {ep!r}")
@@ -1325,7 +1333,7 @@ def payload_assignees(staffed_plan, item):
 # ---------------------------------------------------------------------------
 
 RELEASED_PROJECT_KEYS = ("name", "slug", "id_prefix", "repo", "branch", "epic", "epic_title", "subepic_prefix",
-                         "title_format", "spec_dir", "project_title", "dev_skill", "dev_skill_path")
+                         "title_format", "spec_dir", "project_title", "dev_skill", "dev_skill_path", "clarification")
 RELEASED_SOURCE_KEYS = ("id", "name", "version")
 RELEASED_PERSON_KEYS = ("id", "track", "derived")
 RELEASED_ITEM_KEYS = ("id", "slug", "label", "milestone", "track", "owner", "theme", "complete_by", "size", "depends",
@@ -1756,6 +1764,41 @@ def _handling_problems(plan, mode):
     return P
 
 
+def _clarification_problems(plan):
+    """Problems with the optional project.clarification block, the owner-approved routing of an engineer's
+    Rule clarification request. channel is mention or issue. A mention needs login, a GitHub login the owner
+    approved for publication. An issue needs issue, the number of an existing issue. Nothing else is allowed.
+    A login is a person's public name, so a value that is not a login is never echoed."""
+    P = []
+    block = (plan.get("project") or {}).get("clarification")
+    if block is None or not isinstance(block, dict):
+        return P            # absent is fine. A wrong type is reported by type_problems
+    for k in block:
+        if k not in CLARIFICATION_KEYS:
+            P.append(f"project.clarification: unknown key {str(k)[:40]!r}. Use channel, login or issue")
+    channel = block.get("channel")
+    if "channel" not in block:
+        P.append("project.clarification.channel is required: mention or issue")
+    elif channel not in CLARIFICATION_CHANNELS:
+        P.append("project.clarification.channel must be mention or issue")
+    login, issue = block.get("login"), block.get("issue")
+    if "login" in block and not (isinstance(login, str) and _LOGIN_RE.match(login)):
+        P.append("project.clarification.login must be a GitHub login")
+    if "issue" in block and not (_is_int(issue) and 1 <= issue <= 10 ** 9):
+        P.append("project.clarification.issue must be an issue number, a whole number of 1 or more")
+    if channel == "mention":
+        if "login" not in block:
+            P.append("project.clarification.login is required when the channel is mention")
+        if "issue" in block:
+            P.append("project.clarification.issue is not used when the channel is mention. Remove it")
+    elif channel == "issue":
+        if "issue" not in block:
+            P.append("project.clarification.issue is required when the channel is issue")
+        if "login" in block:
+            P.append("project.clarification.login is not used when the channel is issue. Remove it")
+    return P
+
+
 def _people_key_problems(plan):
     """Staffing keys that a migrated plan must not hold: people[] fields and a top-level advisors
     list. Locations are people:<id>:<field>, never a value."""
@@ -1855,6 +1898,7 @@ def validate_plan(plan, view=None):
         P.append(tf)
     P += path_problems(plan)
     P += _handling_problems(plan, mode)
+    P += _clarification_problems(plan)
     if proj.get("repo") and not repo_ok(proj["repo"]):
         P.append(f"project.repo must look like owner/name, got {proj['repo']!r}")
     # A released plan needs no original and no rendering: project.ground_truth is optional there and

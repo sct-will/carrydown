@@ -1,6 +1,6 @@
 ---
 name: carrydown-plan-to-github
-description: Publishes an approved plan to GitHub and generates the engineers' skill. Use for "Put the plan on GitHub", "Generate the engineers' skill" or "Review and repair the published plan". External updates are previewed before approval.
+description: Publishes an approved plan to GitHub, carries an approved update through the same release and generates the engineers' skill. Use for "Put the plan on GitHub", "Resume the project update", "Generate the engineers' skill" or "Review and repair the published plan". External updates are previewed before approval.
 license: Apache-2.0
 compatibility: Needs Python 3.9 or later (the skill checks for it and offers to install it), network access to api.github.com only, and a GitHub token the user creates.
 metadata:
@@ -27,7 +27,7 @@ Then it generates the engineers' skill: a small folder in the Agent Skills forma
 ## Rules that never bend
 
 - Ask before you write anything to GitHub. Always run the dry run first, show the user its summary, and wait for a clear yes. Writing means `--apply`. A yes to one run is not a yes to the next. For a release, the dry run of `release.py release` and its external-write line are that dry run and that yes, for exactly the runs the line names (step 3).
-- Run the preflight before you ask the user to commit, push or publish anything (step 4). It reads the destination and prints one visibility line for each target. For a project that publishes an approved release it refuses a destination the release's audience does not allow: a release for repository readers on a public repository (`audience-visibility-mismatch`), a board that more accounts can read than the repository, or a board whose readers cannot be listed and that no current administrator attestation covers (`destination-access-not-verified`). There is no flag that overrides it. Say the code and its plain meaning, and do not look for a way around it. A repository that is public is not a reason to ask the user anything new when the release is approved for the public at that exact repository.
+- Run the preflight before you commit, push or publish anything, and before you ask the user to approve it (step 4). It reads the destination and prints one visibility line for each target. For a project that publishes an approved release it refuses a destination the release's audience does not allow: a release for repository readers on a public repository (`audience-visibility-mismatch`), a board that more accounts can read than the repository, or a board whose readers cannot be listed and that no current administrator attestation covers (`destination-access-not-verified`). There is no flag that overrides it. Say the code and its plain meaning, and do not look for a way around it. A repository that is public is not a reason to ask the user anything new when the release is approved for the public at that exact repository.
 - A project with no release policy (a legacy project) has no approved audience, so the preflight only reports. If its repository is public, say so before you ask for the yes: issue bodies carry text from the ground truth, and anyone can read them.
 - Never print, log, echo, paste or commit the token. Never ask the user to paste it into the chat. Never put it in a URL or a command line argument. Never set or read the token in the shell. Only the scripts read it.
 - When the user gives you the path of a token file, never open, read, cat, grep, list or display that file, and never pass it to any tool other than `github_token.py --from-file`. If the script fails, report its message. Do not inspect the file.
@@ -36,6 +36,33 @@ Then it generates the engineers' skill: a small folder in the Agent Skills forma
 - Do not delete issues, labels, projects or repositories. If something must be removed, tell the user how to do it themselves.
 - Keep to the repository and owner the user named.
 - Do not put secrets, tokens or personal data in the generated skill, and ask before you write outside `docs/`.
+
+## Route by project state
+
+Before you start, find out where the project stands, after the preflight in step 0:
+
+```bash
+python3 <skill>/scripts/reconcile.py status --root .
+```
+
+It writes nothing. Pick the response from the rows that concern this skill. The planning skill, `carrydown-ground-truth`, owns the other states: no plan, an unapproved draft, changed sources or a correction, and an unfinished update.
+
+| Observed state | Response |
+| --- | --- |
+| Accepted drafts awaiting release | Continue here at step 3: the release preview, then the owner's approvals. |
+| Approved release awaiting publication | Resume the existing publication at step 4. The journal says what remains. |
+| Resume existing publication ("Resume the project update.") | Pick the existing publication request and resume it. Ask the owner only when more than one consequential choice remains. |
+| Anything earlier in the state list | Go back to `carrydown-ground-truth`. |
+
+When the owner says "Resume the project update." or asks "Is this project up to date?", start with the engineers' requests, before the publication state:
+
+```bash
+python3 <skill>/scripts/github_sync.py --root . --clarifications
+```
+
+Show the outstanding requests first, one line each. If the read could not run, say so: outstanding requests were not observed, and why. Then go on with the rows above. Do not say "up to date" while a request is pending or a publication step is pending.
+
+Routing works after this skill activates. It does not replace the checks that every script runs before it writes. Never reset, force an approval, retry blindly or remove human work to recover. Previous approval covers only its unchanged scope. An approved update goes through the same release as a first plan: preview, disclosure approval, authorization, commit and push check, managed updates and the journal.
 
 ## Where the files are
 
@@ -61,13 +88,36 @@ python3 <skill>/scripts/release.py inventory --root .
 
 It lists the tracked originals and renderings, the staffing fields in tracked files, the generated references of the engineers' skill and whether any of them are in git history, and it says plainly that Carrydown cannot rewrite history and links GitHub's guidance. Show it to the user. The user then answers the one question in step 0 of `carrydown-ground-truth`, which migrates the project. For the issues already on GitHub, the same step has a read-only report once there is a token (step 2): `github_sync.py --root . --inventory` lists every managed issue, whether its body is pristine, whether it holds text outside the managed region and whether it predates the active release. Text outside the managed region stays when the managed region is replaced, so replacing it does not remove that text. Changes need a reviewed migration and approved updates, and the user decides issue by issue. The report proposes no rewrite, and you must not make one.
 
+**The clarification recipient.** Engineers who find a specification problem need to know whom to ask. During the first publication, establish that recipient once and record it. Prefer a permitted owner mention on the engineer's work item. An existing issue assigned to the owner is the alternative, if it is the project's chosen channel. Do not require a new issue for every project. Reuse what the project already says, and do not ask again for something you know. Do not guess a recipient from an organization name, copy staffing details into a public file or expose a contact nobody approved. Ask for approval before you publish a person's login, create an issue or assign one. Record the choice in the owner's working plan under `project.clarification`, either `channel: mention` with `login`, or `channel: issue` with `issue`. A project with no recipient yet is not blocked: say that requests will show as not sent until one is set.
+
+Do it in this order:
+
+1. Before publication, ask the owner one question: "Who should engineers ask when a specification looks wrong?" Offer what the project already shows, such as the owner of the plan or a clarification issue the project already uses, and take a yes or a different answer. Do not ask when the plan already records `project.clarification`.
+2. Record the answer in the owner's working plan, after the owner approves the login or the issue number. Then run the release steps in step 3, so the released plan carries it. The line `Clarification requests: ...` in each work item issue says where requests go. A project that records nothing gets no such line.
+3. After publication, show the owner what is waiting. Run it as a read, first without `--apply`:
+
+```bash
+python3 <skill>/scripts/github_sync.py --root . --clarifications
+python3 <skill>/scripts/github_sync.py --root . --clarifications --apply      # also records the observation in the private workspace
+```
+
+   Each line names the work item, the issue, the state (`pending`, `accepted`, `declined` or `deferred`), the age and the link to the request. The script prints no comment text. `--apply` here writes one file in the private workspace, `events/clarifications.json`, which `carrydown-ground-truth` reads. It writes nothing on GitHub. Without a private workspace the script says the observation was not recorded.
+4. When the owner has decided a request, record the decision on the issue. The owner decides. Do not decide for the owner. Preview the comment, show it, and post it only after a yes:
+
+```bash
+python3 <skill>/scripts/github_sync.py --root . --clarification-disposition ISSUE accepted --request-comment ID --note "One short line."
+python3 <skill>/scripts/github_sync.py --root . --clarification-disposition ISSUE accepted --request-comment ID --note "One short line." --apply
+```
+
+   `ISSUE` is the issue number and `ID` is the number after `issuecomment-` at the end of the request link. The state is `accepted`, `declined` or `deferred`. The note is optional, one line of at most 500 characters, and becomes part of the issue, so keep private details out of it. The first command prints the exact comment and posts nothing. With `--apply` the script posts it, reads the issue back and says whether the request now shows the new state. Do not say the decision is recorded until it says so. It never edits the engineer's comment and never closes the issue. A mention directs attention. It does not prove the owner or the engineer was notified.
+
 Confirm with the user, in plain words: the repository (`owner/name`) and whether it is public, whether a parent Epic issue exists (its number) or may be created, the people's GitHub logins if they should be assigned, and which account owns the project board (the user's own GitHub account or the organization). Put the repository, Epic number and project title in `plan.yaml` under `project` (after a first release on the yes answer, in the working plan, `drafts/plan.yaml` in the private workspace).
 
 ### 2. Token
 
 Read `references/token-walkthrough.md` and relay it in your own words. For a board owned by an organization: a fine-grained token for the one repository. Only for a board owned by a user account: a classic token with `repo` and `project`. Expiry 7 days, revoked when the plan is on GitHub.
 
-The preferred path is the hidden prompt. Print this command for the user to run in their own terminal. Do not run it yourself. The user pastes the token at the prompt, and nothing appears as they type:
+The preferred path is the hidden prompt. Print this command for the user to run in their own terminal. Do not run it yourself. The user pastes the token at the prompt, and nothing appears as they type. Tell the user to come back to the chat and say when it is done:
 
 ```bash
 python3 <skill>/scripts/github_token.py --repo owner/name
@@ -103,7 +153,7 @@ It prepares the request, records the owner's approval (labeled not authenticated
 
 When nothing changed since the active release, the command says so and prepares nothing. `release.py diff --root .` names the work items a change touches. `release.py withdraw --root . --reason <code> --apply` ends the active request, and `release.py export-state --root . --apply` then rewrites its receipt. A change to the plan, a specification or a source after a release needs a new release: run this step again.
 
-**Only on the no answer**, the approval is not a chat answer, and the release needs the organization setup in the setup guide. Run `release.py doctor --root .` and show its table. After the preview (`release.py preview --root .`), run `release.py prepare --root . --apply`, ask permission to write to GitHub, and run `release.py approve --root . --github --apply`. Tell the owner to review the final revision of the pull request in the private staging repository and merge it with a merge commit, then run `release.py export --root . --apply`. It commits to a new branch in an isolated worktree and prints the push and pull request commands. Run those only if the owner asks for them in this chat. Local approval is refused for an enrolled project, and a signed tag is not available. Publication (steps 4 and 5) waits until the engineering pull request has merged. Do not describe this path to a yes-path owner.
+**Only on the no answer**, the approval is not a chat answer, and the release needs the organization setup in the setup guide. Run `release.py doctor --root .` and show its table. After the preview (`release.py preview --root .`), run `release.py prepare --root . --apply`, ask permission to write to GitHub, and run `release.py approve --root . --github --apply`. Tell the owner to review the final revision of the pull request in the private staging repository and merge it with a merge commit, then run `release.py export --root . --apply`. It commits to a new branch in an isolated worktree and prints the push and pull request commands. Show the owner the branch and the destination and ask one approval to push it and open the pull request. Run those commands only after a yes. Local approval is refused for an enrolled project, and a signed tag is not available. Publication (steps 4 and 5) waits until the engineering pull request has merged. Do not describe this path to a yes-path owner.
 
 ### 4. Preflight, commit and push check, issues
 
@@ -114,15 +164,20 @@ python3 <skill>/scripts/github_sync.py --root . --preflight                  # a
 python3 <skill>/scripts/github_sync.py --root . --repo owner/name --preflight   # a legacy project
 ```
 
-Show the user the visibility lines. If it refuses, say the reason code and stop; step 3 says how to fix the release, and the setup guide how to fix the destination. `github_project.py` and `github_repair.py` run the same preflight before they write, and `--verify` on each reports a change of visibility since the last apply. Do not ask the user to commit or push anything before the preflight has passed. Only after it has passed, check the commit and push state. Every issue body links its specification at `https://github.com/<owner>/<repo>/blob/<branch>/docs/spec/...`, where `<branch>` is `project.branch`. Those links work only when the specification folder is committed and pushed to that branch. Ask the user to run these commands in their own terminal, from the project root, and to tell you what they print. They only read. Do not run them yourself:
+Show the user the visibility lines. If it refuses, say the reason code and stop; step 3 says how to fix the release, and the setup guide how to fix the destination. `github_project.py` and `github_repair.py` run the same preflight before they write, and `--verify` on each reports a change of visibility since the last apply. Do not commit or push anything, or ask the user to approve it, before the preflight has passed. Only after it has passed, check the commit and push state. Every issue body links its specification at `https://github.com/<owner>/<repo>/blob/<branch>/docs/spec/...`, where `<branch>` is `project.branch`. Those links work only when the specification folder is committed and pushed to that branch. Run these checks yourself, from the project root. They only read, so they need no approval:
 
 ```bash
+git branch --show-current
 git status --porcelain docs
 git fetch origin <branch>
 git log origin/<branch>..HEAD --oneline -- docs
 ```
 
-The first and the last command must print nothing. If the first prints a file, the release or a specification is not committed. If the last prints a commit, it is not pushed. Ask the user to commit and push the released files, with the plan, the specifications, the approved contexts, the receipt and the engineers' skill, in one commit as they do today. Do not run `git commit` or `git push` yourself unless the user asks for that command in this chat. Then ask the user to run the check again.
+Tell the owner what you found in one plain sentence each, not the commands: which branch is checked out, whether the released files are committed, and whether they are on `<branch>` on GitHub. The second and the last command must print nothing. If the second prints a file, the release or a specification is not committed. If the last prints a commit, it is not pushed. If the fetch fails or asks for a password, stop and say that git could not reach the repository with the credentials on this computer. The owner sets up their git access, then comes back to the chat. Never enter a credential for git.
+
+When something is not committed or not pushed, ask one approval in the chat. It is a separate question, after the disclosure and external-write lines of step 3, and a yes to those lines is not a yes to this. A legacy project has no step 3, so ask it on its own before the issues dry run. Name what will be committed and where it will be pushed, for example: "May I commit these N released files in one commit and push it to `main` on `owner/name`?", followed by a short list: the plan, the specifications, the approved contexts, the receipt and the engineers' skill. The push carries every local commit on the branch that is not yet on GitHub. Count them with the last check without `-- docs`, and if any of them is not part of the release, give their number in the same question. Do nothing before a clear yes.
+
+On the yes, commit only the released files: the paths that the second check listed and that the release wrote (for a legacy project, the plan, the specifications and the engineers' skill). If it lists any other file, leave that file out and name it to the owner. Commit them in one commit with the owner's configured git identity, then push to `<branch>` with `git push origin <branch>`. Push only when the checked-out branch is `<branch>`. Otherwise say which branch is checked out, or that none is, and ask what to do. Never force a push, never skip the commit hooks, and never pull, merge or rebase to make a push succeed. If git refuses, report its message in plain words and stop. Then run the checks again and tell the owner the result. On a no, say that the issue links do not work until the files are on `<branch>`, and stop before the dry run. The owner or the engineering team can commit and push them, and the owner then comes back to the chat.
 
 **Dry run.** For a project that publishes an approved release, leave out `--repo` and `--create-epic`: the repository and the Epic come from the approved payloads, and a different `--repo` is refused (`target-identity-mismatch`).
 
@@ -160,7 +215,23 @@ The script does not yet set grouping, sorting, the board column field, the roadm
 
 ### 7. After
 
-Show the user the counts and the project link. Remind them of the rhythm: closing comment on every issue, a checkpoint comment after each checkpoint, a demonstration note on each sub-epic.
+Finish with this completion line, word for word, then the maintenance notice, both before the routine counts and links:
+
+> **Your approved project has been published.**
+>
+> Engineers can start with "Work on [work item ID]."
+
+> **Important: when the project changes**
+>
+> If requirements, architecture or company rules change significantly, or an engineer finds a specification problem, say:
+>
+> **"This changed: [describe the change or provide revised documents]."**
+>
+> Your agent will review the existing project, preserve engineer corrections and show proposed updates for approval.
+
+Then show the user the counts and the project link. Remind them of the rhythm: closing comment on every issue, a checkpoint comment after each checkpoint, a demonstration note on each sub-epic.
+
+After a release that carries an approved update, report the six states separately, by the names and values `references/verification.md` lists: draft reconciliation (accepted, or not yet accepted), release (approved, or not yet approved), engineering repository update (pending, or available), issue updates (pending, or verified), board updates (pending, or verified) and engineer action (required, with the work items, or none). Do not say "up to date" while any publication step is pending. Engineers can still hold old material in a checkout or an open conversation. Name the work items whose engineers need to act.
 
 ### 8. The engineers' skill
 
@@ -181,7 +252,7 @@ It writes `SKILL.md`, `README.md`, four references (including the Python preflig
 npx skills add https://github.com/<owner>/<repo>/tree/<branch>/<dev_skill_path> -a <agent>
 ```
 
-The line works once the folder is on `project.branch` on GitHub, so ask the user to commit and push it if it is not yet. Do not commit or push it yourself unless the user asks for that command in this chat. `references/engineers-skill-install.md` has every agent, the copy and link options and the team rollout. `references/engineers-skill-maintenance.md` says when to regenerate. The engineers review every change their agent makes.
+The line works once the folder is on `project.branch` on GitHub. If it is not yet, run the commit and push check of step 4 and ask the same one approval before you commit and push it. `references/engineers-skill-install.md` has every agent, the copy and link options and the team rollout. `references/engineers-skill-maintenance.md` says when to regenerate. An approved update regenerates the engineers' skill through the same release, so an engineer who updates their checkout gets the new specifications and approved contexts together. The engineers review every change their agent makes.
 
 ## When something fails
 

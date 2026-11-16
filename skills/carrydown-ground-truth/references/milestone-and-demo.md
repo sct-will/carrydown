@@ -40,3 +40,4 @@ When an item closes, the engineer posts the evidence with the `closing-comment.m
 - Day by day, items close with evidence.
 - On each checkpoint date in the plan, a checkpoint between tracks.
 - At the end of each work unit, a demonstration of the milestone against criteria written in advance.
+- At each milestone review, ask the owner: "Have any source decisions, requirements, constraints or implementation findings changed since the last review?" This is a human observation point. It is not automatic approval, and it is not a claim that all sources were checked. A yes starts the update path.

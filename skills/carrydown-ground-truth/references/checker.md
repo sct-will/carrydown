@@ -71,7 +71,35 @@ Entries are regular expressions matched whole-word and without regard to case.
 
 ## Continuous integration
 
-Offer this to the user after the first clean run, so the checker fails loudly on every pull request. `python3 <skill>/scripts/scaffold_spec.py --root . --ci --apply` writes `.github/workflows/check-specs.yml` from the `check-specs-workflow.yml` template and copies `check_specs.py` and `carrydown_lib.py` to `tools/carrydown/`. The workflow runs `python3 tools/carrydown/check_specs.py --root .` on every pull request and on pushes to the default branch. A finding exits with status 1, so the job fails and the pull request shows a red mark. Mark the job as required in branch protection to block merges. That command also runs locally. Copy the two scripts again when you update the carrydown skills.
+Offer this to the user after the first clean run, so the checks fail loudly on every pull request. `python3 <skill>/scripts/scaffold_spec.py --root . --ci --apply` writes three things: `.github/workflows/check-specs.yml` from the `check-specs-workflow.yml` template, `.github/pull_request_template.md` from the `pull-request-template.md` template, and a copy of `check_specs.py` and its modules in `tools/carrydown/`. Run it without `--apply` first to see the list. An existing file is never overwritten. If the project already has a pull request template, the command says so and keeps it, and the plan owner adds the two declaration lines by hand.
+
+The workflow runs two checks and calls no model.
+
+- The full check, `python3 tools/carrydown/check_specs.py --root .`, runs on a pull request that changes a governed path (the specification folder, the ground truth folder, `docs/context/`, `docs/release/` or `tools/carrydown/`) and on a push to the default branch that changes one.
+- The declaration check runs on every pull request, so a code-only pull request gets a result too. It reads the pull request description.
+
+A finding exits with status 1, so the job fails and the pull request shows a red mark. Mark the job as required in branch protection to block merges. Both commands also run locally. Copy the scripts again when you update the carrydown skills. A workflow written by an earlier version is left alone: run the command with `--force` to replace it, or copy the new triggers by hand.
+
+### The declaration
+
+The description needs one of two lines, or both.
+
+- `Work items: WI-03, WI-04` lists the work items the pull request carries out. Each id must be in the released plan and must not be an external item. Each one's specification and approved context must pass the full check.
+- `Outside the plan: <reason>` is for legitimate maintenance that no work item covers, such as a dependency update. It needs a reason of at least one word. The check passes and prints the reason as a "reviewed maintenance path". A person still reads that reason in review.
+
+A branch name is only a hint. If the branch holds an id and the description has no declaration, the check prints the hint and still fails. An id written in another shape, such as `XX-03` or `WI3`, is a finding. A description that is not UTF-8 text stops the check with exit status 2.
+
+```bash
+python3 tools/carrydown/check_specs.py --root . --pull-request-body body.txt --branch "$BRANCH"
+```
+
+The description is data. The check never runs, opens or follows anything in it, and prints only the lines it matched. A declaration proves what was declared and checked. It does not prove that the code meets every requirement.
+
+### Merge queue
+
+If the project uses a merge queue, enable the commented `merge_group:` block in the workflow. See the GitHub workflow event reference. It is conditional configuration. The full check then runs in the queue. The declaration check runs on the pull request only.
+
+A check at merge time does not prove that the change was authorized at the instant of merge. Approvals can be withdrawn, and context can expire, after the check passed. Run the checks again before you rely on the result.
 
 ## Reading the output
 

@@ -351,6 +351,7 @@ class YesPathTests(Temp):
         before = tree_state(self.root)
         code, out, err = F.run(R.main, ["export-state", "--root", str(self.root), "--request", rid, "--apply"])
         self.assertEqual(code, 0, out + err)
+        self.assertIn(f"Rewrote docs/release/{rid}.receipt.json. Next, check whether it is committed and pushed, and commit and push it only after the owner approves that in the chat.", out)
         after = tree_state(self.root)
         changed = sorted(p for p in after if before.get(p) != after[p])
         self.assertEqual(changed, [f"docs/release/{rid}.receipt.json"])

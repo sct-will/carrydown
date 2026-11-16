@@ -39,18 +39,67 @@ The owner's side of the sample is a test fixture in the main carrydown repositor
 
 ## Run it
 
-From the root of the main carrydown repository. The renderer example writes to a separate folder inside the sample, `sample/expense-approvals/my-test/`, so it does not overwrite the shipped rendering. Git ignores that folder. Delete it when you are done.
+From the root of the main carrydown repository. That is the folder you cloned the carrydown repository into, the one that holds `scripts/` and `sample/`: open a terminal there, or `cd` into it. These commands change nothing. They check the sample, report on its plan, preview the renderer and the GitHub sync, and rebuild the release in a temporary folder to compare it. None of them needs a token or the network.
+
+Start with the renderer preview. It is the first stage of a plan, rendering the ground truth. A rendering is the Markdown copy of a source document, with stable section numbers, that the plan and the specifications cite.
+
+```bash
+python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --version 0.3 --date 2026-10-24 --dry-run
+```
+
+It prints what it would write and ends with the line that says nothing was written:
+
+```text
+would write docs/ground-truth/architecture.md: 344 lines, 31 headings, 0 figures
+would write docs/ground-truth/architecture.index.txt
+1 document(s) checked
+note: docs/spec/plan.yaml is a released plan, so content_sha256 and rendering_sha256 for architecture are not recorded in it. They are recorded in the workspace plan when the project has one
+Dry run: nothing was written.
+```
+
+The note means the released plan keeps no fingerprint of the source. The owner's working plan, in the private workspace, keeps it, so a later change to the source is noticed.
+
+Then the other five. The check of the sample's plan and its nine specifications:
 
 ```bash
 python3 scripts/check_specs.py --root sample/expense-approvals
+```
+
+The same check as a fresh clone sees it, the released plan against its approved contexts and receipts:
+
+```bash
 python3 scripts/check_specs.py --root sample/expense-approvals --view released
+```
+
+The schedule, the load table and the critical path, with the staffing file for the capacity, dates and names checks:
+
+```bash
 python3 scripts/check_specs.py --root sample/expense-approvals --report --people sample/expense-approvals/people.yaml
-python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --out-dir my-test/ground-truth --version 0.3
+```
+
+The GitHub sync preview, from the plan alone:
+
+```bash
 python3 scripts/github_sync.py --root sample/expense-approvals --offline
+```
+
+The release rebuilt in a temporary folder and compared byte for byte with what the repository holds:
+
+```bash
 python3 tests/rebuild_sample_release.py --check
 ```
 
-None of these needs a token or the network. The `--offline` form of `github_sync.py` shows the plan without reading GitHub. To see the release commands on a throwaway copy of the sample, with the owner's working plan in place, read the first section of [the recorded run](https://github.com/sct-will/carrydown/blob/main/docs/sample-run.md) in the main repository: it shows `release.py release`, the one command of the yes path, as a dry run and with `--apply`, with what each prints. Every command that writes is a dry run until you pass `--apply`. Use a throwaway repository of your own for any GitHub write, and add `--apply` only when you have read what it would do.
+The `--offline` form of `github_sync.py` shows the plan without reading GitHub. To see the release commands on a throwaway copy of the sample, with the owner's working plan in place, read the first section of [the recorded run](https://github.com/sct-will/carrydown/blob/main/docs/sample-run.md) in the main repository: it shows `release.py release`, the one command of the yes path, as a dry run and with `--apply`, with what each prints.
+
+The renderer writes local files unless you pass `--dry-run`: the rendering, its index and, in a working plan, the fingerprints of the source. The scaffold and the skill generator write local files only with `--apply`. Every command that writes to GitHub is a dry run until you pass `--apply`. Use a throwaway repository of your own for any GitHub write, and add `--apply` only when you have read what it would do.
+
+## Write a rendering (this changes the sample)
+
+This command writes files into the sample. Run it only in a disposable copy of the carrydown repository, such as a fresh clone you delete when you are done, never in a copy you want to keep. It writes the rendering to a separate folder, `sample/expense-approvals/my-test/`, so it does not overwrite the shipped rendering, and it leaves the released plan as it is. Git ignores that folder.
+
+```bash
+python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/architecture.md --root sample/expense-approvals --out-dir my-test/ground-truth --version 0.3
+```
 
 ## On GitHub
 

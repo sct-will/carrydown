@@ -45,7 +45,7 @@ Export. On the "no" path it makes an isolated worktree on carrydown/request-<id>
 branch, copies only the approved files and the receipts, and commits as you; it prints the push and pull
 request commands and does not run them. On the "yes" path it copies the approved files into your
 working tree and writes the receipts; it refuses (working-copy-differs) when a file you edited differs
-from the snapshot, and leaves commit and push to you.
+from the snapshot, and the agent commits and pushes them only after you approve that in the chat.
 
 --created and --nonce exist to reproduce a release exactly (tests, the sample): --created is the UTC
 time (2027-01-20T14:03:00Z) used for the request and its events, and --nonce is the 32 hexadecimal
@@ -967,6 +967,8 @@ def cmd_prepare(a):
     say("destinations, these targets and these downstream uses. The same content can have several requests, and approving one")
     say("never approves another.")
     say(f"{len(asm.files)} file(s) in the snapshot; audience {params['audience']}; destinations {', '.join(params['destinations'])}.")
+    for line in A.impact_report(asm):
+        say(line)
     if supersedes:
         say(f"This request replaces the active request {supersedes}. The replacement is one reviewed batch.")
     if not a.apply:
@@ -1074,6 +1076,9 @@ def cmd_release(a):
         import workspace as W
         for line in W.apply_retention(project.need_workspace(), None, False):
             say(line)
+        for line in A.impact_report(asm):             # the owner sees an unassessed or stale update before saying yes
+            if line.startswith("warning:"):
+                say(line)
         say("")
         active = None
         try:
@@ -1131,7 +1136,7 @@ def cmd_release(a):
     if rc:
         return rc
     say("")
-    say("Released. Ask the owner to commit and push these files as they do today. Then the GitHub step publishes from this release.")
+    say("Released. Next, check whether these files are committed and pushed, and commit and push them only after the owner approves that in the chat. Then the GitHub step publishes from this release.")
     return 0
 
 
@@ -1622,7 +1627,7 @@ def export_yes(a, project, ev, items, previous, plan_rel):
         write_file(root, rel, data, mode, ev, "release", dest_for(ev, rel))
     for rel, data in sorted(receipts.items()):
         write_file(root, rel, data, "100644", ev, "release", "engineering-repo")
-    say(f"Exported {len(writes)} file(s) and {len(receipts)} receipt(s) into your working tree. Review them with git status, then commit and push as you usually do.")
+    say(f"Exported {len(writes)} file(s) and {len(receipts)} receipt(s) into your working tree. Next, check whether they are committed and pushed, and commit and push them only after the owner approves that in the chat.")
     return 0
 
 
@@ -1743,7 +1748,7 @@ def cmd_export_state(a):
             say("Dry run: nothing was written. Add --apply.")
             return 0
         write_file(root, own_path, ev.receipts[own_path], "100644", ev, "state-only", "engineering-repo")
-        say(f"Rewrote {own_path}. Commit it as you usually do.")
+        say(f"Rewrote {own_path}. Next, check whether it is committed and pushed, and commit and push it only after the owner approves that in the chat.")
         return 0
     name, email = identity(project)
     if not (name and email):

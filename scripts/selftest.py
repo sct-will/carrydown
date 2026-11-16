@@ -32,6 +32,9 @@ CARRYDOWN_GITHUB_TOKEN, so no stored token is ever read.
      named pipes and devices given as files, empty flags, and item ids in other digits. The mock
      adds 401, 429, the secondary rate limit, a 502 before a write and paged lists.
 
+ 12. Runs the update path (scripts/reconcile.py): its help, the state of the sample, which has no private
+     workspace, and of a copy with a temporary workspace, and a prepare dry run that writes nothing.
+
 Every step has a time limit. A step that runs past it fails as a hang.
 
 Usage
@@ -537,6 +540,40 @@ def confidentiality(tmp):
     step("the workspace overlay and the explicit --people file give the same report", [PY, "-c", same, json.dumps(cmds)])
     step("the workspace overlay also feeds the sync dry run's capacity summary", [PY, "scripts/github_sync.py", "--root", str(sample), "--offline"],
          contains=["Track Workflow: 1 person, 100 percent allocated", "Track Experience: 1 person, 60 percent allocated"])
+
+
+def update_path(tmp):
+    """The update path (specification 8 and 12): reconcile.py reports the state of the sample, which has no private
+    workspace, and of a copy that has one, compares a project that has no reviewed checkpoint, and writes nothing
+    in a dry run. Every command answers --help."""
+    rec = [PY, "scripts/reconcile.py"]
+    step("reconcile.py answers --help", rec + ["--help"], contains=["Update an existing project", "status", "prepare", "check", "apply"])
+    for command in ("status", "prepare", "check", "apply"):
+        step(f"reconcile.py {command} answers --help", rec + [command, "--help"], contains=["usage:", "--root"])
+    step("status on the sample says there is no private workspace and what it could not observe", rec + ["status", "--root", SAMPLE],
+         contains=["carrydown project status", "No private workspace was found", "Outstanding engineer requests were not observed: the publishing skill's authorized read has not run.",
+                   "Sources kept elsewhere were not observed"])
+    step("status as machine output is one JSON object", rec + ["status", "--root", SAMPLE, "--json"], json_out=True, contains=['"state": "inputs-unchanged"'])
+    d = tmp / "update-path"
+    d.mkdir()
+    proj = d / "project"
+    copy_sample(proj, ignore=shutil.ignore_patterns("release"))
+    for cmd in (["git", "init", "-q"],):
+        subprocess.run(cmd, cwd=proj, env=ENV, check=True, capture_output=True)
+    step("a workspace for the update path check", [PY, "scripts/workspace.py", "init", "--root", str(proj), "--slug", "reconcile-check", "--answer", "yes", "--apply"],
+         contains=["carrydown: private workspace ready at"], absent=("Traceback", "gh repo create"))
+    step("status of a project with a working plan and no release is an unapproved draft", rec + ["status", "--root", str(proj)],
+         contains=["State: Unapproved draft", "Continue reviewing the existing draft"])
+    step("prepare without a checkpoint says so and still builds the index", rec + ["prepare", "--root", str(proj)],
+         contains=["DRY RUN", "A previous complete source checkpoint is unavailable. Review the current sources to establish one. "
+                   "Earlier uncited changes cannot be assessed automatically.", "0 changed block(s) in 0 source(s); 0 direct consumer(s); index: ",
+                   "tokens (approximate)", "proposal: "])
+    saved = Path(HOME) / ".carrydown" / "workspaces" / "reconcile-check" / "drafts" / "proposals"
+    clean = not saved.exists()
+    results.append((clean, "the prepare dry run wrote no proposal"))
+    print(("PASS " if clean else "FAIL ") + "the prepare dry run wrote no proposal")
+    step("a proposal that does not exist is refused with one line", rec + ["check", "--root", str(proj), "--proposal", "0" * 64], expect=2,
+         contains=["no saved proposal has that id"])
 
 
 def bundles(tmp):
@@ -1085,6 +1122,9 @@ def main():
             for other in sorted((dst / "scripts").glob("*.py")):
                 if other.name != "carrydown_lib.py":
                     step(f"installed copy of {skill} runs {other.name} --help", [PY, str(other), "--help"])
+            if (dst / "scripts/reconcile.py").exists():
+                step(f"installed copy of {skill} runs reconcile.py status", [PY, str(dst / "scripts/reconcile.py"), "status", "--root", str(ROOT / SAMPLE)],
+                     contains=["No private workspace was found"])
             if (dst / "scripts/scaffold_spec.py").exists():
                 step(f"installed copy of {skill} runs the header refresh", [PY, str(dst / "scripts/scaffold_spec.py"), "--root", str(ROOT / SAMPLE), "--refresh-headers"])
         gh = Path(tmp) / "carrydown-plan-to-github"
@@ -1092,7 +1132,7 @@ def main():
              contains=["engineers' skill: expense-approvals-dev"])
         step("installed copy of carrydown-plan-to-github refreshes only the references", [PY, str(gh / "scripts/generate_dev_skill.py"), "--root", str(ROOT / SAMPLE), "--only", "references"],
              contains=["would write: references/work-items.md", "would write: references/ground-truth-map.md"], absent=("Traceback", "SKILL.md"))
-        ships = ("compile_bundles.py", "generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_repair.py", "github_sync.py", "github_token.py", "plan_repair.py", "check_python.py", "release.py", "release_assemble.py", "release_build.py", "release_gate.py", "release_github.py", "release_inventory.py", "release_payloads.py", "release_schema.py", "release_sync.py", "release_verify.py", "scaffold_spec.py", "detectors.py", "workspace.py")
+        ships = ("compile_bundles.py", "generate_dev_skill.py", "check_specs.py", "carrydown_lib.py", "github_client.py", "github_project.py", "github_repair.py", "github_sync.py", "github_token.py", "plan_repair.py", "check_python.py", "release.py", "release_assemble.py", "release_build.py", "release_gate.py", "release_github.py", "release_inventory.py", "release_payloads.py", "release_schema.py", "release_sync.py", "release_verify.py", "scaffold_spec.py", "detectors.py", "workspace.py", "reconcile.py", "reconcile_core.py", "decision_overlay.py")
         extra = sorted(x.name for x in (gh / "scripts").glob("*.py") if x.name not in ships)
         results.append((not extra, "carrydown-plan-to-github ships only the scripts it runs"))
         print(("PASS " if not extra else "FAIL ") + "carrydown-plan-to-github ships only the scripts it runs" + (f" (remove {', '.join(extra)})" if extra else ""))
@@ -1105,6 +1145,7 @@ def main():
         path_safety(Path(tmp), plan_text)
         names(Path(tmp), plan_text)
         confidentiality(Path(tmp))
+        update_path(Path(tmp))
         bundles(Path(tmp))
         lint_spelling(Path(tmp))
         regressions(Path(tmp), plan_text)
