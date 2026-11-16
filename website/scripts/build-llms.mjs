@@ -31,7 +31,8 @@ function pages() {
   return out;
 }
 
-const titleOf = (html) => oneLine(html.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '');
+// Starlight titles the docs pages "<page> | <site name>". The list names the page alone.
+const titleOf = (html) => oneLine(html.match(/<title>([\s\S]*?)<\/title>/)?.[1] ?? '').replace(` | ${siteName}`, '');
 const descriptionOf = (html) => oneLine(html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? '');
 const jsonLd = (html) => {
   const m = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
