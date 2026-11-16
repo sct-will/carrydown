@@ -131,7 +131,8 @@ body.site {
   font-size: 2rem;
   line-height: 1.15;
   letter-spacing: -0.015em;
-  text-align: center;
+  /* The settled render sets the heading flush left in its centered box, over the centered paragraph. */
+  text-align: left;
 }
 .site .stmt p {
   max-width: 40rem;
@@ -351,8 +352,10 @@ body.site {
   .site h2.how {
     margin-top: 64px;
   }
+  /* One column: the statement reads flush left like the heading over it and the value lines under it. */
   .site .stmt {
     margin-top: 64px;
+    text-align: left;
   }
   .site .stmt h2 {
     font-size: 1.6rem;
@@ -386,4 +389,23 @@ body.site {
     min-width: 0;
     padding: 10px 12px;
   }
+}
+
+/* The note at the top of a translated page. */
+.site .translation-wrap {
+  padding-top: 20px;
+}
+.site .translation-note {
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--border-strong);
+  border-inline-start: 4px solid var(--amber);
+  border-radius: 6px;
+  background: var(--cream-raised);
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.site .translation-wrap + section.first {
+  padding-top: 40px;
 }
