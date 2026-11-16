@@ -1,0 +1,1 @@
+This branch exists only so GitHub Pages stays enabled. The site deploys from the website workflow. Safe to leave alone.
