@@ -41,6 +41,8 @@ jobs:
         run: npm ci
       - name: Install the browser for the tests and the social image
         run: npx playwright install --with-deps chromium
+      - name: Generate the docs from the repository Markdown
+        run: node scripts/build-docs.mjs
       - name: Check that the docs match the repository Markdown
         run: node scripts/check-docs-sync.mjs
       - name: Type check
