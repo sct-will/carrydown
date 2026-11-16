@@ -9,9 +9,9 @@ export const zhCN: Strings = {
   label: '简体中文',
 
   site: {
-    name: 'Carried context',
+    name: 'Carried-context development',
     skipLink: '跳到主要内容',
-    homeLabel: 'Carried context，首页',
+    homeLabel: 'Carried-context development，首页',
   },
 
   nav: {
@@ -181,9 +181,12 @@ export const zhCN: Strings = {
     title: 'Carried-context development，首页',
     description:
       'Carried-context development 是一种智能体开发方法，把项目决策和上下文一直传递到每位工程师的编码代理，让项目保持一致，不再偏离。',
-    h1: '上下文，与工作同行。',
+    h1: [
+      'Carried-context development 超越规格驱动开发。',
+      '上下文与工作同行。',
+    ],
     definition:
-      'Carried-context development 是一种智能体开发方法，把项目决策和上下文一直传递到每位工程师的编码代理，让项目保持一致，不再偏离。',
+      '把同样的项目决策和上下文交给每位工程师的编码代理，让项目保持一致。',
     paragraph:
       '你的团队提供项目文档、需求，以及关于人员和截止日期的决策。你的 AI 代理以这些基准事实为依据，创建一份相互关联的计划、每个工作项的规格，以及链接各自规格并引用其背后文档章节的 GitHub issue。你的 AI 代理还会生成一个项目专用的 agent skill，把规格、工作背后的决策和所引用的章节传递给每位工程师的编码代理。文档发生变化时，你只需审阅一次更新。',
     buttons: {
@@ -191,9 +194,10 @@ export const zhCN: Strings = {
       sample: '查看示例项目的 AI 代理产出',
     },
     howHeading: '工作原理',
-    statement: {
-            body: '规格驱动开发把每份规格交给撰写它的工程师。质量取决于谁来写。没有两份规格是一致的，也没有什么把它们联系在一起。随着项目变化，它们会逐渐偏离。Carried-context development 从同一个基准事实派生每一份规格，引用来源，并把每一项获批的变更传递给每个编码代理。',
-    },
+    sideParagraphs: [
+      '工程师各自独立撰写规格时，质量参差不齐，规格也会随着项目的变化而彼此偏离。',
+      'Carried-context development 把每份规格绑定到同一个基准事实，引用来源，并把每一项获批的变更交付给每个编码代理。',
+    ],
     values: [
       {
         eyebrow: '相互关联的计划',
@@ -222,31 +226,20 @@ export const zhCN: Strings = {
       copyLabel: '复制安装命令',
       copiedStatus: '安装命令已复制到剪贴板。',
       copyFailedStatus: '无法复制。请选中命令后自行复制。',
-      needs: '需要 Node.js 22.20 或更高版本和 Git。没有 Node.js？也可以手动安装。',
       tiles: [
         {
           step: '第 1 步',
-          title: '看一份完成的计划。',
+          title: '看一份完成的示例计划。',
           body: 'GitHub 上的示例看板及其 issue。',
           command: '',
           button: '打开示例',
-          time: '一分钟。无需安装。',
         },
         {
           step: '第 2 步',
-          title: '读一读第一次对话。',
-          body: '代理会问你的问题，以及该怎么回答。',
-          command: '',
-          button: '负责人指南',
-          time: '五分钟。无需安装。',
-        },
-        {
-          step: '第 3 步',
-          title: '用你自己的一个文件夹试试。',
+          title: '在你的项目上运行 carrydown。',
           body: '安装两个 carrydown skill，然后说',
-          command: en.home.carrydown.tiles[2].command,
+          command: en.home.carrydown.tiles[1].command,
           button: '安装指南',
-          time: '一个下午，大部分时间在阅读。',
         },
       ],
       stepsHeading: '你的 AI 代理引导你在项目中运行 carrydown',
@@ -273,7 +266,6 @@ export const zhCN: Strings = {
         },
       ],
       reviewNote: '利益相关方、项目负责人和工程经理观看每个里程碑并决定通过与否。人工审核是这一方法明确的一部分。',
-      reviewNoteAccent: '人工审核',
     },
   },
 

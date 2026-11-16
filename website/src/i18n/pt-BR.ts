@@ -9,9 +9,9 @@ export const ptBR: Strings = {
   label: 'Português (Brasil)',
 
   site: {
-    name: 'Carried context',
+    name: 'Carried-context development',
     skipLink: 'Ir para o conteúdo principal',
-    homeLabel: 'Carried context, início',
+    homeLabel: 'Carried-context development, início',
   },
 
   nav: {
@@ -204,9 +204,12 @@ export const ptBR: Strings = {
     title: 'Carried-context development, início',
     description:
       'Carried-context development é uma abordagem de desenvolvimento com agentes que leva as decisões e o contexto do projeto até o agente de programação de cada engenheiro, para que o projeto fique alinhado e nada se afaste.',
-    h1: 'Contexto que viaja com o trabalho.',
+    h1: [
+      'Carried-context development vai além do desenvolvimento orientado por especificações.',
+      'O contexto viaja com o trabalho.',
+    ],
     definition:
-      'Carried-context development é uma abordagem de desenvolvimento com agentes que leva as decisões e o contexto do projeto até o agente de programação de cada engenheiro, para que o projeto fique alinhado e nada se afaste.',
+      'Mantenha o projeto alinhado dando ao agente de programação de cada engenheiro as mesmas decisões e o mesmo contexto do projeto.',
     paragraph:
       'Sua equipe fornece os documentos do projeto, os requisitos e as decisões sobre pessoas e prazos. Seu agente de IA usa essa verdade de referência para criar um plano conectado, uma especificação para cada item de trabalho e issues do GitHub que ligam cada especificação e citam as seções de documentos por trás dela. Seu agente de IA também gera um agent skill específico do projeto que leva a especificação, as decisões por trás do trabalho e as seções citadas até o agente de programação de cada engenheiro. Quando um documento muda, você revisa uma única atualização.',
     buttons: {
@@ -214,9 +217,10 @@ export const ptBR: Strings = {
       sample: 'Ver os resultados do agente de IA de um projeto de exemplo',
     },
     howHeading: 'Como funciona',
-    statement: {
-            body: 'O desenvolvimento orientado por especificações deixa cada especificação para o engenheiro que a escreve. A qualidade depende de quem a escreveu. Não há duas especificações iguais e nada as une. Elas se afastam à medida que o projeto muda. Carried-context development deriva cada especificação da mesma verdade de referência, cita as fontes e leva cada mudança aprovada a cada agente de programação.',
-    },
+    sideParagraphs: [
+      'Quando os engenheiros escrevem as especificações por conta própria, a qualidade varia e as especificações se afastam à medida que o projeto muda.',
+      'Carried-context development liga cada especificação à mesma verdade de referência, cita as fontes e entrega cada mudança aprovada a cada agente de programação.',
+    ],
     values: [
       {
         eyebrow: 'Plano conectado',
@@ -245,31 +249,20 @@ export const ptBR: Strings = {
       copyLabel: 'Copiar o comando de instalação',
       copiedStatus: 'Comando de instalação copiado para a área de transferência.',
       copyFailedStatus: 'Não foi possível copiar. Selecione o comando e copie.',
-      needs: 'Precisa de Node.js 22.20 ou posterior e Git. Sem Node.js? Há uma instalação manual.',
       tiles: [
         {
           step: 'Passo 1',
-          title: 'Veja um plano pronto.',
+          title: 'Veja um exemplo de plano pronto.',
           body: 'O quadro de exemplo e suas issues, no GitHub.',
           command: '',
           button: 'Abrir o exemplo',
-          time: 'Um minuto. Nada para instalar.',
         },
         {
           step: 'Passo 2',
-          title: 'Leia a primeira conversa.',
-          body: 'As perguntas que o agente faz e o que responder.',
-          command: '',
-          button: 'Guia do responsável',
-          time: 'Cinco minutos. Nada para instalar.',
-        },
-        {
-          step: 'Passo 3',
-          title: 'Experimente com uma pasta sua.',
+          title: 'Execute o carrydown no seu projeto.',
           body: 'Instale os dois skills do carrydown e então diga',
-          command: en.home.carrydown.tiles[2].command,
+          command: en.home.carrydown.tiles[1].command,
           button: 'Guia de instalação',
-          time: 'Uma tarde, quase toda de leitura.',
         },
       ],
       stepsHeading: 'Seu agente de IA orienta você ao usar o carrydown no seu projeto',
@@ -296,7 +289,6 @@ export const ptBR: Strings = {
         },
       ],
       reviewNote: 'Partes interessadas, responsáveis pelo projeto e gerentes de engenharia assistem a cada marco e decidem se passou ou não. A revisão humana é explicitamente parte do método.',
-      reviewNoteAccent: 'revisão humana',
     },
   },
 

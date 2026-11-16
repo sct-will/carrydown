@@ -85,34 +85,50 @@ body.site {
   padding-block: 64px;
 }
 
-/* Home: hero */
+/* Home: hero. Two columns: the title and the buttons, then the definition and two short paragraphs
+ * behind a vertical rule. The side column starts level with the title's first line, and the buttons
+ * stay inside the first column, so nothing crosses the rule. */
+.site .hero {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  column-gap: 48px;
+  align-items: stretch;
+}
+.site .hero-side {
+  padding-top: 10px;
+  padding-inline-start: 40px;
+  border-inline-start: 1px solid var(--border-strong);
+}
 .site h1.r25 {
-  max-width: 15em;
-  margin: 0 auto 24px;
-  font-size: 3.25rem;
+  margin: 0 0 36px;
+  font-size: 3rem;
   line-height: 1.08;
   letter-spacing: -0.022em;
 }
+.site h1.r25 .h1-line {
+  display: block;
+}
+.site h1.r25 .h1-line + .h1-line {
+  margin-top: 0.4em;
+}
 .site .defn {
-  max-width: 42rem;
-  margin: 0 auto 16px;
-  font-size: 1.35rem;
+  margin: 0 0 20px;
+  font-size: 1.3rem;
   font-weight: 500;
   line-height: 1.45;
-  text-align: center;
 }
 .site .sub {
-  max-width: 40rem;
-  margin: 0 auto 40px;
+  margin: 0 0 14px;
   color: var(--ink-muted);
   font-size: 1.05rem;
   line-height: 1.6;
-  text-align: center;
+}
+.site .sub:last-child {
+  margin-bottom: 0;
 }
 .site .actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: 12px;
 }
 .site h2.how {
@@ -180,8 +196,13 @@ body.site {
   font-size: 1.05rem;
   line-height: 1.6;
 }
-.site .cd-intro .accent {
+.site .cd-intro a.accent {
   color: var(--amber-ink);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.site .cd-intro a.accent:hover {
+  text-decoration-thickness: 2px;
 }
 .site .cd-cta {
   display: flex;
@@ -224,16 +245,18 @@ body.site {
 .site .cmd .copy:hover {
   background: var(--teal-soft);
 }
-.site .caption {
-  margin: 10px 0 0;
-  color: var(--ink-muted);
-  font-size: 0.9rem;
-}
 .site .tiles {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  gap: 24px;
   margin-top: 40px;
+}
+.site .tile-arrow {
+  align-self: center;
+  width: 48px;
+  height: 24px;
+  color: var(--teal);
 }
 .site .tile {
   display: flex;
@@ -264,13 +287,10 @@ body.site {
   align-self: flex-start;
   margin-top: 6px;
 }
-.site .tile .time {
-  color: var(--ink-muted);
-  font-size: 0.875rem;
-}
+/* The list of who says what is a part of the section, a step below its heading in size. */
 .site .cd-sub {
-  margin: 64px 0 16px;
-  font-size: 1.25rem;
+  margin: 56px 0 12px;
+  font-size: 1.1rem;
 }
 .site .runsteps {
   margin: 0;
@@ -280,11 +300,13 @@ body.site {
 }
 .site .rs {
   display: grid;
-  grid-template-columns: 40px 150px 1fr;
+  grid-template-columns: 36px 140px 1fr;
   gap: 20px;
   align-items: baseline;
-  padding: 12px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--border);
+  font-size: 1rem;
+  line-height: 1.5;
 }
 .site .rs-body {
   display: grid;
@@ -302,16 +324,13 @@ body.site {
 .site .rs-say {
   color: var(--teal);
   font-family: var(--font-mono);
-  font-size: 0.88rem;
+  font-size: 0.82rem;
 }
 /* The statement under the list: who decides, in the running text color, full measure. */
 .site .cd-note {
-  margin: 28px 0 0;
-  font-size: 1.05rem;
+  margin: 24px 0 0;
+  font-size: 1rem;
   line-height: 1.6;
-}
-.site .cd-note .accent {
-  color: var(--amber-ink);
 }
 
 /* Reflow */
@@ -321,6 +340,16 @@ body.site {
   }
 }
 @media (max-width: 899.98px) {
+  .site .hero {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 32px;
+  }
+  .site .hero-side {
+    padding-top: 28px;
+    padding-inline-start: 0;
+    border-inline-start: 0;
+    border-top: 1px solid var(--border-strong);
+  }
   /* One row for the number and the role, one for what happens and what to say. */
   .site .rs {
     grid-template-columns: 32px 1fr;
@@ -346,7 +375,7 @@ body.site {
     padding: 48px 0 48px;
   }
   .site h1.r25 {
-    font-size: clamp(2.1rem, 9vw, 3.25rem);
+    font-size: clamp(2.1rem, 9vw, 3rem);
   }
   .site .defn {
     font-size: 1.2rem;
@@ -367,7 +396,12 @@ body.site {
     margin-top: 48px;
   }
   .site .tiles {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+  .site .tile-arrow {
+    justify-self: center;
+    transform: rotate(90deg);
   }
   .site .cd-sub {
     margin-top: 48px;

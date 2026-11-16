@@ -16,25 +16,25 @@ const h = t.home;
 const c = h.carrydown;
 // The product name in the intro is set in the accent color: the text is split on it and it is put back as a span.
 const introParts = c.intro.split('carrydown');
-// The same for the phrase in the note under the list, which each language names.
-const noteParts = c.reviewNote.split(c.reviewNoteAccent);
-const tileLinks = [
-  sampleBoardUrl,
-  localePath(locale, '/docs/plan-owner-guide/'),
-  localePath(locale, '/docs/setup/'),
-];
+const tileLinks = [sampleBoardUrl, localePath(locale, '/docs/setup/')];
 ---
 
 <SiteLayout title={h.title} description={h.description} locale={locale} kind="home">
   <TranslationNote locale={locale} />
-  <section class="first center">
+  <section class="first">
     <div class="wrap">
-      <h1 class="r25">{h.h1}</h1>
-      <p class="defn">{h.definition}</p>
-      <p class="sub">{h.statement.body}</p>
-      <div class="actions">
-        <a class="btn primary" href={repoUrl}>{h.buttons.try}</a>
-        <a class="btn secondary" href={sampleBoardUrl}>{h.buttons.sample}</a>
+      <div class="hero">
+        <div class="hero-main">
+          <h1 class="r25">{h.h1.map((line) => <span class="h1-line">{line}</span>)}</h1>
+          <div class="actions">
+            <a class="btn primary" href={repoUrl}>{h.buttons.try}</a>
+            <a class="btn secondary" href={sampleBoardUrl}>{h.buttons.sample}</a>
+          </div>
+        </div>
+        <div class="hero-side">
+          <p class="defn">{h.definition}</p>
+          {h.sideParagraphs.map((text) => <p class="sub">{text}</p>)}
+        </div>
       </div>
 
       <h2 class="how">{h.howHeading}</h2>
@@ -57,7 +57,7 @@ const tileLinks = [
   <section id="carrydown">
     <div class="wrap">
       <h2 class="cd-h">{c.heading}</h2>
-      <p class="cd-intro">{introParts.map((part, i) => (<>{i > 0 && <span class="accent">carrydown</span>}{part}</>))}</p>
+      <p class="cd-intro">{introParts.map((part, i) => (<>{i > 0 && <a class="accent" href={repoUrl}>carrydown</a>}{part}</>))}</p>
       <div class="cd-cta">
         <a class="btn primary" href={repoUrl}>{c.tryButton}</a>
         <div class="cmd">
@@ -75,17 +75,22 @@ const tileLinks = [
         </div>
         <span class="sr-only" role="status" data-copy-status></span>
       </div>
-      <p class="caption">{c.needs}</p>
 
       <div class="tiles">
         {c.tiles.map((tile, i) => (
-          <div class="tile">
-            <div class="n">{tile.step}</div>
-            <h3>{tile.title}</h3>
-            <p>{tile.body}{tile.command && <>{' '}<span class="mono">{tile.command}</span></>}</p>
-            <a class="btn secondary" href={tileLinks[i]}>{tile.button}</a>
-            <div class="time">{tile.time}</div>
-          </div>
+          <>
+            {i > 0 && (
+              <svg class="tile-arrow" viewBox="0 0 48 24" aria-hidden="true" focusable="false">
+                <path d="M3 12h41M36 4l8 8-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            )}
+            <div class="tile">
+              <div class="n">{tile.step}</div>
+              <h3>{tile.title}</h3>
+              <p>{tile.body}{tile.command && <>{' '}<span class="mono">{tile.command}</span></>}</p>
+              <a class="btn secondary" href={tileLinks[i]}>{tile.button}</a>
+            </div>
+          </>
         ))}
       </div>
 
@@ -102,7 +107,7 @@ const tileLinks = [
           </li>
         ))}
       </ol>
-      <p class="cd-note">{noteParts.map((part, i) => (<>{i > 0 && <span class="accent">{c.reviewNoteAccent}</span>}{part}</>))}</p>
+      <p class="cd-note">{c.reviewNote}</p>
     </div>
   </section>
 </SiteLayout>

@@ -9,9 +9,9 @@ export const ja: Strings = {
   label: '日本語',
 
   site: {
-    name: 'Carried context',
+    name: 'Carried-context development',
     skipLink: 'メインコンテンツへ移動',
-    homeLabel: 'Carried context、ホーム',
+    homeLabel: 'Carried-context development、ホーム',
   },
 
   nav: {
@@ -196,9 +196,12 @@ export const ja: Strings = {
     title: 'Carried-context development、ホーム',
     description:
       'Carried-context development は、プロジェクトの決定とコンテキストを各エンジニアのコーディングエージェントまで伝え、プロジェクトのずれや漂流を防ぐ、エージェント開発のアプローチです。',
-    h1: 'コンテキストは、作業と一緒に旅をする。',
+    h1: [
+      'Carried-context development は、仕様駆動開発のその先へ。',
+      'コンテキストは、作業と一緒に旅をする。',
+    ],
     definition:
-      'Carried-context development は、プロジェクトの決定とコンテキストを各エンジニアのコーディングエージェントまで伝え、プロジェクトのずれや漂流を防ぐ、エージェント開発のアプローチです。',
+      '各エンジニアのコーディングエージェントに同じプロジェクトの決定とコンテキストを渡して、プロジェクトのずれを防ぎます。',
     paragraph:
       'チームは、プロジェクトの文書、要件、人や期限についての決定を用意します。AIエージェントはこのグラウンドトゥルースを使って、つながった計画、作業項目ごとの仕様、各仕様へのリンクと根拠となる文書セクションの引用を持つ GitHub イシューを作ります。AIエージェントはさらに、仕様、その背後にある決定、引用されたセクションを各エンジニアのコーディングエージェントへ届ける、プロジェクト専用のエージェントスキルも生成します。文書が変わったときは、ひとつの更新をレビューするだけです。',
     buttons: {
@@ -206,9 +209,10 @@ export const ja: Strings = {
       sample: 'サンプルプロジェクトのAIエージェントの成果物を見る',
     },
     howHeading: '仕組み',
-    statement: {
-            body: '仕様駆動開発では、各仕様は書くエンジニアに任されます。品質は誰が書いたかで決まります。同じ仕様は二つとなく、それらを結びつけるものもありません。プロジェクトが変わるにつれて、仕様はずれていきます。Carried-context development は、すべての仕様を同じグラウンドトゥルースから導き、出典を引用し、承認された変更をすべてのコーディングエージェントへ伝えます。',
-    },
+    sideParagraphs: [
+      'エンジニアが仕様をそれぞれ別々に書くと、品質はばらつき、プロジェクトの変化とともに仕様は離れていきます。',
+      'Carried-context development は、すべての仕様を同じグラウンドトゥルースに結びつけ、出典を引用し、承認されたすべての変更をすべてのコーディングエージェントに届けます。',
+    ],
     values: [
       {
         eyebrow: 'つながった計画',
@@ -237,31 +241,20 @@ export const ja: Strings = {
       copyLabel: 'インストールコマンドをコピー',
       copiedStatus: 'インストールコマンドをクリップボードにコピーしました。',
       copyFailedStatus: 'コピーできませんでした。コマンドを選択してコピーしてください。',
-      needs: 'Node.js 22.20 以降と Git が必要です。Node.js がない場合は、手動インストールもあります。',
       tiles: [
         {
           step: 'ステップ 1',
-          title: '完成した計画を見る。',
+          title: '完成したサンプル計画を見る。',
           body: 'GitHub 上のサンプルボードとそのイシュー。',
           command: '',
           button: 'サンプルを開く',
-          time: '1分。インストール不要。',
         },
         {
           step: 'ステップ 2',
-          title: '最初の会話を読む。',
-          body: 'エージェントがする質問と、その答え方。',
-          command: '',
-          button: 'オーナーガイド',
-          time: '5分。インストール不要。',
-        },
-        {
-          step: 'ステップ 3',
-          title: '自分のフォルダーで試す。',
+          title: '自分のプロジェクトで carrydown を実行する。',
           body: '二つの carrydown スキルをインストールして、次のように話しかけます',
-          command: en.home.carrydown.tiles[2].command,
+          command: en.home.carrydown.tiles[1].command,
           button: 'セットアップガイド',
-          time: '午後いっぱい。ほとんどは読む時間です。',
         },
       ],
       stepsHeading: 'AIエージェントが、あなたのプロジェクトで carrydown を使う手順を案内します',
@@ -288,7 +281,6 @@ export const ja: Strings = {
         },
       ],
       reviewNote: 'ステークホルダー、プロジェクトオーナー、エンジニアリングマネージャーが各マイルストーンを見て、合格か不合格かを判断します。人によるレビューは、明示的にこの方法の一部です。',
-      reviewNoteAccent: '人によるレビュー',
     },
   },
 

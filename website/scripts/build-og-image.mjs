@@ -1,6 +1,6 @@
 // Renders the Open Graph and Twitter card image, 1200 by 630, into dist/og-image.png after `astro build`.
 //
-// The card is the "Pinned pages" mark at 160 px and the title "Carried-context development goes beyond spec-driven development. The context travels with the work." on
+// The card is the mark at 140 px and the title "Carried-context development goes beyond spec-driven development. The context travels with the work." on
 // the navy ground, set in Inter from the fontsource package. The text is drawn by Chromium through
 // Playwright, which loads the real Inter font file. No network is used.
 //
@@ -17,15 +17,15 @@ const writePublic = process.argv.includes('--public');
 
 const WIDTH = 1200;
 const HEIGHT = 630;
-const MARK_SIZE = 160;
+const MARK_SIZE = 140;
 const NAVY = '#0F1420';
 const INK = '#EEF1F6';
 const MUTED = '#A9B2C3';
 
-// The mark's drawing sits inside its 64 unit box, so the box is offset to line the glyph up with the text.
-const mark = readFileSync(join(websiteDir, 'src/assets/logo/I-pages-dark.svg'), 'utf8')
-  .replace(" width='64' height='64'", ` width='${MARK_SIZE}' height='${MARK_SIZE}'`)
-  .replace(" role='img'", " aria-hidden='true'");
+// The mark in the lighter teal of the navy theme. Its box is wider than tall; MARK_SIZE is the height.
+const mark = readFileSync(join(websiteDir, 'src/assets/logo/mark.svg'), 'utf8')
+  .replace('fill="#4aa4aa"', 'fill="#5fb8b8"')
+  .replace(' role="img" aria-label="carrydown mark"', ` aria-hidden="true" height="${MARK_SIZE}"`);
 const fontPath = join(websiteDir, 'node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2');
 const font = readFileSync(fontPath).toString('base64');
 
@@ -33,7 +33,7 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
 @font-face { font-family: 'Inter Variable'; font-weight: 100 900; src: url(data:font/woff2;base64,${font}) format('woff2'); }
 html, body { margin: 0; width: ${WIDTH}px; height: ${HEIGHT}px; background: ${NAVY}; }
 body { position: relative; font-family: 'Inter Variable', sans-serif; color: ${INK}; overflow: hidden; }
-.mark { position: absolute; left: 66px; top: 78px; width: ${MARK_SIZE}px; height: ${MARK_SIZE}px; }
+.mark { position: absolute; left: 96px; top: 84px; height: ${MARK_SIZE}px; }
 .mark svg { display: block; }
 h1 { position: absolute; left: 96px; top: 258px; margin: 0; font-size: 58px; line-height: 1.12; font-weight: 700; letter-spacing: -0.02em; width: 1010px; }
 p { position: absolute; left: 96px; bottom: 64px; margin: 0; font-size: 30px; font-weight: 500; color: ${MUTED}; }

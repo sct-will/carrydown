@@ -9,9 +9,9 @@ export const de: Strings = {
   label: 'Deutsch',
 
   site: {
-    name: 'Carried context',
+    name: 'Carried-context development',
     skipLink: 'Zum Hauptinhalt springen',
-    homeLabel: 'Carried context, Startseite',
+    homeLabel: 'Carried-context development, Startseite',
   },
 
   nav: {
@@ -204,9 +204,12 @@ export const de: Strings = {
     title: 'Carried-context development, Startseite',
     description:
       'Carried-context development ist ein Ansatz für agentische Entwicklung, der Projektentscheidungen und Kontext bis zum Coding-Agenten jedes Entwicklers trägt, damit das Projekt ausgerichtet bleibt und nichts auseinanderdriftet.',
-    h1: 'Kontext, der mit der Arbeit reist.',
+    h1: [
+      'Carried-context development geht über spezifikationsgetriebene Entwicklung hinaus.',
+      'Der Kontext reist mit der Arbeit.',
+    ],
     definition:
-      'Carried-context development ist ein Ansatz für agentische Entwicklung, der Projektentscheidungen und Kontext bis zum Coding-Agenten jedes Entwicklers trägt, damit das Projekt ausgerichtet bleibt und nichts auseinanderdriftet.',
+      'Halten Sie das Projekt ausgerichtet, indem Sie dem Coding-Agenten jedes Entwicklers dieselben Projektentscheidungen und denselben Kontext geben.',
     paragraph:
       'Ihr Team liefert die Projektdokumente, die Anforderungen und die Entscheidungen zu Personen und Terminen. Ihr KI-Agent nutzt diese Faktengrundlage, um einen verbundenen Plan, eine Spezifikation für jedes Arbeitspaket und GitHub-Issues zu erstellen, die jede Spezifikation verlinken und die dahinterstehenden Dokumentabschnitte belegen. Ihr KI-Agent generiert außerdem einen projektspezifischen Agent Skill, der die Spezifikation, die Entscheidungen dahinter und die belegten Abschnitte zum Coding-Agenten jedes Entwicklers trägt. Wenn sich ein Dokument ändert, prüfen Sie eine einzige Aktualisierung.',
     buttons: {
@@ -214,9 +217,10 @@ export const de: Strings = {
       sample: 'KI-Agent-Ergebnisse eines Beispielprojekts ansehen',
     },
     howHeading: 'So funktioniert es',
-    statement: {
-            body: 'Spezifikationsgetriebene Entwicklung überlässt jede Spezifikation dem Entwickler, der sie schreibt. Die Qualität hängt davon ab, wer sie verfasst hat. Keine zwei Spezifikationen gleichen sich, und nichts verbindet sie. Sie driften auseinander, wenn sich das Projekt ändert. Carried-context development leitet jede Spezifikation aus derselben Faktengrundlage ab, belegt die Quellen und trägt jede freigegebene Änderung zu jedem Coding-Agenten.',
-    },
+    sideParagraphs: [
+      'Wenn Entwickler Spezifikationen unabhängig voneinander schreiben, schwankt die Qualität, und die Spezifikationen driften auseinander, während sich das Projekt ändert.',
+      'Carried-context development bindet jede Spezifikation an dieselbe Faktengrundlage, belegt die Quellen und trägt jede freigegebene Änderung zu jedem Coding-Agenten.',
+    ],
     values: [
       {
         eyebrow: 'Verbundener Plan',
@@ -245,31 +249,20 @@ export const de: Strings = {
       copyLabel: 'Installationsbefehl kopieren',
       copiedStatus: 'Installationsbefehl in die Zwischenablage kopiert.',
       copyFailedStatus: 'Kopieren nicht möglich. Markieren Sie den Befehl und kopieren Sie ihn.',
-      needs: 'Benötigt Node.js 22.20 oder neuer und Git. Kein Node.js? Es gibt eine manuelle Installation.',
       tiles: [
         {
           step: 'Schritt 1',
-          title: 'Einen fertigen Plan ansehen.',
+          title: 'Einen fertigen Beispielplan ansehen.',
           body: 'Das Beispielboard und seine Issues auf GitHub.',
           command: '',
           button: 'Beispiel öffnen',
-          time: 'Eine Minute. Nichts zu installieren.',
         },
         {
           step: 'Schritt 2',
-          title: 'Das erste Gespräch lesen.',
-          body: 'Die Fragen, die der Agent Ihnen stellt, und was Sie antworten.',
-          command: '',
-          button: 'Leitfaden',
-          time: 'Fünf Minuten. Nichts zu installieren.',
-        },
-        {
-          step: 'Schritt 3',
-          title: 'Mit einem eigenen Ordner ausprobieren.',
+          title: 'carrydown in Ihrem Projekt ausführen.',
           body: 'Installieren Sie die zwei carrydown-Skills und sagen Sie dann',
-          command: en.home.carrydown.tiles[2].command,
+          command: en.home.carrydown.tiles[1].command,
           button: 'Einrichtung',
-          time: 'Ein Nachmittag, größtenteils Lesen.',
         },
       ],
       stepsHeading: 'Ihr KI-Agent führt Sie durch den Einsatz von carrydown in Ihrem Projekt',
@@ -296,7 +289,6 @@ export const de: Strings = {
         },
       ],
       reviewNote: 'Stakeholder, Projektverantwortliche und Engineering-Manager sehen sich jeden Meilenstein an und entscheiden über bestanden oder nicht bestanden. Die Prüfung durch Menschen ist ausdrücklich Teil der Methode.',
-      reviewNoteAccent: 'Prüfung durch Menschen',
     },
   },
 

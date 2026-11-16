@@ -52,18 +52,17 @@ header.header {
   font-family: var(--font-body);
   color: var(--ink);
 }
+/* The bar spans the viewport: the name sits at the left edge, the controls at the right, as on Biome's
+ * site, which leaves the middle to the nav and the search field. */
 .site-header__bar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0 24px;
   min-height: 72px;
-  max-width: var(--measure);
-  margin-inline: auto;
-  padding-inline: var(--gutter);
+  padding-inline: clamp(16px, 2.2vw, 32px);
 }
 .site-header--wide .site-header__bar {
-  max-width: none;
   height: 100%;
 }
 .brand {
@@ -128,11 +127,17 @@ header.header {
   margin-inline-start: auto;
 }
 
-/* The search button: a field-shaped button with the shortcut hint at its end. */
+/* The search button: a field-shaped button with the shortcut hint at its end. It takes the free space
+ * of the bar, up to a comfortable field width. */
+.site-search {
+  flex: 1 1 auto;
+  max-width: 440px;
+}
 .search-button {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
   min-width: 176px;
   min-height: 44px;
   padding: 0 8px 0 12px;
@@ -269,9 +274,13 @@ header.header {
   pointer-events: none;
 }
 
-/* Up to 1100 px the bar has no room for the search field: the search is an icon button. Between 900 and
- * 1100 px the nav and the controls still sit in the bar, with the tighter gaps from locales.css. */
-@media (max-width: 1099.98px) {
+/* Up to 1200 px the bar has no room for the search field beside the longer name: the search is an icon
+ * button. Under 1100 px the name steps down too. Between 900 and 1100 px the nav and the controls still
+ * sit in the bar, with the tighter gaps from locales.css. */
+@media (max-width: 1199.98px) {
+  .site-search {
+    flex: none;
+  }
   .search-button {
     justify-content: center;
     width: 44px;
@@ -292,6 +301,15 @@ header.header {
     display: none;
   }
 }
+@media (max-width: 1099.98px) {
+  .brand {
+    font-size: 1.25rem;
+  }
+  .brand .mark {
+    width: 36px;
+    height: 30px;
+  }
+}
 
 /* Under 900 px (phones, and a tablet held upright) the nav and controls sit behind a labeled button.
  * Without script the panel simply stays visible under the bar. */
@@ -299,12 +317,16 @@ header.header {
   .site-header__bar {
     gap: 0 12px;
   }
+  /* The name takes what is left of the bar and wraps onto two lines on a narrow phone. */
   .brand {
+    flex: 1 1 0;
     gap: 10px;
-    font-size: 1.2rem;
+    min-width: 0;
+    font-size: 1.1rem;
+    line-height: 1.15;
   }
   .brand .mark {
-    width: 28px;
+    width: 34px;
     height: 28px;
   }
   /* The search icon sits at the end of the bar, before the Menu button. */
@@ -370,6 +392,23 @@ header.header {
   }
   .controls {
     margin-inline-start: 0;
+  }
+}
+
+/* On a narrow phone the menu button is its icon; the word stays in the accessible name. */
+@media (max-width: 479.98px) {
+  .js .menu-button {
+    padding: 0;
+    width: 44px;
+  }
+  .menu-button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
   }
 }
 

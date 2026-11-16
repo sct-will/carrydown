@@ -9,9 +9,9 @@ export const en = {
   label: 'English',
 
   site: {
-    name: 'Carried context',
+    name: 'Carried-context development',
     skipLink: 'Skip to main content',
-    homeLabel: 'Carried context, home',
+    homeLabel: 'Carried-context development, home',
   },
 
   nav: {
@@ -207,9 +207,12 @@ export const en = {
     title: 'Carried-context development, home',
     description:
       'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent, so the project stays aligned and nothing drifts.',
-    h1: 'Carried-context development goes beyond spec-driven development. The context travels with the work.',
+    h1: [
+      'Carried-context development goes beyond spec-driven development.',
+      'The context travels with the work.',
+    ],
     definition:
-      'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent, so the project stays aligned and nothing drifts.',
+      'Keep the project aligned by giving each engineer’s coding agent the same project decisions and context.',
     paragraph:
       'Your team provides the project documents, the requirements and the decisions about people and deadlines. Your AI agent uses this ground truth to create a connected plan, a spec for every work item, and GitHub issues that link each spec and cite the document sections behind it. Your AI agent also generates a project-specific agent skill that carries the spec, the decisions behind the work and the cited sections to each engineer’s coding agent. When a document changes, you review one update.',
     buttons: {
@@ -217,9 +220,10 @@ export const en = {
       sample: 'See a sample project’s AI agent outputs',
     },
     howHeading: 'How it works',
-    statement: {
-            body: 'Spec-driven development leaves each spec to the engineer writing it. Quality depends on who wrote it. No two specs match and nothing ties them together. They drift as the project changes. Carried-context development derives every spec from the same ground truth, cites the sources and carries every approved change to every coding agent.',
-    },
+    sideParagraphs: [
+      'When engineers write specs independently, quality varies and the specs drift apart as the project changes.',
+      'Carried-context development ties every spec to the same ground truth, cites the sources, and delivers every approved change to every coding agent.',
+    ],
     values: [
       {
         eyebrow: 'Connected plan',
@@ -248,31 +252,20 @@ export const en = {
       copyLabel: 'Copy the install command',
       copiedStatus: 'Install command copied to the clipboard.',
       copyFailedStatus: 'Could not copy. Select the command and copy it.',
-      needs: 'Needs Node.js 22.20 or later and Git. No Node.js? There is a manual install.',
       tiles: [
         {
           step: 'Step 1',
-          title: 'Look at a finished plan.',
+          title: 'Look at a sample finished plan.',
           body: 'The sample board and its issues, on GitHub.',
           command: '',
           button: 'Open the sample',
-          time: 'One minute. Nothing to install.',
         },
         {
           step: 'Step 2',
-          title: 'Read the first conversation.',
-          body: 'The questions the agent asks you, and what to answer.',
-          command: '',
-          button: 'Owner guide',
-          time: 'Five minutes. Nothing to install.',
-        },
-        {
-          step: 'Step 3',
-          title: 'Try it with one folder of yours.',
+          title: 'Run carrydown on your project.',
           body: 'Install the two carrydown skills, then say',
           command: '“Set up a project plan from these documents.”',
           button: 'Setup guide',
-          time: 'An afternoon, mostly reading.',
         },
       ],
       stepsHeading: 'Your AI agent guides you through running carrydown on your project',
@@ -299,7 +292,6 @@ export const en = {
         },
       ],
       reviewNote: 'Stakeholders, project owners and engineering managers watch each milestone and decide pass or fail. Human-in-the-loop review is explicitly part of the method.',
-      reviewNoteAccent: 'Human-in-the-loop',
     },
   },
 
