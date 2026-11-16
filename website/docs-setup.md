@@ -39,3 +39,10 @@ In `website/site.config.mjs`, set `customDomain` to `"carried-context.dev"`. The
 ## 5. Launch steps
 
 The search engine steps are in `TODO.md`.
+
+## What was set on the repository, 16 November 2026
+
+- GitHub Actions is enabled, restricted to actions written by GitHub and by verified creators. The website workflow uses GitHub's own actions only, pinned by commit.
+- GitHub Pages is enabled with the build type set to the workflow, so every deploy comes from the website workflow and nothing is served from a branch.
+- A placeholder branch named gh-pages exists with one README. GitHub required a branch to exist before Pages could be turned on, and turning the branch off turns Pages off with it. Leave the branch alone.
+- The github-pages environment allows deploys from main and from the website branch. Remove the website branch from that list after the merge.
