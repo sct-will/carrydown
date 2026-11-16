@@ -64,7 +64,11 @@ To translate a docs page, put a translated copy under `docs/i18n/<locale>/` with
 
 Edit the Markdown in the repository, never the generated pages.
 
-## Search and sharing metadata
+## Site search
+
+The Search button in the header opens a dialog over a Pagefind index. Starlight builds the index into `dist/pagefind/` at the end of `astro build`, over every docs page and every site page whose main element carries `data-pagefind-body`, one index per language. `src/components/SiteSearch.astro` holds the button, the dialog and the keyboard shortcuts (Ctrl K, Cmd K, or "/" outside a text field). `astro dev` builds no index, so the dialog says search works on the published site; `astro preview` serves the built one.
+
+## Search engines and sharing metadata
 
 `src/components/Seo.astro` writes the title, description, canonical link, Open Graph and Twitter tags and the JSON-LD for each page. The docs get the same tags through `src/components/starlight/Head.astro`. The text for each page is in `src/seo/pages.ts`, which reads the locale strings in `src/i18n/`.
 

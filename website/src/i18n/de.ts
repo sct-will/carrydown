@@ -33,6 +33,13 @@ export const de: Strings = {
     languageLabel: 'Sprache',
   },
 
+  search: {
+    button: 'Suchen',
+    title: 'Diese Website durchsuchen',
+    close: 'Schließen',
+    unavailable: 'Die Suche funktioniert auf der veröffentlichten Website. In der Entwicklungsvorschau ist sie nicht verfügbar.',
+  },
+
   translation: {
     note: 'Diese Übersetzung wird noch von Muttersprachlern geprüft. Die englische Seite ist maßgeblich.',
     link: 'Englische Seite lesen',
@@ -208,8 +215,7 @@ export const de: Strings = {
     },
     howHeading: 'So funktioniert es',
     statement: {
-      heading: 'Carried-context development geht über spezifikationsgetriebene Entwicklung hinaus.',
-      body: 'Spezifikationsgetriebene Entwicklung überlässt jede Spezifikation dem Entwickler, der sie schreibt. Die Qualität hängt davon ab, wer sie verfasst hat. Keine zwei Spezifikationen gleichen sich, und nichts verbindet sie. Sie driften auseinander, wenn sich das Projekt ändert. Carried-context development leitet jede Spezifikation aus derselben Faktengrundlage ab, belegt die Quellen und trägt jede freigegebene Änderung zu jedem Coding-Agenten.',
+            body: 'Spezifikationsgetriebene Entwicklung überlässt jede Spezifikation dem Entwickler, der sie schreibt. Die Qualität hängt davon ab, wer sie verfasst hat. Keine zwei Spezifikationen gleichen sich, und nichts verbindet sie. Sie driften auseinander, wenn sich das Projekt ändert. Carried-context development leitet jede Spezifikation aus derselben Faktengrundlage ab, belegt die Quellen und trägt jede freigegebene Änderung zu jedem Coding-Agenten.',
     },
     values: [
       {
@@ -229,9 +235,7 @@ export const de: Strings = {
       },
     ],
     carrydown: {
-      headingBefore: 'Probieren Sie ',
-      headingBrand: 'carrydown',
-      headingAfter: ' aus, die offene Referenzimplementierung.',
+      heading: 'Probieren Sie es aus',
       intro:
         'Carried-context development ist ein Ansatz für agentische Entwicklung, und es gibt mehr als einen Weg, ihn umzusetzen. carrydown ist die Referenzimplementierung: zwei Agent Skills, die Sie installieren, ein dritter, den sie für Ihre Entwickler generiert, und die Prüfungen, die jeden Beleg validieren. Sie ist Open Source unter Apache 2.0 und arbeitet mit dem Coding-Agenten, den Ihr Team bereits nutzt.',
       tryButton: 'Auf GitHub ausprobieren',
@@ -268,7 +272,7 @@ export const de: Strings = {
           time: 'Ein Nachmittag, größtenteils Lesen.',
         },
       ],
-      stepsHeading: 'Schritte beim Einsatz von carrydown',
+      stepsHeading: 'Ihr KI-Agent führt Sie durch den Einsatz von carrydown in Ihrem Projekt',
       steps: [
         {
           who: 'Plan-Verantwortlicher',
@@ -287,16 +291,12 @@ export const de: Strings = {
         },
         {
           who: 'Stakeholder',
-          what: 'Sehen sich jede Meilenstein-Demonstration an und entscheiden über bestanden oder nicht bestanden. Sie installieren nichts.',
-          say: '',
-        },
-        {
-          who: 'Alle',
           what: 'Melden eine geänderte Quelle oder eine Spezifikation, die falsch scheint. Eine Prüfung, dann wird die freigegebene Aktualisierung hinuntergetragen.',
-          say: en.home.carrydown.steps[4].say,
+          say: en.home.carrydown.steps[3].say,
         },
       ],
-      noCommand: 'Kein Befehl zu sagen.',
+      reviewNote: 'Stakeholder, Projektverantwortliche und Engineering-Manager sehen sich jeden Meilenstein an und entscheiden über bestanden oder nicht bestanden. Die Prüfung durch Menschen ist ausdrücklich Teil der Methode.',
+      reviewNoteAccent: 'Prüfung durch Menschen',
     },
   },
 

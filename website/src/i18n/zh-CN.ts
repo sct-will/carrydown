@@ -33,6 +33,13 @@ export const zhCN: Strings = {
     languageLabel: '语言',
   },
 
+  search: {
+    button: '搜索',
+    title: '搜索本站',
+    close: '关闭',
+    unavailable: '搜索在已发布的网站上可用。开发预览中不可用。',
+  },
+
   translation: {
     note: '本翻译尚待母语人士审校。以英文页面为准。',
     link: '阅读英文页面',
@@ -185,8 +192,7 @@ export const zhCN: Strings = {
     },
     howHeading: '工作原理',
     statement: {
-      heading: 'Carried-context development 超越了规格驱动开发。',
-      body: '规格驱动开发把每份规格交给撰写它的工程师。质量取决于谁来写。没有两份规格是一致的，也没有什么把它们联系在一起。随着项目变化，它们会逐渐偏离。Carried-context development 从同一个基准事实派生每一份规格，引用来源，并把每一项获批的变更传递给每个编码代理。',
+            body: '规格驱动开发把每份规格交给撰写它的工程师。质量取决于谁来写。没有两份规格是一致的，也没有什么把它们联系在一起。随着项目变化，它们会逐渐偏离。Carried-context development 从同一个基准事实派生每一份规格，引用来源，并把每一项获批的变更传递给每个编码代理。',
     },
     values: [
       {
@@ -206,9 +212,7 @@ export const zhCN: Strings = {
       },
     ],
     carrydown: {
-      headingBefore: '试用 ',
-      headingBrand: 'carrydown',
-      headingAfter: '，开放的参考实现。',
+      heading: '试一试',
       intro:
         'Carried-context development 是一种智能体开发方法，实现它的方式不止一种。carrydown 是参考实现：你安装的两个 Agent Skills，它为你的工程师生成的第三个，以及验证每一处引用的检查。它以 Apache 2.0 开源，可与你的团队已经在用的编码代理配合使用。',
       tryButton: '在 GitHub 上试用',
@@ -245,7 +249,7 @@ export const zhCN: Strings = {
           time: '一个下午，大部分时间在阅读。',
         },
       ],
-      stepsHeading: '运行 carrydown 的步骤',
+      stepsHeading: '你的 AI 代理引导你在项目中运行 carrydown',
       steps: [
         {
           who: '计划负责人',
@@ -264,16 +268,12 @@ export const zhCN: Strings = {
         },
         {
           who: '利益相关方',
-          what: '观看每个里程碑演示并决定通过与否。无需安装任何东西。',
-          say: '',
-        },
-        {
-          who: '任何人',
           what: '报告某个来源有变化，或某份规格似乎有误。一次审阅之后，获批的更新向下传递。',
-          say: en.home.carrydown.steps[4].say,
+          say: en.home.carrydown.steps[3].say,
         },
       ],
-      noCommand: '没有需要说的命令。',
+      reviewNote: '利益相关方、项目负责人和工程经理观看每个里程碑并决定通过与否。人工审核是这一方法明确的一部分。',
+      reviewNoteAccent: '人工审核',
     },
   },
 

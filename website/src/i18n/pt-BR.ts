@@ -33,6 +33,13 @@ export const ptBR: Strings = {
     languageLabel: 'Idioma',
   },
 
+  search: {
+    button: 'Buscar',
+    title: 'Buscar neste site',
+    close: 'Fechar',
+    unavailable: 'A busca funciona no site publicado. Ela não está disponível na prévia de desenvolvimento.',
+  },
+
   translation: {
     note: 'Esta tradução aguarda revisão de um falante nativo. A página em inglês é a referência.',
     link: 'Ler a página em inglês',
@@ -208,8 +215,7 @@ export const ptBR: Strings = {
     },
     howHeading: 'Como funciona',
     statement: {
-      heading: 'Carried-context development vai além do desenvolvimento orientado por especificações.',
-      body: 'O desenvolvimento orientado por especificações deixa cada especificação para o engenheiro que a escreve. A qualidade depende de quem a escreveu. Não há duas especificações iguais e nada as une. Elas se afastam à medida que o projeto muda. Carried-context development deriva cada especificação da mesma verdade de referência, cita as fontes e leva cada mudança aprovada a cada agente de programação.',
+            body: 'O desenvolvimento orientado por especificações deixa cada especificação para o engenheiro que a escreve. A qualidade depende de quem a escreveu. Não há duas especificações iguais e nada as une. Elas se afastam à medida que o projeto muda. Carried-context development deriva cada especificação da mesma verdade de referência, cita as fontes e leva cada mudança aprovada a cada agente de programação.',
     },
     values: [
       {
@@ -229,9 +235,7 @@ export const ptBR: Strings = {
       },
     ],
     carrydown: {
-      headingBefore: 'Experimente o ',
-      headingBrand: 'carrydown',
-      headingAfter: ', a implementação de referência aberta.',
+      heading: 'Experimente',
       intro:
         'Carried-context development é uma abordagem de desenvolvimento com agentes, e há mais de uma forma de implementá-la. O carrydown é a implementação de referência: dois Agent Skills que você instala, um terceiro que ele gera para seus engenheiros e as verificações que validam cada citação. É de código aberto sob Apache 2.0 e funciona com o agente de programação que sua equipe já usa.',
       tryButton: 'Experimentar no GitHub',
@@ -268,7 +272,7 @@ export const ptBR: Strings = {
           time: 'Uma tarde, quase toda de leitura.',
         },
       ],
-      stepsHeading: 'Etapas para usar o carrydown',
+      stepsHeading: 'Seu agente de IA orienta você ao usar o carrydown no seu projeto',
       steps: [
         {
           who: 'Responsável pelo plano',
@@ -287,16 +291,12 @@ export const ptBR: Strings = {
         },
         {
           who: 'Partes interessadas',
-          what: 'Assistem a cada demonstração de marco e decidem se passou ou não. Não instalam nada.',
-          say: '',
-        },
-        {
-          who: 'Qualquer pessoa',
-          what: 'Informa uma fonte alterada ou uma especificação que parece errada. Uma revisão, e a atualização aprovada se propaga.',
-          say: en.home.carrydown.steps[4].say,
+          what: 'Informam uma fonte alterada ou uma especificação que parece errada. Uma revisão, e a atualização aprovada se propaga.',
+          say: en.home.carrydown.steps[3].say,
         },
       ],
-      noCommand: 'Nenhum comando para dizer.',
+      reviewNote: 'Partes interessadas, responsáveis pelo projeto e gerentes de engenharia assistem a cada marco e decidem se passou ou não. A revisão humana é explicitamente parte do método.',
+      reviewNoteAccent: 'revisão humana',
     },
   },
 

@@ -2,6 +2,7 @@
 import Mark from './Mark.astro';
 import ThemeControl from './ThemeControl.astro';
 import LanguageControl from './LanguageControl.astro';
+import SiteSearch from './SiteSearch.astro';
 import { getStrings, locales } from '../i18n';
 import { localePath, stripBase } from '../lib/paths';
 import { repoUrl } from '../../site.config.mjs';
@@ -26,21 +27,9 @@ const isCurrent = (match: string) => match !== '' && route.startsWith(match);
 <div class:list={['site-header', { 'site-header--wide': wide }]} data-site-header>
   <div class="site-header__bar">
     <a class="brand" href={localePath(locale, '/')}>
-      <Mark size={24} />
+      <Mark size={36} />
       <span>{t.site.name}</span>
     </a>
-    <button
-      type="button"
-      class="menu-button"
-      aria-expanded="false"
-      aria-controls="site-header-panel"
-      data-menu-button
-    >
-      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
-        <path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-      </svg>
-      <span>{t.nav.menu}</span>
-    </button>
     <div class="site-header__panel" id="site-header-panel" data-menu-panel>
       <nav aria-label={t.nav.label}>
         <ul class="nav-links">
@@ -56,11 +45,24 @@ const isCurrent = (match: string) => match !== '' && route.startsWith(match);
         <LanguageControl locale={locale} />
       </div>
     </div>
+    <SiteSearch locale={locale} />
+    <button
+      type="button"
+      class="menu-button"
+      aria-expanded="false"
+      aria-controls="site-header-panel"
+      data-menu-button
+    >
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
+        <path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+      <span>{t.nav.menu}</span>
+    </button>
   </div>
 </div>
 
 <script>
-  // Under 768 px the nav and controls sit behind the Menu button. Without script they stay visible.
+  // Under 900 px the nav and controls sit behind the Menu button. Without script they stay visible.
   const header = document.querySelector<HTMLElement>('[data-site-header]');
   const button = header?.querySelector<HTMLButtonElement>('[data-menu-button]');
   const panel = header?.querySelector<HTMLElement>('[data-menu-panel]');
@@ -76,7 +78,7 @@ const isCurrent = (match: string) => match !== '' && route.startsWith(match);
         button.focus();
       }
     });
-    matchMedia('(min-width: 768px)').addEventListener('change', (e) => {
+    matchMedia('(min-width: 900px)').addEventListener('change', (e) => {
       if (e.matches) set(false);
     });
   }

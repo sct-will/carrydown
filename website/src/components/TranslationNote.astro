@@ -14,7 +14,7 @@ const route = stripBase(Astro.url.pathname, [...locales]);
 
 {
   locale !== defaultLocale && (
-    <div class="wrap translation-wrap">
+    <div class="wrap translation-wrap" data-pagefind-ignore>
       <p class="translation-note" role="note">
         <span>{t.note}</span>{' '}
         <a href={localePath(defaultLocale, route)} hreflang="en">{t.link}</a>

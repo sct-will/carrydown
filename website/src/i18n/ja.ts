@@ -33,6 +33,13 @@ export const ja: Strings = {
     languageLabel: '言語',
   },
 
+  search: {
+    button: '検索',
+    title: 'サイト内を検索',
+    close: '閉じる',
+    unavailable: '検索は公開済みのサイトで利用できます。開発プレビューでは利用できません。',
+  },
+
   translation: {
     note: 'この翻訳は、ネイティブスピーカーによる確認を待っています。基準となるのは英語のページです。',
     link: '英語のページを読む',
@@ -200,8 +207,7 @@ export const ja: Strings = {
     },
     howHeading: '仕組み',
     statement: {
-      heading: 'Carried-context development は、仕様駆動開発のその先へ進みます。',
-      body: '仕様駆動開発では、各仕様は書くエンジニアに任されます。品質は誰が書いたかで決まります。同じ仕様は二つとなく、それらを結びつけるものもありません。プロジェクトが変わるにつれて、仕様はずれていきます。Carried-context development は、すべての仕様を同じグラウンドトゥルースから導き、出典を引用し、承認された変更をすべてのコーディングエージェントへ伝えます。',
+            body: '仕様駆動開発では、各仕様は書くエンジニアに任されます。品質は誰が書いたかで決まります。同じ仕様は二つとなく、それらを結びつけるものもありません。プロジェクトが変わるにつれて、仕様はずれていきます。Carried-context development は、すべての仕様を同じグラウンドトゥルースから導き、出典を引用し、承認された変更をすべてのコーディングエージェントへ伝えます。',
     },
     values: [
       {
@@ -221,9 +227,7 @@ export const ja: Strings = {
       },
     ],
     carrydown: {
-      headingBefore: '',
-      headingBrand: 'carrydown',
-      headingAfter: ' を試す。オープンなリファレンス実装です。',
+      heading: '試してみる',
       intro:
         'Carried-context development はエージェント開発のアプローチであり、実装方法はひとつではありません。carrydown はそのリファレンス実装です。インストールする二つの Agent Skills、エンジニア向けに生成される三つ目、そしてすべての引用を検証するチェックで構成されます。Apache 2.0 のオープンソースで、チームがすでに使っているコーディングエージェントで動きます。',
       tryButton: 'GitHub で試す',
@@ -260,7 +264,7 @@ export const ja: Strings = {
           time: '午後いっぱい。ほとんどは読む時間です。',
         },
       ],
-      stepsHeading: 'carrydown を使う手順',
+      stepsHeading: 'AIエージェントが、あなたのプロジェクトで carrydown を使う手順を案内します',
       steps: [
         {
           who: 'プランオーナー',
@@ -279,16 +283,12 @@ export const ja: Strings = {
         },
         {
           who: 'ステークホルダー',
-          what: '各マイルストーンのデモを見て、合格か不合格かを判断します。何もインストールしません。',
-          say: '',
-        },
-        {
-          who: '誰でも',
           what: '出典の変更や、誤っていそうな仕様を知らせます。一度のレビューを経て、承認された更新が伝わります。',
-          say: en.home.carrydown.steps[4].say,
+          say: en.home.carrydown.steps[3].say,
         },
       ],
-      noCommand: '話しかけるコマンドはありません。',
+      reviewNote: 'ステークホルダー、プロジェクトオーナー、エンジニアリングマネージャーが各マイルストーンを見て、合格か不合格かを判断します。人によるレビューは、明示的にこの方法の一部です。',
+      reviewNoteAccent: '人によるレビュー',
     },
   },
 

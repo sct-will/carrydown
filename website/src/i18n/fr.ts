@@ -33,6 +33,13 @@ export const fr: Strings = {
     languageLabel: 'Langue',
   },
 
+  search: {
+    button: 'Rechercher',
+    title: 'Rechercher sur ce site',
+    close: 'Fermer',
+    unavailable: 'La recherche fonctionne sur le site publié. Elle n’est pas disponible dans l’aperçu de développement.',
+  },
+
   translation: {
     note: 'Cette traduction est en attente de relecture par un locuteur natif. La page en anglais fait foi.',
     link: 'Lire la page en anglais',
@@ -208,8 +215,7 @@ export const fr: Strings = {
     },
     howHeading: 'Comment ça marche',
     statement: {
-      heading: 'Carried-context development va au-delà du développement piloté par les spécifications.',
-      body: 'Le développement piloté par les spécifications laisse chaque spécification à l’ingénieur qui l’écrit. La qualité dépend de son auteur. Deux spécifications ne se ressemblent pas et rien ne les relie. Elles dérivent au fil des changements du projet. Carried-context development dérive chaque spécification de la même vérité de référence, cite les sources et porte chaque changement approuvé à chaque agent de codage.',
+            body: 'Le développement piloté par les spécifications laisse chaque spécification à l’ingénieur qui l’écrit. La qualité dépend de son auteur. Deux spécifications ne se ressemblent pas et rien ne les relie. Elles dérivent au fil des changements du projet. Carried-context development dérive chaque spécification de la même vérité de référence, cite les sources et porte chaque changement approuvé à chaque agent de codage.',
     },
     values: [
       {
@@ -229,9 +235,7 @@ export const fr: Strings = {
       },
     ],
     carrydown: {
-      headingBefore: 'Essayez ',
-      headingBrand: 'carrydown',
-      headingAfter: ', l’implémentation de référence ouverte.',
+      heading: 'Essayez-le',
       intro:
         'Carried-context development est une approche du développement agentique, et il y a plus d’une façon de la mettre en œuvre. carrydown en est l’implémentation de référence : deux Agent Skills que vous installez, un troisième qu’elle génère pour vos ingénieurs, et les contrôles qui valident chaque citation. Elle est open source sous Apache 2.0 et fonctionne avec l’agent de codage que votre équipe utilise déjà.',
       tryButton: 'Essayer sur GitHub',
@@ -268,7 +272,7 @@ export const fr: Strings = {
           time: 'Un après-midi, surtout de la lecture.',
         },
       ],
-      stepsHeading: 'Les étapes pour utiliser carrydown',
+      stepsHeading: 'Votre agent d’IA vous guide pour utiliser carrydown sur votre projet',
       steps: [
         {
           who: 'Responsable du plan',
@@ -287,16 +291,12 @@ export const fr: Strings = {
         },
         {
           who: 'Parties prenantes',
-          what: 'Assistent à chaque démonstration de jalon et décident de la réussite ou de l’échec. Elles n’installent rien.',
-          say: '',
-        },
-        {
-          who: 'Tout le monde',
-          what: 'Signale une source modifiée ou une spécification qui semble erronée. Une revue, puis la mise à jour approuvée descend.',
-          say: en.home.carrydown.steps[4].say,
+          what: 'Signalent une source modifiée ou une spécification qui semble erronée. Une revue, puis la mise à jour approuvée descend.',
+          say: en.home.carrydown.steps[3].say,
         },
       ],
-      noCommand: 'Aucune commande à dire.',
+      reviewNote: 'Les parties prenantes, les responsables de projet et les responsables d’ingénierie assistent à chaque jalon et décident de la réussite ou de l’échec. La revue humaine fait explicitement partie de la méthode.',
+      reviewNoteAccent: 'revue humaine',
     },
   },
 

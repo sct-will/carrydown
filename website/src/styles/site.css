@@ -116,37 +116,32 @@ body.site {
   gap: 12px;
 }
 .site h2.how {
-  margin: 96px 0 24px;
+  margin: 96px 0 16px;
 }
-
-/* Home: statement and value lines */
-.site .stmt {
-  max-width: 48rem;
-  margin: 96px auto 0;
-  text-align: center;
-}
-.site .stmt h2 {
-  max-width: 20em;
-  margin: 0 auto 16px;
-  font-size: 2rem;
-  line-height: 1.15;
-  letter-spacing: -0.015em;
-  /* The settled render sets the heading flush left in its centered box, over the centered paragraph. */
-  text-align: left;
-}
-.site .stmt p {
-  max-width: 40rem;
-  margin: 0 auto;
+/* The paragraph under the How it works heading runs the full width of the measure, flush left. */
+.site .how-intro {
+  margin: 0 0 32px;
   color: var(--ink-muted);
   font-size: 1.1rem;
-  line-height: 1.5;
+  line-height: 1.6;
+  text-align: left;
 }
+/* The diagram sits in a large rounded teal frame. The side padding is small so the wide drawing keeps
+ * its scale, and from 1200 px the frame reaches 24 px past the measure to give it back. */
+.site .flow-frame {
+  padding: 36px 24px;
+  border: 2px solid var(--teal);
+  border-radius: 28px;
+  background: var(--cream-raised);
+}
+
+/* Home: value lines */
 .site .vals {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 40px;
   max-width: 72rem;
-  margin: 64px auto 0;
+  margin: 80px auto 0;
   text-align: left;
 }
 .site .vals > div {
@@ -178,15 +173,15 @@ body.site {
 .site .cd-h {
   margin: 0 0 16px;
 }
-.site .cd-h .accent {
-  color: var(--amber-ink);
-}
+/* The intro runs the full measure. The product name in it is set in the amber that carries text. */
 .site .cd-intro {
-  max-width: 44rem;
   margin: 0 0 24px;
   color: var(--ink-muted);
   font-size: 1.05rem;
   line-height: 1.6;
+}
+.site .cd-intro .accent {
+  color: var(--amber-ink);
 }
 .site .cd-cta {
   display: flex;
@@ -309,15 +304,22 @@ body.site {
   font-family: var(--font-mono);
   font-size: 0.88rem;
 }
-.site .rs-say .dash {
-  display: inline-block;
-  width: 14px;
-  height: 2px;
-  margin-bottom: 4px;
-  background: var(--ink-muted);
+/* The statement under the list: who decides, in the running text color, full measure. */
+.site .cd-note {
+  margin: 28px 0 0;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+.site .cd-note .accent {
+  color: var(--amber-ink);
 }
 
 /* Reflow */
+@media (min-width: 1200px) {
+  .site .flow-frame {
+    margin-inline: -24px;
+  }
+}
 @media (max-width: 899.98px) {
   /* One row for the number and the role, one for what happens and what to say. */
   .site .rs {
@@ -352,13 +354,12 @@ body.site {
   .site h2.how {
     margin-top: 64px;
   }
-  /* One column: the statement reads flush left like the heading over it and the value lines under it. */
-  .site .stmt {
-    margin-top: 64px;
-    text-align: left;
+  .site .how-intro {
+    font-size: 1.05rem;
   }
-  .site .stmt h2 {
-    font-size: 1.6rem;
+  .site .flow-frame {
+    padding: 24px 16px;
+    border-radius: 20px;
   }
   .site .vals {
     grid-template-columns: 1fr;

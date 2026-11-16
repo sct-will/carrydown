@@ -1,6 +1,6 @@
 // Renders the Open Graph and Twitter card image, 1200 by 630, into dist/og-image.png after `astro build`.
 //
-// The card is the "Pinned pages" mark at 160 px and the title "Context that travels with the work." on
+// The card is the "Pinned pages" mark at 160 px and the title "Carried-context development goes beyond spec-driven development. The context travels with the work." on
 // the navy ground, set in Inter from the fontsource package. The text is drawn by Chromium through
 // Playwright, which loads the real Inter font file. No network is used.
 //
@@ -35,11 +35,11 @@ html, body { margin: 0; width: ${WIDTH}px; height: ${HEIGHT}px; background: ${NA
 body { position: relative; font-family: 'Inter Variable', sans-serif; color: ${INK}; overflow: hidden; }
 .mark { position: absolute; left: 66px; top: 78px; width: ${MARK_SIZE}px; height: ${MARK_SIZE}px; }
 .mark svg { display: block; }
-h1 { position: absolute; left: 96px; top: 300px; margin: 0; font-size: 84px; line-height: 1.08; font-weight: 700; letter-spacing: -0.02em; width: 900px; }
+h1 { position: absolute; left: 96px; top: 258px; margin: 0; font-size: 58px; line-height: 1.12; font-weight: 700; letter-spacing: -0.02em; width: 1010px; }
 p { position: absolute; left: 96px; bottom: 64px; margin: 0; font-size: 30px; font-weight: 500; color: ${MUTED}; }
 </style></head><body>
 <div class="mark">${mark}</div>
-<h1>Context that travels with the work.</h1>
+<h1>Carried-context development goes beyond spec-driven development. The context travels with the work.</h1>
 <p>Carried-context development</p>
 </body></html>`;
 
@@ -50,7 +50,7 @@ async function render() {
     const page = await browser.newPage({ viewport: { width: WIDTH, height: HEIGHT }, deviceScaleFactor: 1 });
     await page.setContent(html, { waitUntil: 'load' });
     await page.evaluate(() => document.fonts.ready);
-    const ok = await page.evaluate(() => document.fonts.check("700 84px 'Inter Variable'"));
+    const ok = await page.evaluate(() => document.fonts.check("700 58px 'Inter Variable'"));
     if (!ok) throw new Error('the Inter font did not load');
     return await page.screenshot({ type: 'png', clip: { x: 0, y: 0, width: WIDTH, height: HEIGHT } });
   } finally {

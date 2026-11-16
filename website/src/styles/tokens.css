@@ -110,6 +110,6 @@
   --sl-color-hairline-light: var(--border);
   --sl-color-hairline: var(--border);
   --sl-color-hairline-shade: var(--border);
-  --sl-nav-height: 4rem;
+  --sl-nav-height: 4.5rem;
   --sl-menu-button-size: 2.75rem;
 }

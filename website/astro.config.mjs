@@ -56,7 +56,9 @@ export default defineConfig({
         defaultProps: { frame: 'none' },
         styleOverrides: { borderColor: 'var(--border-strong)', borderRadius: '6px' },
       },
-      pagefind: false,
+      // Pagefind indexes the whole build after `astro build`: the docs, and every site page whose main
+      // element carries data-pagefind-body. The header's search dialog reads that index.
+      pagefind: true,
       sidebar,
     }),
     pagesFiles,

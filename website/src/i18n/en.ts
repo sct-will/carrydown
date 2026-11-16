@@ -34,6 +34,15 @@ export const en = {
     languageLabel: 'Language',
   },
 
+  /** The site search: the header button, and the dialog it opens. Pagefind supplies the strings inside
+   * the results list in the page's language. */
+  search: {
+    button: 'Search',
+    title: 'Search this site',
+    close: 'Close',
+    unavailable: 'Search works on the published site. It is not available in the development preview.',
+  },
+
   /** Shown at the top of every translated page. The English locale never shows it. */
   translation: {
     note: 'This translation is pending review by a native speaker. The English page is the reference.',
@@ -198,7 +207,7 @@ export const en = {
     title: 'Carried-context development, home',
     description:
       'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent, so the project stays aligned and nothing drifts.',
-    h1: 'Context that travels with the work.',
+    h1: 'Carried-context development goes beyond spec-driven development. The context travels with the work.',
     definition:
       'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent, so the project stays aligned and nothing drifts.',
     paragraph:
@@ -209,8 +218,7 @@ export const en = {
     },
     howHeading: 'How it works',
     statement: {
-      heading: 'Carried-context development goes beyond spec-driven development.',
-      body: 'Spec-driven development leaves each spec to the engineer writing it. Quality depends on who wrote it. No two specs match and nothing ties them together. They drift as the project changes. Carried-context development derives every spec from the same ground truth, cites the sources and carries every approved change to every coding agent.',
+            body: 'Spec-driven development leaves each spec to the engineer writing it. Quality depends on who wrote it. No two specs match and nothing ties them together. They drift as the project changes. Carried-context development derives every spec from the same ground truth, cites the sources and carries every approved change to every coding agent.',
     },
     values: [
       {
@@ -230,9 +238,7 @@ export const en = {
       },
     ],
     carrydown: {
-      headingBefore: 'Try ',
-      headingBrand: 'carrydown',
-      headingAfter: ', the open reference implementation.',
+      heading: 'Try it out',
       intro:
         'Carried-context development is an approach to agentic development, and there is more than one way to implement it. carrydown is the reference implementation: two Agent Skills you install, a third it generates for your engineers, and the checks that validate every citation. It is open source under Apache 2.0 and works with the coding agent your team already uses.',
       tryButton: 'Try it on GitHub',
@@ -269,7 +275,7 @@ export const en = {
           time: 'An afternoon, mostly reading.',
         },
       ],
-      stepsHeading: 'Steps in running carrydown',
+      stepsHeading: 'Your AI agent guides you through running carrydown on your project',
       steps: [
         {
           who: 'Plan owner',
@@ -288,16 +294,12 @@ export const en = {
         },
         {
           who: 'Stakeholders',
-          what: 'Watch each milestone demonstration and decide pass or fail. They install nothing.',
-          say: '',
-        },
-        {
-          who: 'Anyone',
-          what: 'Reports a changed source or a spec that seems wrong. One review, then the approved update carries down.',
+          what: 'Report a changed source or a spec that seems wrong. One review, then the approved update carries down.',
           say: '“This changed: …”',
         },
       ],
-      noCommand: 'No command to say.',
+      reviewNote: 'Stakeholders, project owners and engineering managers watch each milestone and decide pass or fail. Human-in-the-loop review is explicitly part of the method.',
+      reviewNoteAccent: 'Human-in-the-loop',
     },
   },
 
@@ -334,6 +336,5 @@ export const en = {
 
 export type Strings = typeof en;
 
-/** The not-found page's text. Starlight renders one not-found page, in English, at the site root. The
- * docs have no search, so the text does not point to one. */
-export const notFoundText = 'Page not found. Check the address, or use the links above.';
+/** The not-found page's text. Starlight renders one not-found page, in English, at the site root. */
+export const notFoundText = 'Page not found. Check the address, search the site, or use the links above.';

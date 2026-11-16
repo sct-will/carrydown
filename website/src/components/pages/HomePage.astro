@@ -14,6 +14,10 @@ const { locale = 'en' } = Astro.props;
 const t = getStrings(locale);
 const h = t.home;
 const c = h.carrydown;
+// The product name in the intro is set in the accent color: the text is split on it and it is put back as a span.
+const introParts = c.intro.split('carrydown');
+// The same for the phrase in the note under the list, which each language names.
+const noteParts = c.reviewNote.split(c.reviewNoteAccent);
 const tileLinks = [
   sampleBoardUrl,
   localePath(locale, '/docs/plan-owner-guide/'),
@@ -27,18 +31,16 @@ const tileLinks = [
     <div class="wrap">
       <h1 class="r25">{h.h1}</h1>
       <p class="defn">{h.definition}</p>
-      <p class="sub">{h.paragraph}</p>
+      <p class="sub">{h.statement.body}</p>
       <div class="actions">
         <a class="btn primary" href={repoUrl}>{h.buttons.try}</a>
         <a class="btn secondary" href={sampleBoardUrl}>{h.buttons.sample}</a>
       </div>
 
       <h2 class="how">{h.howHeading}</h2>
-      <HowItWorks locale={locale} />
-
-      <div class="stmt">
-        <h2>{h.statement.heading}</h2>
-        <p>{h.statement.body}</p>
+      <p class="how-intro">{h.paragraph}</p>
+      <div class="flow-frame">
+        <HowItWorks locale={locale} />
       </div>
       <div class="vals">
         {h.values.map((v) => (
@@ -54,8 +56,8 @@ const tileLinks = [
 
   <section id="carrydown">
     <div class="wrap">
-      <h2 class="cd-h">{c.headingBefore}<span class="accent">{c.headingBrand}</span>{c.headingAfter}</h2>
-      <p class="cd-intro">{c.intro}</p>
+      <h2 class="cd-h">{c.heading}</h2>
+      <p class="cd-intro">{introParts.map((part, i) => (<>{i > 0 && <span class="accent">carrydown</span>}{part}</>))}</p>
       <div class="cd-cta">
         <a class="btn primary" href={repoUrl}>{c.tryButton}</a>
         <div class="cmd">
@@ -95,18 +97,12 @@ const tileLinks = [
             <div class="rs-who">{s.who}</div>
             <div class="rs-body">
               <div class="rs-what">{s.what}</div>
-              {s.say ? (
-                <div class="rs-say">{s.say}</div>
-              ) : (
-                <div class="rs-say">
-                  <span class="dash" aria-hidden="true"></span>
-                  <span class="sr-only">{c.noCommand}</span>
-                </div>
-              )}
+              <div class="rs-say">{s.say}</div>
             </div>
           </li>
         ))}
       </ol>
+      <p class="cd-note">{noteParts.map((part, i) => (<>{i > 0 && <span class="accent">{c.reviewNoteAccent}</span>}{part}</>))}</p>
     </div>
   </section>
 </SiteLayout>
