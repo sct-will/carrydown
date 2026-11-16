@@ -54,7 +54,8 @@ const graph = buildGraph({
   definition: kind === 'definition' ? definitionSentence(locale) : undefined,
   faq: kind === 'faq' ? faqItems(locale) : undefined,
 });
-const isDocs = kind === 'docs';
+// Starlight writes these tags itself on the docs pages and on its not-found page.
+const isDocs = kind === 'docs' || kind === 'notfound';
 ---
 
 {!INDEXING_ENABLED && <meta name="robots" content="noindex, nofollow" />}

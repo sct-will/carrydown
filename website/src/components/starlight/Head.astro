@@ -6,8 +6,10 @@ import Default from '@astrojs/starlight/components/Head.astro';
 import Seo from '../Seo.astro';
 import Analytics from '../Analytics.astro';
 const { locale, entry } = Astro.locals.starlightRoute;
+// Starlight also renders the not-found page through this head. It is not an article.
+const notFound = /\/404(\.html|\/)?$/.test(Astro.url.pathname);
 ---
 
 <Default {...Astro.props}><slot /></Default>
-<Seo title={entry.data.title} description={entry.data.description ?? ''} locale={locale ?? 'en'} kind="docs" />
+<Seo title={entry.data.title} description={entry.data.description ?? ''} locale={locale ?? 'en'} kind={notFound ? 'notfound' : 'docs'} />
 <Analytics />

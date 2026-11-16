@@ -333,3 +333,7 @@ export const en = {
 };
 
 export type Strings = typeof en;
+
+/** The not-found page's text. Starlight renders one not-found page, in English, at the site root. The
+ * docs have no search, so the text does not point to one. */
+export const notFoundText = 'Page not found. Check the address, or use the links above.';
