@@ -46,6 +46,8 @@ export default defineConfig({
       components: {
         Header: './src/components/starlight/Header.astro',
         Footer: './src/components/starlight/Footer.astro',
+        // Adds the robots tag, the image tags, the JSON-LD and the analytics tag to the docs pages.
+        Head: './src/components/starlight/Head.astro',
         ThemeProvider: './src/components/starlight/ThemeProvider.astro',
       },
       pagefind: false,

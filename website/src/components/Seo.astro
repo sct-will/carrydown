@@ -6,7 +6,7 @@
 // basic Open Graph tags, so this component adds only the robots tag, the image tags and the JSON-LD.
 import { INDEXING_ENABLED, siteName } from '../../site.config.mjs';
 import { withBase, stripBase } from '../lib/paths';
-import { locales } from '../i18n';
+import { locales, localeList } from '../i18n';
 import { pageMeta, routes, definitionSentence, faqItems } from '../seo/pages';
 import { buildGraph, toScriptJson } from '../seo/jsonld';
 
@@ -36,9 +36,11 @@ const ogLocale: Record<string, string> = {
   fr: 'fr_FR',
   ja: 'ja_JP',
   es: 'es_ES',
-  'pt-BR': 'pt_BR',
-  'zh-CN': 'zh_CN',
+  'pt-br': 'pt_BR',
+  'zh-cn': 'zh_CN',
 };
+// The locale code is the lowercase URL prefix. JSON-LD wants the BCP 47 tag, for example pt-BR.
+const language = localeList.find((l) => l.code === locale)?.lang ?? locale;
 const imageAlt = 'Carried context: Context that travels with the work.';
 
 const graph = buildGraph({
@@ -48,7 +50,7 @@ const graph = buildGraph({
   pageUrl,
   title,
   description,
-  language: locale,
+  language,
   definition: kind === 'definition' ? definitionSentence(locale) : undefined,
   faq: kind === 'faq' ? faqItems(locale) : undefined,
 });

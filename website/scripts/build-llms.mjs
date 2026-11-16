@@ -10,7 +10,8 @@ import { site, base, siteName } from '../site.config.mjs';
 const dist = join(resolve(dirname(fileURLToPath(import.meta.url)), '..'), 'dist');
 const prefix = base === '/' ? '' : base.replace(/\/+$/, '');
 const origin = `${site}${prefix}`;
-const localeCode = /^[a-z]{2}(-[A-Z]{2})?$/;
+// Locale folders are lowercase: de, fr, ja, es, pt-br, zh-cn.
+const localeCode = /^[a-z]{2}(-[a-z]{2})?$/;
 
 const unescape = (s) =>
   s.replace(/&quot;/g, '"').replace(/&#39;|&#x27;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
