@@ -294,7 +294,7 @@ export const fr: Strings = {
       ],
       reviewNote: 'Les parties prenantes, les responsables de projet et les responsables d’ingénierie assistent à chaque jalon et décident de la réussite ou de l’échec. La revue humaine fait explicitement partie de la méthode.',
     },
-    /** The What you get section: the outputs, summarized from the README's list, and a link to the full list in the docs. */
+    /** The What you get section: the outputs, summarized from the README's list. */
     whatYouGet: {
       heading: 'Ce que vous obtenez',
       intro:
@@ -311,7 +311,6 @@ export const fr: Strings = {
         { title: 'Un tableau GitHub Projects', path: '', body: 'Unités de travail, pistes, dates et points de contrôle remplis.' },
         { title: 'Le skill d’agent d’IA de l’ingénieur', path: '', body: 'Généré à partir de vos spécifications et commité dans votre dépôt. Un ingénieur démarre un élément de travail en le nommant, par exemple « Work on [work item ID] », et l’agent de codage lit d’abord la spécification et le contexte approuvé de cet élément.' },
       ],
-      more: { before: 'L’emplacement de chaque fichier est dans la documentation, sous ', link: 'What you get', after: '.' },
     },
   },
 

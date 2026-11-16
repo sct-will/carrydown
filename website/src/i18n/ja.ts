@@ -286,7 +286,7 @@ export const ja: Strings = {
       ],
       reviewNote: 'ステークホルダー、プロジェクトオーナー、エンジニアリングマネージャーが各マイルストーンを見て、合格か不合格かを判断します。人によるレビューは、明示的にこの方法の一部です。',
     },
-    /** The What you get section: the outputs, summarized from the README's list, and a link to the full list in the docs. */
+    /** The What you get section: the outputs, summarized from the README's list. */
     whatYouGet: {
       heading: '得られるもの',
       intro:
@@ -303,7 +303,6 @@ export const ja: Strings = {
         { title: 'GitHub プロジェクトボード', path: '', body: '作業単位、トラック、期日、チェックポイントが入力済みです。' },
         { title: 'エンジニアのAIエージェントスキル', path: '', body: 'あなたの仕様から生成され、リポジトリにコミットされます。エンジニアは作業項目を名指しして始めます。たとえば「Work on [work item ID]」と言えば、コーディングエージェントはまずその項目の仕様と承認済みコンテキストを読みます。' },
       ],
-      more: { before: '各ファイルの置き場所はドキュメントの ', link: 'What you get', after: ' にあります。' },
     },
   },
 

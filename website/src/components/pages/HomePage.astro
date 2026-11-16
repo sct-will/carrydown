@@ -22,7 +22,6 @@ const tileLinks = [sampleBoardUrl, localePath(locale, '/docs/setup/')];
 const startHereUrl = `${localePath(locale, '/docs/')}#start-here`;
 const howItWorksUrl = `${localePath(locale, '/docs/')}#how-it-works`;
 const w = h.whatYouGet;
-const whatYouGetUrl = `${localePath(locale, '/docs/')}#what-you-get`;
 ---
 
 <SiteLayout title={h.title} description={h.description} locale={locale} kind="home">
@@ -138,7 +137,6 @@ const whatYouGetUrl = `${localePath(locale, '/docs/')}#what-you-get`;
           ))}
         </ul>
       </div>
-      <p class="wyg-more">{w.more.before}<a href={whatYouGetUrl}>{w.more.link}</a>{w.more.after}</p>
     </div>
   </section>
 </SiteLayout>

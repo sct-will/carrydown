@@ -294,7 +294,7 @@ export const de: Strings = {
       ],
       reviewNote: 'Stakeholder, Projektverantwortliche und Engineering-Manager sehen sich jeden Meilenstein an und entscheiden über bestanden oder nicht bestanden. Die Prüfung durch Menschen ist ausdrücklich Teil der Methode.',
     },
-    /** The What you get section: the outputs, summarized from the README's list, and a link to the full list in the docs. */
+    /** The What you get section: the outputs, summarized from the README's list. */
     whatYouGet: {
       heading: 'Was Sie bekommen',
       intro:
@@ -311,7 +311,6 @@ export const de: Strings = {
         { title: 'Ein GitHub-Projektboard', path: '', body: 'Arbeitseinheiten, Tracks, Termine und Checkpoints ausgefüllt.' },
         { title: 'Der KI-Agent-Skill des Entwicklers', path: '', body: 'Aus Ihren Spezifikationen generiert und in Ihrem Repository committet. Ein Entwickler startet ein Arbeitspaket, indem er es nennt, zum Beispiel „Work on [work item ID]“, und der Coding-Agent liest zuerst die Spezifikation und den freigegebenen Kontext dieses Pakets.' },
       ],
-      more: { before: 'Wo jede Datei liegt, steht in der Doku unter ', link: 'What you get', after: '.' },
     },
   },
 

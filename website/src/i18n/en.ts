@@ -297,7 +297,7 @@ export const en = {
       ],
       reviewNote: 'Stakeholders, project owners and engineering managers watch each milestone and decide pass or fail. Human-in-the-loop review is explicitly part of the method.',
     },
-    /** The What you get section: the outputs, summarized from the README's list, and a link to the full list in the docs. */
+    /** The What you get section: the outputs, summarized from the README's list. */
     whatYouGet: {
       heading: 'What you get',
       intro:
@@ -314,7 +314,6 @@ export const en = {
         { title: 'A GitHub Project board', path: '', body: 'Work units, tracks, dates and checkpoints filled in.' },
         { title: 'The engineer’s AI agent skill', path: '', body: 'Generated from your specifications and committed in your repository. An engineer starts a work item by naming it, for example “Work on [work item ID]”, and the coding agent reads that item’s specification and approved context before it touches code.' },
       ],
-      more: { before: 'Where each file goes is in the docs, under ', link: 'What you get', after: '.' },
     },
   },
 

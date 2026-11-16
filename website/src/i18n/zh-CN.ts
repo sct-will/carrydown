@@ -271,7 +271,7 @@ export const zhCN: Strings = {
       ],
       reviewNote: '利益相关方、项目负责人和工程经理观看每个里程碑并决定通过与否。人工审核是这一方法明确的一部分。',
     },
-    /** The What you get section: the outputs, summarized from the README's list, and a link to the full list in the docs. */
+    /** The What you get section: the outputs, summarized from the README's list. */
     whatYouGet: {
       heading: '你会得到什么',
       intro:
@@ -288,7 +288,6 @@ export const zhCN: Strings = {
         { title: '一个 GitHub 项目看板', path: '', body: '工作单元、工作线、日期和检查点均已填好。' },
         { title: '工程师的 AI 代理 skill', path: '', body: '由你的规格生成并提交到你的仓库。工程师通过点名来开始一个工作项，例如“Work on [work item ID]”，编码代理会先读取该工作项的规格和已批准的上下文。' },
       ],
-      more: { before: '每个文件放在哪里，见文档中的 ', link: 'What you get', after: '。' },
     },
   },
 

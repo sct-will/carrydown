@@ -294,7 +294,7 @@ export const es: Strings = {
       ],
       reviewNote: 'Las partes interesadas, los responsables del proyecto y los responsables de ingeniería ven cada hito y deciden si se supera o no. La revisión humana es explícitamente parte del método.',
     },
-    /** The What you get section: the outputs, summarized from the README's list, and a link to the full list in the docs. */
+    /** The What you get section: the outputs, summarized from the README's list. */
     whatYouGet: {
       heading: 'Lo que obtiene',
       intro:
@@ -311,7 +311,6 @@ export const es: Strings = {
         { title: 'Un tablero de GitHub Projects', path: '', body: 'Unidades de trabajo, líneas, fechas y puntos de control rellenados.' },
         { title: 'El skill de agente de IA del ingeniero', path: '', body: 'Generado a partir de sus especificaciones y confirmado en su repositorio. Un ingeniero empieza un elemento de trabajo nombrándolo, por ejemplo «Work on [work item ID]», y el agente de programación lee primero la especificación y el contexto aprobado de ese elemento.' },
       ],
-      more: { before: 'Dónde va cada archivo está en la documentación, en ', link: 'What you get', after: '.' },
     },
   },
 

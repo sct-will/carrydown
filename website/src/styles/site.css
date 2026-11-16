@@ -338,8 +338,8 @@ body.site {
   line-height: 1.6;
 }
 
-/* Home: What you get. One panel with two columns of rows, an amber check on each. The intro and the
- * closing line run the full measure, like the Try it out section. */
+/* Home: What you get. One panel with two columns of rows, an amber check on each. The
+ * intro runs the full measure, like the Try it out section. */
 .site .wyg-intro {
   margin: 0 0 32px;
   color: var(--ink-muted);
@@ -397,11 +397,6 @@ body.site {
   color: var(--ink-muted);
   font-size: 0.92rem;
   line-height: 1.5;
-}
-.site .wyg-more {
-  margin: 24px 0 0;
-  font-size: 1rem;
-  line-height: 1.6;
 }
 
 /* Reflow */

@@ -294,7 +294,7 @@ export const ptBR: Strings = {
       ],
       reviewNote: 'Partes interessadas, responsáveis pelo projeto e gerentes de engenharia assistem a cada marco e decidem se passou ou não. A revisão humana é explicitamente parte do método.',
     },
-    /** The What you get section: the outputs, summarized from the README's list, and a link to the full list in the docs. */
+    /** The What you get section: the outputs, summarized from the README's list. */
     whatYouGet: {
       heading: 'O que você recebe',
       intro:
@@ -311,7 +311,6 @@ export const ptBR: Strings = {
         { title: 'Um quadro do GitHub Projects', path: '', body: 'Unidades de trabalho, trilhas, datas e pontos de verificação preenchidos.' },
         { title: 'O skill de agente de IA do engenheiro', path: '', body: 'Gerado a partir das suas especificações e commitado no seu repositório. Um engenheiro começa um item de trabalho nomeando-o, por exemplo “Work on [work item ID]”, e o agente de programação lê primeiro a especificação e o contexto aprovado desse item.' },
       ],
-      more: { before: 'Onde cada arquivo fica está nos docs, em ', link: 'What you get', after: '.' },
     },
   },
 
