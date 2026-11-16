@@ -284,7 +284,7 @@ const yaml = (s) => JSON.stringify(s);
 // image links such as the README badges (a 24 px target), and tables that wrap instead of scrolling, so no
 // table needs a keyboard stop to be reachable.
 const PAGE_CSS = [
-  '.sl-markdown-content .synced{font-size:0.85rem;color:var(--sl-color-gray-2);margin:0 0 1.5rem}',
+  '.sl-markdown-content .synced{font-size:0.85rem;color:var(--sl-color-gray-3);margin:0 0 1.5rem}',
   '.sl-markdown-content .synced-locale{font-size:0.95rem;margin:0 0 0.5rem}',
   '.sl-markdown-content a:has(>img){display:inline-block;padding:2px 0;margin-right:6px}',
   '.sl-markdown-content table{display:table;width:100%;overflow-wrap:anywhere}',

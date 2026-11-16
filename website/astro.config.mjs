@@ -40,7 +40,7 @@ export default defineConfig({
       description:
         'Carried-context development carries project decisions and context all the way down to each engineer’s coding agent.',
       // The docs and the pages share one palette and one header and footer.
-      customCss: ['./src/styles/tokens.css', './src/styles/chrome.css', './src/styles/locales.css'],
+      customCss: ['./src/styles/tokens.css', './src/styles/chrome.css', './src/styles/locales.css', './src/styles/docs.css'],
       defaultLocale: 'root',
       locales: starlightLocales,
       components: {
@@ -49,6 +49,12 @@ export default defineConfig({
         // Adds the robots tag, the image tags, the JSON-LD and the analytics tag to the docs pages.
         Head: './src/components/starlight/Head.astro',
         ThemeProvider: './src/components/starlight/ThemeProvider.astro',
+        MobileMenuFooter: './src/components/starlight/MobileMenuFooter.astro',
+      },
+      // Code blocks as plain bordered boxes, as in the docs design, without the window frame.
+      expressiveCode: {
+        defaultProps: { frame: 'none' },
+        styleOverrides: { borderColor: 'var(--border-strong)', borderRadius: '6px' },
       },
       pagefind: false,
       sidebar,
