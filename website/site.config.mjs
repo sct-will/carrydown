@@ -1,11 +1,11 @@
 // One place for the settings that change between the preview address and the custom domain.
 //
 // Until the custom domain is on, the site is served by GitHub Pages at
-// https://sct-will.github.io/carrydown/. Set customDomain to "carried-context.dev" to serve it at the
+// https://sct-will.github.io/carrydown/. Set customDomain to "carriedcontext.dev" to serve it at the
 // root of that domain. astro.config.mjs reads this file, and so does the layout.
 
 /** The custom domain, with no scheme and no slash. Empty until the domain is connected. */
-export const customDomain = '';
+export const customDomain = 'carriedcontext.dev';
 
 /** The GoatCounter site code. Empty means no analytics script is loaded. */
 export const goatcounterCode = '';
