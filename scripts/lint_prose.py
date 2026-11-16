@@ -32,7 +32,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 EXTENSIONS = {".md", ".yml", ".yaml", ".py", ".txt", ".json", ".tmpl"}
 SKIP_DIRS = {".git", "__pycache__", "node_modules", ".venv", "venv", "build", "dist", ".tox"}
-SKIP_FILES = {"LICENSE"}
+SKIP_FILES = {"LICENSE", "package-lock.json"}
 
 ALWAYS = [
     (re.compile("[" + chr(0x2014) + chr(0x2013) + chr(0x2028) + chr(0x2029) + "]"), "em dash, en dash or line separator"),
