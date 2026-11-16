@@ -41,8 +41,8 @@ This runs, in order:
 
 - `scripts/check-docs-sync.mjs` regenerates the docs into a temporary folder and fails with a diff if the generated pages differ from the repository's Markdown.
 - `tests/routes.mjs` starts `astro preview` and expects 200 for every page, in every locale, and for every internal link and asset.
-- `tests/reflow.mjs` takes screenshots of every page at six widths in both themes into `tests/screenshots/` and fails on horizontal overflow, text under 12 px and tap targets under 44 px.
-- `tests/a11y.mjs` runs axe-core on every built page in light and dark and fails on any violation.
+- `tests/reflow.mjs` takes screenshots of a bounded set of pages (the four site pages at six widths, plus Japanese, docs and fallback samples) in both themes into `tests/screenshots/` and fails on horizontal overflow, text under 12 px and tap targets under 44 px.
+- `tests/a11y.mjs` runs axe-core on a bounded set (the four site pages in every locale in both themes, every English docs page and one fallback docs page per locale in light) and fails on any violation.
 
 Type checks: `npx astro check`.
 
