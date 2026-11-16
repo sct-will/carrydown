@@ -1,13 +1,5 @@
 ---
-// Placeholder. The pages and languages work replaces this with the settled page.
-import SiteLayout from '../layouts/SiteLayout.astro';
-import { en } from '../i18n/en';
-const title = en.nav.accessibility;
+import AccessibilityPage from '../components/pages/AccessibilityPage.astro';
 ---
 
-<SiteLayout title={title} description={en.stub.body} kind="accessibility">
-  <div class="wrap page">
-    <h1>{title}</h1>
-    <p>{en.stub.body}</p>
-  </div>
-</SiteLayout>
+<AccessibilityPage locale="en" />

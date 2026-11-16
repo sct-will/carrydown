@@ -1,0 +1,33 @@
+---
+// The accessibility statement: what has been done, what is not finished, how to report a problem.
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import TranslationNote from '../TranslationNote.astro';
+import { getStrings } from '../../i18n';
+import { accessibilityEmail } from '../../../site.config.mjs';
+import '../../styles/pages.css';
+
+interface Props {
+  locale?: string;
+}
+const { locale = 'en' } = Astro.props;
+const a = getStrings(locale).accessibility;
+---
+
+<SiteLayout title={a.title} description={a.description} locale={locale} kind="accessibility">
+  <TranslationNote locale={locale} />
+  <section class="first">
+    <div class="wrap">
+      <h1 class="doc-title doc-title--small">{a.h1}</h1>
+      <p class="page-intro">{a.intro}</p>
+      <h2 class="page-h2">{a.doneHeading}</h2>
+      <ul class="factgrid" role="list">
+        {a.done.map((item) => <li class="fact">{item}</li>)}
+      </ul>
+      <h2 class="page-h2">{a.notFinishedHeading}</h2>
+      <p class="page-intro">{a.notFinished}</p>
+      <h2 class="page-h2">{a.contactHeading}</h2>
+      <p class="page-intro">{a.contactBefore}<a href={`mailto:${accessibilityEmail}`}>{accessibilityEmail}</a>{a.contactAfter}</p>
+      <p class="caption page-caption">{a.review}</p>
+    </div>
+  </section>
+</SiteLayout>

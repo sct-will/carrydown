@@ -1,0 +1,57 @@
+---
+// The questions page: five questions and seven facts about what carrydown does not do.
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import TranslationNote from '../TranslationNote.astro';
+import { getStrings } from '../../i18n';
+import { repoUrl } from '../../../site.config.mjs';
+import '../../styles/pages.css';
+
+interface Props {
+  locale?: string;
+}
+const { locale = 'en' } = Astro.props;
+const t = getStrings(locale);
+const f = t.faq;
+// The literal text --apply is set in monospace wherever it appears.
+const parts = (text: string) => text.split('--apply');
+---
+
+<SiteLayout title={f.title} description={f.description} locale={locale} kind="faq">
+  <TranslationNote locale={locale} />
+  <section class="first">
+    <div class="wrap">
+      <h1 class="doc-title doc-title--small">{f.h1}</h1>
+      <p class="page-intro">{f.intro}</p>
+      <dl class="faq">
+        {
+          f.items.map((item) => (
+            <>
+              <dt>{item.q}</dt>
+              <dd>{item.a}</dd>
+            </>
+          ))
+        }
+      </dl>
+      <h2 class="page-h2">{f.doesNotHeading}</h2>
+      <ul class="factgrid" role="list">
+        {
+          f.doesNot.map((fact) => {
+            const [before, ...after] = parts(fact);
+            return (
+              <li class="fact">
+                {before}
+                {after.length > 0 && (
+                  <>
+                    <span class="mono">--apply</span>
+                    {after.join('--apply')}
+                  </>
+                )}
+              </li>
+            );
+          })
+        }
+      </ul>
+      <p class="page-action"><a class="btn primary" href={repoUrl}>{t.home.buttons.try}</a></p>
+    </div>
+  </section>
+</SiteLayout>

@@ -1,0 +1,24 @@
+---
+// The note at the top of every translated page: the translation is pending review by a native speaker.
+// It renders nothing on the English page.
+import { getStrings, locales, defaultLocale } from '../i18n';
+import { localePath, stripBase } from '../lib/paths';
+
+interface Props {
+  locale?: string;
+}
+const { locale = defaultLocale } = Astro.props;
+const t = getStrings(locale).translation;
+const route = stripBase(Astro.url.pathname, [...locales]);
+---
+
+{
+  locale !== defaultLocale && (
+    <div class="wrap translation-wrap">
+      <p class="translation-note" role="note">
+        <span>{t.note}</span>{' '}
+        <a href={localePath(defaultLocale, route)} hreflang="en">{t.link}</a>
+      </p>
+    </div>
+  )
+}

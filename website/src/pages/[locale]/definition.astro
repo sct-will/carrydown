@@ -1,0 +1,13 @@
+---
+// The translated definition page. One file serves every non-English locale: /de/, /fr/, /ja/, /es/,
+// /pt-br/ and /zh-cn/.
+import DefinitionPage from '../../components/pages/DefinitionPage.astro';
+import { translatedLocales } from '../../i18n';
+
+export function getStaticPaths() {
+  return translatedLocales.map((locale) => ({ params: { locale }, props: { locale } }));
+}
+const { locale } = Astro.props;
+---
+
+<DefinitionPage locale={locale} />

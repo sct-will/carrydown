@@ -1,0 +1,89 @@
+---
+// The definition page: the one-sentence definition, the seven rules, the comparison with spec-driven
+// development, the reference implementation and how to cite. Shared by every locale.
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import TranslationNote from '../TranslationNote.astro';
+import { getStrings } from '../../i18n';
+import { repoUrl } from '../../../site.config.mjs';
+import '../../styles/pages.css';
+
+interface Props {
+  locale?: string;
+}
+const { locale = 'en' } = Astro.props;
+const d = getStrings(locale).definition;
+const ids = ['definition', 'rules', 'differs', 'reference', 'cite', 'changelog'];
+---
+
+<SiteLayout title={d.title} description={d.description} locale={locale} kind="definition">
+  <TranslationNote locale={locale} />
+  <section class="first">
+    <div class="wrap">
+      <h1 class="doc-title">{d.h1}</h1>
+      <p class="status">{d.status.map((s) => <span>{s}</span>)}</p>
+      <div class="doc-layout">
+        <nav class="toc" aria-labelledby="toc-label">
+          <p class="label-top" id="toc-label">{d.contents}</p>
+          <ol>
+            {d.sections.map((name, i) => <li><a href={`#${ids[i]}`}>{name}</a></li>)}
+          </ol>
+        </nav>
+        <div class="doc-body">
+          <h2 id={ids[0]}>1. {d.sections[0]}</h2>
+          <p class="def">{d.definition}</p>
+
+          <h2 id={ids[1]}>2. {d.sections[1]}</h2>
+          <ol class="rules" role="list">
+            {
+              d.rules.map((r) => (
+                <li>
+                  <div>
+                    <b>{r.title}</b>
+                    <p>{r.body}</p>
+                  </div>
+                </li>
+              ))
+            }
+          </ol>
+
+          <h2 id={ids[2]}>3. {d.sections[2]}</h2>
+          <p class="lede">{d.differs}</p>
+          <table class="compare" role="table">
+            <caption class="sr-only">{d.sections[2]}</caption>
+            <thead role="rowgroup">
+              <tr role="row">
+                <th role="columnheader" scope="col"><span class="sr-only">{d.compare.aspect}</span></th>
+                <th role="columnheader" scope="col">{d.compare.specDriven}</th>
+                <th role="columnheader" scope="col">{d.compare.carried}</th>
+              </tr>
+            </thead>
+            <tbody role="rowgroup">
+              {
+                d.compare.rows.map((row) => (
+                  <tr role="row">
+                    <th role="rowheader" scope="row">{row[0]}</th>
+                    <td role="cell" data-label={d.compare.specDriven}>{row[1]}</td>
+                    <td role="cell" data-label={d.compare.carried}>{row[2]}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+
+          <h2 id={ids[3]}>4. {d.sections[3]}</h2>
+          <p>{d.reference.body} <a href={repoUrl}>{d.reference.link}</a></p>
+
+          <h2 id={ids[4]}>5. {d.sections[4]}</h2>
+          <div class="cite">
+            <b>{d.cite.heading}</b>
+            <p class="cite-text" lang="en">{d.cite.text}</p>
+            <pre lang="en">{d.cite.bibtex}</pre>
+          </div>
+
+          <h2 id={ids[5]}>6. {d.sections[5]}</h2>
+          <p class="muted">{d.changelog}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</SiteLayout>

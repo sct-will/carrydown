@@ -1,0 +1,310 @@
+/* The definition, questions and accessibility pages, and the translation note. Scoped under body.site.
+ * Ported from specs/carried-context-site/final/definition.html, faq.html and accessibility.html. */
+
+/* The note at the top of a translated page. */
+.site .translation-wrap {
+  padding-top: 20px;
+}
+.site .translation-note {
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--border-strong);
+  border-inline-start: 4px solid var(--amber);
+  border-radius: 6px;
+  background: var(--cream-raised);
+  color: var(--ink);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.site .translation-wrap + section.first {
+  padding-top: 40px;
+}
+
+/* Titles and the shared page text */
+.site .doc-title {
+  max-width: 16em;
+  margin: 0 0 10px;
+  font-size: 3rem;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.site .doc-title--small {
+  font-size: 2.5rem;
+}
+.site .page-intro {
+  max-width: 52rem;
+  margin: 0 0 8px;
+  color: var(--ink-muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+.site .page-h2 {
+  margin: 48px 0 14px;
+}
+.site .page-caption {
+  margin-top: 28px;
+}
+.site .page-action {
+  margin: 36px 0 0;
+}
+.site .muted {
+  color: var(--ink-muted);
+}
+
+/* Questions */
+.site .faq {
+  margin: 0;
+}
+.site .faq dt {
+  margin-top: 18px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+.site .faq dd {
+  margin: 4px 0 0;
+  color: var(--ink-muted);
+  font-size: 1.05rem;
+}
+
+/* The fact lists on the questions and accessibility pages */
+.site .factgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 40px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--border-strong);
+}
+.site .fact {
+  position: relative;
+  padding: 12px 0 12px 22px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.98rem;
+}
+.site .fact::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 22px;
+  width: 10px;
+  height: 2px;
+  background: var(--amber);
+}
+
+/* Definition: status line, contents, rules */
+.site .status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 0 0 28px;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+.site .doc-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 56px;
+}
+.site .toc {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  font-size: 0.9rem;
+}
+.site .label-top {
+  margin: 0 0 8px;
+  color: var(--ink-muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.site .toc ol {
+  margin: 0;
+  padding-inline-start: 20px;
+  color: var(--ink-muted);
+}
+.site .toc a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink-muted);
+  text-decoration-thickness: 1px;
+}
+.site .toc a:hover {
+  color: var(--ink);
+}
+.site .doc-body h2 {
+  margin: 44px 0 14px;
+  scroll-margin-top: 16px;
+}
+.site .doc-body h2:first-child {
+  margin-top: 0;
+}
+.site .def {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.55;
+}
+.site .lede {
+  max-width: 44rem;
+  margin: 0 0 28px;
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+.site .rules {
+  counter-reset: r;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.site .rules li {
+  counter-increment: r;
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 20px;
+  padding: 20px 0;
+  border-top: 1px solid var(--border);
+}
+.site .rules li:first-child {
+  border-top: 0;
+}
+.site .rules li::before {
+  content: counter(r, decimal-leading-zero);
+  padding-top: 4px;
+  color: var(--amber-ink);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+}
+.site .rules b {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 1.2rem;
+}
+.site .rules p {
+  margin: 0;
+  color: var(--ink-muted);
+}
+
+/* Definition: the comparison table */
+.site .compare {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.site .compare th,
+.site .compare td {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+.site .compare th {
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+.site .compare thead th {
+  border-top: 0;
+  border-bottom: 2px solid var(--ink);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* Definition: how to cite */
+.site .cite {
+  padding: 20px 24px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--cream-raised);
+}
+.site .cite-text {
+  margin: 8px 0 0;
+  overflow-wrap: anywhere;
+}
+.site .cite pre {
+  margin: 12px 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Reflow */
+@media (max-width: 899.98px) {
+  .site .doc-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .site .toc {
+    position: static;
+  }
+}
+@media (max-width: 767.98px) {
+  .site .factgrid {
+    grid-template-columns: 1fr;
+  }
+  .site .doc-title {
+    font-size: clamp(2rem, 9vw, 3rem);
+  }
+  .site .doc-title--small {
+    font-size: clamp(1.9rem, 8vw, 2.5rem);
+  }
+  .site .doc-body h2,
+  .site .page-h2 {
+    font-size: 1.5rem;
+  }
+}
+@media (max-width: 639.98px) {
+  /* The comparison table becomes a stack: the aspect, then the two approaches, each labeled. */
+  .site .compare,
+  .site .compare tbody,
+  .site .compare tr,
+  .site .compare th,
+  .site .compare td {
+    display: block;
+  }
+  .site .compare thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+  .site .compare tr {
+    padding: 12px 0;
+    border-top: 1px solid var(--border);
+  }
+  .site .compare tr:first-child {
+    border-top: 0;
+  }
+  .site .compare th,
+  .site .compare td {
+    padding: 2px 0;
+    border-top: 0;
+  }
+  .site .compare tbody th {
+    color: var(--ink);
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+  .site .compare td::before {
+    content: attr(data-label);
+    display: block;
+    margin-top: 6px;
+    color: var(--ink-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .site .rules li {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .site .cite {
+    padding: 16px;
+  }
+}
