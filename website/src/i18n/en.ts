@@ -4,6 +4,8 @@
 
 export const en = {
   lang: 'en',
+  dir: 'ltr',
+  /** The name of the language in that language, for the language control. */
   label: 'English',
 
   site: {
@@ -20,6 +22,8 @@ export const en = {
     faq: 'FAQ',
     accessibility: 'Accessibility statement',
     menu: 'Menu',
+    /** The label of Starlight's docs sidebar button. It must differ from the site menu button. */
+    docsMenu: 'Docs menu',
   },
 
   controls: {
@@ -30,14 +34,164 @@ export const en = {
     languageLabel: 'Language',
   },
 
+  /** Shown at the top of every translated page. The English locale never shows it. */
+  translation: {
+    note: 'This translation is pending review by a native speaker. The English page is the reference.',
+    link: 'Read the English page',
+  },
+
   footer: {
     label: 'Footer',
     copyright: '© 2026-2027 Will Scott, PhD. Carried-context development. carrydown is Apache 2.0.',
   },
 
-  /** Text for pages that are not written yet. Replaced when the page lands. */
-  stub: {
-    body: 'This page is being written.',
+  definition: {
+    title: 'Carried-context development, definition',
+    description:
+      'Carried-context development carries a team’s agreed ground truth down into the plan, every specification, every issue and every coding agent’s instructions, cited by section, and carries it down again when the ground truth changes.',
+    h1: 'Carried-context development',
+    status: ['Status: open method', 'Version 1.0', 'November 2026', 'Will Scott, PhD'],
+    contents: 'Contents',
+    sections: [
+      'Definition',
+      'The rules',
+      'How it differs from spec-driven development',
+      'Reference implementation',
+      'How to cite',
+      'Changelog',
+    ],
+    definition:
+      'Carried-context development carries a team’s agreed ground truth down into the plan, every specification, every issue and every coding agent’s instructions, cited by section, and carries it down again when the ground truth changes.',
+    rules: [
+      {
+        title: 'One ground truth.',
+        body: 'The documents the team agreed are the only human-authored input. Everything downstream is derived from them, and nothing downstream outranks them.',
+      },
+      {
+        title: 'Fitted to real people and dates.',
+        body: 'The plan is built around who is available, how much of their time, and when it is due. Give one and the other is derived.',
+      },
+      {
+        title: 'One specification per work item.',
+        body: 'A work item is the smallest piece of work an engineer can finish and show. Each one has a specification of its own.',
+      },
+      {
+        title: 'Cited by section.',
+        body: 'Every specification, issue and instruction names the sections of the ground truth it came from. A check validates every citation, from a clean clone.',
+      },
+      {
+        title: 'Approved, not generated.',
+        body: 'A person decides owners, dates, scope and order, approves what may be shared and with whom, and approves what is published. Nothing posts without a yes.',
+      },
+      {
+        title: 'Carried to the agent.',
+        body: 'The engineer’s coding agent reads the specification and the cited sections before it plans a line of code.',
+      },
+      {
+        title: 'Carried again on change.',
+        body: 'When the ground truth changes, one review finds the work it touches and keeps the engineers’ corrections. The approved update carries down to every piece of work.',
+      },
+    ],
+    differs:
+      'Spec-driven development leaves each spec to the engineer writing it. Quality depends on who wrote it. No two specs match and nothing ties them together. They drift as the project changes. Carried-context development derives every spec from the same ground truth, reviews the specs together, cites the sources and carries every approved change to every coding agent. Context engineering, a neighbor, decides what a model sees in one step; carried context decides what the whole project must obey.',
+    compare: {
+      aspect: 'Aspect',
+      specDriven: 'Spec-driven development',
+      carried: 'Carried-context development',
+      rows: [
+        ['Unit of planning', 'One task or feature', 'The whole project'],
+        ['What travels', 'The spec', 'The ground truth, cited by section'],
+        ['When the sources change', 'Rewrite the spec', 'One review. Engineer corrections kept'],
+        [
+          'Who writes the spec',
+          'The engineer',
+          'Derived by the AI agent from the ground truth, reviewed by the plan owner',
+        ],
+        ['Consistency between specs', 'None enforced', 'Reviewed together, every citation checked'],
+        ['Who decides', 'The developer', 'The plan owner, the engineers, the stakeholders'],
+      ],
+    },
+    reference: {
+      body: 'carrydown, two Agent Skills and a generated third, Apache 2.0, first commit 24 October 2026.',
+      link: 'github.com/sct-will/carrydown',
+    },
+    cite: {
+      heading: 'How to cite',
+      text: 'Scott, W. (2026). Carried-context development, version 1.0. https://carried-context.dev/definition. DOI: to be minted on the first carrydown release.',
+      bibtex: `@misc{scott2026carriedcontext,
+  author = {Scott, Will},
+  title  = {Carried-context development},
+  year   = {2026},
+  note   = {Version 1.0. Reference implementation: carrydown},
+  url    = {https://carried-context.dev/definition}
+}`,
+    },
+    changelog: '1.0, November 2026. First publication.',
+  },
+
+  faq: {
+    title: 'Questions, carried-context development',
+    description:
+      'Short answers about carried-context development and carrydown, and what carrydown does not do.',
+    h1: 'Questions',
+    intro: 'Short answers, with links into the docs where there is more.',
+    items: [
+      {
+        q: 'Does it certify that my documents are right?',
+        a: 'No. It starts from what you bring and helps you review it.',
+      },
+      {
+        q: 'Is it for a one-person spike?',
+        a: 'Not really. It pays off when several engineers share weeks of work with agreed architecture.',
+      },
+      { q: 'Does it watch my documents?', a: 'No. An update starts when you say what changed.' },
+      {
+        q: 'Which coding agents?',
+        a: 'Any coding agent that supports Agent Skills. Your engineers keep the one they use.',
+      },
+      {
+        q: 'Which license?',
+        a: 'Apache 2.0. The security policy, the changelog and the answers to common enterprise security questions are in the repository.',
+      },
+    ],
+    doesNotHeading: 'What carrydown does not do',
+    /** The literal text --apply is set in a monospace face wherever it appears. */
+    doesNot: [
+      'It writes no application code.',
+      'Every GitHub write is a dry run until you pass --apply.',
+      'It never deletes issues, labels, projects or repositories.',
+      'The update comparison runs on your machine. No network, no token, no model call.',
+      'Confidential documents stay on your machine unless you say everyone may see them.',
+      'Names, days off and allocation stay in a private file, never in the plan.',
+      'If you stop, you keep plain Markdown and ordinary GitHub issues.',
+    ],
+  },
+
+  accessibility: {
+    title: 'Accessibility statement',
+    description:
+      'This site is meant to be usable by everyone. It aims to meet the Web Content Accessibility Guidelines (WCAG) 2.2 at level AA.',
+    h1: 'Accessibility statement',
+    intro:
+      'This site is meant to be usable by everyone, including people who use a screen reader, a keyboard alone, magnification, or reduced motion. It aims to meet the Web Content Accessibility Guidelines (WCAG) 2.2 at level AA.',
+    doneHeading: 'What has been done',
+    done: [
+      'Text and interface colors are checked for contrast in both the light and the dark theme, and you can choose either theme or follow your system.',
+      'Every page works with a keyboard alone, with a visible focus indicator and a skip link to the main content.',
+      'The diagram is drawn as text and vector shapes, so it scales, respects your theme, and carries a written description for screen readers.',
+      'Nothing on the site moves on its own. Any future animation will respect the reduced-motion setting and offer a still picture.',
+      'Headings, landmarks and link text are written to be read in order and out of context.',
+      'The site is checked with automated tools before each release and reviewed by hand with a screen reader.',
+    ],
+    notFinishedHeading: 'What is not finished',
+    notFinished:
+      'Translations of the site are being reviewed by native speakers and go live one language at a time. The documentation section is generated from the repository and may lag the rest of the site on these points until each release is checked.',
+    contactHeading: 'Tell us about a problem',
+    contactBefore:
+      'If something on this site is hard to use with assistive technology, or you need the content in another form, write to ',
+    contactAfter: '. Say which page and what happened. You should hear back within ten working days.',
+    review:
+      'This statement describes the site’s intent and its current state. It is reviewed when the site changes. Last reviewed 16 November 2026.',
   },
 
   home: {

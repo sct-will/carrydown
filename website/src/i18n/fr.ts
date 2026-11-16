@@ -1,0 +1,331 @@
+// French strings. Same shape as en.ts, so the compiler flags a missing key. Brand names, the term
+// "Carried-context development" and the quoted agent commands stay in English. A native speaker has
+// not reviewed this translation yet, and every translated page says so.
+import { en, type Strings } from './en';
+
+export const fr: Strings = {
+  lang: 'fr',
+  dir: 'ltr',
+  label: 'Français',
+
+  site: {
+    name: 'Carried context',
+    skipLink: 'Aller au contenu principal',
+    homeLabel: 'Carried context, accueil',
+  },
+
+  nav: {
+    label: 'Principale',
+    definition: 'Définition',
+    github: 'GitHub',
+    docs: 'Docs',
+    faq: 'FAQ',
+    accessibility: 'Déclaration d’accessibilité',
+    menu: 'Menu',
+    docsMenu: 'Menu des docs',
+  },
+
+  controls: {
+    themeLabel: 'Thème',
+    themeAuto: 'Auto',
+    themeDark: 'Sombre',
+    themeLight: 'Clair',
+    languageLabel: 'Langue',
+  },
+
+  translation: {
+    note: 'Cette traduction est en attente de relecture par un locuteur natif. La page en anglais fait foi.',
+    link: 'Lire la page en anglais',
+  },
+
+  footer: {
+    label: 'Pied de page',
+    copyright: en.footer.copyright,
+  },
+
+  definition: {
+    title: 'Carried-context development, définition',
+    description:
+      'Carried-context development fait descendre la vérité de référence convenue par une équipe jusque dans le plan, chaque spécification, chaque ticket et les instructions de chaque agent de codage, avec citation par section, et la fait descendre à nouveau quand elle change.',
+    h1: 'Carried-context development',
+    status: ['Statut : méthode ouverte', 'Version 1.0', 'Novembre 2026', 'Will Scott, PhD'],
+    contents: 'Sommaire',
+    sections: [
+      'Définition',
+      'Les règles',
+      'En quoi elle diffère du développement piloté par les spécifications',
+      'Implémentation de référence',
+      'Comment citer',
+      'Journal des modifications',
+    ],
+    definition:
+      'Carried-context development fait descendre la vérité de référence convenue par une équipe jusque dans le plan, chaque spécification, chaque ticket et les instructions de chaque agent de codage, avec citation par section, et la fait descendre à nouveau quand elle change.',
+    rules: [
+      {
+        title: 'Une seule vérité de référence.',
+        body: 'Les documents que l’équipe a validés sont la seule entrée rédigée par des humains. Tout ce qui en découle en est dérivé, et rien en aval ne prime sur eux.',
+      },
+      {
+        title: 'Ajusté aux personnes et aux dates réelles.',
+        body: 'Le plan est bâti autour de qui est disponible, de combien de temps, et de l’échéance. Fixez l’un et l’autre se déduit.',
+      },
+      {
+        title: 'Une spécification par élément de travail.',
+        body: 'Un élément de travail est le plus petit morceau de travail qu’un ingénieur peut terminer et montrer. Chacun a sa propre spécification.',
+      },
+      {
+        title: 'Cité par section.',
+        body: 'Chaque spécification, ticket et instruction nomme les sections de la vérité de référence dont il provient. Un contrôle valide chaque citation, depuis un clone propre.',
+      },
+      {
+        title: 'Approuvé, pas généré.',
+        body: 'Une personne décide des responsables, des dates, du périmètre et de l’ordre, approuve ce qui peut être partagé et avec qui, et approuve ce qui est publié. Rien n’est publié sans un oui.',
+      },
+      {
+        title: 'Porté jusqu’à l’agent.',
+        body: 'L’agent de codage de l’ingénieur lit la spécification et les sections citées avant de planifier une ligne de code.',
+      },
+      {
+        title: 'Porté à nouveau en cas de changement.',
+        body: 'Quand la vérité de référence change, une seule revue trouve le travail concerné et conserve les corrections des ingénieurs. La mise à jour approuvée descend jusqu’à chaque élément de travail.',
+      },
+    ],
+    differs:
+      'Le développement piloté par les spécifications laisse chaque spécification à l’ingénieur qui l’écrit. La qualité dépend de son auteur. Deux spécifications ne se ressemblent pas et rien ne les relie. Elles dérivent au fil des changements du projet. Carried-context development dérive chaque spécification de la même vérité de référence, les revoit ensemble, cite les sources et porte chaque changement approuvé à chaque agent de codage. L’ingénierie de contexte, une voisine, décide de ce qu’un modèle voit en une étape ; le contexte porté décide de ce que le projet entier doit respecter.',
+    compare: {
+      aspect: 'Critère',
+      specDriven: 'Développement piloté par les spécifications',
+      carried: 'Carried-context development',
+      rows: [
+        ['Unité de planification', 'Une tâche ou une fonctionnalité', 'Le projet entier'],
+        ['Ce qui circule', 'La spécification', 'La vérité de référence, citée par section'],
+        [
+          'Quand les sources changent',
+          'Réécrire la spécification',
+          'Une revue. Corrections des ingénieurs conservées',
+        ],
+        [
+          'Qui écrit la spécification',
+          'L’ingénieur',
+          'Dérivée par l’agent d’IA de la vérité de référence, relue par le responsable du plan',
+        ],
+        [
+          'Cohérence entre les spécifications',
+          'Aucune imposée',
+          'Revues ensemble, chaque citation vérifiée',
+        ],
+        ['Qui décide', 'Le développeur', 'Le responsable du plan, les ingénieurs, les parties prenantes'],
+      ],
+    },
+    reference: {
+      body: 'carrydown, deux Agent Skills et un troisième généré, Apache 2.0, premier commit le 24 octobre 2026.',
+      link: 'github.com/sct-will/carrydown',
+    },
+    cite: {
+      heading: 'Comment citer',
+      text: en.definition.cite.text,
+      bibtex: en.definition.cite.bibtex,
+    },
+    changelog: '1.0, novembre 2026. Première publication.',
+  },
+
+  faq: {
+    title: 'Questions, carried-context development',
+    description:
+      'Des réponses courtes sur carried-context development et carrydown, et sur ce que carrydown ne fait pas.',
+    h1: 'Questions',
+    intro: 'Des réponses courtes, avec des liens vers les docs quand il y a plus à lire.',
+    items: [
+      {
+        q: 'Certifie-t-il que mes documents sont corrects ?',
+        a: 'Non. Il part de ce que vous apportez et vous aide à le relire.',
+      },
+      {
+        q: 'Est-il fait pour un prototype en solo ?',
+        a: 'Pas vraiment. Il devient rentable quand plusieurs ingénieurs partagent des semaines de travail autour d’une architecture convenue.',
+      },
+      { q: 'Surveille-t-il mes documents ?', a: 'Non. Une mise à jour démarre quand vous dites ce qui a changé.' },
+      {
+        q: 'Quels agents de codage ?',
+        a: 'Tout agent de codage qui prend en charge les Agent Skills. Vos ingénieurs gardent celui qu’ils utilisent.',
+      },
+      {
+        q: 'Quelle licence ?',
+        a: 'Apache 2.0. La politique de sécurité, le journal des modifications et les réponses aux questions de sécurité courantes des entreprises sont dans le dépôt.',
+      },
+    ],
+    doesNotHeading: 'Ce que carrydown ne fait pas',
+    doesNot: [
+      'Il n’écrit aucun code d’application.',
+      'Chaque écriture sur GitHub est un essai à blanc tant que vous ne passez pas --apply.',
+      'Il ne supprime jamais de tickets, d’étiquettes, de projets ni de dépôts.',
+      'La comparaison de mise à jour s’exécute sur votre machine. Pas de réseau, pas de jeton, pas d’appel à un modèle.',
+      'Les documents confidentiels restent sur votre machine, sauf si vous dites que tout le monde peut les voir.',
+      'Les noms, les jours d’absence et l’affectation restent dans un fichier privé, jamais dans le plan.',
+      'Si vous arrêtez, vous gardez du Markdown brut et de simples tickets GitHub.',
+    ],
+  },
+
+  accessibility: {
+    title: 'Déclaration d’accessibilité',
+    description:
+      'Ce site est conçu pour être utilisable par tous. Il vise la conformité aux Web Content Accessibility Guidelines (WCAG) 2.2 au niveau AA.',
+    h1: 'Déclaration d’accessibilité',
+    intro:
+      'Ce site est conçu pour être utilisable par tous, y compris par les personnes qui utilisent un lecteur d’écran, le clavier seul, l’agrandissement ou la réduction des animations. Il vise la conformité aux Web Content Accessibility Guidelines (WCAG) 2.2 au niveau AA.',
+    doneHeading: 'Ce qui a été fait',
+    done: [
+      'Les couleurs du texte et de l’interface sont vérifiées pour le contraste dans les thèmes clair et sombre, et vous pouvez choisir l’un ou l’autre ou suivre votre système.',
+      'Chaque page fonctionne au clavier seul, avec un indicateur de focus visible et un lien d’évitement vers le contenu principal.',
+      'Le schéma est dessiné avec du texte et des formes vectorielles. Il s’adapte à la taille, respecte votre thème et porte une description écrite pour les lecteurs d’écran.',
+      'Rien sur le site ne bouge de lui-même. Toute animation future respectera le réglage de réduction des animations et proposera une image fixe.',
+      'Les titres, les repères et les textes de liens sont écrits pour être lus dans l’ordre et hors contexte.',
+      'Le site est vérifié avec des outils automatiques avant chaque version et relu à la main avec un lecteur d’écran.',
+    ],
+    notFinishedHeading: 'Ce qui n’est pas terminé',
+    notFinished:
+      'Les traductions du site sont relues par des locuteurs natifs et sont mises en ligne une langue à la fois. La section de documentation est générée à partir du dépôt et peut avoir du retard sur le reste du site sur ces points, jusqu’à la vérification de chaque version.',
+    contactHeading: 'Signalez-nous un problème',
+    contactBefore:
+      'Si quelque chose sur ce site est difficile à utiliser avec une technologie d’assistance, ou si vous avez besoin du contenu sous une autre forme, écrivez à ',
+    contactAfter: '. Indiquez la page et ce qui s’est passé. Vous devriez recevoir une réponse sous dix jours ouvrés.',
+    review:
+      'Cette déclaration décrit l’intention du site et son état actuel. Elle est revue quand le site change. Dernière revue le 16 novembre 2026.',
+  },
+
+  home: {
+    title: 'Carried-context development, accueil',
+    description:
+      'Carried-context development est une approche du développement agentique qui fait descendre les décisions et le contexte du projet jusqu’à l’agent de codage de chaque ingénieur, pour que le projet reste aligné et que rien ne dérive.',
+    h1: 'Le contexte qui voyage avec le travail.',
+    definition:
+      'Carried-context development est une approche du développement agentique qui fait descendre les décisions et le contexte du projet jusqu’à l’agent de codage de chaque ingénieur, pour que le projet reste aligné et que rien ne dérive.',
+    paragraph:
+      'Votre équipe fournit les documents du projet, les exigences et les décisions sur les personnes et les échéances. Votre agent d’IA s’appuie sur cette vérité de référence pour créer un plan connecté, une spécification pour chaque élément de travail et des tickets GitHub qui lient chaque spécification et citent les sections de documents sur lesquelles elle repose. Votre agent d’IA génère aussi un agent skill propre au projet, qui porte la spécification, les décisions qui la fondent et les sections citées jusqu’à l’agent de codage de chaque ingénieur. Quand un document change, vous relisez une seule mise à jour.',
+    buttons: {
+      try: 'Essayer sur GitHub',
+      sample: 'Voir les productions de l’agent d’IA d’un projet exemple',
+    },
+    howHeading: 'Comment ça marche',
+    statement: {
+      heading: 'Carried-context development va au-delà du développement piloté par les spécifications.',
+      body: 'Le développement piloté par les spécifications laisse chaque spécification à l’ingénieur qui l’écrit. La qualité dépend de son auteur. Deux spécifications ne se ressemblent pas et rien ne les relie. Elles dérivent au fil des changements du projet. Carried-context development dérive chaque spécification de la même vérité de référence, cite les sources et porte chaque changement approuvé à chaque agent de codage.',
+    },
+    values: [
+      {
+        eyebrow: 'Plan connecté',
+        title: 'Planifié comme un tout connecté.',
+        body: 'Un seul plan et toutes les spécifications viennent de la même vérité de référence. Les dépendances, les interfaces et les critères d’acceptation sont revus ensemble pour repérer lacunes et conflits, et un contrôle valide chaque citation.',
+      },
+      {
+        eyebrow: 'Passation à l’ingénierie',
+        title: 'Une passation qui atteint l’agent de codage.',
+        body: 'Chaque ticket lie sa spécification et cite ses sections de la vérité de référence. Un agent skill propre au projet place la spécification approuvée, ces sections et vos conventions sous les yeux de l’agent de codage avant qu’il planifie le code.',
+      },
+      {
+        eyebrow: 'Contexte du projet tenu à jour',
+        title: 'Les changements signalés par le chef de projet ou les ingénieurs se propagent.',
+        body: 'Un chef de projet signale une source modifiée, ou un ingénieur signale une spécification erronée. L’agent trouve le travail concerné, garde les corrections qui tiennent encore et vous soumet les conflits. Les mises à jour approuvées traversent les spécifications, les tickets et la passation.',
+      },
+    ],
+    carrydown: {
+      headingBefore: 'Essayez ',
+      headingBrand: 'carrydown',
+      headingAfter: ', l’implémentation de référence ouverte.',
+      intro:
+        'Carried-context development est une approche du développement agentique, et il y a plus d’une façon de la mettre en œuvre. carrydown en est l’implémentation de référence : deux Agent Skills que vous installez, un troisième qu’elle génère pour vos ingénieurs, et les contrôles qui valident chaque citation. Elle est open source sous Apache 2.0 et fonctionne avec l’agent de codage que votre équipe utilise déjà.',
+      tryButton: 'Essayer sur GitHub',
+      installCommand: en.home.carrydown.installCommand,
+      copy: 'Copier',
+      copied: 'Copié',
+      copyLabel: 'Copier la commande d’installation',
+      copiedStatus: 'Commande d’installation copiée dans le presse-papiers.',
+      copyFailedStatus: 'Copie impossible. Sélectionnez la commande et copiez-la.',
+      needs: 'Nécessite Node.js 22.20 ou plus récent et Git. Pas de Node.js ? Il existe une installation manuelle.',
+      tiles: [
+        {
+          step: 'Étape 1',
+          title: 'Regarder un plan terminé.',
+          body: 'Le tableau exemple et ses tickets, sur GitHub.',
+          command: '',
+          button: 'Ouvrir l’exemple',
+          time: 'Une minute. Rien à installer.',
+        },
+        {
+          step: 'Étape 2',
+          title: 'Lire la première conversation.',
+          body: 'Les questions que l’agent vous pose, et quoi répondre.',
+          command: '',
+          button: 'Guide du responsable',
+          time: 'Cinq minutes. Rien à installer.',
+        },
+        {
+          step: 'Étape 3',
+          title: 'L’essayer avec l’un de vos dossiers.',
+          body: 'Installez les deux skills carrydown, puis dites',
+          command: en.home.carrydown.tiles[2].command,
+          button: 'Guide d’installation',
+          time: 'Un après-midi, surtout de la lecture.',
+        },
+      ],
+      stepsHeading: 'Les étapes pour utiliser carrydown',
+      steps: [
+        {
+          who: 'Responsable du plan',
+          what: 'Installe les deux skills carrydown et lance le plan.',
+          say: en.home.carrydown.steps[0].say,
+        },
+        {
+          who: 'Responsable du plan',
+          what: 'Relit le plan et les spécifications, puis publie.',
+          say: en.home.carrydown.steps[1].say,
+        },
+        {
+          who: 'Chaque ingénieur',
+          what: 'Installe une fois l’agent skill généré et nomme un élément de travail.',
+          say: en.home.carrydown.steps[2].say,
+        },
+        {
+          who: 'Parties prenantes',
+          what: 'Assistent à chaque démonstration de jalon et décident de la réussite ou de l’échec. Elles n’installent rien.',
+          say: '',
+        },
+        {
+          who: 'Tout le monde',
+          what: 'Signale une source modifiée ou une spécification qui semble erronée. Une revue, puis la mise à jour approuvée descend.',
+          say: en.home.carrydown.steps[4].say,
+        },
+      ],
+      noCommand: 'Aucune commande à dire.',
+    },
+  },
+
+  diagram: {
+    ariaLabel:
+      'Le contexte de projet que vous fournissez, documents, décisions et plus tard un changement, alimente l’agent d’IA. Celui-ci génère pour votre équipe un plan de projet à relire et à approuver, une spécification pour chaque élément de travail, un tableau GitHub avec tickets et jalons où chaque ticket lie sa spécification et cite ses sources, et un agent skill propre au projet, installé une fois par chaque ingénieur qui utilise un agent de codage.',
+    provideHeading: 'Contexte que vous fournissez',
+    generatesHeading: 'L’agent d’IA génère pour l’équipe',
+    documents: 'Documents',
+    documentsNote: 'architecture, exigences, règles',
+    decisions: 'Décisions',
+    decisionsNote: 'personnes, affectation, échéances',
+    later: 'Plus tard',
+    changed: 'Quelque chose a changé',
+    changedNote: 'document modifié, spécification fausse',
+    agent: 'Agent d’IA',
+    agentVerbs: ['lit, planifie, cite,', 'transmet, réconcilie'],
+    plans: 'Planifie',
+    plansTitle: 'Plan de projet à relire et approuver',
+    plansNote: 'jalons, pistes, dates ajustées à vos équipes',
+    writes: 'Écrit',
+    writesTitle: 'Une spécification par élément',
+    writesNote: 'toutes issues de la même vérité',
+    opens: 'Ouvre',
+    opensTitle: 'Tableau GitHub, tickets et jalons',
+    opensNote: 'chaque ticket lie sa spécification et ses sources',
+    generates: 'Génère',
+    generatesTitle: 'Agent skill propre au projet',
+    generatesNote: 'installé une fois par chaque ingénieur',
+    engineers: ['Ingénieurs avec', 'agents de codage'],
+  },
+};

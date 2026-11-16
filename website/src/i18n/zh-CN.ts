@@ -1,0 +1,308 @@
+// Simplified Chinese strings. Same shape as en.ts, so the compiler flags a missing key. Brand names,
+// the term "Carried-context development" and the quoted agent commands stay in English. A native
+// speaker has not reviewed this translation yet, and every translated page says so.
+import { en, type Strings } from './en';
+
+export const zhCN: Strings = {
+  lang: 'zh-CN',
+  dir: 'ltr',
+  label: '简体中文',
+
+  site: {
+    name: 'Carried context',
+    skipLink: '跳到主要内容',
+    homeLabel: 'Carried context，首页',
+  },
+
+  nav: {
+    label: '主导航',
+    definition: '定义',
+    github: 'GitHub',
+    docs: '文档',
+    faq: 'FAQ',
+    accessibility: '无障碍声明',
+    menu: '菜单',
+    docsMenu: '文档菜单',
+  },
+
+  controls: {
+    themeLabel: '主题',
+    themeAuto: '自动',
+    themeDark: '深色',
+    themeLight: '浅色',
+    languageLabel: '语言',
+  },
+
+  translation: {
+    note: '本翻译尚待母语人士审校。以英文页面为准。',
+    link: '阅读英文页面',
+  },
+
+  footer: {
+    label: '页脚',
+    copyright: en.footer.copyright,
+  },
+
+  definition: {
+    title: 'Carried-context development，定义',
+    description:
+      'Carried-context development 把团队商定的基准事实向下传递到计划、每一份规格、每一个 issue 和每个编码代理的指令中，并按章节引用，当基准事实变化时再次向下传递。',
+    h1: 'Carried-context development',
+    status: ['状态：开放方法', '版本 1.0', '2026年11月', 'Will Scott, PhD'],
+    contents: '目录',
+    sections: ['定义', '规则', '与规格驱动开发的区别', '参考实现', '如何引用', '更新日志'],
+    definition:
+      'Carried-context development 把团队商定的基准事实向下传递到计划、每一份规格、每一个 issue 和每个编码代理的指令中，并按章节引用，当基准事实变化时再次向下传递。',
+    rules: [
+      {
+        title: '只有一个基准事实。',
+        body: '团队商定的文档是唯一由人撰写的输入。下游的一切都由它们派生，下游的任何内容都不能凌驾于它们之上。',
+      },
+      {
+        title: '贴合真实的人员和日期。',
+        body: '计划围绕谁有空、能投入多少时间以及何时交付来制定。确定其一，另一个便可推导出来。',
+      },
+      {
+        title: '每个工作项一份规格。',
+        body: '工作项是工程师能够完成并演示的最小工作单元。每个工作项都有自己的规格。',
+      },
+      {
+        title: '按章节引用。',
+        body: '每份规格、每个 issue 和每条指令都会写明它出自基准事实的哪些章节。检查会从干净的克隆验证每一处引用。',
+      },
+      {
+        title: '经过批准，而非自动生成。',
+        body: '负责人、日期、范围和顺序由人来决定，哪些内容可以与谁共享、哪些内容可以发布也由人批准。没有同意，什么都不会发布。',
+      },
+      {
+        title: '传递到代理。',
+        body: '工程师的编码代理在规划任何一行代码之前，先阅读规格和所引用的章节。',
+      },
+      {
+        title: '变化时再次传递。',
+        body: '基准事实变化时，一次审阅就能找到受影响的工作，并保留工程师的修正。获批的更新会向下传递到每一项工作。',
+      },
+    ],
+    differs:
+      '规格驱动开发把每份规格交给撰写它的工程师。质量取决于谁来写。没有两份规格是一致的，也没有什么把它们联系在一起。随着项目变化，它们会逐渐偏离。Carried-context development 从同一个基准事实派生每一份规格，对规格一并审阅，引用来源，并把每一项获批的变更传递给每个编码代理。上下文工程是近邻，它决定模型在一个步骤中看到什么；carried context 决定整个项目必须遵守什么。',
+    compare: {
+      aspect: '方面',
+      specDriven: '规格驱动开发',
+      carried: 'Carried-context development',
+      rows: [
+        ['规划单位', '一个任务或功能', '整个项目'],
+        ['传递的内容', '规格', '按章节引用的基准事实'],
+        ['来源变化时', '重写规格', '一次审阅。保留工程师的修正'],
+        ['谁来写规格', '工程师', '由 AI 代理从基准事实派生，由计划负责人审阅'],
+        ['规格之间的一致性', '不强制', '一并审阅，逐一检查引用'],
+        ['谁来决定', '开发者', '计划负责人、工程师、利益相关方'],
+      ],
+    },
+    reference: {
+      body: 'carrydown，两个 Agent Skills 和一个生成的第三个，Apache 2.0，首次提交于2026年10月24日。',
+      link: 'github.com/sct-will/carrydown',
+    },
+    cite: {
+      heading: '如何引用',
+      text: en.definition.cite.text,
+      bibtex: en.definition.cite.bibtex,
+    },
+    changelog: '1.0，2026年11月。首次发布。',
+  },
+
+  faq: {
+    title: '常见问题，carried-context development',
+    description: '关于 carried-context development 和 carrydown 的简短回答，以及 carrydown 不做什么。',
+    h1: '常见问题',
+    intro: '简短的回答，需要更多内容时附有指向文档的链接。',
+    items: [
+      {
+        q: '它会证明我的文档是正确的吗？',
+        a: '不会。它从你带来的内容出发，帮助你审阅。',
+      },
+      {
+        q: '适合一个人的试验项目吗？',
+        a: '不太适合。当多名工程师基于已商定的架构分担数周的工作时，它才有回报。',
+      },
+      { q: '它会监视我的文档吗？', a: '不会。更新从你说明有什么变化时开始。' },
+      {
+        q: '支持哪些编码代理？',
+        a: '任何支持 Agent Skills 的编码代理。你的工程师可以继续使用他们现在用的那个。',
+      },
+      {
+        q: '使用什么许可证？',
+        a: 'Apache 2.0。安全政策、更新日志以及企业常见安全问题的解答都在代码仓库里。',
+      },
+    ],
+    doesNotHeading: 'carrydown 不做什么',
+    doesNot: [
+      '它不编写应用程序代码。',
+      '在你传入 --apply 之前，每一次对 GitHub 的写入都只是试运行。',
+      '它从不删除 issue、标签、项目或仓库。',
+      '更新比较在你的机器上运行。没有网络，没有令牌，也不调用模型。',
+      '机密文档留在你的机器上，除非你说明所有人都可以查看。',
+      '姓名、休假日和分配情况保存在私有文件中，绝不写入计划。',
+      '如果你不再使用，仍然保留纯 Markdown 和普通的 GitHub issue。',
+    ],
+  },
+
+  accessibility: {
+    title: '无障碍声明',
+    description: '本网站旨在让所有人都能使用。目标是达到 Web Content Accessibility Guidelines (WCAG) 2.2 的 AA 级。',
+    h1: '无障碍声明',
+    intro:
+      '本网站旨在让所有人都能使用，包括使用屏幕阅读器、只用键盘、放大显示或减少动态效果的人。目标是达到 Web Content Accessibility Guidelines (WCAG) 2.2 的 AA 级。',
+    doneHeading: '已完成的工作',
+    done: [
+      '文字和界面颜色在浅色和深色两种主题下都检查了对比度，你可以选择其中一种，也可以跟随系统设置。',
+      '每个页面都可以只用键盘操作，有可见的焦点指示，并提供跳到主要内容的链接。',
+      '图表由文字和矢量图形绘制，因此可以缩放、跟随你的主题，并为屏幕阅读器提供文字说明。',
+      '网站上没有任何内容会自行移动。今后的任何动画都会遵守减少动态效果的设置，并提供静态图片。',
+      '标题、地标区域和链接文字的写法，便于按顺序阅读，也便于脱离上下文阅读。',
+      '网站在每次发布前用自动化工具检查，并由人工使用屏幕阅读器审阅。',
+    ],
+    notFinishedHeading: '尚未完成的工作',
+    notFinished:
+      '网站的翻译正在由母语人士审校，将逐种语言上线。文档部分由代码仓库生成，在每个版本检查完成之前，这些方面可能落后于网站的其他部分。',
+    contactHeading: '告诉我们遇到的问题',
+    contactBefore: '如果本网站的某些内容在使用辅助技术时难以使用，或者你需要其他形式的内容，请写信到 ',
+    contactAfter: '。请说明是哪个页面以及发生了什么。你应该会在十个工作日内收到回复。',
+    review: '本声明说明网站的意图和当前状态。网站变化时会重新审阅。最近一次审阅是2026年11月16日。',
+  },
+
+  home: {
+    title: 'Carried-context development，首页',
+    description:
+      'Carried-context development 是一种智能体开发方法，把项目决策和上下文一直传递到每位工程师的编码代理，让项目保持一致，不再偏离。',
+    h1: '上下文，与工作同行。',
+    definition:
+      'Carried-context development 是一种智能体开发方法，把项目决策和上下文一直传递到每位工程师的编码代理，让项目保持一致，不再偏离。',
+    paragraph:
+      '你的团队提供项目文档、需求，以及关于人员和截止日期的决策。你的 AI 代理以这些基准事实为依据，创建一份相互关联的计划、每个工作项的规格，以及链接各自规格并引用其背后文档章节的 GitHub issue。你的 AI 代理还会生成一个项目专用的 agent skill，把规格、工作背后的决策和所引用的章节传递给每位工程师的编码代理。文档发生变化时，你只需审阅一次更新。',
+    buttons: {
+      try: '在 GitHub 上试用',
+      sample: '查看示例项目的 AI 代理产出',
+    },
+    howHeading: '工作原理',
+    statement: {
+      heading: 'Carried-context development 超越了规格驱动开发。',
+      body: '规格驱动开发把每份规格交给撰写它的工程师。质量取决于谁来写。没有两份规格是一致的，也没有什么把它们联系在一起。随着项目变化，它们会逐渐偏离。Carried-context development 从同一个基准事实派生每一份规格，引用来源，并把每一项获批的变更传递给每个编码代理。',
+    },
+    values: [
+      {
+        eyebrow: '相互关联的计划',
+        title: '作为一个相互关联的整体来规划。',
+        body: '一份计划和每一份规格都来自同一个基准事实。依赖关系、接口和验收标准会一并审阅，找出缺口和冲突，检查会验证每一处引用。',
+      },
+      {
+        eyebrow: '工程交接',
+        title: '交接直达编码代理。',
+        body: '每个 issue 都链接它的规格，并引用基准事实的对应章节。项目专用的 agent skill 会在编码代理规划代码之前，把获批的规格、这些章节和你的约定摆在它面前。',
+      },
+      {
+        eyebrow: '项目上下文保持同步',
+        title: '项目负责人或工程师提出的变更会一路传递。',
+        body: '项目负责人报告某个来源发生了变化，或者工程师指出某份规格有误。代理会找出受影响的工作，保留仍然适用的修正，并把冲突交给你处理。获批的更新会流向规格、issue 和交接。',
+      },
+    ],
+    carrydown: {
+      headingBefore: '试用 ',
+      headingBrand: 'carrydown',
+      headingAfter: '，开放的参考实现。',
+      intro:
+        'Carried-context development 是一种智能体开发方法，实现它的方式不止一种。carrydown 是参考实现：你安装的两个 Agent Skills，它为你的工程师生成的第三个，以及验证每一处引用的检查。它以 Apache 2.0 开源，可与你的团队已经在用的编码代理配合使用。',
+      tryButton: '在 GitHub 上试用',
+      installCommand: en.home.carrydown.installCommand,
+      copy: '复制',
+      copied: '已复制',
+      copyLabel: '复制安装命令',
+      copiedStatus: '安装命令已复制到剪贴板。',
+      copyFailedStatus: '无法复制。请选中命令后自行复制。',
+      needs: '需要 Node.js 22.20 或更高版本和 Git。没有 Node.js？也可以手动安装。',
+      tiles: [
+        {
+          step: '第 1 步',
+          title: '看一份完成的计划。',
+          body: 'GitHub 上的示例看板及其 issue。',
+          command: '',
+          button: '打开示例',
+          time: '一分钟。无需安装。',
+        },
+        {
+          step: '第 2 步',
+          title: '读一读第一次对话。',
+          body: '代理会问你的问题，以及该怎么回答。',
+          command: '',
+          button: '负责人指南',
+          time: '五分钟。无需安装。',
+        },
+        {
+          step: '第 3 步',
+          title: '用你自己的一个文件夹试试。',
+          body: '安装两个 carrydown skill，然后说',
+          command: en.home.carrydown.tiles[2].command,
+          button: '安装指南',
+          time: '一个下午，大部分时间在阅读。',
+        },
+      ],
+      stepsHeading: '运行 carrydown 的步骤',
+      steps: [
+        {
+          who: '计划负责人',
+          what: '安装两个 carrydown skill，并启动计划。',
+          say: en.home.carrydown.steps[0].say,
+        },
+        {
+          who: '计划负责人',
+          what: '审阅计划和规格，然后发布。',
+          say: en.home.carrydown.steps[1].say,
+        },
+        {
+          who: '每位工程师',
+          what: '安装一次生成的 agent skill，并指明一个工作项。',
+          say: en.home.carrydown.steps[2].say,
+        },
+        {
+          who: '利益相关方',
+          what: '观看每个里程碑演示并决定通过与否。无需安装任何东西。',
+          say: '',
+        },
+        {
+          who: '任何人',
+          what: '报告某个来源有变化，或某份规格似乎有误。一次审阅之后，获批的更新向下传递。',
+          say: en.home.carrydown.steps[4].say,
+        },
+      ],
+      noCommand: '没有需要说的命令。',
+    },
+  },
+
+  diagram: {
+    ariaLabel:
+      '你提供的项目上下文，包括文档、决策以及之后的变更，输入 AI 代理。AI 代理为你的团队生成：供审阅和批准的项目计划、每个工作项的规格、带有 issue 和里程碑的 GitHub 看板（每个 issue 链接其规格并引用其来源），以及项目专用的 agent skill，由每位工程师安装一次，并配合编码代理使用。',
+    provideHeading: '你提供的项目上下文',
+    generatesHeading: 'AI 代理为团队生成',
+    documents: '文档',
+    documentsNote: '架构、需求、规则等',
+    decisions: '决策',
+    decisionsNote: '人员、分配、截止日期',
+    later: '之后',
+    changed: '有变化',
+    changedNote: '文档变更，或规格有误',
+    agent: 'AI 代理',
+    agentVerbs: ['阅读、规划、引用、', '交接、对账'],
+    plans: '规划',
+    plansTitle: '供审阅和批准的项目计划',
+    plansNote: '里程碑、工作线、贴合人员的日期',
+    writes: '撰写',
+    writesTitle: '每个工作项一份规格',
+    writesNote: '全部出自同一个基准事实',
+    opens: '创建',
+    opensTitle: '带 issue 和里程碑的 GitHub 看板',
+    opensNote: '每个 issue 链接规格并引用来源',
+    generates: '生成',
+    generatesTitle: '项目专用的 agent skill',
+    generatesNote: '由每位工程师安装一次',
+    engineers: ['使用编码代理的', '工程师'],
+  },
+};
