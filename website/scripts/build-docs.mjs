@@ -37,8 +37,9 @@ export const FALLBACK_NOTES = {
   'zh-CN': '此页面尚未翻译。当前显示英文页面。',
 };
 
-// Starlight lowercases the folder names of its content, so pt-BR is served at /pt-br/ and zh-CN at /zh-cn/.
-// The folders under docs/i18n/ keep the tag as written.
+// Starlight lowercases the ids of its content, so the generated folders and the docs routes are lowercase:
+// pt-BR is served at /pt-br/docs/ and zh-CN at /zh-cn/docs/. The folders under docs/i18n/ keep the tag as
+// written.
 export const localeDir = (locale) => locale.toLowerCase();
 
 // Where the generated files live inside the website folder. The sync check compares exactly these.
@@ -279,6 +280,16 @@ function makeRewriter(repo, pagesByPath, translations, imagesOut, ctx) {
 
 const yaml = (s) => JSON.stringify(s);
 
+// Styles for the generated pages only, added to each page's head through its front matter. The note line,
+// image links such as the README badges (a 24 px target), and tables that wrap instead of scrolling, so no
+// table needs a keyboard stop to be reachable.
+const PAGE_CSS = [
+  '.sl-markdown-content .synced{font-size:0.85rem;color:var(--sl-color-gray-2);margin:0 0 1.5rem}',
+  '.sl-markdown-content .synced-locale{font-size:0.95rem;margin:0 0 0.5rem}',
+  '.sl-markdown-content a:has(>img){display:inline-block;padding:2px 0;margin-right:6px}',
+  '.sl-markdown-content table{display:table;width:100%;overflow-wrap:anywhere}',
+].join('');
+
 /** Removes what an earlier run wrote. */
 function clean(out) {
   for (const rel of MANAGED) rmSync(join(out, rel), { recursive: true, force: true });
@@ -331,14 +342,14 @@ export function generate({ repo = repoRootDefault, out = websiteDir } = {}) {
       translated: source.startsWith('docs/i18n/'),
     });
     let body = rewriter(doc.body).replace(/\s+$/, '');
-    const note = `<p class="synced" style="font-size:0.85rem;color:var(--sl-color-gray-2);margin:0 0 1.5rem">From the repository, ${source}. Generated at build time and checked against the source.</p>`;
+    const note = `<p class="synced">From the repository, ${source}. Generated at build time and checked against the source.</p>`;
     let top = note;
     if (fallbackOf) {
-      top = `<p class="synced" lang="${locale}" style="font-size:0.95rem;margin:0 0 0.5rem">${FALLBACK_NOTES[locale]}</p>\n\n${note}`;
+      top = `<p class="synced-locale" lang="${locale}">${FALLBACK_NOTES[locale]}</p>\n\n${note}`;
       body = `<div lang="en">\n\n${body}\n\n</div>`;
     }
     const description = describe(doc.paragraph);
-    const front = `---\ntitle: ${yaml(doc.title)}\n${description ? `description: ${yaml(description)}\n` : ''}---\n`;
+    const front = `---\ntitle: ${yaml(doc.title)}\n${description ? `description: ${yaml(description)}\n` : ''}head:\n  - tag: style\n    content: ${yaml(PAGE_CSS)}\n---\n`;
     write(out, mdPath, `${front}\n${top}\n\n${body}\n`);
     return { slug: page.slug, locale, title: doc.title, description, source, fallback: Boolean(fallbackOf) };
   }
