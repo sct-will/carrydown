@@ -8,6 +8,7 @@ import { sidebar } from './src/sidebar.mjs';
 
 // Writes the files GitHub Pages needs next to the built pages: .nojekyll always, and CNAME once a
 // custom domain is set.
+/** @type {import('astro').AstroIntegration} */
 const pagesFiles = {
   name: 'carried-context-pages-files',
   hooks: {
