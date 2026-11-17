@@ -189,6 +189,12 @@ export const ptBR: Strings = {
         more: { label: 'Ler como o carrydown apoia a governança de IA.', href: '/docs/#how-does-carrydown-support-ai-governance' },
       },
       {
+        id: 'withhold',
+        q: 'Posso manter certo contexto fora das especificações, do skill dos engenheiros e dos agentes de programação?',
+        a: 'Sim. Os engenheiros e seus agentes de programação só veem o contexto aprovado de cada item de trabalho: o texto exato da fonte que o item cita e as decisões por trás dele, que você aprova antes de qualquer publicação. Antes de renderizar ou copiar qualquer coisa, o agente faz uma pergunta: todos que podem ler este repositório podem ver todos esses documentos e suas notas de alocação? Se a resposta for não, ele redige em um espaço de trabalho privado na sua máquina, e o repositório recebe só os resultados que você aprova, nunca um original restrito nem a sua renderização completa. Cada publicação mostra a você uma prévia do que será compartilhado, com quem e onde, e um ensaio antes de escrever qualquer coisa. Nomes, dias de folga e alocação ficam em um arquivo privado e nunca chegam ao plano, a uma especificação ou ao skill. Restam dois limites. Todos que podem ler o repositório podem ler cada contexto aprovado, então uma seção não pode ser mostrada a um engenheiro e escondida de outro, e o trabalho que alguns leitores não devem ver fica fora da publicação como item restrito. E um texto já entregue não pode ser recolhido.',
+        more: { label: 'Ler quem pode ver seus documentos, no guia de configuração.', href: '/docs/setup/#before-you-add-documents-who-may-see-them' },
+      },
+      {
         id: 'watch',
         q: 'Ele vigia meus documentos?',
         a: 'Não. O carrydown não tem observador de arquivos e nunca lê seu sistema de documentos por conta própria. Uma atualização começa quando você diz o que mudou e fornece o material revisado, e termina quando você aprova a revisão. A revisão de marco do guia do responsável pelo plano também pergunta se alguma fonte, requisito ou restrição mudou desde o último plano, então uma mudança é percebida ali no mais tardar.',

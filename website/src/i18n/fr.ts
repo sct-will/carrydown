@@ -189,6 +189,12 @@ export const fr: Strings = {
         more: { label: 'Lire comment carrydown soutient la gouvernance de l’IA.', href: '/docs/#how-does-carrydown-support-ai-governance' },
       },
       {
+        id: 'withhold',
+        q: 'Puis-je garder certains éléments de contexte hors des spécifications, du skill des ingénieurs et des agents de codage ?',
+        a: 'Oui. Les ingénieurs et leurs agents de codage ne voient jamais que le contexte approuvé de chaque élément de travail : le texte source exact que l’élément cite et les décisions qui le sous-tendent, que vous approuvez avant toute publication. Avant de rendre ou de copier quoi que ce soit, l’agent pose une question : tous ceux qui peuvent lire ce dépôt peuvent-ils voir tous ces documents et vos notes d’affectation ? Sur un non, il rédige dans un espace de travail privé sur votre machine, et le dépôt ne reçoit que les résultats que vous approuvez, jamais un original restreint ni son rendu complet. Chaque publication vous montre un aperçu de ce qui sera partagé, avec qui et où, et une simulation avant toute écriture. Les noms, les jours d’absence et l’allocation restent dans un fichier privé et n’atteignent jamais le plan, une spécification ou le skill. Deux limites demeurent. Tous ceux qui peuvent lire le dépôt peuvent lire chaque contexte approuvé, une section ne peut donc pas être montrée à un ingénieur et cachée à un autre, et le travail que certains lecteurs ne doivent pas voir reste hors de la publication comme élément restreint. Et un texte déjà livré ne peut pas être rappelé.',
+        more: { label: 'Lire qui peut voir vos documents, dans le guide d’installation.', href: '/docs/setup/#before-you-add-documents-who-may-see-them' },
+      },
+      {
         id: 'watch',
         q: 'Surveille-t-il mes documents ?',
         a: 'Non. carrydown n’a aucun observateur de fichiers et ne lit jamais votre système documentaire de lui-même. Une mise à jour commence quand vous dites ce qui a changé et fournissez le matériel révisé, et elle se termine quand vous approuvez la revue. La revue de jalon du guide du responsable du plan demande aussi si une source, une exigence ou une contrainte a changé depuis le dernier plan, si bien qu’un changement est repéré là au plus tard.',

@@ -189,6 +189,12 @@ export const de: Strings = {
         more: { label: 'Lesen, wie carrydown die KI-Governance unterstützt.', href: '/docs/#how-does-carrydown-support-ai-governance' },
       },
       {
+        id: 'withhold',
+        q: 'Kann ich bestimmten Kontext aus den Spezifikationen, dem Skill der Entwickler und den Coding-Agenten heraushalten?',
+        a: 'Ja. Die Entwickler und ihre Coding-Agenten sehen immer nur den freigegebenen Kontext jedes Arbeitspakets: den genauen Quelltext, den das Paket zitiert, und die Entscheidungen dahinter, die Sie freigeben, bevor etwas veröffentlicht wird. Bevor der Agent etwas rendert oder kopiert, stellt er eine Frage: Dürfen alle, die dieses Repository lesen können, alle diese Dokumente und Ihre Besetzungsnotizen sehen? Bei Nein entwirft er in einem privaten Arbeitsbereich auf Ihrem Rechner, und das Repository erhält nur die Ergebnisse, die Sie freigeben, nie ein eingeschränktes Original oder dessen vollständige Wiedergabe. Jede Veröffentlichung zeigt Ihnen eine Vorschau dessen, was mit wem und wo geteilt wird, und einen Probelauf, bevor etwas geschrieben wird. Namen, freie Tage und Auslastung bleiben in einer privaten Datei und gelangen nie in den Plan, eine Spezifikation oder den Skill. Zwei Grenzen bleiben. Wer das Repository lesen kann, kann jeden freigegebenen Kontext lesen, ein Abschnitt lässt sich also nicht einem Entwickler zeigen und vor einem anderen verbergen, und Arbeit, die manche Leser nicht sehen dürfen, bleibt als eingeschränktes Paket aus der Veröffentlichung heraus. Und bereits ausgelieferter Text lässt sich nicht zurückrufen.',
+        more: { label: 'In der Einrichtungsanleitung lesen, wer Ihre Dokumente sehen darf.', href: '/docs/setup/#before-you-add-documents-who-may-see-them' },
+      },
+      {
         id: 'watch',
         q: 'Beobachtet es meine Dokumente?',
         a: 'Nein. carrydown hat keine Dateiüberwachung und liest Ihr Dokumentensystem nie von sich aus. Eine Aktualisierung beginnt, wenn Sie sagen, was sich geändert hat, und das überarbeitete Material bereitstellen, und sie endet, wenn Sie die Durchsicht freigeben. Die Meilensteinprüfung im Leitfaden für Plan-Verantwortliche fragt außerdem, ob sich seit dem letzten Plan eine Quelle, eine Anforderung oder eine Randbedingung geändert hat, sodass eine Änderung spätestens dort auffällt.',

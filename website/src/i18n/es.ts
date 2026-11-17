@@ -189,6 +189,12 @@ export const es: Strings = {
         more: { label: 'Leer cómo carrydown apoya la gobernanza de la IA.', href: '/docs/#how-does-carrydown-support-ai-governance' },
       },
       {
+        id: 'withhold',
+        q: '¿Puedo mantener cierto contexto fuera de las especificaciones, del skill de los ingenieros y de los agentes de programación?',
+        a: 'Sí. Los ingenieros y sus agentes de programación solo ven el contexto aprobado de cada elemento de trabajo: el texto exacto de la fuente que el elemento cita y las decisiones que hay detrás, que usted aprueba antes de publicar nada. Antes de renderizar o copiar algo, el agente hace una pregunta: ¿pueden todos los que leen este repositorio ver todos estos documentos y sus notas de asignación? Si responde que no, redacta en un espacio de trabajo privado en su máquina, y el repositorio solo recibe los resultados que usted aprueba, nunca un original restringido ni su renderizado completo. Cada publicación le muestra una vista previa de qué se compartirá, con quién y dónde, y un ensayo antes de escribir nada. Los nombres, los días libres y la asignación se quedan en un archivo privado y nunca llegan al plan, a una especificación ni al skill. Quedan dos límites. Todos los que pueden leer el repositorio pueden leer cada contexto aprobado, así que una sección no puede mostrarse a un ingeniero y ocultarse a otro, y el trabajo que algunos lectores no deben ver se queda fuera de la publicación como elemento restringido. Y el texto ya entregado no se puede retirar.',
+        more: { label: 'Leer quién puede ver sus documentos, en la guía de instalación.', href: '/docs/setup/#before-you-add-documents-who-may-see-them' },
+      },
+      {
         id: 'watch',
         q: '¿Vigila mis documentos?',
         a: 'No. carrydown no tiene ningún observador de archivos y nunca lee su sistema de documentos por su cuenta. Una actualización empieza cuando usted dice qué cambió y aporta el material revisado, y termina cuando aprueba la revisión. La revisión de hito de la guía del responsable del plan también pregunta si alguna fuente, requisito o restricción ha cambiado desde el último plan, así que un cambio se detecta allí como muy tarde.',

@@ -196,6 +196,12 @@ export const en = {
         more: { label: 'Read how carrydown supports AI governance.', href: '/docs/#how-does-carrydown-support-ai-governance' },
       },
       {
+        id: 'withhold',
+        q: 'Can I keep some context out of the specs, the engineers’ skill and the coding agents?',
+        a: 'Yes. The engineers and their coding agents only ever see the approved context of each work item: the exact source text the item cites and the decisions behind it, which you approve before anything is published. Before the agent renders or copies anything, it asks one question: can everyone who can read this repository see all of these documents and your staffing notes? On no, it drafts in a private workspace on your machine, and the repository receives only the outputs you approve, never a restricted original or its full rendering. Each release shows you a preview of what will be shared, with whom and where, and a dry run before anything is written. Names, days off and allocation stay in a private file and never reach the plan, a spec or the skill. Two limits remain. Everyone who can read the repository can read every approved context, so a section cannot be shown to one engineer and hidden from another, and work that some readers must not see stays out of the release as a restricted item. And text that has already been delivered cannot be recalled.',
+        more: { label: 'Read who may see your documents, in the setup guide.', href: '/docs/setup/#before-you-add-documents-who-may-see-them' },
+      },
+      {
         id: 'watch',
         q: 'Does it watch my documents?',
         a: 'No. carrydown has no file watcher and never reads your document system on its own. An update starts when you say what changed and provide the revised material, and it ends when you approve the review. The milestone review in the plan owner guide also asks whether any source, requirement or constraint has changed since the last plan, so a change is caught there at the latest.',
