@@ -18,6 +18,8 @@ Already have a draft? Skip to [reviewing the plan](#reviewing-the-plan). Approve
 
 The agent drafts, checks and populates. You decide the owners, dates, scope and order.
 
+**Bring a technical lead if you do not know the codebase well.** Do this for the interview and the plan review. Some questions need that knowledge: which document wins when two disagree, which coding agents the engineers use, and how code is built, tested and merged. The agent works from your answers. It does not know your system.
+
 **What to say.** Ordinary language is the normal entry point. The same tables are in [the README](../README.md#what-to-say).
 
 Plan owner:
@@ -52,6 +54,8 @@ The steps are in [when the project changes](#when-the-project-changes).
 ## What the agent asks you
 
 The interview starts with step 0, the question about who may see your documents, and then has six steps. Replies start with `carrydown: interview, step N of 6`, with the current step number in place of `N`. The step column gives that number for each question. These questions tell you what to have ready. [Words you will meet](setup.md#words-you-will-meet) explains the terms in one sentence each, and the [glossary](#glossary) has the rest.
+
+Steps 1, 5 and 6 need someone who knows the system. If that is not you, answer them with a technical lead at your side.
 
 | Step | The agent asks | You answer with |
 | --- | --- | --- |
