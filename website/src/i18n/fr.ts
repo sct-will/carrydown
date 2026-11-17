@@ -180,7 +180,13 @@ export const fr: Strings = {
       {
         id: 'one-person',
         q: 'Est-ce fait pour un spike d’une seule personne ?',
-        a: 'Pas vraiment. La méthode paie quand plusieurs ingénieurs partagent des semaines de travail sur une architecture convenue et que des spécifications qui divergent coûtent du vrai temps. Pour un spike d’une seule personne, le plan, les spécifications et le tableau sont plus de structure que le travail n’en demande. Utilisez-la quand une équipe confie du travail à des agents de codage et a besoin que chacun parte des mêmes décisions.',
+        a: 'Pas vraiment. La méthode paie quand plusieurs ingénieurs partagent des semaines de travail sur une architecture convenue et que des spécifications qui divergent coûtent du vrai temps. Pour un spike d’une seule personne, le plan, les spécifications et le tableau sont plus de structure que le travail n’en demande. Elle convient particulièrement bien aux équipes d’entreprise, où les règles de gouvernance, les normes d’ingénierie et le contexte de l’entreprise font partie de la vérité de référence et où plusieurs équipes construisent sur une même architecture. Utilisez-la quand une équipe confie du travail à des agents de codage et a besoin que chacun parte des mêmes décisions.',
+      },
+      {
+        id: 'governance',
+        q: 'Comment cela soutient-il la gouvernance de l’IA ?',
+        a: 'Les règles de gouvernance, les normes d’ingénierie et le contexte de l’entreprise entrent comme vérité de référence à côté des documents techniques, en Word, Markdown, texte brut ou extractions relues de fichiers PDF et d’images. Le plan enregistre la version et la préséance de chaque source, chaque élément de travail cite les sections qui s’appliquent à lui, et les vérifications valident ces citations pendant la rédaction puis à nouveau depuis un clone propre. Le skill généré des ingénieurs pointe chaque agent de codage vers le contexte approuvé, si bien que l’agent lit les règles applicables avant de planifier le code. Vous relisez les brouillons et approuvez exactement ce qui est partagé, avec qui et où, après un aperçu et une simulation, et le plan, les spécifications, les versions des sources et les décisions enregistrées restent dans votre dépôt. Les vérifications automatiques et la seconde passe consignent les preuves et les risques, et votre équipe reste juge de la conformité du travail aux exigences de votre organisation.',
+        more: { label: 'Lire comment carrydown soutient la gouvernance de l’IA.', href: '/docs/#how-does-carrydown-support-ai-governance' },
       },
       {
         id: 'watch',

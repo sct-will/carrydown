@@ -16,6 +16,8 @@ const startHereUrl = `${localePath(locale, '/docs/')}#start-here`;
 const f = t.faq;
 // The link under an answer: a site path gets the locale prefix, an address is used as written.
 const href = (path: string) => (path.startsWith('/') ? localePath(locale, path) : path);
+// The sign of a question's link is Starlight's link icon, the one the docs headings carry.
+const anchorIcon = '<path d="m10 17.55-1.77 1.72a2.47 2.47 0 0 1-3.5-3.5l4.54-4.55a2.46 2.46 0 0 1 3.39-.09l.12.1a1 1 0 0 0 1.4-1.43 3 3 0 0 0-.18-.21 4.46 4.46 0 0 0-6.09.22l-4.6 4.55a4.48 4.48 0 0 0 6.33 6.33L11.37 19A1 1 0 0 0 10 17.55M20.69 3.31a4.49 4.49 0 0 0-6.33 0L12.63 5A1 1 0 0 0 14 6.45l1.73-1.72a2.47 2.47 0 0 1 3.5 3.5l-4.54 4.55a2.46 2.46 0 0 1-3.39.09l-.12-.1a1 1 0 0 0-1.4 1.43 3 3 0 0 0 .23.21 4.47 4.47 0 0 0 6.09-.22l4.55-4.55a4.49 4.49 0 0 0 .04-6.33"/>';
 // The literal text --apply is set in monospace wherever it appears.
 const parts = (text: string) => text.split('--apply');
 ---
@@ -31,7 +33,10 @@ const parts = (text: string) => text.split('--apply');
           f.items.map((item) => (
             <div class="faq-item">
               <h2 class="faq-q" id={item.id}>
-                <a href={`#${item.id}`}>{item.q}<span class="faq-hash" aria-hidden="true">#</span></a>
+                <a href={`#${item.id}`}>
+                  {item.q}
+                  <svg class="faq-anchor" viewBox="0 0 24 24" aria-hidden="true" focusable="false" set:html={anchorIcon}></svg>
+                </a>
               </h2>
               <p class="faq-a">{item.a}</p>
               {'more' in item && item.more && (

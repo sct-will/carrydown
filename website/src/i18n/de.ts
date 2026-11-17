@@ -180,7 +180,13 @@ export const de: Strings = {
       {
         id: 'one-person',
         q: 'Ist es für einen Ein-Personen-Spike gedacht?',
-        a: 'Eher nicht. Die Methode lohnt sich, wenn mehrere Entwickler über Wochen an einer vereinbarten Architektur arbeiten und auseinanderdriftende Spezifikationen echte Zeit kosten. Für einen Ein-Personen-Spike sind Plan, Spezifikationen und Board mehr Struktur, als die Arbeit braucht. Nutzen Sie sie, wenn ein Team Arbeit an Coding-Agenten übergibt und jeder davon von denselben Entscheidungen ausgehen muss.',
+        a: 'Eher nicht. Die Methode lohnt sich, wenn mehrere Entwickler über Wochen an einer vereinbarten Architektur arbeiten und auseinanderdriftende Spezifikationen echte Zeit kosten. Für einen Ein-Personen-Spike sind Plan, Spezifikationen und Board mehr Struktur, als die Arbeit braucht. Besonders gut passt sie zu Unternehmensteams, bei denen Governance-Regeln, Entwicklungsstandards und Unternehmenskontext Teil der Faktengrundlage sind und mehrere Teams auf einer Architektur aufbauen. Nutzen Sie sie, wenn ein Team Arbeit an Coding-Agenten übergibt und jeder davon von denselben Entscheidungen ausgehen muss.',
+      },
+      {
+        id: 'governance',
+        q: 'Wie unterstützt das die KI-Governance?',
+        a: 'Governance-Regeln, Entwicklungsstandards und Unternehmenskontext gehen neben den technischen Dokumenten als Faktengrundlage ein, als Word, Markdown, Klartext oder geprüfte Auszüge aus PDF- und Bilddateien. Der Plan hält Version und Rang jeder Quelle fest, jedes Arbeitspaket zitiert die Abschnitte, die für es gelten, und die Prüfungen validieren diese Zitate beim Entwurf und noch einmal in einem frischen Klon. Der generierte Skill der Entwickler verweist jeden Coding-Agenten auf den freigegebenen Kontext, sodass der Agent die geltenden Regeln liest, bevor er Code plant. Sie prüfen die Entwürfe und geben nach Vorschau und Probelauf genau frei, was mit wem und wo geteilt wird, und Plan, Spezifikationen, Quellversionen und festgehaltene Entscheidungen bleiben in Ihrem Repository. Die automatischen Prüfungen und die zweite Prüfung halten Belege und Risiken fest, und ob die Arbeit die Anforderungen Ihrer Organisation erfüllt, beurteilt weiterhin Ihr Team.',
+        more: { label: 'Lesen, wie carrydown die KI-Governance unterstützt.', href: '/docs/#how-does-carrydown-support-ai-governance' },
       },
       {
         id: 'watch',

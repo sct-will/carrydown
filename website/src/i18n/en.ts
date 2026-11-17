@@ -187,7 +187,13 @@ export const en = {
       {
         id: 'one-person',
         q: 'Is it for a one-person spike?',
-        a: 'Not really. The method pays off when several engineers share weeks of work under an agreed architecture and specs that drift apart cost real time. For a one-person spike the plan, the specs and the board are more structure than the work needs. Use it when a team hands work to coding agents and needs every one of them to start from the same decisions.',
+        a: 'Not really. The method pays off when several engineers share weeks of work under an agreed architecture and specs that drift apart cost real time. For a one-person spike the plan, the specs and the board are more structure than the work needs. It is particularly well suited to enterprise teams, where governance rules, engineering standards and company context are part of the ground truth and several teams build on one architecture. Use it when a team hands work to coding agents and needs every one of them to start from the same decisions.',
+      },
+      {
+        id: 'governance',
+        q: 'How does this support AI governance?',
+        a: 'Governance rules, engineering standards and company context go in as ground truth beside the technical documents, in Word, Markdown, plain text or reviewed extractions from PDF and image files. The plan records each source’s version and precedence, every work item cites the sections that apply to it, and the checks validate those citations while you draft and again in a clean clone. The generated engineers’ skill points each coding agent at the approved context, so the agent reads the applicable rules before it plans code. You review the drafts and approve exactly what is shared, with whom and where, after a preview and a dry run, and the plan, the specs, the source versions and the recorded decisions stay in your repository. The automated checks and the second-pass review record evidence and risk, and your team still judges whether the work meets your organization’s requirements.',
+        more: { label: 'Read how carrydown supports AI governance.', href: '/docs/#how-does-carrydown-support-ai-governance' },
       },
       {
         id: 'watch',

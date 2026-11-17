@@ -180,7 +180,13 @@ export const es: Strings = {
       {
         id: 'one-person',
         q: '¿Es para un spike de una sola persona?',
-        a: 'No mucho. El método compensa cuando varios ingenieros comparten semanas de trabajo bajo una arquitectura acordada y las especificaciones que se separan cuestan tiempo real. Para un spike de una sola persona, el plan, las especificaciones y el tablero son más estructura de la que el trabajo necesita. Úselo cuando un equipo entrega trabajo a agentes de programación y necesita que todos partan de las mismas decisiones.',
+        a: 'No mucho. El método compensa cuando varios ingenieros comparten semanas de trabajo bajo una arquitectura acordada y las especificaciones que se separan cuestan tiempo real. Para un spike de una sola persona, el plan, las especificaciones y el tablero son más estructura de la que el trabajo necesita. Es especialmente adecuado para equipos de empresa, donde las reglas de gobernanza, los estándares de ingeniería y el contexto de la compañía forman parte de la verdad de referencia y varios equipos construyen sobre una misma arquitectura. Úselo cuando un equipo entrega trabajo a agentes de programación y necesita que todos partan de las mismas decisiones.',
+      },
+      {
+        id: 'governance',
+        q: '¿Cómo apoya esto la gobernanza de la IA?',
+        a: 'Las reglas de gobernanza, los estándares de ingeniería y el contexto de la compañía entran como verdad de referencia junto a los documentos técnicos, en Word, Markdown, texto plano o extracciones revisadas de archivos PDF y de imagen. El plan registra la versión y la precedencia de cada fuente, cada elemento de trabajo cita las secciones que le aplican, y las comprobaciones validan esas citas mientras redacta y de nuevo en un clon limpio. El skill generado de los ingenieros dirige a cada agente de programación al contexto aprobado, de modo que el agente lee las reglas aplicables antes de planificar el código. Usted revisa los borradores y aprueba exactamente qué se comparte, con quién y dónde, tras una vista previa y un ensayo, y el plan, las especificaciones, las versiones de las fuentes y las decisiones registradas se quedan en su repositorio. Las comprobaciones automáticas y la segunda revisión registran evidencias y riesgos, y su equipo sigue juzgando si el trabajo cumple los requisitos de su organización.',
+        more: { label: 'Leer cómo carrydown apoya la gobernanza de la IA.', href: '/docs/#how-does-carrydown-support-ai-governance' },
       },
       {
         id: 'watch',

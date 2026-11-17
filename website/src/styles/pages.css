@@ -37,8 +37,8 @@
 }
 
 /* Questions. Each question is a heading with its own link, so a reader can send one question. The
- * hash after the question is the sign of the link; it is hidden from screen readers, which read the
- * question as the link text. */
+ * link icon after the question, the one the docs headings carry, is the sign of the link; it is hidden
+ * from screen readers, which read the question as the link text. */
 .site .faq {
   margin: 10px 0 0;
 }
@@ -64,14 +64,17 @@
   text-decoration: underline;
   text-underline-offset: 0.18em;
 }
-.site .faq-hash {
-  margin-inline-start: 0.4em;
+.site .faq-anchor {
+  width: 0.75em;
+  height: 0.75em;
+  margin-inline-start: 0.45em;
+  vertical-align: -0.02em;
   color: var(--ink-muted);
-  font-weight: 400;
-  opacity: 0.6;
+  fill: currentColor;
+  opacity: 0.7;
 }
-.site .faq-q a:hover .faq-hash,
-.site .faq-q a:focus-visible .faq-hash {
+.site .faq-q a:hover .faq-anchor,
+.site .faq-q a:focus-visible .faq-anchor {
   color: var(--amber-ink);
   opacity: 1;
 }
