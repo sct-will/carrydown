@@ -54,7 +54,8 @@ const isCurrent = (match: string) => match !== '' && route.startsWith(match);
       data-menu-button
     >
       <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
-        <path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+        <path class="menu-icon-open" d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+        <path class="menu-icon-close" d="M4 4l10 10M14 4 4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
       </svg>
       <span>{t.nav.menu}</span>
     </button>
@@ -78,6 +79,15 @@ const isCurrent = (match: string) => match !== '' && route.startsWith(match);
         button.focus();
       }
     });
+    // Following a link closes the menu, so the page is not left with it open.
+    panel.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('a')) set(false);
+    });
+    // A page restored from the browser's back-forward cache comes back as it was left. Start it closed.
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted) set(false);
+    });
+    window.addEventListener('pagehide', () => set(false));
     matchMedia('(min-width: 900px)').addEventListener('change', (e) => {
       if (e.matches) set(false);
     });

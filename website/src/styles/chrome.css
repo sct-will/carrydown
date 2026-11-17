@@ -345,6 +345,7 @@ header.header {
   .js .menu-button {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     min-width: 44px;
     min-height: 44px;
@@ -396,6 +397,12 @@ header.header {
   .controls {
     margin-inline-start: 0;
   }
+}
+
+/* While the menu is open the button shows a cross; the word stays Menu and aria-expanded says the state. */
+.menu-button[aria-expanded='true'] .menu-icon-open,
+.menu-button:not([aria-expanded='true']) .menu-icon-close {
+  display: none;
 }
 
 /* On a narrow phone the menu button is its icon; the word stays in the accessible name. */
