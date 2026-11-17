@@ -1,7 +1,7 @@
 ---
-// The questions page: an accordion of questions, each with a link of its own, and the facts about what
-// carrydown does not do. The answers are in the page for a reader without scripts and for search; the
-// script folds them, and a link to a question unfolds that one.
+// The questions page: two groups of questions, about the method and about carrydown, each an accordion
+// of questions with a link of its own. The answers are in the page for a reader without scripts and
+// for search; the script folds them, and a link to a question unfolds that one.
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import TranslationNote from '../TranslationNote.astro';
 import { getStrings } from '../../i18n';
@@ -15,6 +15,11 @@ const { locale = 'en' } = Astro.props;
 const t = getStrings(locale);
 const startHereUrl = `${localePath(locale, '/docs/')}#start-here`;
 const f = t.faq;
+// The two groups, in the order of the page. An item names its group, so a new question lands in the right place.
+const sections = [
+  { id: 'method', heading: f.methodHeading, items: f.items.filter((item) => item.group === 'method') },
+  { id: 'carrydown', heading: f.toolHeading, items: f.items.filter((item) => item.group === 'carrydown') },
+];
 // The link under an answer: a site path gets the locale prefix, an address is used as written.
 const href = (path: string) => (path.startsWith('/') ? localePath(locale, path) : path);
 // The sign of a question's link is Starlight's link icon, the one the docs headings carry.
@@ -29,52 +34,56 @@ const parts = (text: string) => text.split('--apply');
     <div class="wrap">
       <h1 class="doc-title doc-title--small">{f.h1}</h1>
       <p class="page-intro">{f.intro}</p>
-      <div class="faq">
-        {
-          f.items.map((item) => (
-            <div class="faq-item" id={item.id}>
-              <h2 class="faq-q">
-                <button type="button" class="faq-toggle" aria-expanded="true" aria-controls={`${item.id}-answer`}>
-                  <span class="faq-q-text">{item.q}</span>
-                  <svg class="faq-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-                    <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
-                  </svg>
-                </button>
-                <a class="faq-anchor-link" href={`#${item.id}`} aria-label={f.anchorLabel}>
-                  <svg class="faq-anchor" viewBox="0 0 24 24" aria-hidden="true" focusable="false" set:html={anchorIcon}></svg>
-                </a>
-              </h2>
-              <div class="faq-panel" id={`${item.id}-answer`}>
-                <p class="faq-a">{item.a}</p>
-                {'more' in item && item.more && (
-                  <p class="faq-more">
-                    <a href={href(item.more.href)}>{item.more.label}</a>
-                  </p>
-                )}
-              </div>
+      {
+        sections.map((section) => (
+          <section class="faq-section" aria-labelledby={`faq-${section.id}`}>
+            <h2 class="page-h2" id={`faq-${section.id}`}>{section.heading}</h2>
+            <div class="faq">
+              {section.items.map((item) => (
+                <div class="faq-item" id={item.id}>
+                  <h3 class="faq-q">
+                    <button type="button" class="faq-toggle" aria-expanded="true" aria-controls={`${item.id}-answer`}>
+                      <span class="faq-q-text">{item.q}</span>
+                      <svg class="faq-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                        <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
+                      </svg>
+                    </button>
+                    <a class="faq-anchor-link" href={`#${item.id}`} aria-label={f.anchorLabel}>
+                      <svg class="faq-anchor" viewBox="0 0 24 24" aria-hidden="true" focusable="false" set:html={anchorIcon}></svg>
+                    </a>
+                  </h3>
+                  <div class="faq-panel" id={`${item.id}-answer`}>
+                    <p class="faq-a">{item.a}</p>
+                    {'list' in item && item.list && (
+                      <ul class="faq-list">
+                        {item.list.map((fact) => {
+                          const [before, ...after] = parts(fact);
+                          return (
+                            <li>
+                              {before}
+                              {after.length > 0 && (
+                                <>
+                                  <span class="mono">--apply</span>
+                                  {after.join('--apply')}
+                                </>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                    {'more' in item && item.more && (
+                      <p class="faq-more">
+                        <a href={href(item.more.href)}>{item.more.label}</a>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))
-        }
-      </div>
-      <h2 class="page-h2">{f.doesNotHeading}</h2>
-      <ul class="factgrid" role="list">
-        {
-          f.doesNot.map((fact) => {
-            const [before, ...after] = parts(fact);
-            return (
-              <li class="fact">
-                {before}
-                {after.length > 0 && (
-                  <>
-                    <span class="mono">--apply</span>
-                    {after.join('--apply')}
-                  </>
-                )}
-              </li>
-            );
-          })
-        }
-      </ul>
+          </section>
+        ))
+      }
       <p class="page-action"><a class="btn primary" href={startHereUrl}>{t.home.buttons.try}</a></p>
     </div>
   </section>

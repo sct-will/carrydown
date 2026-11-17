@@ -127,8 +127,16 @@
   margin: 10px 0 0;
   font-size: 0.95rem;
 }
-.site .faq + .page-h2 {
-  margin-top: 48px;
+.site .faq-section + .faq-section > .page-h2 {
+  margin-top: 56px;
+}
+.site .faq-list {
+  margin: 12px 0 0;
+  padding-inline-start: 1.25em;
+  line-height: 1.6;
+}
+.site .faq-list li {
+  margin: 6px 0;
 }
 
 /* The fact lists on the questions and accessibility pages */

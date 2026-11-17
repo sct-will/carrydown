@@ -86,7 +86,8 @@ export function faqItems(locale: string): FaqItem[] {
       if (!raw || typeof raw !== 'object') continue;
       const o = raw as Loose;
       const question = asText(o.q ?? o.question ?? o.title);
-      const answer = asText(o.a ?? o.answer ?? o.body);
+      const list = Array.isArray(o.list) ? (o.list as unknown[]).filter((x): x is string => typeof x === 'string') : [];
+      const answer = asText([o.a ?? o.answer ?? o.body, ...list].filter((x) => typeof x === 'string').join(' '));
       if (question && answer) items.push({ question, answer });
     }
     if (items.length) return items;
