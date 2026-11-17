@@ -157,6 +157,8 @@ export const en = {
       'Answers about carried-context development and carrydown: how it differs from spec-driven development, why it is not waterfall, how the GitHub work stays reconciled with the ground truth, and what carrydown does not do.',
     h1: 'Questions',
     intro: 'Answers to the questions that come up most, with links into the docs where there is more. Each question has a link of its own.',
+    /** The accessible name of the link beside each question; the icon is its only visible sign. */
+    anchorLabel: 'Link to this question',
     /** Each item has a stable id, the same in every language, so a link to a question holds across
      * translations. An optional `more` link under the answer leads into the docs or the repository: a
      * site path gets the locale prefix, an address is used as written. */

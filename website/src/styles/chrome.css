@@ -80,12 +80,15 @@ header.header {
   display: none;
 }
 /* From 900 px the panel is only a grouping for the narrow-screen menu: its nav and controls lay out in
- * the bar itself, with the search between them, in this order. */
+ * the bar itself, with the search between them, in this order. The nav takes the free space of the bar
+ * as its start margin, so the nav, the search and the controls sit together at the end and the name has
+ * the room. */
 .site-header__panel {
   display: contents;
 }
 .site-header__panel nav {
   order: 2;
+  margin-inline-start: auto;
 }
 .site-search {
   order: 3;
@@ -124,7 +127,6 @@ header.header {
 .controls {
   display: flex;
   gap: 10px;
-  margin-inline-start: auto;
 }
 
 /* The search button: a field-shaped button with the shortcut hint at its end. It takes the free space
@@ -368,6 +370,7 @@ header.header {
   .site-header__panel nav,
   .controls {
     order: 0;
+    margin-inline-start: 0;
   }
   .js .site-header__panel {
     display: none;

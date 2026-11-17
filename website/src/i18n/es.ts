@@ -153,6 +153,7 @@ export const es: Strings = {
       'Respuestas sobre carried-context development y carrydown: en qué se diferencia del desarrollo guiado por especificaciones, por qué no es cascada, cómo el trabajo en GitHub se mantiene conciliado con la verdad de referencia y qué no hace carrydown.',
     h1: 'Preguntas',
     intro: 'Respuestas a las preguntas más frecuentes, con enlaces a la documentación donde hay más. Cada pregunta tiene su propio enlace.',
+    anchorLabel: 'Enlace a esta pregunta',
     items: [
       {
         id: 'spec-driven',

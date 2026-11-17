@@ -1,6 +1,7 @@
 ---
-// The questions page: the questions, each with a link of its own, and the facts about what carrydown
-// does not do.
+// The questions page: an accordion of questions, each with a link of its own, and the facts about what
+// carrydown does not do. The answers are in the page for a reader without scripts and for search; the
+// script folds them, and a link to a question unfolds that one.
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import TranslationNote from '../TranslationNote.astro';
 import { getStrings } from '../../i18n';
@@ -31,19 +32,26 @@ const parts = (text: string) => text.split('--apply');
       <div class="faq">
         {
           f.items.map((item) => (
-            <div class="faq-item">
-              <h2 class="faq-q" id={item.id}>
-                <a href={`#${item.id}`}>
-                  {item.q}
+            <div class="faq-item" id={item.id}>
+              <h2 class="faq-q">
+                <button type="button" class="faq-toggle" aria-expanded="true" aria-controls={`${item.id}-answer`}>
+                  <span class="faq-q-text">{item.q}</span>
+                  <svg class="faq-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                    <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                </button>
+                <a class="faq-anchor-link" href={`#${item.id}`} aria-label={f.anchorLabel}>
                   <svg class="faq-anchor" viewBox="0 0 24 24" aria-hidden="true" focusable="false" set:html={anchorIcon}></svg>
                 </a>
               </h2>
-              <p class="faq-a">{item.a}</p>
-              {'more' in item && item.more && (
-                <p class="faq-more">
-                  <a href={href(item.more.href)}>{item.more.label}</a>
-                </p>
-              )}
+              <div class="faq-panel" id={`${item.id}-answer`}>
+                <p class="faq-a">{item.a}</p>
+                {'more' in item && item.more && (
+                  <p class="faq-more">
+                    <a href={href(item.more.href)}>{item.more.label}</a>
+                  </p>
+                )}
+              </div>
             </div>
           ))
         }
@@ -71,3 +79,32 @@ const parts = (text: string) => text.split('--apply');
     </div>
   </section>
 </SiteLayout>
+
+<script>
+  // The accordion. Each question is a button that shows or hides its answer. A link to a question, in the
+  // address or on the page, unfolds that question and scrolls to it.
+  const items = Array.from(document.querySelectorAll<HTMLElement>('.faq-item'));
+  const set = (item: HTMLElement, open: boolean) => {
+    const toggle = item.querySelector<HTMLButtonElement>('.faq-toggle');
+    const panel = item.querySelector<HTMLElement>('.faq-panel');
+    if (!toggle || !panel) return;
+    toggle.setAttribute('aria-expanded', String(open));
+    panel.hidden = !open;
+  };
+  const current = () => decodeURIComponent(location.hash.slice(1));
+  const openHash = () => {
+    const item = items.find((i) => i.id === current());
+    if (!item) return;
+    set(item, true);
+    item.scrollIntoView();
+  };
+  items.forEach((item) => {
+    set(item, item.id === current());
+    item.querySelector<HTMLButtonElement>('.faq-toggle')?.addEventListener('click', (event) => {
+      set(item, (event.currentTarget as HTMLButtonElement).getAttribute('aria-expanded') !== 'true');
+    });
+    item.querySelector<HTMLAnchorElement>('.faq-anchor-link')?.addEventListener('click', () => set(item, true));
+  });
+  window.addEventListener('hashchange', openHash);
+  openHash();
+</script>

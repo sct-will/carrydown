@@ -145,6 +145,7 @@ export const ja: Strings = {
       'carried-context development と carrydown についての回答。仕様駆動開発との違い、ウォーターフォールではない理由、GitHub 上の作業がグラウンドトゥルースと整合し続ける仕組み、そして carrydown がしないこと。',
     h1: 'よくある質問',
     intro: 'よくある質問への回答です。詳しい説明があるところにはドキュメントへのリンクがあります。各質問には固有のリンクがあります。',
+    anchorLabel: 'この質問へのリンク',
     items: [
       {
         id: 'spec-driven',
