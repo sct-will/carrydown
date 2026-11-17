@@ -18,7 +18,7 @@
 
 ## Words you will meet
 
-- **Agent skill.** A folder of instructions that your coding agent loads to do one kind of work. Carrydown installs two.
+- **Agent skill.** A folder of instructions that your coding agent loads to do one kind of work. carrydown installs two.
 - **Node.js and npx.** Node.js is a free program that runs JavaScript on your computer, and `npx` is the command it provides to download and run the skills installer.
 - **Ground truth.** The documents the project must obey, such as architecture, requirements and company rules.
 - **Track.** A lane of work that one engineer owns, such as back end or front end.
@@ -84,7 +84,7 @@ The commands in this documentation are written for macOS and Linux. On Windows, 
 
 ## Choose a coding agent
 
-Choose a coding agent that supports Agent Skills and can read and edit project files and run commands. Carrydown uses those capabilities to draft and check the plan.
+Choose a coding agent that supports Agent Skills and can read and edit project files and run commands. carrydown uses those capabilities to draft and check the plan.
 
 If your team already uses one, start there. Otherwise, choose one from this install list and follow its official setup instructions. Install it and sign in, then continue below. Its account, subscription and organization permissions are separate from carrydown.
 
@@ -284,7 +284,7 @@ What this means in practice:
 
 - **Keep confidential documents where they are.** Give the agent their paths in the system your organization already uses. Do not copy a confidential document into the project folder. The checks pass in a clean clone without originals.
 - **Staffing stays private on both answers.** Names, GitHub logins, skills, preferences, days off, allocation and start dates go to `people.yaml` in the private workspace, never into the plan or any file in the project. The load table and the date checks run on your machine.
-- **An ignore rule does not erase history.** If a confidential file was ever committed, it is still in the repository's history. `release.py inventory` lists tracked originals, renderings and staffing fields and whether they appear in history. Carrydown cannot rewrite history. [GitHub's guidance on removing sensitive data](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository) applies.
+- **An ignore rule does not erase history.** If a confidential file was ever committed, it is still in the repository's history. `release.py inventory` lists tracked originals, renderings and staffing fields and whether they appear in history. carrydown cannot rewrite history. [GitHub's guidance on removing sensitive data](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository) applies.
 - **The approved context is readable by everyone who can read the repository.** Version 1 cannot hide a section from a teammate who has repository access. Material that some of those readers must not see needs a delivery mode that is planned and not yet available. See [delivery modes](delivery-modes.md).
 - **Answer once.** The agent records your answer for each document and shows it in two lines, with where drafting will happen. Change it only by running step 0 again.
 

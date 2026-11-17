@@ -72,7 +72,7 @@ Some facts cannot be read with an ordinary token: the Apps installed on the stag
 
 - The author must be one of the enrollment's administrators, by numeric id, and the attestation must sit in the protected history of `enrollment.yaml`. Record the tooling pull request review that approved it in `note`.
 - The subject must match the exact component. A change to the reader set, the repository or the App makes the old attestation stop matching.
-- It has an expiry. Choose a lifetime you will keep renewing. Carrydown supplies no attestation that never expires.
+- It has an expiry. Choose a lifetime you will keep renewing. carrydown supplies no attestation that never expires.
 - It never replaces a live content hash, an approval identity, an event state, an expiry or the verifier's scan health.
 
 An expired or missing attestation blocks the first upload to staging, not the later audit. Renew it before it lapses.

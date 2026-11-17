@@ -41,7 +41,7 @@ Yes, within stated limits. Governance rules, standards and company context go in
 
 ## Do my confidential documents end up in the project repository?
 
-Not unless you say everyone who can read the repository may see them. The project holds the outputs you approved, never a restricted original or its full rendering. Originals are optional in the project even when a document is public, and the checks pass in a clean clone without them. An ignore rule keeps new files out of git, but it does not erase a file that an earlier commit already holds. The inventory command, `release.py inventory`, lists what a legacy project tracks and whether it is in history. Carrydown cannot rewrite history. See [who may see your documents](setup.md#before-you-add-documents-who-may-see-them).
+Not unless you say everyone who can read the repository may see them. The project holds the outputs you approved, never a restricted original or its full rendering. Originals are optional in the project even when a document is public, and the checks pass in a clean clone without them. An ignore rule keeps new files out of git, but it does not erase a file that an earlier commit already holds. The inventory command, `release.py inventory`, lists what a legacy project tracks and whether it is in history. carrydown cannot rewrite history. See [who may see your documents](setup.md#before-you-add-documents-who-may-see-them).
 
 ## Can one engineer see a section that another engineer must not?
 
@@ -61,7 +61,7 @@ Its workflow asks GitHub for a run every five minutes, and an administrator can 
 
 ## Do hosted coding agents work?
 
-They can read the approved contexts from the repository, so they need no local workspace. The engineers' check refreshes with a `git fetch` of the default branch, and whether a hosted environment allows that depends on the host. If the fetch fails, the check applies the offline grace rule or stops. Carrydown's tests do not run inside a hosted agent, so confirm the fetch behavior for yours.
+They can read the approved contexts from the repository, so they need no local workspace. The engineers' check refreshes with a `git fetch` of the default branch, and whether a hosted environment allows that depends on the host. If the fetch fails, the check applies the offline grace rule or stops. carrydown's tests do not run inside a hosted agent, so confirm the fetch behavior for yours.
 
 ## What are the private path and the organization setup?
 
