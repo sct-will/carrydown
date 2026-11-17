@@ -1,0 +1,14 @@
+---
+// Keeps Starlight's page title and sets the Copy page control beside it: the page as Markdown, to copy
+// or to open, and its source in the repository. Registered in astro.config.mjs as components.PageTitle.
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+import CopyPage from '../CopyPage.astro';
+const { locale, entry } = Astro.locals.starlightRoute;
+// Starlight renders the not-found page through this title too. It has no Markdown to copy.
+const notFound = /\/404(\.html|\/)?$/.test(Astro.url.pathname);
+---
+
+<div class="title-row">
+  <div class="title-row__title"><Default {...Astro.props} /></div>
+  {!notFound && <CopyPage locale={locale ?? 'en'} id={entry.id} body={entry.body ?? ''} />}
+</div>

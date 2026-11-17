@@ -490,3 +490,16 @@ header.header {
   gap: 10px;
   margin: 0;
 }
+/* The author's name links to their site. The vertical padding and the matching negative margin give
+ * the link a 44 px tap target without moving the line. */
+.site-footer__copyright a {
+  display: inline-block;
+  padding: 12px 0;
+  margin: -12px 0;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.site-footer__copyright a:hover {
+  color: var(--teal);
+}

@@ -1,0 +1,223 @@
+---
+// The Copy page control at the top of a docs page. The main button copies the page as Markdown. The
+// menu beside it offers the same copy, the Markdown file itself and the page's source in the repository.
+// The Markdown is the file served next to the page, /docs/setup.md for /docs/setup/, built by
+// src/pages/[...path].md.ts.
+import { getStrings } from '../i18n';
+import { base, repoUrl, sourceBranch } from '../../site.config.mjs';
+
+interface Props {
+  locale: string;
+  /** The content entry id, for example "docs/setup" or "de/docs/setup". */
+  id: string;
+  /** The entry's Markdown body, which names its source file in the repository. */
+  body: string;
+}
+const { locale, id, body } = Astro.props;
+const t = getStrings(locale).copyPage;
+const prefix = base === '/' ? '' : base.replace(/\/+$/, '');
+const mdUrl = `${prefix}/${id}.md`;
+// The generated page opens with a line naming its source, "From the repository, docs/setup.md."
+const source = body.match(/From the repository, ([\w./-]+\.md)\./)?.[1];
+const sourceUrl = source ? `${repoUrl}/blob/${sourceBranch}/${source}` : `${repoUrl}/tree/${sourceBranch}`;
+---
+
+<div class="copy-page" data-copy-page data-md={mdUrl}>
+  <button
+    type="button"
+    class="copy-page__main"
+    data-copy-main
+    data-label={t.button}
+    data-copied={t.copied}
+    data-ok={t.ok}
+    data-fail={t.fail}
+  >
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
+      <path d="M10.5 5.5V3.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" fill="none" stroke="currentColor" stroke-width="1.5"></path>
+    </svg>
+    <span data-copy-label>{t.button}</span>
+  </button>
+  <button type="button" class="copy-page__toggle" aria-haspopup="menu" aria-expanded="false" aria-label={t.menu} data-toggle>
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </button>
+  <ul class="copy-page__menu" role="menu" aria-label={t.menu} hidden>
+    <li role="none">
+      <button type="button" role="menuitem" data-copy-item>
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
+          <path d="M10.5 5.5V3.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" fill="none" stroke="currentColor" stroke-width="1.5"></path>
+        </svg>
+        {t.asMarkdown}
+      </button>
+    </li>
+    <li role="none">
+      <a role="menuitem" href={mdUrl}>
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path d="M4 12L12 4M6 4h6v6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        {t.open}
+      </a>
+    </li>
+    <li role="none">
+      <a role="menuitem" href={sourceUrl}>
+        <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+          <path d="M4 12L12 4M6 4h6v6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        {t.source}
+      </a>
+    </li>
+  </ul>
+  <span class="sr-only" role="status" data-status></span>
+</div>
+
+<script>
+  // A menu button, as in the ARIA authoring practices: the toggle opens the menu, arrow keys move
+  // between the items, Escape closes and returns focus, a click elsewhere closes.
+  document.querySelectorAll<HTMLElement>('[data-copy-page]').forEach((root) => {
+    const mdUrl = root.dataset.md ?? '';
+    const main = root.querySelector<HTMLButtonElement>('[data-copy-main]');
+    const label = root.querySelector<HTMLElement>('[data-copy-label]');
+    const toggle = root.querySelector<HTMLButtonElement>('[data-toggle]');
+    const menu = root.querySelector<HTMLElement>('[role="menu"]');
+    const status = root.querySelector<HTMLElement>('[data-status]');
+    if (!main || !label || !toggle || !menu) return;
+    const items = () => Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+
+    // The Markdown is fetched once, early: on the first pointer or focus near the control, so that the
+    // clipboard write on the click happens inside the user's gesture, which some browsers require.
+    let text: string | null = null;
+    let loading: Promise<string> | null = null;
+    const load = () => {
+      if (text !== null) return Promise.resolve(text);
+      loading ??= fetch(mdUrl).then(async (res) => {
+        if (!res.ok) throw new Error(`${res.status}`);
+        text = await res.text();
+        return text;
+      });
+      return loading;
+    };
+    ['pointerenter', 'focusin', 'touchstart'].forEach((type) => root.addEventListener(type, () => void load().catch(() => {}), { passive: true }));
+
+    const say = (message: string) => {
+      if (!status) return;
+      status.textContent = '';
+      window.setTimeout(() => {
+        status.textContent = message;
+      }, 50);
+    };
+    // The last resort, for a browser without the async clipboard or one that refuses it: a hidden
+    // text area, selected and copied with the old command.
+    const fallbackCopy = async () => {
+      let value = '';
+      try {
+        value = await load();
+      } catch {
+        return false;
+      }
+      const area = document.createElement('textarea');
+      area.value = value;
+      area.setAttribute('readonly', '');
+      area.setAttribute('aria-hidden', 'true');
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
+      area.remove();
+      main.focus();
+      return ok;
+    };
+    let timer: number | undefined;
+    const copy = async () => {
+      let ok = false;
+      try {
+        if (text !== null) {
+          await navigator.clipboard.writeText(text);
+        } else if (typeof ClipboardItem !== 'undefined') {
+          // A promise inside the clipboard item keeps the write inside the gesture while the fetch runs.
+          await navigator.clipboard.write([new ClipboardItem({ 'text/plain': load().then((t) => new Blob([t], { type: 'text/plain' })) })]);
+        } else {
+          await navigator.clipboard.writeText(await load());
+        }
+        ok = true;
+      } catch {
+        try {
+          await navigator.clipboard.writeText(await load());
+          ok = true;
+        } catch {
+          ok = await fallbackCopy();
+        }
+      }
+      say(ok ? (main.dataset.ok ?? '') : (main.dataset.fail ?? ''));
+      if (ok) {
+        label.textContent = main.dataset.copied ?? '';
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          label.textContent = main.dataset.label ?? '';
+        }, 2000);
+      }
+    };
+
+    const open = (index: number) => {
+      menu.hidden = false;
+      toggle.setAttribute('aria-expanded', 'true');
+      const list = items();
+      list[(index + list.length) % list.length]?.focus();
+    };
+    const close = (refocus = false) => {
+      if (menu.hidden) return;
+      menu.hidden = true;
+      toggle.setAttribute('aria-expanded', 'false');
+      if (refocus) toggle.focus();
+    };
+
+    main.addEventListener('click', () => void copy());
+    toggle.addEventListener('click', () => (menu.hidden ? open(0) : close()));
+    toggle.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        open(0);
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        open(-1);
+      }
+    });
+    menu.addEventListener('keydown', (event) => {
+      const list = items();
+      const i = list.indexOf(document.activeElement as HTMLElement);
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        list[(i + 1) % list.length]?.focus();
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        list[(i - 1 + list.length) % list.length]?.focus();
+      } else if (event.key === 'Home') {
+        event.preventDefault();
+        list[0]?.focus();
+      } else if (event.key === 'End') {
+        event.preventDefault();
+        list[list.length - 1]?.focus();
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        close(true);
+      } else if (event.key === 'Tab') {
+        close();
+      }
+    });
+    menu.querySelector<HTMLButtonElement>('[data-copy-item]')?.addEventListener('click', () => {
+      close(true);
+      void copy();
+    });
+    document.addEventListener('click', (event) => {
+      if (!root.contains(event.target as Node)) close();
+    });
+  });
+</script>

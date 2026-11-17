@@ -40,6 +40,17 @@ export const zhCN: Strings = {
     unavailable: '搜索在已发布的网站上可用。开发预览中不可用。',
   },
 
+  copyPage: {
+    button: '复制页面',
+    copied: '已复制',
+    menu: '使用本页的更多方式',
+    asMarkdown: '以 Markdown 复制页面',
+    open: '打开 Markdown',
+    source: '在 GitHub 上查看源文件',
+    ok: '页面已以 Markdown 形式复制到剪贴板。',
+    fail: '无法复制。请打开 Markdown，从那里复制。',
+  },
+
   translation: {
     note: '本翻译尚待母语人士审校。以英文页面为准。',
     link: '阅读英文页面',
@@ -119,26 +130,55 @@ export const zhCN: Strings = {
 
   faq: {
     title: '常见问题，carried-context development',
-    description: '关于 carried-context development 和 carrydown 的简短回答，以及 carrydown 不做什么。',
+    description:
+      '关于 carried-context development 和 carrydown 的解答：它与规格驱动开发的区别、为什么它不是瀑布式、GitHub 上的工作如何与基准事实保持一致，以及 carrydown 不做什么。',
     h1: '常见问题',
-    intro: '简短的回答，需要更多内容时附有指向文档的链接。',
+    intro: '最常见问题的解答，并在有更多内容处链接到文档。每个问题都有自己的链接。',
     items: [
       {
-        q: '它会证明我的文档是正确的吗？',
-        a: '不会。它从你带来的内容出发，帮助你审阅。',
+        id: 'spec-driven',
+        q: '这与传统的规格驱动开发有什么不同？',
+        a: '在规格驱动开发中，每位工程师为自己的任务编写规格。质量取决于写的人，没有两份规格是一样的，项目一旦开始变化，也没有什么把它们联系在一起。Carried-context development 从更高一层开始。您的 AI 代理从同一个商定的基准事实派生每一份规格，并引用它所出自的章节。计划负责人在发布任何内容之前把规格放在一起审阅，检查会从干净的克隆验证每一处引用。基准事实变化时，一次审阅就把批准的变更传递到每一份规格、每个 issue 和每个编码代理，而不是每位工程师各自重写。',
+        more: { label: '在定义页面查看并排对比。', href: '/definition/#differs' },
       },
       {
-        q: '适合一个人的试验项目吗？',
-        a: '不太适合。当多名工程师基于已商定的架构分担数周的工作时，它才有回报。',
+        id: 'waterfall',
+        q: '这不就是瀑布式吗？',
+        a: '不是。瀑布式把整个计划预先固定，并把变更视为计划的失败。在这里，计划、规格和 issue 都是 Git 中的文件，所以修改成本低，而且变更像代码一样经过审阅。工作单元按工作所需的时长进行，而不是固定长度的时间盒。每个里程碑以一次演示结束，由相关方决定通过或不通过，团队学到的东西回到基准事实并再次向下传递。您可以规划、构建一点、学习，并按项目需要随时更新计划。',
+        more: { label: '在方法页面阅读变更如何向下传递。', href: '/docs/method/#when-the-project-changes' },
       },
-      { q: '它会监视我的文档吗？', a: '不会。更新从你说明有什么变化时开始。' },
       {
+        id: 'reconciled',
+        q: '项目看板、issue、规格和工程师的 skill 如何与基准事实保持一致？',
+        a: '您告诉代理什么变了。说“This changed: …”并描述变更，或交给它修订后的文档。代理把变更与您上次审阅的来源和当前工作比较，找出受影响的规格和 issue，保留仍然适用的工程师修正，并向您展示一次审阅，列出建议的更新和所有冲突。在您批准之前，什么都不会动。批准的更新随后经过与计划相同的发布流程：更新您选择的看板和 issue，不删除任何一项，并重新生成工程师的 skill，这样下次工程师指定工作项时，每个编码代理读到的都是新的规格。',
+        more: { label: '按照计划负责人指南中的步骤操作。', href: '/docs/plan-owner-guide/#when-the-project-changes' },
+      },
+      {
+        id: 'certify',
+        q: '它能证明我的文档是正确的吗？',
+        a: '不能。基准事实是团队商定的内容，代理把它当作既定事实。它增加的是审阅。它渲染每份文档，用提问帮助您审阅，并由第二轮审阅把完成的计划与其来源、约束和人员安排决定进行对照。如果文档是错的，计划也会以同样的方式出错，修正应该放在文档里，而不是计划里。',
+      },
+      {
+        id: 'one-person',
+        q: '适合一个人做的 spike 吗？',
+        a: '不太适合。当多名工程师在商定的架构下共同承担数周的工作，而规格的偏离会真正耗费时间时，这个方法才划算。对于一个人做的 spike，计划、规格和看板的结构超出了工作的需要。当团队把工作交给编码代理，并且需要每一个代理都从同样的决定出发时，再使用它。',
+      },
+      {
+        id: 'watch',
+        q: '它会监视我的文档吗？',
+        a: '不会。carrydown 没有文件监视器，也从不自行读取您的文档系统。更新在您说明变更并提供修订材料时开始，在您批准审阅时结束。计划负责人指南中的里程碑审阅也会询问自上次计划以来是否有来源、需求或约束发生了变化，所以变更最迟会在那里被发现。',
+      },
+      {
+        id: 'agents',
         q: '支持哪些编码代理？',
-        a: '任何支持 Agent Skills 的编码代理。你的工程师可以继续使用他们现在用的那个。',
+        a: '任何支持 Agent Skills、能够读写项目文件并运行命令的编码代理。工程师继续使用他们已有的代理。生成的 skill 是代理加载的一个指令文件夹，不包含任何凭据。设置指南列出了支持的代理和各自的安装步骤。',
+        more: { label: '在设置指南中选择编码代理。', href: '/docs/setup/#choose-a-coding-agent' },
       },
       {
-        q: '使用什么许可证？',
-        a: 'Apache 2.0。安全政策、更新日志以及企业常见安全问题的解答都在代码仓库里。',
+        id: 'license',
+        q: '采用什么许可证？',
+        a: 'Apache 2.0，涵盖 skill、脚本和模板。仓库中有安全策略、更新日志，以及对企业常见安全问题的解答，每条解答都标注为已支持、有前提条件地支持或计划中。',
+        more: { label: '在 GitHub 上打开仓库。', href: 'https://github.com/sct-will/carrydown' },
       },
     ],
     doesNotHeading: 'carrydown 不做什么',
@@ -178,7 +218,7 @@ export const zhCN: Strings = {
   },
 
   home: {
-    title: 'Carried-context development，首页',
+    title: 'Carried context，为每个编码代理提供同一个基准事实',
     description:
       'Carried-context development 是一种智能体开发方法，把项目决策和上下文一直传递到每位工程师的编码代理，让项目保持一致，不再偏离。',
     h1: [
@@ -223,13 +263,6 @@ export const zhCN: Strings = {
       heading: '试一试',
       intro:
         'Carried-context development 是一种智能体开发方法，实现它的方式不止一种。carrydown 是参考实现：你安装的两个 Agent Skills，它为你的工程师生成的第三个，以及验证每一处引用的检查。它以 Apache 2.0 开源，可与你的团队已经在用的编码代理配合使用。',
-      tryButton: '从这里开始',
-      installCommand: en.home.carrydown.installCommand,
-      copy: '复制',
-      copied: '已复制',
-      copyLabel: '复制安装命令',
-      copiedStatus: '安装命令已复制到剪贴板。',
-      copyFailedStatus: '无法复制。请选中命令后自行复制。',
       tiles: [
         {
           step: '第 1 步',

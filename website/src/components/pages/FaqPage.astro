@@ -1,5 +1,6 @@
 ---
-// The questions page: five questions and seven facts about what carrydown does not do.
+// The questions page: the questions, each with a link of its own, and the facts about what carrydown
+// does not do.
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import TranslationNote from '../TranslationNote.astro';
 import { getStrings } from '../../i18n';
@@ -13,6 +14,8 @@ const { locale = 'en' } = Astro.props;
 const t = getStrings(locale);
 const startHereUrl = `${localePath(locale, '/docs/')}#start-here`;
 const f = t.faq;
+// The link under an answer: a site path gets the locale prefix, an address is used as written.
+const href = (path: string) => (path.startsWith('/') ? localePath(locale, path) : path);
 // The literal text --apply is set in monospace wherever it appears.
 const parts = (text: string) => text.split('--apply');
 ---
@@ -23,16 +26,23 @@ const parts = (text: string) => text.split('--apply');
     <div class="wrap">
       <h1 class="doc-title doc-title--small">{f.h1}</h1>
       <p class="page-intro">{f.intro}</p>
-      <dl class="faq">
+      <div class="faq">
         {
           f.items.map((item) => (
-            <>
-              <dt>{item.q}</dt>
-              <dd>{item.a}</dd>
-            </>
+            <div class="faq-item">
+              <h2 class="faq-q" id={item.id}>
+                <a href={`#${item.id}`}>{item.q}<span class="faq-hash" aria-hidden="true">#</span></a>
+              </h2>
+              <p class="faq-a">{item.a}</p>
+              {'more' in item && item.more && (
+                <p class="faq-more">
+                  <a href={href(item.more.href)}>{item.more.label}</a>
+                </p>
+              )}
+            </div>
           ))
         }
-      </dl>
+      </div>
       <h2 class="page-h2">{f.doesNotHeading}</h2>
       <ul class="factgrid" role="list">
         {

@@ -40,6 +40,17 @@ export const es: Strings = {
     unavailable: 'La búsqueda funciona en el sitio publicado. No está disponible en la vista previa de desarrollo.',
   },
 
+  copyPage: {
+    button: 'Copiar página',
+    copied: 'Copiado',
+    menu: 'Más formas de usar esta página',
+    asMarkdown: 'Copiar la página como Markdown',
+    open: 'Abrir el Markdown',
+    source: 'Ver la fuente en GitHub',
+    ok: 'Página copiada al portapapeles como Markdown.',
+    fail: 'No se pudo copiar. Abra el Markdown y cópielo desde allí.',
+  },
+
   translation: {
     note: 'Esta traducción está pendiente de revisión por un hablante nativo. La página en inglés es la referencia.',
     link: 'Leer la página en inglés',
@@ -139,26 +150,54 @@ export const es: Strings = {
   faq: {
     title: 'Preguntas, carried-context development',
     description:
-      'Respuestas breves sobre carried-context development y carrydown, y sobre lo que carrydown no hace.',
+      'Respuestas sobre carried-context development y carrydown: en qué se diferencia del desarrollo guiado por especificaciones, por qué no es cascada, cómo el trabajo en GitHub se mantiene conciliado con la verdad de referencia y qué no hace carrydown.',
     h1: 'Preguntas',
-    intro: 'Respuestas breves, con enlaces a la documentación donde hay más.',
+    intro: 'Respuestas a las preguntas más frecuentes, con enlaces a la documentación donde hay más. Cada pregunta tiene su propio enlace.',
     items: [
       {
+        id: 'spec-driven',
+        q: '¿En qué se diferencia del desarrollo guiado por especificaciones tradicional?',
+        a: 'En el desarrollo guiado por especificaciones, cada ingeniero escribe la especificación de su propia tarea. La calidad depende de quién la escribió, no hay dos especificaciones iguales y nada las mantiene unidas cuando el proyecto empieza a cambiar. Carried-context development empieza un nivel más arriba. Su agente de IA deriva cada especificación de la misma verdad de referencia acordada y cita las secciones de las que procede. El responsable del plan revisa las especificaciones en conjunto antes de publicar nada, y una comprobación valida cada cita desde un clon limpio. Cuando la verdad de referencia cambia, una sola revisión lleva el cambio aprobado a cada especificación, cada incidencia y cada agente de programación, en lugar de que cada ingeniero reescriba la suya.',
+        more: { label: 'Ver la comparación lado a lado en la página de definición.', href: '/definition/#differs' },
+      },
+      {
+        id: 'waterfall',
+        q: '¿No es esto simplemente cascada?',
+        a: 'No. La cascada fija todo el plan por adelantado y trata un cambio como un fallo del plan. Aquí el plan, las especificaciones y las incidencias son archivos en Git, así que cambiarlos es barato y el cambio se revisa como el código. Las unidades de trabajo duran lo que el trabajo necesita, no cajas de longitud fija. Cada hito termina con una demostración que las partes interesadas aprueban o rechazan, y lo que el equipo aprende vuelve a la verdad de referencia y se propaga de nuevo. Puede planificar, construir un poco, aprender y actualizar el plan tantas veces como el proyecto lo necesite.',
+        more: { label: 'Leer en el método cómo se propaga un cambio.', href: '/docs/method/#when-the-project-changes' },
+      },
+      {
+        id: 'reconciled',
+        q: '¿Cómo se mantienen el tablero del proyecto, las incidencias, las especificaciones y el skill de los ingenieros conciliados con la verdad de referencia?',
+        a: 'Usted le dice a su agente qué cambió. Diga «This changed: …» y describa el cambio o entregue los documentos revisados. El agente compara el cambio con las fuentes que revisó por última vez y con el trabajo actual, encuentra las especificaciones y las incidencias que el cambio afecta, conserva las correcciones de los ingenieros que siguen encajando y le muestra una sola revisión de las actualizaciones propuestas y de cualquier conflicto. Nada se mueve hasta que usted aprueba. La actualización aprobada pasa después por la misma publicación que el plan: actualiza el tablero y las incidencias que usted elija, no elimina ninguna y regenera el skill de los ingenieros, de modo que cada agente de programación lee la nueva especificación la próxima vez que un ingeniero nombra un elemento de trabajo.',
+        more: { label: 'Seguir los pasos de la guía del responsable del plan.', href: '/docs/plan-owner-guide/#when-the-project-changes' },
+      },
+      {
+        id: 'certify',
         q: '¿Certifica que mis documentos son correctos?',
-        a: 'No. Parte de lo que usted aporta y le ayuda a revisarlo.',
+        a: 'No. La verdad de referencia es lo que su equipo acordó, y el agente la toma como dada. Lo que añade es revisión. Renderiza cada documento, le ayuda a revisarlo con preguntas, y una segunda revisión contrasta el plan terminado con sus fuentes, sus restricciones y sus decisiones de asignación. Si un documento está mal, el plan está mal de la misma forma, y la corrección va en el documento y no en el plan.',
       },
       {
-        q: '¿Sirve para una prueba de una sola persona?',
-        a: 'No realmente. Compensa cuando varios ingenieros comparten semanas de trabajo con una arquitectura acordada.',
+        id: 'one-person',
+        q: '¿Es para un spike de una sola persona?',
+        a: 'No mucho. El método compensa cuando varios ingenieros comparten semanas de trabajo bajo una arquitectura acordada y las especificaciones que se separan cuestan tiempo real. Para un spike de una sola persona, el plan, las especificaciones y el tablero son más estructura de la que el trabajo necesita. Úselo cuando un equipo entrega trabajo a agentes de programación y necesita que todos partan de las mismas decisiones.',
       },
-      { q: '¿Vigila mis documentos?', a: 'No. Una actualización empieza cuando usted dice qué cambió.' },
       {
+        id: 'watch',
+        q: '¿Vigila mis documentos?',
+        a: 'No. carrydown no tiene ningún observador de archivos y nunca lee su sistema de documentos por su cuenta. Una actualización empieza cuando usted dice qué cambió y aporta el material revisado, y termina cuando aprueba la revisión. La revisión de hito de la guía del responsable del plan también pregunta si alguna fuente, requisito o restricción ha cambiado desde el último plan, así que un cambio se detecta allí como muy tarde.',
+      },
+      {
+        id: 'agents',
         q: '¿Qué agentes de programación?',
-        a: 'Cualquier agente de programación que admita Agent Skills. Sus ingenieros conservan el que usan.',
+        a: 'Cualquier agente de programación que admita Agent Skills y pueda leer y editar los archivos del proyecto y ejecutar comandos. Sus ingenieros conservan el que ya usan. El skill generado es una carpeta de instrucciones que su agente carga, y no contiene ninguna credencial. La guía de instalación enumera los agentes admitidos y los pasos de instalación de cada uno.',
+        more: { label: 'Elegir un agente de programación en la guía de instalación.', href: '/docs/setup/#choose-a-coding-agent' },
       },
       {
+        id: 'license',
         q: '¿Qué licencia?',
-        a: 'Apache 2.0. La política de seguridad, el registro de cambios y las respuestas a las preguntas de seguridad habituales de las empresas están en el repositorio.',
+        a: 'Apache 2.0, para los skills, los scripts y las plantillas. El repositorio contiene la política de seguridad, el registro de cambios y las respuestas a las preguntas de seguridad habituales de las empresas, cada una etiquetada como admitida, admitida con requisitos previos o prevista.',
+        more: { label: 'Abrir el repositorio en GitHub.', href: 'https://github.com/sct-will/carrydown' },
       },
     ],
     doesNotHeading: 'Lo que carrydown no hace',
@@ -201,7 +240,7 @@ export const es: Strings = {
   },
 
   home: {
-    title: 'Carried-context development, inicio',
+    title: 'Carried context, una verdad de referencia para cada agente de programación',
     description:
       'Carried-context development es un enfoque de desarrollo con agentes que lleva las decisiones y el contexto del proyecto hasta el agente de programación de cada ingeniero, para que el proyecto siga alineado y nada se desvíe.',
     h1: [
@@ -246,13 +285,6 @@ export const es: Strings = {
       heading: 'Pruébelo',
       intro:
         'Carried-context development es un enfoque de desarrollo con agentes, y hay más de una forma de implementarlo. carrydown es la implementación de referencia: dos Agent Skills que usted instala, un tercero que genera para sus ingenieros y las comprobaciones que validan cada cita. Es de código abierto bajo Apache 2.0 y funciona con el agente de programación que su equipo ya usa.',
-      tryButton: 'Empiece aquí',
-      installCommand: en.home.carrydown.installCommand,
-      copy: 'Copiar',
-      copied: 'Copiado',
-      copyLabel: 'Copiar el comando de instalación',
-      copiedStatus: 'Comando de instalación copiado al portapapeles.',
-      copyFailedStatus: 'No se pudo copiar. Seleccione el comando y cópielo.',
       tiles: [
         {
           step: 'Paso 1',

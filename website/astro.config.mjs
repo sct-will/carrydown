@@ -48,6 +48,8 @@ export default defineConfig({
         Footer: './src/components/starlight/Footer.astro',
         // Adds the robots tag, the image tags, the JSON-LD and the analytics tag to the docs pages.
         Head: './src/components/starlight/Head.astro',
+        // The page title with the Copy page control beside it.
+        PageTitle: './src/components/starlight/PageTitle.astro',
         ThemeProvider: './src/components/starlight/ThemeProvider.astro',
         MobileMenuFooter: './src/components/starlight/MobileMenuFooter.astro',
       },

@@ -43,6 +43,19 @@ export const en = {
     unavailable: 'Search works on the published site. It is not available in the development preview.',
   },
 
+  /** The Copy page control at the top of each docs page: the page as Markdown, to copy or to open, and
+   * its source in the repository. */
+  copyPage: {
+    button: 'Copy page',
+    copied: 'Copied',
+    menu: 'More ways to use this page',
+    asMarkdown: 'Copy page as Markdown',
+    open: 'Open Markdown',
+    source: 'View the source on GitHub',
+    ok: 'Page copied to the clipboard as Markdown.',
+    fail: 'Could not copy. Open the Markdown and copy it from there.',
+  },
+
   /** Shown at the top of every translated page. The English locale never shows it. */
   translation: {
     note: 'This translation is pending review by a native speaker. The English page is the reference.',
@@ -51,7 +64,7 @@ export const en = {
 
   footer: {
     label: 'Footer',
-    copyright: '© 2026-2027 Will Scott, PhD. Carried-context development. carrydown is Apache 2.0.',
+    copyright: '© 2026-present Will Scott, PhD. Carried-context development. carrydown is Apache 2.0.',
   },
 
   definition: {
@@ -141,26 +154,57 @@ export const en = {
   faq: {
     title: 'Questions, carried-context development',
     description:
-      'Short answers about carried-context development and carrydown, and what carrydown does not do.',
+      'Answers about carried-context development and carrydown: how it differs from spec-driven development, why it is not waterfall, how the GitHub work stays reconciled with the ground truth, and what carrydown does not do.',
     h1: 'Questions',
-    intro: 'Short answers, with links into the docs where there is more.',
+    intro: 'Answers to the questions that come up most, with links into the docs where there is more. Each question has a link of its own.',
+    /** Each item has a stable id, the same in every language, so a link to a question holds across
+     * translations. An optional `more` link under the answer leads into the docs or the repository: a
+     * site path gets the locale prefix, an address is used as written. */
     items: [
       {
+        id: 'spec-driven',
+        q: 'How is this different from traditional spec-driven development?',
+        a: 'In spec-driven development each engineer writes the spec for their own task. Quality depends on who wrote it, no two specs match, and nothing ties them together once the project starts to change. Carried-context development starts one level up. Your AI agent derives every spec from the same agreed ground truth and cites the sections each one came from. The plan owner reviews the specs together before anything is published, and a check validates every citation from a clean clone. When the ground truth changes, one review carries the approved change to every spec, issue and coding agent, instead of each engineer rewriting their own.',
+        more: { label: 'See the side-by-side comparison on the definition page.', href: '/definition/#differs' },
+      },
+      {
+        id: 'waterfall',
+        q: 'Isn’t this just waterfall?',
+        a: 'No. Waterfall fixes the whole plan up front and treats a change as a failure of the plan. Here the plan, the specs and the issues are files in Git, so changing them is cheap and the change is reviewed like code. Work units take the length the work needs rather than fixed-length boxes. Each milestone ends with a demonstration that the stakeholders pass or fail, and what the team learns goes back into the ground truth and is carried down again. You can plan, build a little, learn and update the plan as often as the project needs.',
+        more: { label: 'Read how a change is carried down in the method.', href: '/docs/method/#when-the-project-changes' },
+      },
+      {
+        id: 'reconciled',
+        q: 'How do the project board, the issues, the specs and the engineers’ skill stay reconciled with the ground truth?',
+        a: 'You tell your agent what changed. Say “This changed: …” and describe the change or hand over the revised documents. The agent compares the change with the sources you last reviewed and with the current work, finds the specs and issues the change touches, keeps the engineers’ corrections that still fit, and shows you one review of the proposed updates and any conflicts. Nothing moves until you approve. The approved update then goes through the same release as the plan: it updates the board and the issues you choose, never deletes any of them, and regenerates the engineers’ skill, so each coding agent reads the new specification the next time an engineer names a work item.',
+        more: { label: 'Follow the steps in the plan owner guide.', href: '/docs/plan-owner-guide/#when-the-project-changes' },
+      },
+      {
+        id: 'certify',
         q: 'Does it certify that my documents are right?',
-        a: 'No. It starts from what you bring and helps you review it.',
+        a: 'No. The ground truth is whatever your team agreed, and the agent takes it as given. What it adds is review. It renders each document, helps you review it with prompts, and a second-pass review challenges the finished plan against its sources, its constraints and its staffing choices. If a document is wrong, the plan is wrong in the same way, and the fix belongs in the document rather than in the plan.',
       },
       {
+        id: 'one-person',
         q: 'Is it for a one-person spike?',
-        a: 'Not really. It pays off when several engineers share weeks of work with agreed architecture.',
+        a: 'Not really. The method pays off when several engineers share weeks of work under an agreed architecture and specs that drift apart cost real time. For a one-person spike the plan, the specs and the board are more structure than the work needs. Use it when a team hands work to coding agents and needs every one of them to start from the same decisions.',
       },
-      { q: 'Does it watch my documents?', a: 'No. An update starts when you say what changed.' },
       {
+        id: 'watch',
+        q: 'Does it watch my documents?',
+        a: 'No. carrydown has no file watcher and never reads your document system on its own. An update starts when you say what changed and provide the revised material, and it ends when you approve the review. The milestone review in the plan owner guide also asks whether any source, requirement or constraint has changed since the last plan, so a change is caught there at the latest.',
+      },
+      {
+        id: 'agents',
         q: 'Which coding agents?',
-        a: 'Any coding agent that supports Agent Skills. Your engineers keep the one they use.',
+        a: 'Any coding agent that supports Agent Skills and can read and edit project files and run commands. Your engineers keep the one they already use. The generated skill is a folder of instructions that their agent loads, and it holds no credential. The setup guide lists the supported agents and the install steps for each.',
+        more: { label: 'Choose a coding agent in the setup guide.', href: '/docs/setup/#choose-a-coding-agent' },
       },
       {
+        id: 'license',
         q: 'Which license?',
-        a: 'Apache 2.0. The security policy, the changelog and the answers to common enterprise security questions are in the repository.',
+        a: 'Apache 2.0, for the skills, the scripts and the templates. The repository carries the security policy, the changelog and the answers to common enterprise security questions, each labeled supported, supported with prerequisites or planned.',
+        more: { label: 'Open the repository on GitHub.', href: 'https://github.com/sct-will/carrydown' },
       },
     ],
     doesNotHeading: 'What carrydown does not do',
@@ -204,7 +248,7 @@ export const en = {
   },
 
   home: {
-    title: 'Carried-context development, home',
+    title: 'Carried context, one ground truth for every coding agent',
     description:
       'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent, so the project stays aligned and nothing drifts.',
     h1: [
@@ -248,14 +292,7 @@ export const en = {
     carrydown: {
       heading: 'Try it out',
       intro:
-        'Carried-context development is an approach to agentic development, and there is more than one way to implement it. carrydown is the reference implementation: two Agent Skills you install, a third it generates for your engineers, and the checks that validate every citation. It is open source under Apache 2.0 and works with the coding agent your team already uses.',
-      tryButton: 'Start here',
-      installCommand: 'npx skills add sct-will/carrydown',
-      copy: 'Copy',
-      copied: 'Copied',
-      copyLabel: 'Copy the install command',
-      copiedStatus: 'Install command copied to the clipboard.',
-      copyFailedStatus: 'Could not copy. Select the command and copy it.',
+        'Carried-context development is an approach to agentic development, and there is more than one way to implement it. carrydown is a reference implementation: two Agent Skills you install, a third it generates for your engineers, and the checks that validate every citation. It is open source under Apache 2.0 and works with the coding agent your team already uses.',
       tiles: [
         {
           step: 'Step 1',

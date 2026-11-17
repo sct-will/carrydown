@@ -16,11 +16,13 @@ const h = t.home;
 const c = h.carrydown;
 // The product name in the intro is set in the accent color: the text is split on it and it is put back as a span.
 const introParts = c.intro.split('carrydown');
-const tileLinks = [sampleBoardUrl, localePath(locale, '/docs/setup/')];
+
 // The way in: the Start here section of the docs' first page, and its How it works section. The reader
 // stays in the docs for the installation.
 const startHereUrl = `${localePath(locale, '/docs/')}#start-here`;
 const howItWorksUrl = `${localePath(locale, '/docs/')}#how-it-works`;
+// Step 1 opens the sample board; step 2 opens Start here, like the hero button.
+const tileLinks = [sampleBoardUrl, startHereUrl];
 const w = h.whatYouGet;
 ---
 
@@ -64,24 +66,6 @@ const w = h.whatYouGet;
     <div class="wrap">
       <h2 class="cd-h">{c.heading}</h2>
       <p class="cd-intro">{introParts.map((part, i) => (<>{i > 0 && <a class="accent" href={startHereUrl}>carrydown</a>}{part}</>))}</p>
-      <div class="cd-cta">
-        <a class="btn primary" href={startHereUrl}>{c.tryButton}</a>
-        <div class="cmd">
-          <code id="install-command">{c.installCommand}</code>
-          <button
-            type="button"
-            class="copy"
-            aria-label={c.copyLabel}
-            data-copy-target="install-command"
-            data-label={c.copy}
-            data-copied={c.copied}
-            data-ok={c.copiedStatus}
-            data-fail={c.copyFailedStatus}
-          >{c.copy}</button>
-        </div>
-        <span class="sr-only" role="status" data-copy-status></span>
-      </div>
-
       <div class="tiles">
         {c.tiles.map((tile, i) => (
           <>
@@ -140,50 +124,3 @@ const w = h.whatYouGet;
     </div>
   </section>
 </SiteLayout>
-
-<script>
-  // The Copy button writes the install command to the clipboard and says so in a live region.
-  document.querySelectorAll<HTMLButtonElement>('button[data-copy-target]').forEach((button) => {
-    const target = document.getElementById(button.dataset.copyTarget ?? '');
-    const status = button.parentElement?.parentElement?.querySelector<HTMLElement>('[data-copy-status]');
-    let timer: number | undefined;
-    button.addEventListener('click', async () => {
-      const text = target?.textContent?.trim() ?? '';
-      let ok = false;
-      try {
-        await navigator.clipboard.writeText(text);
-        ok = true;
-      } catch {
-        // Fallback for pages without the async clipboard (older browsers, insecure origins).
-        const area = document.createElement('textarea');
-        area.value = text;
-        area.setAttribute('readonly', '');
-        area.style.position = 'fixed';
-        area.style.opacity = '0';
-        document.body.appendChild(area);
-        area.select();
-        try {
-          ok = document.execCommand('copy');
-        } catch {
-          ok = false;
-        }
-        area.remove();
-        button.focus();
-      }
-      if (status) {
-        // Clear first so a repeat click is announced again.
-        status.textContent = '';
-        window.setTimeout(() => {
-          status.textContent = ok ? (button.dataset.ok ?? '') : (button.dataset.fail ?? '');
-        }, 50);
-      }
-      if (ok) {
-        button.textContent = button.dataset.copied ?? '';
-        window.clearTimeout(timer);
-        timer = window.setTimeout(() => {
-          button.textContent = button.dataset.label ?? '';
-        }, 2000);
-      }
-    });
-  });
-</script>

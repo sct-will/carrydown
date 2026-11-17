@@ -34,7 +34,7 @@ It does not write application code. Planning decisions (owners, dates, scope, or
 - Every script that writes to GitHub is a dry run unless you pass `--apply`. The scaffold and the skill generator write local files in the project only with `--apply`; the renderer writes them unless you pass `--dry-run`. Run the dry run, read it, then apply.
 - Ask the user before anything touches GitHub. Never delete issues, labels, projects or repositories.
 - Prose style: US English spelling, sentence-case headings, short sentences, no em or en dashes, spell out acronyms on first use.
-- Exception: the website footer carries a copyright line, © 2026-2027 Will Scott, PhD.
+- Exception: the website footer carries a copyright line, © 2026-present Will Scott, PhD.
 - No AI vendor names outside the agent install lists. One retired word for this product, the three-letter "k" noun for a set of tools, is banned. Say "the carrydown skills", "the two skills" or "the repository". `lint_prose.py` rejects it. No copyright lines, use an attribution line.
 - After you change a file in `scripts/` or `templates/`, refresh the skill copies: `python3 scripts/sync_skill_assets.py --apply`. Check with `--check`.
 - Commits carry a real human author and an imperative message. No generated-by lines and no co-author trailers.

@@ -40,6 +40,17 @@ export const de: Strings = {
     unavailable: 'Die Suche funktioniert auf der veröffentlichten Website. In der Entwicklungsvorschau ist sie nicht verfügbar.',
   },
 
+  copyPage: {
+    button: 'Seite kopieren',
+    copied: 'Kopiert',
+    menu: 'Weitere Möglichkeiten für diese Seite',
+    asMarkdown: 'Seite als Markdown kopieren',
+    open: 'Markdown öffnen',
+    source: 'Quelle auf GitHub ansehen',
+    ok: 'Seite als Markdown in die Zwischenablage kopiert.',
+    fail: 'Kopieren nicht möglich. Öffnen Sie das Markdown und kopieren Sie es von dort.',
+  },
+
   translation: {
     note: 'Diese Übersetzung wird noch von Muttersprachlern geprüft. Die englische Seite ist maßgeblich.',
     link: 'Englische Seite lesen',
@@ -139,26 +150,54 @@ export const de: Strings = {
   faq: {
     title: 'Fragen, carried-context development',
     description:
-      'Kurze Antworten zu carried-context development und carrydown und dazu, was carrydown nicht tut.',
+      'Antworten zu carried-context development und carrydown: der Unterschied zu spezifikationsgetriebener Entwicklung, warum es kein Wasserfall ist, wie die Arbeit auf GitHub mit der Faktengrundlage abgeglichen bleibt und was carrydown nicht tut.',
     h1: 'Fragen',
-    intro: 'Kurze Antworten, mit Links in die Doku, wo es mehr gibt.',
+    intro: 'Antworten auf die häufigsten Fragen, mit Links in die Doku, wo es mehr gibt. Jede Frage hat einen eigenen Link.',
     items: [
       {
+        id: 'spec-driven',
+        q: 'Was unterscheidet das von klassischer spezifikationsgetriebener Entwicklung?',
+        a: 'Bei spezifikationsgetriebener Entwicklung schreibt jeder Entwickler die Spezifikation für seine eigene Aufgabe. Die Qualität hängt davon ab, wer sie geschrieben hat, keine zwei Spezifikationen gleichen sich, und nichts hält sie zusammen, sobald sich das Projekt ändert. Carried-context development setzt eine Ebene höher an. Ihr KI-Agent leitet jede Spezifikation aus derselben vereinbarten Faktengrundlage ab und zitiert die Abschnitte, aus denen sie stammt. Der Plan-Verantwortliche prüft die Spezifikationen gemeinsam, bevor etwas veröffentlicht wird, und eine Prüfung validiert jedes Zitat aus einem frischen Klon. Ändert sich die Faktengrundlage, trägt eine einzige Durchsicht die freigegebene Änderung in jede Spezifikation, jedes Issue und jeden Coding-Agenten, statt dass jeder Entwickler seine eigene umschreibt.',
+        more: { label: 'Den direkten Vergleich auf der Definitionsseite ansehen.', href: '/definition/#differs' },
+      },
+      {
+        id: 'waterfall',
+        q: 'Ist das nicht einfach Wasserfall?',
+        a: 'Nein. Das Wasserfallmodell legt den ganzen Plan im Voraus fest und behandelt eine Änderung als Versagen des Plans. Hier sind Plan, Spezifikationen und Issues Dateien in Git, also ist eine Änderung billig und wird wie Code geprüft. Arbeitseinheiten dauern so lange, wie die Arbeit braucht, statt in Kästen fester Länge zu passen. Jeder Meilenstein endet mit einer Vorführung, über die die Stakeholder mit bestanden oder nicht bestanden entscheiden, und was das Team lernt, fließt in die Faktengrundlage zurück und wird erneut hinuntergetragen. Sie können planen, ein wenig bauen, lernen und den Plan so oft anpassen, wie das Projekt es braucht.',
+        more: { label: 'In der Methode lesen, wie eine Änderung hinuntergetragen wird.', href: '/docs/method/#when-the-project-changes' },
+      },
+      {
+        id: 'reconciled',
+        q: 'Wie bleiben Projektboard, Issues, Spezifikationen und der Skill der Entwickler mit der Faktengrundlage abgeglichen?',
+        a: 'Sie sagen Ihrem Agenten, was sich geändert hat. Sagen Sie „This changed: …“ und beschreiben Sie die Änderung oder übergeben Sie die überarbeiteten Dokumente. Der Agent vergleicht die Änderung mit den Quellen, die Sie zuletzt geprüft haben, und mit der laufenden Arbeit, findet die betroffenen Spezifikationen und Issues, behält die Korrekturen der Entwickler, die noch passen, und zeigt Ihnen eine einzige Durchsicht der vorgeschlagenen Aktualisierungen und aller Konflikte. Nichts bewegt sich, bevor Sie freigeben. Die freigegebene Aktualisierung durchläuft dann dieselbe Veröffentlichung wie der Plan: Sie aktualisiert das Board und die Issues, die Sie auswählen, löscht keines davon und generiert den Skill der Entwickler neu, sodass jeder Coding-Agent die neue Spezifikation liest, wenn ein Entwickler das nächste Mal ein Arbeitspaket nennt.',
+        more: { label: 'Den Schritten im Leitfaden für Plan-Verantwortliche folgen.', href: '/docs/plan-owner-guide/#when-the-project-changes' },
+      },
+      {
+        id: 'certify',
         q: 'Bescheinigt es, dass meine Dokumente richtig sind?',
-        a: 'Nein. Es geht von dem aus, was Sie mitbringen, und hilft Ihnen, es zu prüfen.',
+        a: 'Nein. Die Faktengrundlage ist das, worauf sich Ihr Team geeinigt hat, und der Agent nimmt sie als gegeben. Was er hinzufügt, ist Prüfung. Er rendert jedes Dokument, hilft Ihnen mit Fragen bei der Durchsicht, und eine zweite Prüfung stellt den fertigen Plan seinen Quellen, seinen Randbedingungen und seinen Besetzungsentscheidungen gegenüber. Ist ein Dokument falsch, ist der Plan auf dieselbe Weise falsch, und die Korrektur gehört in das Dokument und nicht in den Plan.',
       },
       {
+        id: 'one-person',
         q: 'Ist es für einen Ein-Personen-Spike gedacht?',
-        a: 'Eher nicht. Es lohnt sich, wenn mehrere Entwickler über Wochen an einer vereinbarten Architektur arbeiten.',
+        a: 'Eher nicht. Die Methode lohnt sich, wenn mehrere Entwickler über Wochen an einer vereinbarten Architektur arbeiten und auseinanderdriftende Spezifikationen echte Zeit kosten. Für einen Ein-Personen-Spike sind Plan, Spezifikationen und Board mehr Struktur, als die Arbeit braucht. Nutzen Sie sie, wenn ein Team Arbeit an Coding-Agenten übergibt und jeder davon von denselben Entscheidungen ausgehen muss.',
       },
-      { q: 'Beobachtet es meine Dokumente?', a: 'Nein. Eine Aktualisierung beginnt, wenn Sie sagen, was sich geändert hat.' },
       {
+        id: 'watch',
+        q: 'Beobachtet es meine Dokumente?',
+        a: 'Nein. carrydown hat keine Dateiüberwachung und liest Ihr Dokumentensystem nie von sich aus. Eine Aktualisierung beginnt, wenn Sie sagen, was sich geändert hat, und das überarbeitete Material bereitstellen, und sie endet, wenn Sie die Durchsicht freigeben. Die Meilensteinprüfung im Leitfaden für Plan-Verantwortliche fragt außerdem, ob sich seit dem letzten Plan eine Quelle, eine Anforderung oder eine Randbedingung geändert hat, sodass eine Änderung spätestens dort auffällt.',
+      },
+      {
+        id: 'agents',
         q: 'Welche Coding-Agenten?',
-        a: 'Jeder Coding-Agent, der Agent Skills unterstützt. Ihre Entwickler behalten den, den sie nutzen.',
+        a: 'Jeder Coding-Agent, der Agent Skills unterstützt und Projektdateien lesen und bearbeiten sowie Befehle ausführen kann. Ihre Entwickler behalten den, den sie bereits nutzen. Der generierte Skill ist ein Ordner mit Anweisungen, den ihr Agent lädt, und er enthält keine Zugangsdaten. Die Einrichtungsanleitung listet die unterstützten Agenten und die Installationsschritte für jeden.',
+        more: { label: 'Einen Coding-Agenten in der Einrichtungsanleitung wählen.', href: '/docs/setup/#choose-a-coding-agent' },
       },
       {
+        id: 'license',
         q: 'Welche Lizenz?',
-        a: 'Apache 2.0. Die Sicherheitsrichtlinie, das Änderungsprotokoll und die Antworten auf häufige Sicherheitsfragen von Unternehmen liegen im Repository.',
+        a: 'Apache 2.0, für die Skills, die Skripte und die Vorlagen. Das Repository enthält die Sicherheitsrichtlinie, das Änderungsprotokoll und die Antworten auf häufige Sicherheitsfragen von Unternehmen, jede mit dem Vermerk unterstützt, unterstützt mit Voraussetzungen oder geplant.',
+        more: { label: 'Das Repository auf GitHub öffnen.', href: 'https://github.com/sct-will/carrydown' },
       },
     ],
     doesNotHeading: 'Was carrydown nicht tut',
@@ -201,7 +240,7 @@ export const de: Strings = {
   },
 
   home: {
-    title: 'Carried-context development, Startseite',
+    title: 'Carried context, eine Faktengrundlage für jeden Coding-Agenten',
     description:
       'Carried-context development ist ein Ansatz für agentische Entwicklung, der Projektentscheidungen und Kontext bis zum Coding-Agenten jedes Entwicklers trägt, damit das Projekt ausgerichtet bleibt und nichts auseinanderdriftet.',
     h1: [
@@ -246,13 +285,6 @@ export const de: Strings = {
       heading: 'Probieren Sie es aus',
       intro:
         'Carried-context development ist ein Ansatz für agentische Entwicklung, und es gibt mehr als einen Weg, ihn umzusetzen. carrydown ist die Referenzimplementierung: zwei Agent Skills, die Sie installieren, ein dritter, den sie für Ihre Entwickler generiert, und die Prüfungen, die jeden Beleg validieren. Sie ist Open Source unter Apache 2.0 und arbeitet mit dem Coding-Agenten, den Ihr Team bereits nutzt.',
-      tryButton: 'Hier starten',
-      installCommand: en.home.carrydown.installCommand,
-      copy: 'Kopieren',
-      copied: 'Kopiert',
-      copyLabel: 'Installationsbefehl kopieren',
-      copiedStatus: 'Installationsbefehl in die Zwischenablage kopiert.',
-      copyFailedStatus: 'Kopieren nicht möglich. Markieren Sie den Befehl und kopieren Sie ihn.',
       tiles: [
         {
           step: 'Schritt 1',

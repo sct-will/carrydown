@@ -2,13 +2,16 @@
 import Mark from './Mark.astro';
 import { getStrings } from '../i18n';
 import { localePath } from '../lib/paths';
-import { repoUrl } from '../../site.config.mjs';
+import { repoUrl, authorName, authorUrl } from '../../site.config.mjs';
 
 interface Props {
   locale?: string;
 }
 const { locale = 'en' } = Astro.props;
 const t = getStrings(locale);
+// The author's name in the copyright line links to their site. A translation that does not carry the
+// name as written is shown as plain text.
+const [before, after] = t.footer.copyright.split(authorName);
 const links = [
   { label: t.nav.definition, href: localePath(locale, '/definition/') },
   { label: t.nav.github, href: repoUrl },
@@ -27,7 +30,7 @@ const links = [
     </nav>
     <p class="site-footer__copyright">
       <Mark size={18} />
-      <span>{t.footer.copyright}</span>
+      <span>{after === undefined ? t.footer.copyright : <>{before}<a href={authorUrl}>{authorName}</a>{after}</>}</span>
     </p>
   </div>
 </footer>

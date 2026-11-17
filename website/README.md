@@ -68,6 +68,10 @@ Edit the Markdown in the repository, never the generated pages.
 
 The Search button in the header opens a dialog over a Pagefind index. Starlight builds the index into `dist/pagefind/` at the end of `astro build`, over every docs page and every site page whose main element carries `data-pagefind-body`, one index per language. `src/components/SiteSearch.astro` holds the button, the dialog and the keyboard shortcuts (Ctrl K, Cmd K, or "/" outside a text field). `astro dev` builds no index, so the dialog says search works on the published site; `astro preview` serves the built one.
 
+## Copy page and the Markdown files
+
+Every docs page has a Copy page control beside its title, from `src/components/CopyPage.astro` through the `PageTitle` override in `src/components/starlight/`. The button copies the page as Markdown; the menu beside it also opens the Markdown file and the page's source on GitHub. The Markdown file is built next to each page by `src/pages/[...path].md.ts`: `/docs/setup.md` for `/docs/setup/`, and `/de/docs/setup.md` for the German route. It is the generated page with its links made absolute and its images pointed at the repository on the branch named by `sourceBranch` in `site.config.mjs`.
+
 ## Search engines and sharing metadata
 
 `src/components/Seo.astro` writes the title, description, canonical link, Open Graph and Twitter tags and the JSON-LD for each page. The docs get the same tags through `src/components/starlight/Head.astro`. The text for each page is in `src/seo/pages.ts`, which reads the locale strings in `src/i18n/`.

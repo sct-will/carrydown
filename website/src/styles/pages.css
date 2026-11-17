@@ -36,20 +36,55 @@
   color: var(--ink-muted);
 }
 
-/* Questions */
+/* Questions. Each question is a heading with its own link, so a reader can send one question. The
+ * hash after the question is the sign of the link; it is hidden from screen readers, which read the
+ * question as the link text. */
 .site .faq {
-  margin: 18px 0;
+  margin: 10px 0 0;
 }
-.site .faq dt {
-  margin-top: 16px;
-  font-weight: 600;
+.site .faq-item {
+  padding: 22px 0;
+  border-bottom: 1px solid var(--border);
 }
-.site .faq dd {
-  margin: 4px 0 0;
+.site .faq-item:last-child {
+  border-bottom: 0;
+}
+.site .faq-q {
+  margin: 0 0 10px;
+  font-size: 1.25rem;
+  line-height: 1.3;
+  scroll-margin-top: 24px;
+}
+.site .faq-q a {
+  color: inherit;
+  text-decoration: none;
+}
+.site .faq-q a:hover,
+.site .faq-q a:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+.site .faq-hash {
+  margin-inline-start: 0.4em;
   color: var(--ink-muted);
+  font-weight: 400;
+  opacity: 0.6;
+}
+.site .faq-q a:hover .faq-hash,
+.site .faq-q a:focus-visible .faq-hash {
+  color: var(--amber-ink);
+  opacity: 1;
+}
+.site .faq-a {
+  margin: 0;
+  line-height: 1.6;
+}
+.site .faq-more {
+  margin: 10px 0 0;
+  font-size: 0.95rem;
 }
 .site .faq + .page-h2 {
-  margin-top: 56px;
+  margin-top: 48px;
 }
 
 /* The fact lists on the questions and accessibility pages */

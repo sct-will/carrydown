@@ -21,5 +21,13 @@ export const base = customDomain ? '/' : '/carrydown';
 
 export const siteName = 'Carried-context development';
 export const repoUrl = 'https://github.com/sct-will/carrydown';
+/** The author's site. The footer links the name in the copyright line to it. */
+export const authorName = 'Will Scott, PhD';
+export const authorUrl = 'https://www.willscottphd.com';
+
+/** The branch the docs are built from. The Copy page control links a page's source and the images in
+ * its Markdown to this branch. Set it to main after the website branch is merged. */
+export const sourceBranch = 'website';
+
 export const sampleBoardUrl = 'https://github.com/users/sct-will/projects/2';
 export const accessibilityEmail = 'accessibility@carriedcontext.dev';

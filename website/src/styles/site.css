@@ -209,47 +209,6 @@ body.site {
 .site .cd-intro a.accent:hover {
   text-decoration-thickness: 2px;
 }
-.site .cd-cta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 18px;
-}
-.site .cmd {
-  display: flex;
-  flex: 0 1 30rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  min-width: min(30rem, 100%);
-  padding: 6px 8px 6px 16px;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  background: var(--paper);
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
-}
-.site .cmd code {
-  font-family: inherit;
-  overflow-wrap: anywhere;
-}
-.site .cmd .copy {
-  flex: none;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: 4px;
-  background: var(--cream-raised);
-  color: var(--teal);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-.site .cmd .copy:hover {
-  background: var(--teal-soft);
-}
 .site .tiles {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -489,18 +448,6 @@ body.site {
   .site .actions {
     flex-direction: column;
     align-items: stretch;
-  }
-  .site .cd-cta {
-    align-items: stretch;
-    flex-direction: column;
-  }
-  .site .cmd {
-    flex: none;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-    min-width: 0;
-    padding: 10px 12px;
   }
 }
 
