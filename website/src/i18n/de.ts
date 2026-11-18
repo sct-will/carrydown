@@ -165,6 +165,12 @@ export const de: Strings = {
         more: { label: 'Den direkten Vergleich auf der Definitionsseite ansehen.', href: '/definition/#differs' },
       },
       {
+        id: 'rag',
+        group: 'method',
+        q: 'Was unterscheidet carried-context development von Retrieval-Augmented Generation?',
+        a: 'Retrieval-Augmented Generation versorgt ein Modell mit Material, das es im Moment der Anfrage findet. Carried-context development hält während der Planung und nach einer Prüfung durch Menschen fest, welchen freigegebenen Quellabschnitten eine Arbeit folgen muss, und gibt Ihnen einen geprüften Weg, das später zu ändern. Retrieval kann Teil einer Implementierung sein. Es legt diese Projektentscheidungen und ihre Prüfung aber nicht von sich aus fest.',
+      },
+      {
         id: 'waterfall',
         group: 'method',
         q: 'Ist carried-context development nicht einfach Wasserfall?',

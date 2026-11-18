@@ -173,6 +173,12 @@ export const en = {
         more: { label: 'See the side-by-side comparison on the definition page.', href: '/definition/#differs' },
       },
       {
+        id: 'rag',
+        group: 'method',
+        q: 'How is carried-context development different from retrieval-augmented generation?',
+        a: 'Retrieval-augmented generation supplies a model with material it finds at the moment of the request. Carried-context development records, during planning and after a human review, which approved source sections a piece of work must follow, and gives you a reviewed path for changing that later. Retrieval can live inside an implementation. It does not by itself define those project decisions or their review.',
+      },
+      {
         id: 'waterfall',
         group: 'method',
         q: 'Isn’t carried-context development just waterfall?',

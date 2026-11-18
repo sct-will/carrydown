@@ -165,6 +165,12 @@ export const fr: Strings = {
         more: { label: 'Voir la comparaison côte à côte sur la page de définition.', href: '/definition/#differs' },
       },
       {
+        id: 'rag',
+        group: 'method',
+        q: 'En quoi carried-context development diffère-t-il de la génération augmentée par récupération ?',
+        a: 'La génération augmentée par récupération fournit à un modèle des éléments qu’il trouve au moment de la demande. Carried-context development consigne, pendant la planification et après une revue humaine, les sections sources approuvées qu’un travail doit suivre, et vous donne un chemin relu pour les modifier ensuite. La récupération peut faire partie d’une implémentation. Elle ne définit pas à elle seule ces décisions de projet ni leur revue.',
+      },
+      {
         id: 'waterfall',
         group: 'method',
         q: 'Carried-context development, n’est-ce pas simplement un modèle en cascade ?',

@@ -146,6 +146,12 @@ export const zhCN: Strings = {
         more: { label: '在定义页面查看并排对比。', href: '/definition/#differs' },
       },
       {
+        id: 'rag',
+        group: 'method',
+        q: 'Carried-context development 与检索增强生成有什么不同？',
+        a: '检索增强生成是在请求发出的那一刻，把模型自己找到的材料提供给模型。Carried-context development 则在规划阶段、经过人工审阅之后，记录一项工作必须遵循哪些已批准的来源章节，并为您提供一条以后修改它们的、经过审阅的途径。检索可以存在于某个实现之内，但它本身并不定义这些项目决策及其审阅。',
+      },
+      {
         id: 'waterfall',
         group: 'method',
         q: 'Carried-context development 不就是瀑布式吗？',

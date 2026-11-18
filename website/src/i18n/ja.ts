@@ -157,6 +157,12 @@ export const ja: Strings = {
         more: { label: '定義ページで並べて比較する。', href: '/definition/#differs' },
       },
       {
+        id: 'rag',
+        group: 'method',
+        q: 'Carried-context development は検索拡張生成とどう違うのですか？',
+        a: '検索拡張生成は、リクエストの時点でモデルが見つけた資料をモデルに与えます。Carried-context development は、計画の段階で人間のレビューを経て、ある作業がどの承認済みの出典セクションに従うべきかを記録し、後でそれを変更するためのレビュー済みの手順を用意します。検索は実装の内部に置くことができます。ただし、検索だけではそうしたプロジェクトの決定やそのレビューは定まりません。',
+      },
+      {
         id: 'waterfall',
         group: 'method',
         q: 'Carried-context development は結局ウォーターフォールではないのですか？',

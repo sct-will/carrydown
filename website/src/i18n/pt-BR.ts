@@ -165,6 +165,12 @@ export const ptBR: Strings = {
         more: { label: 'Ver a comparação lado a lado na página de definição.', href: '/definition/#differs' },
       },
       {
+        id: 'rag',
+        group: 'method',
+        q: 'Em que carried-context development difere da geração aumentada por recuperação?',
+        a: 'A geração aumentada por recuperação fornece a um modelo o material que ele encontra no momento da solicitação. Carried-context development registra, durante o planejamento e após uma revisão humana, quais seções de origem aprovadas um trabalho deve seguir, e oferece a você um caminho revisado para alterá-las depois. A recuperação pode fazer parte de uma implementação. Sozinha, ela não define essas decisões do projeto nem a revisão delas.',
+      },
+      {
         id: 'waterfall',
         group: 'method',
         q: 'Carried-context development não é só cascata?',
