@@ -14,7 +14,7 @@ The plan is built around your team's availability and target date. You can also 
 
 [![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
 
-[Start here](#start-here) | [What to say](#what-to-say) | [FAQ](#frequently-asked-questions) | [How it works](#how-it-works) | [Explore the sample](#explore-the-sample) | [What you get](#what-you-get) | [AI governance](#how-does-carrydown-support-ai-governance) | [Contributing and license](#contributing-and-license)
+[Start here](#start-here) | [What to say](#what-to-say) | [FAQ](https://carriedcontext.dev/faq/) | [How it works](#how-it-works) | [Explore the sample](#explore-the-sample) | [What you get](#what-you-get) | [AI governance](#how-does-carrydown-support-ai-governance) | [Contributing and license](#contributing-and-license)
 
 <br />
 
@@ -29,6 +29,8 @@ The plan is built around your team's availability and target date. You can also 
 **Have a plan to review or publish?** Continue with [Review and publish your plan](docs/plan-owner-guide.md).
 
 **The project changed after planning?** Read [when the project changes](#when-the-project-changes) and say what changed.
+
+**Something is not working?** Read [troubleshooting](docs/troubleshooting.md): installation, source formats, GitHub permissions, publishing and updates.
 
 <br />
 
@@ -92,6 +94,8 @@ In more detail, and before any name for it: your agent looks at what changed, fi
 Repository checks assess the material they can observe. For sources kept elsewhere, provide the revised material. A configured integration can add automatic observation later. The owner guidance also prompts review when the team makes significant decisions. When you are unsure whether a change is significant, say it anyway: the agent assesses it.
 
 There are still two skills you install and one skill generated for your engineers. The first skill, `carrydown-ground-truth`, now covers initial planning and updates. It does not watch your documents, and an update starts when you say so. The [owner guide](docs/plan-owner-guide.md#when-the-project-changes) lists what counts as a significant change, what the one review shows and how to resume an interrupted update.
+
+[Recover a plan or publication](docs/recovery.md) covers identity choices, source references, issue reconciliation and resumable board updates. If an update stopped partway, say "Resume the project update." and read [resume a project update](docs/recovery.md#resume-a-project-update).
 
 <br />
 
@@ -176,16 +180,6 @@ This makes organizational context part of the ordinary engineering handoff. A co
 The automated checks validate consistency with the plan and whether cited sections exist. The second-pass agent review examines whether the completed work covers the sources and fits the team's constraints, and records the evidence and risks for your decision. Agent review can miss problems. Your team still judges whether the interpretation and resulting work meet your organization's requirements.
 
 Some documents are not for everyone who can read the project repository. carrydown can keep those in a private workspace and share only the sections you approve. It cannot hide text from a teammate who can read the repository, and it cannot recall text that has already been delivered. For what carrydown protects and what it cannot, read the [enterprise security questions](docs/enterprise-security.md).
-
-<br />
-
-## Frequently asked questions
-
-The questions people ask before they try carrydown, from how it differs from spec-driven development to where it stops, are answered on the [carriedcontext.dev FAQ](https://carriedcontext.dev/faq/). It is searchable and available in seven languages.
-
-[Troubleshooting](docs/troubleshooting.md) covers installation, source formats, GitHub permissions, publishing and updates.
-
-[Recover a plan or publication](docs/recovery.md) for identity choices, source references, issue reconciliation and resumable board updates. If an update stopped partway, say "Resume the project update." and read [resume a project update](docs/recovery.md#resume-a-project-update).
 
 <br />
 
