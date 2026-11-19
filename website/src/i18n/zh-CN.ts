@@ -152,6 +152,12 @@ export const zhCN: Strings = {
         a: '检索增强生成是在请求发出的那一刻，把模型自己找到的材料提供给模型。Carried-context development 则在规划阶段、经过人工审阅之后，记录一项工作必须遵循哪些已批准的来源章节，并为您提供一条以后修改它们的、经过审阅的途径。检索可以存在于某个实现之内，但它本身并不定义这些项目决策及其审阅。',
       },
       {
+        id: 'prompts',
+        group: 'method',
+        q: '这不就是提示词吗？',
+        a: '不是。检查器是代码，规格违反规则时，它会让持续集成失败。看板由脚本通过 GitHub 的应用程序编程接口构建。计划和规格是 Git 中的文件，您可以阅读、比较差异和审阅。提示词只是最小的一部分。',
+      },
+      {
         id: 'waterfall',
         group: 'method',
         q: 'Carried-context development 不就是瀑布式吗？',
@@ -209,6 +215,19 @@ export const zhCN: Strings = {
         q: 'carrydown 支持哪些编码代理？',
         a: '任何支持 Agent Skills、能够读写项目文件并运行命令的编码代理。工程师继续使用他们已有的代理。生成的 skill 是代理加载的一个指令文件夹，不包含任何凭据。设置指南列出了支持的代理和各自的安装步骤。',
         more: { label: '在设置指南中选择编码代理。', href: '/docs/setup/#choose-a-coding-agent' },
+      },
+      {
+        id: 'tracker',
+        group: 'carrydown',
+        q: '可以使用 Jira 或其他跟踪工具吗？',
+        a: '目前的跟踪工具是 GitHub。Jira、Azure Boards、GitLab 和 Linear 是向社区开放的邀请。无论哪种情况，计划、规格和工程师的 skill 都以普通文件的形式保存在您的仓库中。',
+        more: { label: '在 GitHub 上阅读这份开放邀请。', href: 'https://github.com/sct-will/carrydown/issues/1' },
+      },
+      {
+        id: 'cost',
+        group: 'carrydown',
+        q: '它在 AI 用量上花费多少？',
+        a: '这里的成本指您的代理对模型的使用量，即 AI 模型读取和写入的文本。它独立于 GitHub 令牌。规划会读取文档，并为每个工作项写一份规格，因此成本随工作项的数量增长。更新会读取变更的材料、所有工作项的紧凑索引，以及它找到的候选项的完整规格，并且只重写需要修补的部分。代理在评估之前会报告该索引的大小。这些数字都是估算，范围广的规则变更仍可能需要大范围阅读。工程师开始一个工作项时，生成的 skill 只加载一份规格和被引用的章节，而不是整份文档。两个 skill 的描述保持简短，以便出现在每个会话的列表中。',
       },
       {
         id: 'does-not',

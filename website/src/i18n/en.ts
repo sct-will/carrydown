@@ -179,6 +179,12 @@ export const en = {
         a: 'Retrieval-augmented generation supplies a model with material it finds at the moment of the request. Carried-context development records, during planning and after a human review, which approved source sections a piece of work must follow, and gives you a reviewed path for changing that later. Retrieval can live inside an implementation. It does not by itself define those project decisions or their review.',
       },
       {
+        id: 'prompts',
+        group: 'method',
+        q: 'Isn’t this just prompts?',
+        a: 'No. The checker is code, and it fails continuous integration when a spec breaks the rules. Scripts build the board through the GitHub application programming interface. The plan and the specs are files in Git that you can read, diff and review. The prompts are the smallest part.',
+      },
+      {
         id: 'waterfall',
         group: 'method',
         q: 'Isn’t carried-context development just waterfall?',
@@ -236,6 +242,19 @@ export const en = {
         q: 'Which coding agents does carrydown work with?',
         a: 'Any coding agent that supports Agent Skills and can read and edit project files and run commands. Your engineers keep the one they already use. The generated skill is a folder of instructions that their agent loads, and it holds no credential. The setup guide lists the supported agents and the install steps for each.',
         more: { label: 'Choose a coding agent in the setup guide.', href: '/docs/setup/#choose-a-coding-agent' },
+      },
+      {
+        id: 'tracker',
+        group: 'carrydown',
+        q: 'Can I use Jira or another tracker?',
+        a: 'GitHub is the tracker today. Jira, Azure Boards, GitLab and Linear are open invitations to the community. Either way, the plan, the specs and the engineers’ skill live in your repository as plain files.',
+        more: { label: 'Read the open invitation on GitHub.', href: 'https://github.com/sct-will/carrydown/issues/1' },
+      },
+      {
+        id: 'cost',
+        group: 'carrydown',
+        q: 'What does it cost in AI usage?',
+        a: 'Cost here means your agent’s model usage, the text the AI model reads and writes. It is separate from the GitHub token. Planning reads the documents and writes one spec per work item, so its cost grows with the number of items. An update reads the changed material, a compact index of every work item and the full specs of the candidates it finds, and rewrites only what needs a patch. The agent reports the size of that index before it assesses. The figures are estimates, and a broad rule change can still need broad reading. When an engineer starts a work item, the generated skill loads one spec and its cited sections, not the whole document. The two skill descriptions stay short so they fit in every session’s listing.',
       },
       {
         id: 'does-not',

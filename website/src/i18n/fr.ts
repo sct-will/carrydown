@@ -171,6 +171,12 @@ export const fr: Strings = {
         a: 'La génération augmentée par récupération fournit à un modèle des éléments qu’il trouve au moment de la demande. Carried-context development consigne, pendant la planification et après une revue humaine, les sections sources approuvées qu’un travail doit suivre, et vous donne un chemin relu pour les modifier ensuite. La récupération peut faire partie d’une implémentation. Elle ne définit pas à elle seule ces décisions de projet ni leur revue.',
       },
       {
+        id: 'prompts',
+        group: 'method',
+        q: 'N’est-ce que des prompts ?',
+        a: 'Non. Le vérificateur est du code, et il fait échouer l’intégration continue quand une spécification enfreint les règles. Des scripts construisent le tableau via l’interface de programmation de GitHub. Le plan et les spécifications sont des fichiers dans Git que vous pouvez lire, comparer et relire. Les prompts en sont la plus petite partie.',
+      },
+      {
         id: 'waterfall',
         group: 'method',
         q: 'Carried-context development, n’est-ce pas simplement un modèle en cascade ?',
@@ -228,6 +234,19 @@ export const fr: Strings = {
         q: 'Avec quels agents de codage carrydown fonctionne-t-il ?',
         a: 'Tout agent de codage qui prend en charge les Agent Skills et peut lire et modifier les fichiers du projet et exécuter des commandes. Vos ingénieurs gardent celui qu’ils utilisent déjà. Le skill généré est un dossier d’instructions que leur agent charge, et il ne contient aucun identifiant. Le guide d’installation liste les agents pris en charge et les étapes d’installation de chacun.',
         more: { label: 'Choisir un agent de codage dans le guide d’installation.', href: '/docs/setup/#choose-a-coding-agent' },
+      },
+      {
+        id: 'tracker',
+        group: 'carrydown',
+        q: 'Puis-je utiliser Jira ou un autre outil de suivi ?',
+        a: 'Aujourd’hui, l’outil de suivi est GitHub. Jira, Azure Boards, GitLab et Linear sont des invitations ouvertes à la communauté. Dans tous les cas, le plan, les spécifications et le skill des ingénieurs vivent dans votre dépôt sous forme de fichiers simples.',
+        more: { label: 'Lire l’invitation ouverte sur GitHub.', href: 'https://github.com/sct-will/carrydown/issues/1' },
+      },
+      {
+        id: 'cost',
+        group: 'carrydown',
+        q: 'Combien cela coûte-t-il en usage d’IA ?',
+        a: 'Le coût désigne ici l’usage du modèle par votre agent, c’est-à-dire le texte que le modèle d’IA lit et écrit. Il est distinct du jeton GitHub. La planification lit les documents et écrit une spécification par élément de travail, donc son coût croît avec le nombre d’éléments. Une mise à jour lit le contenu modifié, un index compact de tous les éléments de travail et les spécifications complètes des candidats qu’elle trouve, et ne réécrit que ce qui demande un correctif. L’agent indique la taille de cet index avant d’évaluer. Les chiffres sont des estimations, et un changement de règle étendu peut encore demander une lecture étendue. Quand un ingénieur commence un élément de travail, le skill généré charge une spécification et les sections citées, pas tout le document. Les descriptions des deux skills restent courtes pour tenir dans la liste de chaque session.',
       },
       {
         id: 'does-not',

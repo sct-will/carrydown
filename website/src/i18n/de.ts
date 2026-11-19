@@ -171,6 +171,12 @@ export const de: Strings = {
         a: 'Retrieval-Augmented Generation versorgt ein Modell mit Material, das es im Moment der Anfrage findet. Carried-context development hält während der Planung und nach einer Prüfung durch Menschen fest, welchen freigegebenen Quellabschnitten eine Arbeit folgen muss, und gibt Ihnen einen geprüften Weg, das später zu ändern. Retrieval kann Teil einer Implementierung sein. Es legt diese Projektentscheidungen und ihre Prüfung aber nicht von sich aus fest.',
       },
       {
+        id: 'prompts',
+        group: 'method',
+        q: 'Sind das nicht einfach Prompts?',
+        a: 'Nein. Die Prüfung ist Code, und sie lässt die Continuous Integration fehlschlagen, wenn eine Spezifikation gegen die Regeln verstößt. Skripte bauen das Board über die Programmierschnittstelle von GitHub auf. Der Plan und die Spezifikationen sind Dateien in Git, die Sie lesen, vergleichen und prüfen können. Die Prompts sind der kleinste Teil.',
+      },
+      {
         id: 'waterfall',
         group: 'method',
         q: 'Ist carried-context development nicht einfach Wasserfall?',
@@ -228,6 +234,19 @@ export const de: Strings = {
         q: 'Mit welchen Coding-Agenten arbeitet carrydown?',
         a: 'Jeder Coding-Agent, der Agent Skills unterstützt und Projektdateien lesen und bearbeiten sowie Befehle ausführen kann. Ihre Entwickler behalten den, den sie bereits nutzen. Der generierte Skill ist ein Ordner mit Anweisungen, den ihr Agent lädt, und er enthält keine Zugangsdaten. Die Einrichtungsanleitung listet die unterstützten Agenten und die Installationsschritte für jeden.',
         more: { label: 'Einen Coding-Agenten in der Einrichtungsanleitung wählen.', href: '/docs/setup/#choose-a-coding-agent' },
+      },
+      {
+        id: 'tracker',
+        group: 'carrydown',
+        q: 'Kann ich Jira oder einen anderen Tracker verwenden?',
+        a: 'Heute ist GitHub der Tracker. Jira, Azure Boards, GitLab und Linear sind offene Einladungen an die Community. In jedem Fall liegen der Plan, die Spezifikationen und der Skill der Entwickler als einfache Dateien in Ihrem Repository.',
+        more: { label: 'Die offene Einladung auf GitHub lesen.', href: 'https://github.com/sct-will/carrydown/issues/1' },
+      },
+      {
+        id: 'cost',
+        group: 'carrydown',
+        q: 'Was kostet es an KI-Nutzung?',
+        a: 'Kosten meint hier die Modellnutzung Ihres Agenten, also den Text, den das KI-Modell liest und schreibt. Sie sind vom GitHub-Token getrennt. Die Planung liest die Dokumente und schreibt eine Spezifikation pro Arbeitspaket, daher wachsen ihre Kosten mit der Zahl der Arbeitspakete. Eine Aktualisierung liest das geänderte Material, einen kompakten Index aller Arbeitspakete und die vollständigen Spezifikationen der Kandidaten, die sie findet, und schreibt nur neu, was eine Korrektur braucht. Der Agent nennt die Größe dieses Index, bevor er bewertet. Die Zahlen sind Schätzungen, und eine weitreichende Regeländerung kann trotzdem weitreichendes Lesen erfordern. Wenn ein Entwickler ein Arbeitspaket beginnt, lädt der generierte Skill eine Spezifikation und die zitierten Abschnitte, nicht das ganze Dokument. Die Beschreibungen der beiden Skills bleiben kurz, damit sie in die Liste jeder Sitzung passen.',
       },
       {
         id: 'does-not',

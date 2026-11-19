@@ -171,6 +171,12 @@ export const es: Strings = {
         a: 'La generación aumentada por recuperación proporciona a un modelo material que encuentra en el momento de la solicitud. Carried-context development registra, durante la planificación y tras una revisión humana, qué secciones de origen aprobadas debe seguir un trabajo, y le ofrece un camino revisado para cambiarlas más adelante. La recuperación puede formar parte de una implementación. Por sí sola no define esas decisiones del proyecto ni su revisión.',
       },
       {
+        id: 'prompts',
+        group: 'method',
+        q: '¿No son solo prompts?',
+        a: 'No. El verificador es código, y hace fallar la integración continua cuando una especificación incumple las reglas. Unos scripts construyen el tablero mediante la interfaz de programación de aplicaciones de GitHub. El plan y las especificaciones son archivos en Git que usted puede leer, comparar y revisar. Los prompts son la parte más pequeña.',
+      },
+      {
         id: 'waterfall',
         group: 'method',
         q: '¿No es carried-context development simplemente cascada?',
@@ -228,6 +234,19 @@ export const es: Strings = {
         q: '¿Con qué agentes de programación funciona carrydown?',
         a: 'Cualquier agente de programación que admita Agent Skills y pueda leer y editar los archivos del proyecto y ejecutar comandos. Sus ingenieros conservan el que ya usan. El skill generado es una carpeta de instrucciones que su agente carga, y no contiene ninguna credencial. La guía de instalación enumera los agentes admitidos y los pasos de instalación de cada uno.',
         more: { label: 'Elegir un agente de programación en la guía de instalación.', href: '/docs/setup/#choose-a-coding-agent' },
+      },
+      {
+        id: 'tracker',
+        group: 'carrydown',
+        q: '¿Puedo usar Jira u otro gestor de tareas?',
+        a: 'Hoy el gestor de tareas es GitHub. Jira, Azure Boards, GitLab y Linear son invitaciones abiertas a la comunidad. En cualquier caso, el plan, las especificaciones y el skill de los ingenieros viven en su repositorio como archivos simples.',
+        more: { label: 'Leer la invitación abierta en GitHub.', href: 'https://github.com/sct-will/carrydown/issues/1' },
+      },
+      {
+        id: 'cost',
+        group: 'carrydown',
+        q: '¿Cuánto cuesta en uso de IA?',
+        a: 'Aquí el costo es el uso del modelo por parte de su agente, el texto que el modelo de IA lee y escribe. Es independiente del token de GitHub. La planificación lee los documentos y escribe una especificación por elemento de trabajo, así que su costo crece con el número de elementos. Una actualización lee el material cambiado, un índice compacto de todos los elementos de trabajo y las especificaciones completas de los candidatos que encuentra, y reescribe solo lo que necesita un parche. El agente informa del tamaño de ese índice antes de evaluar. Las cifras son estimaciones, y un cambio de regla amplio todavía puede requerir una lectura amplia. Cuando un ingeniero empieza un elemento de trabajo, el skill generado carga una especificación y las secciones citadas, no el documento completo. Las descripciones de los dos skills se mantienen breves para que quepan en la lista de cada sesión.',
       },
       {
         id: 'does-not',
