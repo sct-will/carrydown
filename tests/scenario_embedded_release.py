@@ -1613,7 +1613,7 @@ def _():
         equal(scan_text(blob, (first,)), [], f"the text of the uncited section {uncited[0]} in a bundle")
 
 
-@step("B4.3", "a successful first fetch records the right repository, default branch revision and request id; the engineers' check passes")
+@step("B4.3", "a successful first fetch records the right repository, default branch revision, request id and the item's baseline; the engineers' check passes")
 def _():
     n = no()
     clone = stage("no.clone")
@@ -1623,7 +1623,10 @@ def _():
     need("warning" not in text, text)
     record = read_json(clone / ".carrydown" / "cache" / "last-refresh")
     head = git(clone, "rev-parse", "origin/main").stdout.strip()
-    equal(sorted(record), ["cache_format", "commit", "repository", "request_id", "time"], "record keys")
+    equal(sorted(record), ["cache_format", "commit", "items", "repository", "request_id", "time"], "record keys")
+    base = record["items"].get("WI-06") if isinstance(record["items"], dict) else None
+    need(isinstance(base, dict) and base.get("request_id") == n.rid and isinstance(base.get("files"), dict) and base["files"],
+         f"the check records the item's baseline under items: {record['items']!r}"[:300])
     equal(record["commit"], head, "default branch revision")
     equal(record["request_id"], n.rid, "request id")
     equal(record["repository"], str(n.origin)[:-len(".git")], "repository identity")
