@@ -143,3 +143,82 @@
     inset-inline-start: 0;
   }
 }
+
+/* Headings in the display face, with the optical size set per size. */
+.sl-markdown-content :is(h1, h2, h3, h4, h5, h6),
+h1#_top {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  text-wrap: balance;
+  font-variation-settings: 'opsz' 48, 'SOFT' 20;
+}
+h1#_top {
+  letter-spacing: -0.02em;
+  font-variation-settings: 'opsz' 96, 'SOFT' 30;
+}
+
+/* The thread under every link in the content, thicker on hover. */
+.sl-markdown-content a:not(.sl-anchor-link) {
+  text-decoration: underline;
+  text-decoration-color: var(--amber-ink);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.22em;
+  transition:
+    text-decoration-thickness var(--dur) var(--ease),
+    text-decoration-color var(--dur) var(--ease);
+}
+.sl-markdown-content a:not(.sl-anchor-link):hover {
+  text-decoration-thickness: 3px;
+  text-decoration-color: var(--amber);
+}
+
+/* The current page's marker in the sidebar is named for the page transition, so it slides to the new
+ * page on a navigation. The table of contents changes its current item smoothly as the reader scrolls. */
+.sidebar-content ul ul li:has(> a[aria-current='page']) {
+  view-transition-name: sidebar-current;
+}
+starlight-toc a {
+  transition:
+    color var(--dur) var(--ease),
+    background-color var(--dur) var(--ease);
+}
+
+/* The copy control as a pill, and the tick that draws in place of its icon when the copy succeeds. */
+.copy-page__main {
+  padding: 0 14px 0 16px;
+  border-radius: 999px 0 0 999px;
+}
+.copy-page__toggle {
+  border-radius: 0 999px 999px 0;
+}
+.copy-page__menu {
+  border-color: var(--shell-line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lift);
+}
+.copy-page__menu [role='menuitem'] {
+  border-radius: 999px;
+}
+.copy-page__tick {
+  display: none;
+}
+.copy-page--copied .copy-page__icon {
+  display: none;
+}
+.copy-page--copied .copy-page__tick {
+  display: block;
+  color: var(--teal);
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes tick {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  .copy-page--copied .copy-page__tick path {
+    stroke-dasharray: 14;
+    stroke-dashoffset: 14;
+    animation: tick 0.35s var(--ease-out) forwards;
+  }
+}

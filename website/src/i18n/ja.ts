@@ -302,6 +302,8 @@ export const ja: Strings = {
       'Carried-context development は、仕様駆動開発のその先へ。',
       'コンテキストは、作業と一緒に旅をする。',
     ],
+    /** The part of the second title line set in the amber, a styling choice a native reviewer may move or empty. */
+    h1Emphasis: '作業と一緒に旅をする。',
     definition:
       '各エンジニアのコーディングエージェントに同じプロジェクトの決定とコンテキストを渡して、プロジェクトのずれを防ぎます。',
     paragraph:

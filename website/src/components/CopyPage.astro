@@ -32,9 +32,12 @@ const sourceUrl = source ? `${repoUrl}/blob/${sourceBranch}/${source}` : `${repo
     data-ok={t.ok}
     data-fail={t.fail}
   >
-    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+    <svg class="copy-page__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
       <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.5"></rect>
       <path d="M10.5 5.5V3.5a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2" fill="none" stroke="currentColor" stroke-width="1.5"></path>
+    </svg>
+    <svg class="copy-page__tick" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M3.5 8.5l3 3 6-6.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
     </svg>
     <span data-copy-label>{t.button}</span>
   </button>
@@ -159,9 +162,12 @@ const sourceUrl = source ? `${repoUrl}/blob/${sourceBranch}/${source}` : `${repo
       say(ok ? (main.dataset.ok ?? '') : (main.dataset.fail ?? ''));
       if (ok) {
         label.textContent = main.dataset.copied ?? '';
+        // The tick draws in place of the copy icon for a moment; see docs.css.
+        root.classList.add('copy-page--copied');
         window.clearTimeout(timer);
         timer = window.setTimeout(() => {
           label.textContent = main.dataset.label ?? '';
+          root.classList.remove('copy-page--copied');
         }, 2000);
       }
     };

@@ -1,18 +1,24 @@
-/* Design tokens for carriedcontext.dev. The values come from specs/carried-context-site/final/base.css
- * and design-tokens.md: a light cream set and a dark navy "Ink" set.
+/* Design tokens for carriedcontext.dev: a light cream set, the default, and a dark navy "Ink" set.
+ * The values come from specs/carried-context-site/final/base.css and design-tokens.md; the type, the
+ * surfaces and the motion tokens from the round 2 mock-up in specs/carried-context-site/mockups-v2/.
  *
- * Which set applies:
- *   - theme control on Auto (no data-theme attribute): the system preference decides.
- *   - data-theme="dark" or data-theme="light" on <html>: the visitor's choice wins.
- * The Starlight variables at the end point the documentation at the same tokens.
- */
-@import '@fontsource-variable/inter';
-@import '@fontsource-variable/jetbrains-mono';
+ * Which set applies is decided by data-theme on <html>, which ThemeScript sets before first paint from
+ * the visitor's choice: "light" (the default), "dark", or "auto", which it resolves to one of the two
+ * from the system preference and keeps resolved as the preference changes. The choice itself is kept
+ * in data-theme-choice. A page without script shows the cream set; a docs page without script keeps
+ * Starlight's fallback data-theme="dark" and shows the Ink set.
+ *
+ * The Starlight variables at the end point the documentation at the same tokens. */
+@import '@fontsource-variable/fraunces/full.css';
+@import '@fontsource-variable/fraunces/full-italic.css';
+@import '@fontsource-variable/atkinson-hyperlegible-next';
+@import '@fontsource-variable/atkinson-hyperlegible-next/wght-italic.css';
+@import '@fontsource-variable/geist-mono';
 
 :root {
   --cream: #f6f3ec;
   --cream-raised: #fbf7f0;
-  --cream-deep: #f3efe6;
+  --cream-deep: #efeadf;
   --paper: #ffffff;
   --border: #e4dfd2;
   --border-strong: #857e6e;
@@ -24,41 +30,39 @@
   --teal-soft: #e6f0f0;
   --on-teal: #ffffff;
   --amber: #e8a33d;
-  --amber-deep: #9a6209;
-  /* The only amber that carries text, lines of the diagram and small markers. */
-  --amber-ink: #9a6209;
+  --amber-deep: #8f5a08;
+  /* The only amber that carries text, the lines of the diagram, the underline of every link, the focus
+   * ring and the small markers. At 4.8:1 on the deeper ground of the Try it out band and 5.2:1 on the
+   * cream, it carries text on every surface of the light theme. */
+  --amber-ink: #8f5a08;
   --amber-soft: #fbebd0;
   --grid: rgba(31, 42, 68, 0.06);
 
-  --font-body: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'JetBrains Mono Variable', ui-monospace, Menlo, Consolas, monospace;
+  /* Surfaces: the outer shell of a card, its hairline, the soft shadows, the inner highlight, and the
+   * film grain of the light theme. */
+  --shell: rgba(31, 42, 68, 0.045);
+  --shell-line: rgba(31, 42, 68, 0.09);
+  --shadow: 0 1px 2px rgba(31, 42, 68, 0.04), 0 24px 60px -24px rgba(31, 42, 68, 0.22);
+  --shadow-lift: 0 2px 4px rgba(31, 42, 68, 0.05), 0 40px 90px -30px rgba(31, 42, 68, 0.3);
+  --inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --grain: 0.045;
+
+  /* Type: Fraunces for display, with its optical size axis set per size; Atkinson Hyperlegible Next
+   * for text, with true small capitals, old-style figures and a real italic; Geist Mono for code. */
+  --font-display: 'Fraunces Variable', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --font-body: 'Atkinson Hyperlegible Next Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, Menlo, Consolas, monospace;
   --measure: 1120px;
-  --gutter: clamp(16px, 4vw, 32px);
+  --gutter: clamp(16px, 4vw, 40px);
+
+  /* Motion: one easing family, and the durations of interface feedback. */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 150ms;
+  --dur: 350ms;
+  --dur-slow: 600ms;
 
   color-scheme: light;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --cream: #0f1420;
-    --cream-raised: #171e2e;
-    --cream-deep: #131927;
-    --paper: #1b2336;
-    --border: #2a3346;
-    --border-strong: #66739a;
-    --ink: #eef1f6;
-    --ink-muted: #a9b2c3;
-    --teal: #5fb8b8;
-    --teal-strong: #7ccaca;
-    --teal-stroke: #5fb8b8;
-    --teal-soft: #1b2f36;
-    --on-teal: #0f1420;
-    --amber-deep: #f0be6b;
-    --amber-ink: #e8a33d;
-    --amber-soft: #2e2616;
-    --grid: rgba(243, 239, 230, 0.06);
-    color-scheme: dark;
-  }
 }
 
 :root[data-theme='dark'] {
@@ -79,6 +83,13 @@
   --amber-ink: #e8a33d;
   --amber-soft: #2e2616;
   --grid: rgba(243, 239, 230, 0.06);
+  --shell: rgba(255, 255, 255, 0.04);
+  --shell-line: rgba(255, 255, 255, 0.09);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 24px 60px -24px rgba(0, 0, 0, 0.6);
+  --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.35), 0 40px 90px -30px rgba(0, 0, 0, 0.7);
+  --inner-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  /* Noise on navy reads as dirt. */
+  --grain: 0;
   color-scheme: dark;
 }
 

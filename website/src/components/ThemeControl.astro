@@ -9,30 +9,40 @@ const t = getStrings(Astro.props.locale).controls;
 <div class="control select">
   <label class="sr-only" for="theme-select">{t.themeLabel}</label>
   <select id="theme-select" data-theme-select>
-    <option value="auto" selected>{t.themeAuto}</option>
+    <option value="light" selected>{t.themeLight}</option>
     <option value="dark">{t.themeDark}</option>
-    <option value="light">{t.themeLight}</option>
+    <option value="auto">{t.themeAuto}</option>
   </select>
 </div>
 
 <script>
-  // Auto is the default. The choice is kept in localStorage under "cc-theme" and mirrored on <html> as
-  // data-theme. Auto removes both, so the system preference decides.
+  // Light is the default. The choice is kept in localStorage under "cc-theme" and mirrored on <html> as
+  // data-theme-choice; data-theme carries the theme it resolves to, as ThemeScript sets it before first
+  // paint. A change crossfades the colors for a moment, unless the visitor prefers reduced motion.
   const KEY = 'cc-theme';
   const root = document.documentElement;
+  const dark = window.matchMedia('(prefers-color-scheme: dark)');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   function stored(): string {
     try {
       const v = localStorage.getItem(KEY);
-      return v === 'dark' || v === 'light' ? v : 'auto';
+      return v === 'dark' || v === 'auto' ? v : 'light';
     } catch {
-      return 'auto';
+      return 'light';
     }
   }
 
+  let fade: number | undefined;
   function apply(value: string) {
-    if (value === 'dark' || value === 'light') root.dataset.theme = value;
-    else delete root.dataset.theme;
+    root.dataset.themeChoice = value;
+    const next = value === 'auto' ? (dark.matches ? 'dark' : 'light') : value;
+    if (next !== root.dataset.theme && !reduce.matches) {
+      root.classList.add('theme-fade');
+      window.clearTimeout(fade);
+      fade = window.setTimeout(() => root.classList.remove('theme-fade'), 500);
+    }
+    root.dataset.theme = next;
   }
 
   document.querySelectorAll<HTMLSelectElement>('select[data-theme-select]').forEach((select) => {
@@ -40,7 +50,7 @@ const t = getStrings(Astro.props.locale).controls;
     select.addEventListener('change', () => {
       const value = select.value;
       try {
-        if (value === 'auto') localStorage.removeItem(KEY);
+        if (value === 'light') localStorage.removeItem(KEY);
         else localStorage.setItem(KEY, value);
       } catch {
         /* Storage can be blocked. The choice still applies to this page view. */

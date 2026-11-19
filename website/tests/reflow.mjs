@@ -91,12 +91,17 @@ function smallestSvgText() {
 try {
   for (const theme of themes) {
     const context = await browser.newContext({ colorScheme: theme, viewport: { width: 1280, height: 800 } });
+    // Light is the site's default whatever the system prefers; the dark theme is the stored choice.
+    if (theme === 'dark') await context.addInitScript(() => localStorage.setItem('cc-theme', 'dark'));
     const page = await context.newPage();
     for (const { route, widths } of jobs) {
       for (const width of widths) {
         await page.setViewportSize({ width, height: 900 });
         await page.goto(origin + route, { waitUntil: 'networkidle' });
         await page.evaluate(() => document.fonts.ready);
+        // The page's timed animations (the hero rising on load) end before the audit, so it sees every
+        // element in its final state. Scroll-driven animations have no end and are left alone.
+        await page.evaluate(() => Promise.all(document.getAnimations().filter((a) => a.timeline instanceof DocumentTimeline).map((a) => a.finished.catch(() => {}))));
         const name = `${route.slice(basePath.length).replace(/^\/|\/$/g, '').replace(/\//g, '_') || 'home'}-${width}-${theme}.png`;
         await page.screenshot({ path: join(shots, name), fullPage: true });
         const problems = await page.evaluate(audit, route.includes('/docs/'));
