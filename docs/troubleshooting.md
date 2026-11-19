@@ -12,7 +12,7 @@ The terminal cannot find the installer command supplied by Node.js. Follow [the 
 
 carrydown needs a coding agent, Node.js for the installer, Python 3.9 or newer for the scripts and Git. You use a terminal to install and check the skills. After installation, you work in your agent's chat.
 
-You need a coding agent, and the agent can do the rest. The first thing each skill does is check for Python 3.9 or newer. If Python is missing, it asks once whether to install it, and installs it from the official source after your yes. You still install Node.js and Git yourself. The [computer preparation steps](setup.md#prepare-your-computer) list versions and checks. If you would rather install Python yourself, [follow your system's steps](setup.md#before-anything-python). The [installation walkthrough](setup.md#install-the-two-skills) explains where to enter the commands and what to select. [Manual installation](install-options.md#manual-install-without-nodejs) is available if you cannot use Node.js.
+The first thing each skill does is check for Python 3.9 or newer. If Python is missing, it asks once whether to install it, and installs it from the official source after your yes. You still install Node.js and Git yourself. The [computer preparation steps](setup.md#prepare-your-computer) list versions and checks. If you would rather install Python yourself, [follow your system's steps](setup.md#before-anything-python). The [installation walkthrough](setup.md#install-the-two-skills) explains where to enter the commands and what to select. [Manual installation](install-options.md#manual-install-without-nodejs) is available if you cannot use Node.js.
 
 ### A hosted coding agent cannot refresh the engineers' check
 
