@@ -30,10 +30,20 @@ const starlightLocales = Object.fromEntries(
   ]),
 );
 
+// The docs FAQ page became the troubleshooting page. The old address in each locale redirects to the
+// new one. Astro adds the base path to both sides.
+const redirects = Object.fromEntries(
+  localeList.map((l) => {
+    const prefix = l.code === defaultLocale ? '' : `/${l.code}`;
+    return [`${prefix}/docs/faq/`, `${prefix}/docs/troubleshooting/`];
+  }),
+);
+
 export default defineConfig({
   site,
   base,
   trailingSlash: 'always',
+  redirects,
   integrations: [
     starlight({
       title: siteName,
