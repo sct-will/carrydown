@@ -232,7 +232,7 @@ export const zhCN: Strings = {
       {
         id: 'does-not',
         group: 'carrydown',
-        q: 'carrydown 不做什么？',
+        q: 'carrydown 的边界在哪里？',
         a: 'carrydown 起草计划和规格，检查它们，并发布你批准的内容。决定留给人来做，应用代码也由人来写。',
         /** The literal text --apply is set in a monospace face wherever it appears. */
         list: [

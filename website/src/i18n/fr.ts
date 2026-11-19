@@ -251,7 +251,7 @@ export const fr: Strings = {
       {
         id: 'does-not',
         group: 'carrydown',
-        q: 'Que ne fait pas carrydown ?',
+        q: 'Où s’arrête carrydown ?',
         a: 'carrydown rédige le plan et les spécifications, les vérifie et publie ce que vous approuvez. Les décisions restent aux personnes, et le code applicatif aussi.',
         /** The literal text --apply is set in a monospace face wherever it appears. */
         list: [

@@ -251,7 +251,7 @@ export const ptBR: Strings = {
       {
         id: 'does-not',
         group: 'carrydown',
-        q: 'O que o carrydown não faz?',
+        q: 'Onde o carrydown para?',
         a: 'O carrydown redige o plano e as especificações, verifica tudo e publica o que você aprova. As decisões ficam com pessoas, e o código da aplicação também.',
         /** The literal text --apply is set in a monospace face wherever it appears. */
         list: [

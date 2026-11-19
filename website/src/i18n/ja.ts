@@ -243,7 +243,7 @@ export const ja: Strings = {
       {
         id: 'does-not',
         group: 'carrydown',
-        q: 'carrydown がしないことは何ですか？',
+        q: 'carrydown の役割はどこまでですか？',
         a: 'carrydown は計画と仕様を下書きし、検査し、あなたが承認したものを公開します。判断は人に残り、アプリケーションのコードも人が書きます。',
         /** The literal text --apply is set in a monospace face wherever it appears. */
         list: [

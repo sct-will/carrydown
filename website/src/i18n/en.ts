@@ -259,7 +259,7 @@ export const en = {
       {
         id: 'does-not',
         group: 'carrydown',
-        q: 'What does carrydown not do?',
+        q: 'Where does carrydown stop?',
         a: 'carrydown drafts the plan and the specifications, checks them and publishes what you approve. The decisions stay with people, and so does the application code.',
         /** The literal text --apply is set in a monospace face wherever it appears. */
         list: [
