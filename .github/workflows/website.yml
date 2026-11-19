@@ -1,13 +1,11 @@
 # Builds, tests and deploys the carried-context.dev website to GitHub Pages.
 #
 # The only credential is the built-in GITHUB_TOKEN. No secret is read.
-#
-# The website branch trigger below is removed after the merge to main.
 name: Website
 
 on:
   push:
-    branches: [main, website]
+    branches: [main]
     paths:
       - "website/**"
       - "docs/**"
@@ -77,8 +75,7 @@ jobs:
     steps:
       # enablement: true asks Pages to switch itself on, but only a token with admin rights can do that.
       # The built-in token cannot, so turn Pages on once in Settings, Pages, Source: GitHub Actions,
-      # before the first deploy. The github-pages environment may also need the website branch added
-      # to its deployment branches until the merge to main.
+      # before the first deploy.
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
         with:
           enablement: true
