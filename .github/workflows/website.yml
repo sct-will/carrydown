@@ -11,6 +11,7 @@ on:
       - "docs/**"
       - "README.md"
       - "sample/expense-approvals/README.md"
+      - "sample/expense-approvals/images/**"
       - ".github/workflows/website.yml"
   workflow_dispatch:
 
