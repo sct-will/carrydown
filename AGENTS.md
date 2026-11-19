@@ -24,7 +24,7 @@ It does not write application code. Planning decisions (owners, dates, scope, or
 | `scripts/decision_overlay.py` | The validator for permitted decision notes. The engineers' check and the independent verifier share it. |
 | `scripts/workspace.py` | The private workspace. `workspace.py checkpoint` records and reads back a reviewed source checkpoint. |
 | `sample/expense-approvals/` | The sample: ground truth, plan, specifications, engineers' skill. |
-| `docs/` | Method, inputs, FAQ, security, setup, plan owner guide, sample pointer. |
+| `docs/` | Method, inputs, troubleshooting, security, setup, plan owner guide, sample pointer. |
 | `.github/` | Issue forms, pull request template, workflows. |
 | `tests/acceptance/` | The runner and its tests for the acceptance run on real GitHub. The owner runs it once against a throwaway organization. |
 

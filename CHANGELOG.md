@@ -4,6 +4,10 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ## Unreleased
 
+### Documentation
+
+- **A troubleshooting page replaces the FAQ.** [Troubleshooting](docs/troubleshooting.md) has 15 entries in three groups, installing, planning, and publishing and updating, each written as the symptom you have, followed by the cause and the fix. Six answers moved into the guides beside what they explain: the private path into the setup guide, assignments, names and external inputs into the plan owner guide, work units into the method and the YAML subset into the contributing guide. The answers that other pages already gave were removed, and questions about the method are on [the carried-context development FAQ](https://carriedcontext.dev/faq/).
+
 ### Onboarding fixes
 
 - **The renderer keeps a released plan valid.** A preview or a write no longer records the source fingerprints in a released plan, so the next command on the sample no longer fails. It says so in one line, and a working plan still gets them.

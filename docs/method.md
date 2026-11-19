@@ -102,6 +102,8 @@ The carrydown skills cannot write your document for you. They can help you revie
 
 Work units are time boxes of variable length. A thin first slice may take a week and the core may take three. Breaks sit between them. There is no sprint vocabulary, no story points and no velocity. Each work unit has an exit gate, and each milestone has acceptance criteria written before the work starts.
 
+Why not sprints? Time boxes of equal length force the work to fit the box. Work units take the length the work needs. The checker rejects sprint, story point and velocity vocabulary unless you configure otherwise.
+
 Items are the smallest pieces an engineer can finish, show and close, usually two to five days. Each has an owner on a track, a completion date, dependencies, a size and the sections of the ground truth it cites. The load table shows items and days per person per work unit. The critical path shows the longest dependency chain.
 
 Items that depend on work owned outside the team (a pilot team, an approval, a review) carry an "external input" note. That work is an external item: the plan does not schedule it, and it leaves a gap in the numbering.

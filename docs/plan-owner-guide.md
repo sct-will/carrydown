@@ -74,9 +74,15 @@ The agent inventories Word, Markdown, plain text, PDF, image and other readable 
 
 Team size, allocation and target dates can be undecided. If you have a team and no date, the agent derives a date. If you have a date and no team, it proposes the capacity needed. If neither is known, it proposes a starting point and asks you to confirm it. Skills and work preferences are always optional. If you supply them, the agent proposes a best match and explains it. If they are missing or unclear, the agent uses the default assignment approach and continues.
 
+Required capabilities, fixed staffing decisions, availability, dependencies and delivery constraints take priority over preferences. The agent records its reasoning and tradeoffs for each proposed match, and you approve the assignments. The default approach assigns by tracks, capacity, dependencies and reduced context switching. The checker reports supplied staffing context but does not score or reject a match.
+
 Allocation is the share of each person's working time available for this plan. The agent assumes 100 percent and asks you to confirm. For someone available three days in five, say 60 percent. Mention start dates, days off, breaks, work owned outside the team and any existing parent epic. An epic is the parent GitHub issue for the whole plan.
 
+Work owned outside the team, such as a pilot team, an approval or a review, becomes an [external item](#glossary). The plan does not schedule it, so it is not an issue in the plan. Items that wait for it say "external input".
+
 Names and personal facts are private on both answers. The agent writes them to `people.yaml` in your private workspace, with the same ids as the plan, and shows you the path. The load table, the dates and the name checks run on your machine, where that file is. In a clean clone, such as the checks that run on every pull request, those checks say `people overlay not loaded: capacity, dates and names not checked` and skip. That is expected.
+
+Names stay out of `plan.yaml` and the specifications because people change and names are personal. The plan holds ids and tracks. The checker merges the private file when you run it, so the specification files stay true when someone swaps in. Owners live in the GitHub issues, and you choose whether logins are published.
 
 Confirm engineering commands and branch rules with the engineering team, or mark them "decide later". The agent summarizes your answers before writing the plan. Review and correct the summary before approving it.
 
@@ -301,7 +307,7 @@ Every change the agent found in the sources receives a disposition, its recorded
 
 A conflict, a missing decision or an approval your organization requires can mean one more question. Each such question names the consequential decision that makes it necessary. Distinct permissions stay distinct: approving an update to the drafts is not permission to disclose it or to write to GitHub.
 
-The agent reads the compact index of all work items, then the full specifications of the candidates. It says what it checked and what it could not observe. When it lists something it could not observe, such as a source kept elsewhere, give it that material or accept the limit. It does not claim to have found every affected item, and an independent review pass looks again at the original changes, the claimed lack of impact and the proposed patches before you see the review. You do not run that pass or wait for it separately. People decide what the changes mean.
+The agent reads the compact index of all work items, then the full specifications of the candidates. Before it assesses, it tells you the size of what it will read, an estimate of your agent's model usage. A broad rule change can still need broad reading. It says what it checked and what it could not observe. When it lists something it could not observe, such as a source kept elsewhere, give it that material or accept the limit. It does not claim to have found every affected item, and an independent review pass looks again at the original changes, the claimed lack of impact and the proposed patches before you see the review. You do not run that pass or wait for it separately. People decide what the changes mean.
 
 The agent keeps a private copy of each source version you reviewed, in your private workspace on your machine, so that it can compare the next change with it. [The security guide](security.md#local-source-history) says what that copy holds and what deleting a raw input does not erase. If a previous complete source checkpoint is missing, the agent says what it cannot compare and asks you to review the current sources to establish one. In that case earlier uncited changes cannot be assessed automatically.
 

@@ -246,7 +246,7 @@ You do not need a token to plan locally. Publishing issues and a project board r
 
 </details>
 
-[Read the full FAQ](docs/faq.md) for setup, source formats, planning, GitHub permissions and ongoing changes.
+[Troubleshooting](docs/troubleshooting.md) covers installation, source formats, GitHub permissions, publishing and updates.
 
 [Recover a plan or publication](docs/recovery.md) for identity choices, source references, issue reconciliation and resumable board updates. If an update stopped partway, say "Resume the project update." and read [resume a project update](docs/recovery.md#resume-a-project-update).
 
@@ -254,7 +254,7 @@ You do not need a token to plan locally. Publishing issues and a project board r
 
 ## Contributing and license
 
-[CONTRIBUTING.md](CONTRIBUTING.md) shows how to run the scripts and checks yourself, under the [code of conduct](CODE_OF_CONDUCT.md); [SECURITY.md](SECURITY.md) covers private reports. Everything in this repository is licensed under [Apache 2.0](LICENSE). Optional reading: [frequently asked questions](docs/faq.md), [enterprise security questions](docs/enterprise-security.md) beside the [security guide](docs/security.md), [changelog](CHANGELOG.md).
+[CONTRIBUTING.md](CONTRIBUTING.md) shows how to run the scripts and checks yourself, under the [code of conduct](CODE_OF_CONDUCT.md); [SECURITY.md](SECURITY.md) covers private reports. Everything in this repository is licensed under [Apache 2.0](LICENSE). Optional reading: [troubleshooting](docs/troubleshooting.md), [enterprise security questions](docs/enterprise-security.md) beside the [security guide](docs/security.md), [changelog](CHANGELOG.md).
 
 **Want to add an integration?** See the [community integration invitations](https://github.com/sct-will/carrydown/issues/1). We welcome contributors for Jira, Azure Boards, GitLab, Linear, Confluence, SharePoint, Figma and Slack. Each issue describes a first contribution and how the pieces could connect. Comment with your proposed approach before starting. These are community opportunities, with no committed delivery dates.
 

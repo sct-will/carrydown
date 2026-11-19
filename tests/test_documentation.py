@@ -248,7 +248,7 @@ class LinkCheckTests(Temp):
         self.assertEqual([w for _, _, _, w in found], ["points outside the folder"])
 
 
-PUBLIC_DOCS = ["README.md", "SECURITY.md", "docs/setup.md", "docs/install-options.md", "docs/organization-setup.md", "docs/security.md", "docs/faq.md", "docs/inputs.md", "docs/method.md",
+PUBLIC_DOCS = ["README.md", "SECURITY.md", "docs/setup.md", "docs/install-options.md", "docs/organization-setup.md", "docs/security.md", "docs/troubleshooting.md", "docs/inputs.md", "docs/method.md",
                "docs/plan-owner-guide.md", "docs/recovery.md", "docs/sample-run.md", "docs/enterprise-security.md",
                "docs/delivery-modes.md", "docs/recording-storyboard.md"]
 
@@ -295,7 +295,6 @@ class EnterpriseSecurityPageTests(unittest.TestCase):
                              ("docs/security.md", "Start with the plain-language questions"),
                              ("docs/setup.md", "(enterprise-security.md)"),
                              ("docs/plan-owner-guide.md", "(enterprise-security.md)"),
-                             ("docs/faq.md", "(enterprise-security.md)"),
                              ("docs/delivery-modes.md", "(enterprise-security.md)")):
             self.assertIn(phrase, (ROOT / page).read_text(encoding="utf-8"), page)
 

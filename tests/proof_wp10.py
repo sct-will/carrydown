@@ -29,7 +29,7 @@ PY = sys.executable
 EDITED_DOCUMENTS = [
     "README.md", "CHANGELOG.md", "SECURITY.md",
     "docs/enterprise-security.md", "docs/delivery-modes.md", "docs/setup.md", "docs/install-options.md", "docs/organization-setup.md", "docs/security.md", "docs/plan-owner-guide.md",
-    "docs/faq.md", "docs/inputs.md", "docs/method.md", "docs/recovery.md", "docs/sample-run.md", "docs/recording-storyboard.md",
+    "docs/troubleshooting.md", "docs/inputs.md", "docs/method.md", "docs/recovery.md", "docs/sample-run.md", "docs/recording-storyboard.md",
     "docs/repository-metadata.md", "docs/derive-the-date.md",
     "skills/carrydown-ground-truth/SKILL.md", "skills/carrydown-plan-to-github/SKILL.md",
     "skills/carrydown-ground-truth/references/interview.md", "skills/carrydown-ground-truth/references/planning.md",

@@ -313,7 +313,7 @@ To install for all your projects, name your agent in the command or install with
 
 ## Organization setup for private drafting
 
-Only for the private path, when some documents are not for everyone who can read the repository: your administrator follows [organization setup for private drafting](organization-setup.md).
+Only for the private path, when some documents are not for everyone who can read the repository: your administrator follows [organization setup for private drafting](organization-setup.md). The private path needs shared pieces that an organization administrator installs once: a tooling repository with the independent verifier, a private staging repository for each project, and a GitHub App that reports two required checks. The plan owner then runs a doctor command that says which pieces are verified. Without the organization's part, the private path is not available, and carrydown says so before it uploads anything. The real GitHub acceptance run of this setup has not been performed yet.
 
 ## When something does not work
 

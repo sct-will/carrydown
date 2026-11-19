@@ -803,7 +803,7 @@ Verification (read only)
   Work unit iterations: 5
   project: https://github.com/users/your-user/projects/N
 
-The API cannot set these. Click them once in the project (see docs/faq.md):
+The API cannot set these. Click them once in the project (see references/project-board.md in the carrydown-plan-to-github skill):
   - Group the Table view by Work unit (View menu, Group by).
   - Sort the Table view by Complete by (View menu, Sort).
   - Set the Board view columns (Column field) to Status, or to Work unit if you prefer.
@@ -862,7 +862,7 @@ Verification (read only)
   Work unit iterations: 5
   project: https://github.com/users/your-user/projects/N
 
-The API cannot set these. Click them once in the project (see docs/faq.md):
+The API cannot set these. Click them once in the project (see references/project-board.md in the carrydown-plan-to-github skill):
   - Group the Table view by Work unit (View menu, Group by).
   - Sort the Table view by Complete by (View menu, Sort).
   - Set the Board view columns (Column field) to Status, or to Work unit if you prefer.
@@ -915,7 +915,7 @@ Verification (read only)
   Work unit iterations: 5
   project: https://github.com/users/your-user/projects/N
 
-The API cannot set these. Click them once in the project (see docs/faq.md):
+The API cannot set these. Click them once in the project (see references/project-board.md in the carrydown-plan-to-github skill):
   - Group the Table view by Work unit (View menu, Group by).
   - Sort the Table view by Complete by (View menu, Sort).
   - Set the Board view columns (Column field) to Status, or to Work unit if you prefer.

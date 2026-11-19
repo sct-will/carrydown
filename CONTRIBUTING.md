@@ -28,7 +28,9 @@ Use the "Question" form for questions. Use the "Feature request" form for ideas.
 | `templates/` | The canonical templates the scripts fill in. |
 | `skills/<name>/` | Each skill: `SKILL.md`, `references/`, and its own copy of the scripts and templates it runs. |
 | `sample/expense-approvals/` | The fictional sample and its worked output. |
-| `docs/` | Method, inputs, FAQ, security notes and the recorded sample run. |
+| `docs/` | Method, inputs, troubleshooting, security notes and the recorded sample run. |
+
+The scripts use the standard library only, so they run on a stock Python with no installation. That is why they do not use PyYAML. `plan.yaml` uses a small subset of YAML, a plain text format for settings, described at the top of `scripts/carrydown_lib.py`.
 
 The installer copies only a skill's own folder, so each skill carries copies of the scripts and templates it needs. Edit the canonical files in `scripts/` and `templates/`, then refresh the copies:
 
