@@ -181,70 +181,7 @@ Some documents are not for everyone who can read the project repository. carrydo
 
 ## Frequently asked questions
 
-<details>
-<summary>What do I need to start?</summary>
-
-One or more project sources, and an answer to one question: can everyone who can read this repository see all of these documents and your staffing notes? Read [who may see your documents](docs/setup.md#before-you-add-documents-who-may-see-them), then follow [Install carrydown and start your first plan](docs/setup.md). The sources can mix Word, Markdown, plain text, PDF and image files, and they can stay where you keep them. The agent reports unreadable files and continues when it can process at least one intended source.
-
-</details>
-
-<details>
-<summary>Do my confidential documents end up in the project repository?</summary>
-
-Not unless you say everyone who can read the repository may see them. The agent asks that one question first. On yes, it drafts in the repository as before. On no, it drafts in a private workspace on your machine, and the repository receives only the outputs you approve. Originals are optional in the project either way. Ignore rules stop new files from being tracked, but they do not erase a file an earlier commit already holds. Read [the enterprise security questions](docs/enterprise-security.md) for what carrydown protects and what it cannot.
-
-</details>
-
-<details>
-<summary>Do I need to supply engineer skills and work preferences?</summary>
-
-No. They are optional inputs for a best-match proposal. When supplied, the agent compares them with the needs of each track and specialized work item. It considers fixed staffing decisions, required capabilities, preferences, availability, dependencies, workload and reduced handoffs, then records the proposed match and its reasoning for the plan owner to review.
-
-Missing, partial or unclear staffing context never blocks planning or becomes a review finding. The agent continues with the default track, capacity, dependency and context-switching rules. The checker reports supplied context without scoring the match, and the second-pass review challenges its tradeoffs. The plan owner makes the final assignment decisions.
-
-</details>
-
-<details>
-<summary>What do I say when the project changes?</summary>
-
-Say "This changed: [describe the change or provide revised documents]." Your agent reviews the existing project, preserves engineer corrections and shows proposed updates for your approval. If the agent does not pick up the update path, say "Use carrydown-ground-truth to update this existing project." Read [when the project changes](#when-the-project-changes).
-
-</details>
-
-<details>
-<summary>Does it watch my documents?</summary>
-
-No. carrydown does not run a file watcher and does not poll your document system. An update starts when you tell your agent what changed and provide the revised material. Configured integrations that observe sources automatically are planned for later, and they could only raise an observation for you to review. The owner guide also asks, at each milestone review, whether any source decisions, requirements, constraints or implementation findings have changed.
-
-</details>
-
-<details>
-<summary>What happens to an engineer's recorded decision when the source changes?</summary>
-
-It is preserved, or it is shown to you as a conflict. When an engineer's decision and the revised source fit together, the update keeps both and explains the result. When they conflict, the agent shows you both sides and nothing is overwritten until you decide.
-
-</details>
-
-<details>
-<summary>Can it tell me every affected item?</summary>
-
-No. It assesses what it can observe. It checks the work that cites the changed material, then reads a compact index of every work item, then reads the full specifications of the candidates and expands further when the evidence is incomplete. It reports what it could not observe. It does not claim complete discovery, so your review of the proposed update still matters.
-
-</details>
-
-<details>
-<summary>Who makes the final planning decisions?</summary>
-
-The plan owner does. The agent drafts the plan, checks it, performs the second-pass review and applies accepted repairs. A person approves the owners, dates, scope, order and GitHub publication.
-
-</details>
-
-<details>
-<summary>What GitHub token permissions are required?</summary>
-
-You do not need a token to plan locally. Publishing issues and a project board requires a GitHub personal access token. For an organization-owned board, use a fine-grained token limited to the repository, with repository permissions **Issues: read and write** and **Metadata: read**, plus the organization permission **Projects: read and write**. For a board owned by your user account, use a classic token with the `repo` and `project` scopes because fine-grained tokens cannot access user-owned projects. The [publishing guide](docs/plan-owner-guide.md#the-token) walks through creation, checking, storage and revocation.
-
-</details>
+The questions people ask before they try carrydown, from how it differs from spec-driven development to where it stops, are answered on the [carriedcontext.dev FAQ](https://carriedcontext.dev/faq/). It is searchable and available in seven languages.
 
 [Troubleshooting](docs/troubleshooting.md) covers installation, source formats, GitHub permissions, publishing and updates.
 
