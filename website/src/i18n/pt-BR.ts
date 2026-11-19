@@ -310,6 +310,8 @@ export const ptBR: Strings = {
       'Carried-context development vai além do desenvolvimento orientado por especificações.',
       'O contexto viaja com o trabalho.',
     ],
+    /** The part of the second title line set in the amber, a styling choice a native reviewer may move or empty. */
+    h1Emphasis: 'viaja com o trabalho.',
     definition:
       'Mantenha o projeto alinhado dando ao agente de programação de cada engenheiro as mesmas decisões e o mesmo contexto do projeto.',
     paragraph:

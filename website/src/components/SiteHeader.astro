@@ -33,8 +33,8 @@ const isCurrent = (match: string) => match !== '' && route.startsWith(match);
     <div class="site-header__panel" id="site-header-panel" data-menu-panel>
       <nav aria-label={t.nav.label}>
         <ul class="nav-links">
-          {links.map((l) => (
-            <li>
+          {links.map((l, i) => (
+            <li style={`--n: ${i}`}>
               <a href={l.href} aria-current={isCurrent(l.match) ? 'page' : undefined}>{l.label}</a>
             </li>
           ))}
@@ -53,17 +53,15 @@ const isCurrent = (match: string) => match !== '' && route.startsWith(match);
       aria-controls="site-header-panel"
       data-menu-button
     >
-      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" focusable="false">
-        <path class="menu-icon-open" d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-        <path class="menu-icon-close" d="M4 4l10 10M14 4 4 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
-      </svg>
+      <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
       <span>{t.nav.menu}</span>
     </button>
   </div>
 </div>
 
 <script>
-  // Under 900 px the nav and controls sit behind the Menu button. Without script they stay visible.
+  // Under 900 px the nav and controls sit behind the Menu button. Without script they stay visible. The
+  // icon's lines turn into a cross and the panel's links settle in one after another; see chrome.css.
   const header = document.querySelector<HTMLElement>('[data-site-header]');
   const button = header?.querySelector<HTMLButtonElement>('[data-menu-button]');
   const panel = header?.querySelector<HTMLElement>('[data-menu-panel]');

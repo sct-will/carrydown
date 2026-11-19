@@ -1,14 +1,18 @@
-/* Language-specific type. Latin text uses Inter. Chinese and Japanese pages put the system's CJK fonts
- * after Inter, so Latin words and numbers stay in Inter and the characters get a native face. The
- * diagram, the docs and the pages all read --font-body, so one override covers them. */
+/* Language-specific type. Latin text uses Atkinson Hyperlegible Next, and display text Fraunces. Chinese
+ * and Japanese pages put the system's CJK fonts after them, so Latin words and numbers keep the site's
+ * faces and the characters get a native one: a sans for text and a serif (Mincho, Song) for headings,
+ * to match the serif display face. The diagram, the docs and the pages all read --font-body, so one
+ * override covers them. */
 
 :root:lang(ja) {
-  --font-body: 'Inter Variable', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI', 'Yu Gothic', Meiryo,
-    'Noto Sans CJK JP', 'Noto Sans JP', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Atkinson Hyperlegible Next Variable', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI',
+    'Yu Gothic', Meiryo, 'Noto Sans CJK JP', 'Noto Sans JP', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Fraunces Variable', 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif CJK JP', 'Noto Serif JP', serif;
 }
 :root:lang(zh-CN) {
-  --font-body: 'Inter Variable', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Microsoft YaHei',
-    'Noto Sans CJK SC', 'Noto Sans SC', 'WenQuanYi Micro Hei', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Atkinson Hyperlegible Next Variable', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI',
+    'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans SC', 'WenQuanYi Micro Hei', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Fraunces Variable', 'Songti SC', 'STSong', 'SimSun', 'Noto Serif CJK SC', 'Noto Serif SC', serif;
 }
 :root:lang(ja) body.site,
 :root:lang(zh-CN) body.site {
@@ -17,9 +21,14 @@
 :root:lang(ja) {
   line-break: strict;
 }
-/* Capitals and tracking mean nothing for these scripts. */
-:root:lang(ja) .site .vals .eb,
-:root:lang(zh-CN) .site .vals .eb,
+/* Capitals, small capitals and tracking mean nothing for these scripts, and their fonts have no italic:
+ * the emphasized part of the title keeps its amber and stands upright. */
+:root:lang(ja) .site .h1-line em,
+:root:lang(zh-CN) .site .h1-line em {
+  font-style: normal;
+}
+:root:lang(ja) .site .eb,
+:root:lang(zh-CN) .site .eb,
 :root:lang(ja) .site .tile .n,
 :root:lang(zh-CN) .site .tile .n,
 :root:lang(ja) .site .label-top,
@@ -27,6 +36,7 @@
 :root:lang(ja) .site .compare td::before,
 :root:lang(zh-CN) .site .compare td::before {
   letter-spacing: 0;
+  font-variant-caps: normal;
 }
 :root:lang(ja) .site h1,
 :root:lang(ja) .site h2,

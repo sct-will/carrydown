@@ -310,6 +310,8 @@ export const de: Strings = {
       'Carried-context development geht über spezifikationsgetriebene Entwicklung hinaus.',
       'Der Kontext reist mit der Arbeit.',
     ],
+    /** The part of the second title line set in the amber, a styling choice a native reviewer may move or empty. */
+    h1Emphasis: 'reist mit der Arbeit.',
     definition:
       'Halten Sie das Projekt ausgerichtet, indem Sie dem Coding-Agenten jedes Entwicklers dieselben Projektentscheidungen und denselben Kontext geben.',
     paragraph:

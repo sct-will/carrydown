@@ -288,6 +288,8 @@ export const zhCN: Strings = {
       'Carried-context development 超越规格驱动开发。',
       '上下文与工作同行。',
     ],
+    /** The part of the second title line set in the amber, a styling choice a native reviewer may move or empty. */
+    h1Emphasis: '与工作同行。',
     definition:
       '把同样的项目决策和上下文交给每位工程师的编码代理，让项目保持一致。',
     paragraph:

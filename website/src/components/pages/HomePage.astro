@@ -16,6 +16,11 @@ const h = t.home;
 const c = h.carrydown;
 // The product name in the intro is set in the accent color: the text is split on it and it is put back as a span.
 const introParts = c.intro.split('carrydown');
+// The second title line stays whole. The part the locale names in h1Emphasis is set in the italic amber;
+// a part that is empty or not in the line leaves the line plain.
+const [line1, line2] = h.h1;
+const emphasis = h.h1Emphasis && line2.includes(h.h1Emphasis) ? h.h1Emphasis : '';
+const line2Parts = emphasis ? line2.split(emphasis) : [line2];
 
 // The way in: the Start here section of the docs' first page, and its How it works section. The reader
 // stays in the docs for the installation.
@@ -32,23 +37,31 @@ const w = h.whatYouGet;
     <div class="wrap">
       <div class="hero">
         <div class="hero-main">
-          <h1 class="r25">{h.h1.map((line) => <span class="h1-line">{line}</span>)}</h1>
-          <div class="actions">
-            <a class="btn primary" href={startHereUrl}>{h.buttons.try}</a>
+          <h1 class="r25 rise" style="--i: 0">
+            <span class="h1-line">{line1}</span>
+            <span class="h1-line">{line2Parts.map((part, i) => (<>{i > 0 && <em>{emphasis}</em>}{part}</>))}</span>
+          </h1>
+          <div class="actions rise" style="--i: 2">
+            <a class="btn primary" href={startHereUrl}>
+              {h.buttons.try}
+              <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M7 17L17 7M9 7h8v8"></path></svg></span>
+            </a>
             <a class="btn secondary" href={sampleBoardUrl}>{h.buttons.sample}</a>
           </div>
-          <p class="license">{h.license}</p>
+          <p class="license rise" style="--i: 3">{h.license}</p>
         </div>
         <div class="hero-side">
-          <p class="defn">{h.definition}</p>
-          {h.sideParagraphs.map((text) => <p class="sub">{text}</p>)}
+          <p class="defn rise" style="--i: 1">{h.definition}</p>
+          {h.sideParagraphs.map((text, i) => <p class="sub rise" style={`--i: ${i + 2}`}>{text}</p>)}
         </div>
       </div>
 
-      <h2 class="how">{h.howHeading}</h2>
+      <h2 class="how tied" data-reveal>{h.howHeading}</h2>
       <p class="how-intro">{h.paragraph} {h.learnMore.before}<a href={howItWorksUrl}>{h.learnMore.link}</a>{h.learnMore.after}</p>
       <div class="flow-frame">
-        <HowItWorks locale={locale} />
+        <div class="flow-frame__in">
+          <HowItWorks locale={locale} />
+        </div>
       </div>
       <div class="vals">
         {h.values.map((v) => (
@@ -64,21 +77,26 @@ const w = h.whatYouGet;
 
   <section id="carrydown">
     <div class="wrap">
-      <h2 class="cd-h">{c.heading}</h2>
+      <h2 class="cd-h tied" data-reveal>{c.heading}</h2>
       <p class="cd-intro">{introParts.map((part, i) => (<>{i > 0 && <a class="accent" href={startHereUrl}>carrydown</a>}{part}</>))}</p>
       <div class="tiles">
         {c.tiles.map((tile, i) => (
           <>
             {i > 0 && (
-              <svg class="tile-arrow" viewBox="0 0 48 24" aria-hidden="true" focusable="false">
-                <path d="M3 12h41M36 4l8 8-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+              <svg class="tile-arrow" viewBox="0 0 56 28" aria-hidden="true" focusable="false">
+                <path d="M3 14h46M40 5l9 9-9 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
               </svg>
             )}
             <div class="tile">
-              <div class="n">{tile.step}</div>
-              <h3>{tile.title}</h3>
-              <p>{tile.body}{tile.command && <>{' '}<span class="mono">{tile.command}</span></>}</p>
-              <a class="btn secondary" href={tileLinks[i]}>{tile.button}</a>
+              <div class="tile__in">
+                <div class="n">{tile.step}</div>
+                <h3>{tile.title}</h3>
+                <p>{tile.body}{tile.command && <>{' '}<span class="mono">{tile.command}</span></>}</p>
+                <a class:list={['btn', i === 1 ? 'primary' : 'secondary']} href={tileLinks[i]}>
+                  {tile.button}
+                  {i === 1 && <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M7 17L17 7M9 7h8v8"></path></svg></span>}
+                </a>
+              </div>
             </div>
           </>
         ))}
@@ -103,24 +121,101 @@ const w = h.whatYouGet;
 
   <section id="what-you-get">
     <div class="wrap">
-      <h2>{w.heading}</h2>
+      <h2 class="tied" data-reveal>{w.heading}</h2>
       <p class="wyg-intro">{w.intro}</p>
       <div class="wyg-panel">
-        <ul class="wyg-list" role="list">
-          {w.items.map((item) => (
-            <li>
-              <svg class="wyg-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <circle cx="12" cy="12" r="9"></circle>
-                <path d="M8 12.5l2.7 2.7L16 9.5"></path>
-              </svg>
-              <div>
-                <h3>{item.title}{item.path && <>{' '}{w.inWord ? `${w.inWord} ` : ''}<span class="wyg-path">{item.path}</span></>}</h3>
-                <p>{item.body}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <div class="wyg-panel__in">
+          <ul class="wyg-list" role="list">
+            {w.items.map((item) => (
+              <li>
+                <svg class="wyg-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <circle cx="12" cy="12" r="9.5"></circle>
+                  <path d="M8 12.5l2.7 2.7L16 9.5"></path>
+                </svg>
+                <div>
+                  <h3>{item.title}{item.path && <>{' '}{w.inWord ? `${w.inWord} ` : ''}<span class="wyg-path">{item.path}</span></>}</h3>
+                  <p>{item.body}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   </section>
 </SiteLayout>
+
+<script>
+  // The motion of the home page, under the rule in chrome.css: a heading's tie draws when the heading
+  // enters the viewport, and the diagram draws itself as the reader scrolls it into view. The styles
+  // are in site.css. This script only classifies the diagram's connectors by their direction and their
+  // place in the flow (the coordinates are the drawing's, in HowItWorks.astro: a changed drawing needs
+  // a look here), gives each its share of the scroll range and a delay for the fallback, and watches
+  // the headings. Without script, under reduced motion, or if anything fails, everything is simply
+  // in its final state.
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const all = <T extends Element>(selector: string) => Array.from(document.querySelectorAll<T>(selector));
+  const finish = () => {
+    all('[data-reveal]').forEach((e) => e.classList.add('in'));
+    all('.flow').forEach((e) => e.classList.add('draw'));
+  };
+  if (reduce || !('IntersectionObserver' in window)) {
+    finish();
+  } else {
+    try {
+      // Groups in flow order: the inputs' connectors, the trunk down to the junction, the junction to
+      // the agent, the agent's ring, the agent to the trunk, the trunk, the four to the outputs, the
+      // last output to the engineers' trunk, that trunk, the three to the engineers, then the dashed
+      // Later path, across and up.
+      const delays = [0, 100, 190, 280, 420, 510, 630, 750, 840, 930, 1100, 1230];
+      const share = (g: number): [string, string] => {
+        const s = 12 + g * 3.3;
+        return [`${s}%`, `${s + 7}%`];
+      };
+      const set = (el: SVGElement, dir: string, g: number) => {
+        if (dir) el.classList.add(dir);
+        const [s, e] = share(g);
+        el.style.setProperty('--d', `${delays[g]}ms`);
+        el.style.setProperty('--s', s);
+        el.style.setProperty('--e', e);
+      };
+      all<SVGLineElement>('.flow-wide .ln').forEach((l) => {
+        const x1 = Number(l.getAttribute('x1'));
+        const x2 = Number(l.getAttribute('x2'));
+        const dashed = l.hasAttribute('stroke-dasharray');
+        let g: [string, number] = ['h', 0];
+        if (x1 === 282 && !dashed) g = ['h', 0];
+        else if (x1 === 330 && x2 === 330 && !dashed) g = ['v', 1];
+        else if (x1 === 330 && x2 === 392) g = ['h', 2];
+        else if (x1 === 508) g = ['h', 4];
+        else if (x1 === 580 && x2 === 580) g = ['vc', 5];
+        else if (x1 === 580 && x2 === 600) g = ['h', 6];
+        else if (x1 === 930) g = ['h', 7];
+        else if (x1 === 966 && x2 === 966) g = ['vc', 8];
+        else if (x1 === 966 && x2 === 992) g = ['h', 9];
+        else if (dashed && x1 === 282) g = ['h', 10];
+        else if (dashed && x1 === 330) g = ['vu', 11];
+        set(l, g[0], g[1]);
+      });
+      all<SVGCircleElement>('.flow-wide circle.tk').forEach((circle) => {
+        if (Number(circle.getAttribute('r')) < 50) return;
+        circle.style.setProperty('--len', String(circle.getTotalLength()));
+        set(circle, 'ring', 3);
+      });
+      all<HTMLElement>('.fs-link').forEach((bar, i) => bar.style.setProperty('--d', `${i * 400}ms`));
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            entry.target.classList.add(entry.target.classList.contains('flow') ? 'draw' : 'in');
+            io.unobserve(entry.target);
+          }
+        },
+        { rootMargin: '0px 0px -20% 0px' },
+      );
+      all('[data-reveal], .flow').forEach((e) => io.observe(e));
+    } catch {
+      finish();
+    }
+  }
+</script>

@@ -1,5 +1,11 @@
-/* Shared by the pages and the docs: header, footer, controls, buttons, skip link and focus. Class based,
- * so it does not touch Starlight's content styles. */
+/* Shared by the pages and the docs: header, footer, controls, buttons, skip link, focus, the paper
+ * grain, the page transition and the theme crossfade. Class based, so it does not touch Starlight's
+ * content styles.
+ *
+ * Motion, here and in site.css and docs.css, follows one rule: it answers something (a load, an entry,
+ * a hover, a press, a navigation), happens once, takes 150 to 600 ms for interface feedback, uses one
+ * easing family and only transform, opacity, clip and stroke, and is off under reduced motion, where
+ * every element is in its final state. */
 
 .sr-only {
   position: absolute;
@@ -13,10 +19,11 @@
   border: 0;
 }
 
+/* The focus ring is the amber of the mark's channel, like the underline of every link. It sits 3 px off
+ * the element, so it reads against the page rather than the element. */
 :where(a, button, select, summary, [tabindex]):focus-visible {
-  outline: 3px solid var(--ink);
-  outline-offset: 4px;
-  border-radius: 4px;
+  outline: 3px solid var(--amber-ink);
+  outline-offset: 3px;
 }
 
 .skip-link {
@@ -28,7 +35,7 @@
   align-items: center;
   min-height: 44px;
   padding: 0 18px;
-  border-radius: 6px;
+  border-radius: 999px;
   background: var(--ink);
   color: var(--cream);
   font-weight: 600;
@@ -38,43 +45,114 @@
   top: 12px;
 }
 
-/* Starlight draws its own padding around the header. The site header does its own. */
-header.header {
-  padding: 0;
+/* Film grain: a fixed, inert overlay, the light theme only (its opacity token is 0 in the Ink theme). */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: var(--grain);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* Header */
+/* Page to page: a cross-document view transition. The content crossfades in 200 ms while the header
+ * island holds still, in browsers that have it; the others load the page as before. ThemeScript skips
+ * a transition still unfinished after 600 ms. */
+@view-transition {
+  navigation: auto;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+  animation-timing-function: var(--ease);
+}
+.site-header__bar {
+  view-transition-name: site-header;
+}
+::view-transition-group(site-header) {
+  animation-duration: 200ms;
+}
+
+/* A theme change crossfades the colors. ThemeControl puts the class on for 500 ms. */
+html.theme-fade,
+html.theme-fade *,
+html.theme-fade *::before,
+html.theme-fade *::after {
+  transition:
+    background-color 0.4s var(--ease),
+    color 0.4s var(--ease),
+    border-color 0.4s var(--ease),
+    fill 0.4s var(--ease),
+    stroke 0.4s var(--ease) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* Header: a floating island, detached from the top, on a soft shadow. On the site pages the wrapper is
+ * sticky; on the docs Starlight's header is fixed and the island sits inside it. */
+.site-top {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+header.header {
+  padding: 12px clamp(16px, 2.2vw, 32px) 0;
+  background: transparent;
+  border-bottom: 0;
+}
 .site-header {
   position: relative;
   z-index: 20;
-  background: var(--cream);
-  border-bottom: 1px solid var(--border);
+  padding: 16px var(--gutter) 0;
   font-family: var(--font-body);
   color: var(--ink);
+  pointer-events: none;
 }
-/* The bar spans the viewport: the name sits at the left edge, the controls at the right, as on Biome's
- * site, which leaves the middle to the nav and the search field. */
+header.header .site-header {
+  padding: 0;
+}
 .site-header__bar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0 24px;
-  min-height: 72px;
-  padding-inline: clamp(16px, 2.2vw, 32px);
+  gap: 0 8px;
+  max-width: var(--measure);
+  min-height: 60px;
+  margin-inline: auto;
+  padding: 8px 10px 8px 14px;
+  border: 1px solid var(--shell-line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--cream-raised) 88%, transparent);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  pointer-events: auto;
 }
 .site-header--wide .site-header__bar {
-  height: 100%;
+  max-width: none;
 }
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-height: 44px;
+  padding: 0 8px 0 0;
   color: var(--ink);
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.015em;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
   text-decoration: none;
+}
+.brand .mark {
+  width: 30px;
+  height: 25px;
 }
 .menu-button {
   display: none;
@@ -98,42 +176,42 @@ header.header {
 }
 .nav-links {
   display: flex;
+  gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
+/* A link in the island carries the thread under it only when it is current or hovered. */
 .nav-links a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 44px;
   min-height: 44px;
-  padding: 0 12px;
+  padding: 0 14px;
   color: var(--ink);
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 500;
-  text-decoration: none;
-}
-.nav-links a:hover {
   text-decoration: underline;
-  text-underline-offset: 0.25em;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.32em;
+  transition: text-decoration-color var(--dur) var(--ease);
 }
+.nav-links a:hover,
 .nav-links a[aria-current='page'] {
-  text-decoration: underline;
-  text-decoration-color: var(--amber);
-  text-decoration-thickness: 3px;
-  text-underline-offset: 0.4em;
+  text-decoration-color: var(--amber-ink);
 }
 .controls {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
-/* The search button: a field-shaped button with the shortcut hint at its end. It takes the free space
- * of the bar, up to a comfortable field width. */
+/* The search button: a field-shaped pill with the shortcut hint at its end. It takes the free space of
+ * the bar, up to a comfortable field width. */
 .site-search {
   flex: 1 1 auto;
-  max-width: 440px;
+  max-width: 300px;
 }
 .search-button {
   display: inline-flex;
@@ -142,51 +220,53 @@ header.header {
   width: 100%;
   min-width: 176px;
   min-height: 44px;
-  padding: 0 8px 0 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  background: var(--paper);
+  padding: 0 12px 0 14px;
+  border: 1px solid var(--shell-line);
+  border-radius: 999px;
+  background: var(--shell);
   color: var(--ink-muted);
   font: inherit;
   font-size: 0.9rem;
   text-align: start;
   cursor: pointer;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 .search-button:hover {
-  border-color: var(--ink);
+  border-color: var(--border-strong);
   color: var(--ink);
 }
 .search-button svg {
   flex: none;
-  color: var(--ink);
+  width: 16px;
+  height: 16px;
+  color: var(--ink-muted);
 }
 .search-button__label {
   flex: 1;
 }
 .search-button__kbd {
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--cream-deep);
+  padding: 0;
   color: var(--ink-muted);
-  font-family: var(--font-body);
+  font-family: var(--font-mono);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
-/* The search dialog. Pagefind's own list is styled through its variables, from the tokens. */
+/* The search dialog. Pagefind's own list is styled through its variables, from the tokens. It opens
+ * from 0.98 in 180 ms. */
 .search-dialog {
   width: min(44rem, calc(100vw - 32px));
   max-height: min(84vh, 46rem);
   margin: 7vh auto auto;
   padding: 0;
   overflow: auto;
-  border: 1px solid var(--border-strong);
-  border-radius: 12px;
+  border: 1px solid var(--shell-line);
+  border-radius: 20px;
   background: var(--cream);
   color: var(--ink);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow-lift);
   font-family: var(--font-body);
   font-size: 1rem;
   --pagefind-ui-scale: 0.9;
@@ -196,11 +276,30 @@ header.header {
   --pagefind-ui-border: var(--border-strong);
   --pagefind-ui-tag: var(--cream-deep);
   --pagefind-ui-border-width: 1px;
-  --pagefind-ui-border-radius: 6px;
+  --pagefind-ui-border-radius: 10px;
   --pagefind-ui-font: var(--font-body);
 }
 .search-dialog::backdrop {
-  background: rgba(15, 20, 32, 0.6);
+  background: rgba(15, 20, 32, 0.55);
+}
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: scale(0.98) translateY(4px);
+    }
+  }
+  @keyframes backdrop-in {
+    from {
+      opacity: 0;
+    }
+  }
+  .search-dialog[open] {
+    animation: dialog-in 180ms var(--ease-out);
+  }
+  .search-dialog[open]::backdrop {
+    animation: backdrop-in 180ms var(--ease-out);
+  }
 }
 .search-dialog__frame {
   padding: 16px 20px 20px;
@@ -214,18 +313,20 @@ header.header {
 }
 .search-dialog__title {
   margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 500;
   line-height: 1.3;
+  font-variation-settings: 'opsz' 36, 'SOFT' 20;
 }
 .search-dialog__close {
   flex: none;
   min-width: 44px;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  background: var(--cream-raised);
+  border-radius: 999px;
+  background: var(--shell);
   color: var(--ink);
   font: inherit;
   font-size: 0.9rem;
@@ -247,7 +348,7 @@ header.header {
   min-height: 44px;
 }
 
-/* A select that looks like the mock-up's "Auto" box. */
+/* A select as a pill. */
 .control.select {
   position: relative;
   display: inline-flex;
@@ -256,29 +357,33 @@ header.header {
   appearance: none;
   min-width: 44px;
   min-height: 44px;
-  padding: 0 32px 0 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: 6px;
-  background: var(--cream-raised);
+  padding: 0 32px 0 14px;
+  border: 1px solid var(--shell-line);
+  border-radius: 999px;
+  background: var(--shell);
   color: var(--ink);
   font: inherit;
   font-size: 0.85rem;
+  font-weight: 500;
   cursor: pointer;
 }
 .control.select::after {
   content: '';
   position: absolute;
-  inset-inline-end: 12px;
+  inset-inline-end: 13px;
   top: 50%;
-  margin-top: -2px;
-  border-inline: 4px solid transparent;
-  border-top: 5px solid var(--ink);
+  width: 7px;
+  height: 7px;
+  margin-top: -5px;
+  border-inline-end: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink);
+  transform: rotate(45deg);
   pointer-events: none;
 }
 
 /* Up to 1200 px the bar has no room for the search field beside the longer name: the search is an icon
- * button. Under 1100 px the name steps down too. Between 900 and 1100 px the nav and the controls still
- * sit in the bar, with the tighter gaps from locales.css. */
+ * button. Between 900 and 1100 px the nav and the controls still sit in the bar, with the tighter gaps
+ * from locales.css. */
 @media (max-width: 1199.98px) {
   .site-search {
     flex: none;
@@ -303,33 +408,24 @@ header.header {
     display: none;
   }
 }
-@media (max-width: 1099.98px) {
-  .brand {
-    font-size: 1.25rem;
-  }
-  .brand .mark {
-    width: 36px;
-    height: 30px;
-  }
-}
 
 /* Under 900 px (phones, and a tablet held upright) the nav and controls sit behind a labeled button.
  * Without script the panel simply stays visible under the bar. */
 @media (max-width: 899.98px) {
+  .site-header {
+    padding: 12px 16px 0;
+  }
   .site-header__bar {
-    gap: 0 12px;
+    gap: 0 8px;
+    padding: 6px 6px 6px 12px;
   }
   /* The name takes what is left of the bar and wraps onto two lines on a narrow phone. */
   .brand {
     flex: 1 1 0;
     gap: 10px;
     min-width: 0;
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     line-height: 1.15;
-  }
-  .brand .mark {
-    width: 34px;
-    height: 28px;
   }
   /* The search icon sits at the end of the bar, before the Menu button. */
   .site-search {
@@ -346,17 +442,17 @@ header.header {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
     min-width: 44px;
     min-height: 44px;
-    padding: 0 14px;
-    border: 1px solid var(--border-strong);
-    border-radius: 6px;
-    background: var(--cream-raised);
+    padding: 0 16px;
+    border: 1px solid var(--shell-line);
+    border-radius: 999px;
+    background: var(--shell);
     color: var(--ink);
     font: inherit;
     font-size: 0.9rem;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
   }
   .site-header__panel {
@@ -366,28 +462,32 @@ header.header {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
-    padding-bottom: 12px;
+    padding: 8px 8px 12px;
   }
   .site-header__panel nav,
   .controls {
     order: 0;
     margin-inline-start: 0;
   }
+  /* With script the panel is a card under the island. */
   .js .site-header__panel {
     display: none;
     position: absolute;
     inset-inline: 0;
-    top: 100%;
+    top: calc(100% + 8px);
     flex: none;
-    padding: 8px var(--gutter) 16px;
-    background: var(--cream);
-    border-bottom: 1px solid var(--border);
+    padding: 12px 16px 16px;
+    border: 1px solid var(--shell-line);
+    border-radius: 24px;
+    background: var(--cream-raised);
+    box-shadow: var(--shadow-lift);
   }
   .js .site-header__panel[data-open] {
     display: flex;
   }
   .nav-links {
     flex-direction: column;
+    gap: 0;
   }
   .nav-links a {
     justify-content: flex-start;
@@ -395,14 +495,73 @@ header.header {
     font-size: 1.05rem;
   }
   .controls {
+    flex-wrap: wrap;
     margin-inline-start: 0;
   }
 }
 
-/* While the menu is open the button shows a cross; the word stays Menu and aria-expanded says the state. */
-.menu-button[aria-expanded='true'] .menu-icon-open,
-.menu-button:not([aria-expanded='true']) .menu-icon-close {
-  display: none;
+/* The menu button's icon: three lines that turn into a cross while the menu is open. The word stays
+ * Menu and aria-expanded says the state. */
+.menu-icon {
+  position: relative;
+  width: 18px;
+  height: 14px;
+  flex: none;
+}
+.menu-icon span {
+  position: absolute;
+  inset-inline: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  transform-origin: center;
+}
+.menu-icon span:nth-child(1) {
+  top: 0;
+}
+.menu-icon span:nth-child(2) {
+  top: 6px;
+}
+.menu-icon span:nth-child(3) {
+  top: 12px;
+}
+.menu-button[aria-expanded='true'] .menu-icon span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.menu-button[aria-expanded='true'] .menu-icon span:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+.menu-button[aria-expanded='true'] .menu-icon span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .menu-icon span {
+    transition:
+      transform var(--dur) var(--ease),
+      opacity var(--dur-fast) var(--ease);
+  }
+  /* The card settles in, and its links follow 30 ms apart. */
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+  @keyframes link-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+  .js .site-header__panel[data-open] {
+    animation: panel-in 220ms var(--ease-out);
+  }
+  .js .site-header__panel[data-open] .nav-links li,
+  .js .site-header__panel[data-open] .controls > * {
+    animation: link-in 320ms var(--ease-out) both;
+    animation-delay: calc(40ms + var(--n, 0) * 30ms);
+  }
 }
 
 /* On a narrow phone the menu button is its icon; the word stays in the accessible name. */
@@ -411,7 +570,7 @@ header.header {
     padding: 0;
     width: 44px;
   }
-  .menu-button span {
+  .menu-button > span:not(.menu-icon) {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -425,45 +584,96 @@ header.header {
 /* The docs sidebar button is fixed at the right edge from here down. Keep the site menu clear of it. */
 @media (max-width: 49.99rem) {
   .site-header--wide .site-header__bar {
-    padding-inline-end: calc(var(--sl-menu-button-size) + 2.25rem);
+    margin-inline-end: calc(var(--sl-menu-button-size) + 1rem);
   }
 }
 
-/* Buttons */
+/* Buttons: pills. The primary carries its arrow in a circle of its own. On hover a button lifts one
+ * pixel and its arrow drifts up and right; on press it gives to 0.98. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 10px 18px;
-  border-radius: 6px;
+  gap: 12px;
+  min-height: 48px;
+  padding: 6px 22px;
+  border-radius: 999px;
   font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 600;
+  letter-spacing: -0.005em;
   line-height: 1.3;
   text-decoration: none;
+}
+.btn .ic {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.btn .ic svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .btn.primary {
   background: var(--teal);
   color: var(--on-teal);
+  box-shadow: var(--shadow);
+}
+.btn.primary:has(.ic) {
+  padding-inline-end: 6px;
+}
+:root[data-theme='dark'] .btn .ic {
+  background: rgba(15, 20, 32, 0.18);
 }
 .btn.primary:hover {
   background: var(--teal-strong);
 }
 .btn.secondary {
   border: 1px solid var(--border-strong);
-  background: var(--cream-raised);
-  color: var(--teal);
+  background: var(--shell);
+  color: var(--ink);
 }
 .btn.secondary:hover {
   background: var(--teal-soft);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .btn {
+    transition:
+      transform var(--dur-slow) var(--ease),
+      box-shadow var(--dur-slow) var(--ease),
+      background-color var(--dur) var(--ease);
+  }
+  .btn .ic {
+    transition: transform var(--dur-slow) var(--ease);
+  }
+  .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lift);
+  }
+  .btn:hover .ic {
+    transform: translate(2px, -2px);
+  }
+  .btn:active {
+    transform: scale(0.98);
+    transition-duration: var(--dur-fast);
+  }
 }
 
 /* Footer */
 .site-footer {
   margin-top: 16px;
   border-top: 1px solid var(--border);
-  padding: 32px 0 64px;
+  padding: 40px 0 56px;
   color: var(--ink-muted);
   font-family: var(--font-body);
   font-size: 0.9rem;
@@ -491,8 +701,15 @@ header.header {
   min-width: 44px;
   min-height: 44px;
   padding-inline: 8px;
-  color: var(--teal);
-  text-underline-offset: 0.18em;
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.22em;
+  transition: text-decoration-color var(--dur) var(--ease);
+}
+.site-footer__links a:hover {
+  text-decoration-color: var(--amber-ink);
 }
 .site-footer__copyright {
   display: flex;
@@ -508,8 +725,19 @@ header.header {
   margin: -12px 0;
   color: inherit;
   text-decoration: underline;
-  text-underline-offset: 0.18em;
+  text-decoration-color: var(--amber-ink);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.22em;
 }
 .site-footer__copyright a:hover {
-  color: var(--teal);
+  color: var(--ink);
+  text-decoration-thickness: 3px;
+}
+
+/* The order of the controls in the narrow-screen menu's stagger, after the four links. */
+.controls > :nth-child(1) {
+  --n: 4;
+}
+.controls > :nth-child(2) {
+  --n: 5;
 }

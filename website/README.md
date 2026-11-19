@@ -46,6 +46,15 @@ This runs, in order:
 
 Type checks: `npx astro check`.
 
+## Design
+
+The design is the round 2 mock-up in `specs/carried-context-site/mockups-v2/` (paper and thread), carried into the site in November 2026.
+
+- Type: Fraunces for display, with its optical size axis set per size and the italic for the emphasized part of the title; Atkinson Hyperlegible Next for text, with true small capitals for the eyebrow labels, old-style figures in running text and tabular figures where numbers line up; Geist Mono for code. All three are self-hosted from their Fontsource packages, imported in `src/styles/tokens.css`. Chinese and Japanese pages put a native sans after the text face and a native serif after the display face (`src/styles/locales.css`).
+- The second line of the home page title stays one string in the locale file; the `h1Emphasis` key beside it names the part set in the italic amber. A translation may move that part or leave it empty.
+- Theme: light is the default. The control offers Light, Dark and Auto; the choice is kept in `localStorage` under `cc-theme` and resolved to `data-theme` on `<html>` before first paint by `src/components/ThemeScript.astro`. The tests reach the dark theme by storing that choice.
+- Motion follows one rule, written at the top of `src/styles/chrome.css`: it answers something, happens once, takes 150 to 600 ms for interface feedback, uses one easing family and only transform, opacity, clip and stroke, and is off under reduced motion. The home page diagram draws itself as the reader scrolls it into view (a scroll-driven animation in `src/styles/site.css`, with a timed fallback), page changes are cross-document view transitions (with a guard in `ThemeScript.astro` that skips a transition still unfinished after 600 ms, since an embedded or automated browser can hold one for seconds), and a theme change crossfades.
+
 ## Settings
 
 All settings are in `site.config.mjs`.
