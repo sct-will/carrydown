@@ -259,6 +259,7 @@ export const de: Strings = {
           'Jeder Schreibzugriff auf GitHub ist ein Probelauf, bis Sie --apply angeben.',
           'Es löscht nie Issues, Labels, Projekte oder Repositories.',
           'Der Aktualisierungsvergleich läuft auf Ihrem Rechner. Kein Netzwerk, kein Token, kein Modellaufruf.',
+          'Eine Aktualisierung prüft die Arbeit, die sie beobachten kann, und meldet, was sie nicht beobachten konnte. Sie behauptet nicht, jedes betroffene Element zu finden.',
           'Vertrauliche Dokumente bleiben auf Ihrem Rechner, es sei denn, Sie sagen, dass alle sie sehen dürfen.',
           'Namen, freie Tage und Zuteilung bleiben in einer privaten Datei, nie im Plan.',
           'Wenn Sie aufhören, behalten Sie reines Markdown und gewöhnliche GitHub-Issues.',

@@ -267,6 +267,7 @@ export const en = {
           'Every GitHub write is a dry run until you pass --apply.',
           'It never deletes issues, labels, projects or repositories.',
           'The update comparison runs on your machine. No network, no token, no model call.',
+          'An update checks the work it can observe and reports what it could not. It does not claim to find every affected item.',
           'Confidential documents stay on your machine unless you say everyone may see them.',
           'Names, days off and allocation stay in a private file, never in the plan.',
           'If you stop, you keep plain Markdown and ordinary GitHub issues.',

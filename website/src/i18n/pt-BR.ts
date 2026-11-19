@@ -259,6 +259,7 @@ export const ptBR: Strings = {
           'Toda escrita no GitHub é um ensaio até você passar --apply.',
           'Ele nunca apaga issues, rótulos, projetos nem repositórios.',
           'A comparação de atualização roda na sua máquina. Sem rede, sem token, sem chamada a modelo.',
+          'Uma atualização verifica o trabalho que consegue observar e relata o que não conseguiu observar. Ela não afirma encontrar todos os itens afetados.',
           'Documentos confidenciais ficam na sua máquina, a menos que você diga que todos podem vê-los.',
           'Nomes, folgas e alocação ficam em um arquivo privado, nunca no plano.',
           'Se você parar, fica com Markdown simples e issues comuns do GitHub.',

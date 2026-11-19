@@ -259,6 +259,7 @@ export const fr: Strings = {
           'Chaque écriture sur GitHub est un essai à blanc tant que vous ne passez pas --apply.',
           'Il ne supprime jamais de tickets, d’étiquettes, de projets ni de dépôts.',
           'La comparaison de mise à jour s’exécute sur votre machine. Pas de réseau, pas de jeton, pas d’appel à un modèle.',
+          'Une mise à jour vérifie le travail qu’elle peut observer et signale ce qu’elle n’a pas pu observer. Elle ne prétend pas trouver chaque élément concerné.',
           'Les documents confidentiels restent sur votre machine, sauf si vous dites que tout le monde peut les voir.',
           'Les noms, les jours d’absence et l’affectation restent dans un fichier privé, jamais dans le plan.',
           'Si vous arrêtez, vous gardez du Markdown brut et de simples tickets GitHub.',

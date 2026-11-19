@@ -259,6 +259,7 @@ export const es: Strings = {
           'Cada escritura en GitHub es un ensayo hasta que usted pasa --apply.',
           'Nunca borra incidencias, etiquetas, proyectos ni repositorios.',
           'La comparación de actualización se ejecuta en su equipo. Sin red, sin token, sin llamada a un modelo.',
+          'Una actualización revisa el trabajo que puede observar e informa de lo que no pudo observar. No afirma encontrar cada elemento afectado.',
           'Los documentos confidenciales permanecen en su equipo salvo que usted diga que todos pueden verlos.',
           'Los nombres, los días libres y la asignación quedan en un archivo privado, nunca en el plan.',
           'Si lo deja, conserva Markdown simple e incidencias normales de GitHub.',
