@@ -4,8 +4,9 @@
 // final/diagram-c8.svg) and, under 1100 px, a stacked variant in HTML and CSS with the same colors.
 // The wide drawing's boxes are fixed width, so keep translated labels close to the English length. At
 // 1100 px and above the drawing scales to no less than 0.94, so its smallest text (13 units) renders
-// at 12 px or more. CSS shows one at a time, so
-// only one is in the accessibility tree. Both carry the same aria-label.
+// at 12 px or more. The stacked variant joins its three groups with bars, as the drawing's connectors
+// do: the inputs to the agent, the agent to the outputs, and the last output to the engineers. CSS
+// shows one variant at a time, so only one is in the accessibility tree. Both carry the same aria-label.
 import { getStrings } from '../i18n';
 
 interface Props {
@@ -38,6 +39,7 @@ const d = getStrings(Astro.props.locale).diagram;
       <div class="fs-card"><em>{d.writes}</em><strong>{d.writesTitle}</strong><span>{d.writesNote}</span></div>
       <div class="fs-card"><em>{d.opens}</em><strong>{d.opensTitle}</strong><span>{d.opensNote}</span></div>
       <div class="fs-card"><em>{d.generates}</em><strong>{d.generatesTitle}</strong><span>{d.generatesNote}</span></div>
+      <div class="fs-link" aria-hidden="true"></div>
       <p class="fs-heading fs-engineers">{d.engineers[0]} {d.engineers[1]}</p>
       <div class="fs-people">
         {[0, 1, 2].map(() => (
@@ -174,7 +176,6 @@ const d = getStrings(Astro.props.locale).diagram;
       line-height: 1.4;
     }
     .fs-engineers {
-      margin-top: 12px;
       text-align: center;
     }
     .fs-people {

@@ -21,12 +21,7 @@
 :root:lang(ja) {
   line-break: strict;
 }
-/* Capitals, small capitals and tracking mean nothing for these scripts, and their fonts have no italic:
- * the emphasized part of the title keeps its amber and stands upright. */
-:root:lang(ja) .site .h1-line em,
-:root:lang(zh-CN) .site .h1-line em {
-  font-style: normal;
-}
+/* Capitals, small capitals and tracking mean nothing for these scripts. */
 :root:lang(ja) .site .eb,
 :root:lang(zh-CN) .site .eb,
 :root:lang(ja) .site .tile .n,

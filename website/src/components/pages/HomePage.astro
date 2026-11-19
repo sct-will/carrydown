@@ -16,7 +16,7 @@ const h = t.home;
 const c = h.carrydown;
 // The product name in the intro is set in the accent color: the text is split on it and it is put back as a span.
 const introParts = c.intro.split('carrydown');
-// The second title line stays whole. The part the locale names in h1Emphasis is set in the italic amber;
+// The second title line stays whole. The part the locale names in h1Emphasis is set in the amber;
 // a part that is empty or not in the line leaves the line plain.
 const [line1, line2] = h.h1;
 const emphasis = h.h1Emphasis && line2.includes(h.h1Emphasis) ? h.h1Emphasis : '';

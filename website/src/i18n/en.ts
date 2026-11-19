@@ -318,8 +318,8 @@ export const en = {
       'Carried-context development goes beyond spec-driven development.',
       'The context travels with the work.',
     ],
-    /** The part of the second title line set in the italic amber. The line itself stays whole; this names
-     * which part of it is emphasized. Empty leaves the line plain. */
+    /** The part of the second title line set in the amber. The line itself stays whole; this names which
+     * part of it is emphasized. Empty leaves the line plain. */
     h1Emphasis: 'travels with the work.',
     definition:
       'Keep the project aligned by giving each engineer’s coding agent the same project decisions and context.',

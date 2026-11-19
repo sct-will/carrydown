@@ -2,7 +2,7 @@
 //
 // The card is the mark at 140 px and the title "Carried-context development goes beyond spec-driven development. The context travels with the work." on
 // the navy ground, set in Fraunces from the fontsource package, with "travels with the work." in the
-// italic amber as on the home page, and the site name in Atkinson Hyperlegible Next. The text is drawn
+// amber as on the home page, and the site name in Atkinson Hyperlegible Next. The text is drawn
 // by Chromium through Playwright, which loads the real font files. No network is used.
 //
 // If Chromium is not installed, the script copies the committed public/og-image.png instead and says so.
@@ -42,7 +42,7 @@ body { position: relative; font-family: 'Atkinson Hyperlegible Next Variable', s
 .mark { position: absolute; left: 96px; top: 84px; height: ${MARK_SIZE}px; }
 .mark svg { display: block; }
 h1 { position: absolute; left: 96px; top: 250px; margin: 0; font-family: 'Fraunces Variable', serif; font-size: 60px; line-height: 1.08; font-weight: 450; letter-spacing: -0.022em; width: 1010px; font-variation-settings: 'opsz' 144, 'SOFT' 40; }
-h1 em { font-style: italic; font-weight: 400; color: ${AMBER}; font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1; }
+h1 em { font-style: normal; color: ${AMBER}; }
 p { position: absolute; left: 96px; bottom: 64px; margin: 0; font-size: 30px; font-weight: 500; color: ${MUTED}; }
 </style></head><body>
 <div class="mark">${mark}</div>

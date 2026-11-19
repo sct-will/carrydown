@@ -160,12 +160,10 @@ body.site {
 .site h1.r25 .h1-line + .h1-line {
   margin-top: 0.4em;
 }
-/* The emphasized part of the second line: the italic, in the amber, with Fraunces's wonky forms. */
+/* The emphasized part of the second line: the same face, upright, in the amber. */
 .site .h1-line em {
   color: var(--amber-ink);
-  font-style: italic;
-  font-weight: 400;
-  font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
+  font-style: normal;
 }
 .site .defn {
   margin: 0 0 24px;
@@ -530,14 +528,15 @@ body.site {
       transform: none;
     }
   }
+  /* The timeline and the range sit in rules of their own, under a different selector: in one rule
+   * with the animation, the bundler folds them into the animation shorthand, which Chromium does not
+   * accept, and drops the whole declaration. */
   @supports (animation-timeline: view()) {
     html.js .site .flow-frame {
       view-timeline: --flow block;
     }
     html.js .site .flow-wide .ln {
       animation: ln-h linear both;
-      animation-timeline: --flow;
-      animation-range: cover var(--s, 12%) cover var(--e, 55%);
     }
     html.js .site .flow-wide .ln.v {
       animation-name: ln-v;
@@ -551,12 +550,17 @@ body.site {
     html.js .site .flow-wide circle.ring {
       stroke-dasharray: var(--len);
       animation: ring linear both;
-      animation-timeline: --flow;
-      animation-range: cover var(--s, 12%) cover var(--e, 55%);
     }
     html.js .site .fs-link {
       transform-origin: top;
       animation: bar linear both;
+    }
+    html.js .site .flow-frame .flow-wide .ln,
+    html.js .site .flow-frame .flow-wide circle.ring {
+      animation-timeline: --flow;
+      animation-range: cover var(--s, 12%) cover var(--e, 55%);
+    }
+    html.js .site .flow-frame .fs-link {
       animation-timeline: view();
       animation-range: entry 0% cover 30%;
     }
