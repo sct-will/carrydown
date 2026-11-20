@@ -139,6 +139,13 @@ export const zhCN: Strings = {
     anchorLabel: '此问题的链接',
     items: [
       {
+        id: 'what-is-carried-context-development',
+        group: 'method',
+        q: '什么是 carried-context development？',
+        a: 'Carried-context development 是一种智能体开发方法，把项目决策和上下文一直传递到每位工程师的编码代理，让项目保持一致，不再偏离。Carried-context development 把团队商定的基准事实向下传递到计划、每一份规格、每一个 issue 和每个编码代理的指令中，并按章节引用，当基准事实变化时再次向下传递。',
+        more: { label: '在定义页面阅读定义和规则。', href: '/definition/' },
+      },
+      {
         id: 'spec-driven',
         group: 'method',
         q: 'Carried-context development 与传统的规格驱动开发有什么不同？',
@@ -163,6 +170,13 @@ export const zhCN: Strings = {
         q: 'Carried-context development 不就是瀑布式吗？',
         a: '不是。瀑布式把整个计划预先固定，并把变更视为计划的失败。在这里，计划、规格和 issue 都是 Git 中的文件，所以修改成本低，而且变更像代码一样经过审阅。工作单元按工作所需的时长进行，而不是固定长度的时间盒。每个里程碑以一次演示结束，由相关方决定通过或不通过，团队学到的东西回到基准事实并再次向下传递。您可以规划、构建一点、学习，并按项目需要随时更新计划。',
         more: { label: '在方法页面阅读变更如何向下传递。', href: '/docs/method/#when-the-project-changes' },
+      },
+      {
+        id: 'what-is-carrydown',
+        group: 'carrydown',
+        q: '什么是 carrydown？它与 carried-context development 有什么不同？',
+        a: 'Carried-context development 是一种智能体开发方法。Carried-context development 把团队商定的基准事实向下传递到计划、每一份规格、每一个 issue 和每个编码代理的指令中，并按章节引用，当基准事实变化时再次向下传递。carrydown 是参考实现：你用一条命令一起安装的两个 Agent Skills，它为你的工程师生成的第三个，以及验证每一处引用的检查。它以 Apache 2.0 开源，可与你的团队已经在用的编码代理配合使用。',
+        more: { label: '在文档中阅读它如何工作。', href: '/docs/#how-it-works' },
       },
       {
         id: 'reconciled',
@@ -377,7 +391,7 @@ export const zhCN: Strings = {
       /** The word between a title and the path that follows it, where there is one. */
       inWord: '位于',
       items: [
-        { title: '一份计划', path: 'docs/spec/plan.yaml', body: '里程碑、工作线、负责人和日期按你的人员和时间来安排，每个里程碑都写明理由。' },
+        { title: '一份你在网页浏览器中以页面形式审阅的计划', path: '', body: '里程碑、工作线、负责人和日期按你的人员和时间来安排，附带负荷表和关键路径，每个里程碑都写明理由。提交到仓库的计划 docs/spec/plan.yaml 只包含 ID 和工作线。' },
         { title: '每个工作项一份规格', path: '', body: '工程师能够完成并展示的最小工作单元，引用其依据的章节，并在每次拉取请求时对照计划检查。' },
         { title: '每个工作项一份已批准的上下文', path: 'docs/context/', body: '工作项所引用章节的原文和背后的决策，由你批准。这是你的文档中唯一会到达工程师代理的部分。' },
         { title: '一份发布回执', path: 'docs/release/', body: '一个小的公开文件，写明已批准的发布、其状态和有效期。' },
