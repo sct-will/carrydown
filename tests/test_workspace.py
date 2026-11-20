@@ -855,7 +855,9 @@ class WindowsPermissionTextTests(unittest.TestCase):
     def test_only_the_current_user_passes(self):
         self.assertIsNone(W.windows_acl_problem(["DESKTOP-1\\me"], "DESKTOP-1\\me"))
         self.assertIsNone(W.windows_acl_problem(["desktop-1\\ME"], "DESKTOP-1\\me"))
-        self.assertIn("3 other principal(s)", W.windows_acl_problem(W.parse_icacls(self.OPEN, self.PATH), "DESKTOP-1\\me"))
+        self.assertIn("1 other principal(s) can open the workspace (NT AUTHORITY\\Authenticated Users)",
+                      W.windows_acl_problem(W.parse_icacls(self.OPEN, self.PATH), "DESKTOP-1\\me"))
+        self.assertIsNone(W.windows_acl_problem(["DESKTOP-1\\me", "NT AUTHORITY\\SYSTEM", "BUILTIN\\Administrators", "OWNER RIGHTS"], "DESKTOP-1\\me"))
         self.assertIn("could not be read back", W.windows_acl_problem([], "DESKTOP-1\\me"))
         self.assertIn("1 other principal", W.windows_acl_problem(["DESKTOP-1\\me", "Everyone"], "DESKTOP-1\\me"))
 
