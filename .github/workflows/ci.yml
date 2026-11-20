@@ -35,6 +35,10 @@ jobs:
       - name: Run the self test
         run: python scripts/selftest.py
       - name: Run recovery regression tests
+        # The unit tests have not been ported to Windows. Their fixtures put a shebang script on PATH as gh,
+        # set POSIX file modes, remove read-only Git objects with a plain rmtree, and compare paths in POSIX
+        # form. The self test above and the checks below gate Windows. The port is a separate change.
+        if: runner.os != 'Windows'
         run: python -m unittest discover -s tests -v
       - name: Check prose and packaged assets
         run: |

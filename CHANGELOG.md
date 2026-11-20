@@ -10,7 +10,7 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ### Windows
 
-- **The self test passes on Windows, and the Windows legs gate continuous integration.** A `.gitattributes` file checks out every text file with LF line endings, so the sample's bundles match their recorded digests on a Windows checkout. Every text file the scripts write is UTF-8 with LF line endings on every platform. The specification scaffold prints project paths with forward slashes, and output to a reader that stops early ends quietly on Windows too.
+- **The self test passes on Windows, and the Windows legs gate continuous integration.** A `.gitattributes` file checks out every text file with LF line endings, so the sample's bundles match their recorded digests on a Windows checkout. Every text file the scripts write is UTF-8 with LF line endings on every platform. The specification scaffold prints project paths with forward slashes, and output to a reader that stops early ends quietly on Windows too. The unit test suite still runs on Ubuntu and macOS only; its port to Windows is a separate change.
 
 ### Documentation
 
