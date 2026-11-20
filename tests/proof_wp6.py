@@ -128,7 +128,7 @@ class Cli:
 
     def edit_spec(self):
         path = self.root / SPEC
-        path.write_text(path.read_text(encoding="utf-8").rstrip("\n") + " Edited after approval.\n", encoding="utf-8")
+        path.write_bytes((path.read_text(encoding="utf-8").rstrip("\n") + " Edited after approval.\n").encode("utf-8"))
 
 
 def tree(folder):
@@ -147,7 +147,7 @@ def _(base):
     request = json.loads((c.workspace / "requests" / rid / "approval-request.json").read_text(encoding="utf-8"))
     fake = {"type": "local-owner", "authenticated": False, "request_sha256": rid, "content_manifest_sha256": request["release_id"],
             "approved_at": "2027-01-20T14:10:00Z", "git_identity": {"name": "x", "email": "y"}, "event_id": "e" * 64}
-    (c.workspace / "requests" / rid / "approval.json").write_text(json.dumps(fake), encoding="utf-8")
+    (c.workspace / "requests" / rid / "approval.json").write_bytes((json.dumps(fake)).encode("utf-8"))
     before = tree(c.root)
     out = c.export(check_ok=False)
     check(out.returncode == 1 and tree(c.root) == before, "export did not refuse or wrote files")
@@ -226,7 +226,7 @@ def _(base):
     for field, value in (("audience", "public"), ("destinations", ["engineering-repo"])):
         request = json.loads(original)
         request["receipt_template"][field] = value
-        path.write_text(json.dumps(request), encoding="utf-8")
+        path.write_bytes((json.dumps(request)).encode("utf-8"))
         out = c.export(check_ok=False)
         check(out.returncode == 1 and "approval-scope-mismatch" in out.stderr, field)
         seen.append(last_line(out.stderr))
@@ -325,7 +325,7 @@ def _(base):
     first = c.prepare()
     c.approve()
     c.export()
-    check(not (c.workspace / "requests" / first / "state.json").exists() or json.loads((c.workspace / "requests" / first / "state.json").read_text())["state"] == "active")
+    check(not (c.workspace / "requests" / first / "state.json").exists() or json.loads((c.workspace / "requests" / first / "state.json").read_text(encoding="utf-8"))["state"] == "active")
     events_first = len(list((c.workspace / "events").iterdir()))
     c.edit_spec()
     second = c.prepare()
@@ -333,7 +333,7 @@ def _(base):
     c.export()
     replay = V.local_replay(str(c.workspace)).replay
     check((replay.requests[first].state, replay.requests[second].state) == ("superseded", "active"))
-    old = json.loads((c.root / "docs/release" / f"{first}.receipt.json").read_text())
+    old = json.loads((c.root / "docs/release" / f"{first}.receipt.json").read_text(encoding="utf-8"))
     c.release("withdraw", "--root", c.root, "--request", second, "--reason", "error-found", "--apply")
     out = c.export(second, check_ok=False)
     check(out.returncode == 1 and "withdrawn" in out.stderr)
@@ -342,7 +342,7 @@ def _(base):
     after = tree(c.root)
     changed = sorted(p for p in after if before.get(p) != after[p])
     check(changed == [f"docs/release/{second}.receipt.json"], str(changed))
-    receipt = json.loads((c.root / "docs/release" / f"{second}.receipt.json").read_text())
+    receipt = json.loads((c.root / "docs/release" / f"{second}.receipt.json").read_text(encoding="utf-8"))
     check(receipt["state"] == "withdrawn" and old["state"] == "superseded" and old["superseded_by"] == second)
     record = V.verify_local_request(V.load_local_evidence(str(c.workspace), second), second)
     replay = V.local_replay(str(c.workspace)).replay
@@ -363,15 +363,15 @@ def _(base):
     c.export()
     c.release("withdraw", "--root", c.root, "--request", first, "--reason", "other", "--apply")
     second = c.prepare("--audience", "public")
-    r1 = json.loads((c.workspace / "requests" / first / "approval-request.json").read_text())
-    r2 = json.loads((c.workspace / "requests" / second / "approval-request.json").read_text())
+    r1 = json.loads((c.workspace / "requests" / first / "approval-request.json").read_text(encoding="utf-8"))
+    r2 = json.loads((c.workspace / "requests" / second / "approval-request.json").read_text(encoding="utf-8"))
     check(r1["release_id"] == r2["release_id"] and first != second)
     c.approve()
     replay = V.local_replay(str(c.workspace)).replay
     check((replay.requests[first].state, replay.requests[second].state) == ("withdrawn", "active"))
     c.release("withdraw", "--root", c.root, "--request", second, "--reason", "other", "--apply")
     third = c.prepare()
-    r3 = json.loads((c.workspace / "requests" / third / "approval-request.json").read_text())
+    r3 = json.loads((c.workspace / "requests" / third / "approval-request.json").read_text(encoding="utf-8"))
     check(third not in (first, second) and r3["request_nonce"] not in (r1["request_nonce"], r2["request_nonce"]))
     return f"release id {r1['release_id'][:12]} twice; request ids {first[:8]} != {second[:8]}; third nonce {r3['request_nonce'][:8]} is new"
 
@@ -383,7 +383,7 @@ def _(base):
         out = c.run(script, "--root", c.root, *args, check_ok=False)
         check("not-approved" not in out.stderr and "drafting-is-private" not in out.stderr, f"{script}: {out.stderr[-200:]}")
     e = Cli(base / "enrolled")
-    (e.root / ".carrydown" / "release-policy.yaml").write_text("format: 1\ntooling_repository: acme/tooling\nenrollment_id: " + "a" * 64 + "\n", encoding="utf-8")
+    (e.root / ".carrydown" / "release-policy.yaml").write_bytes(("format: 1\ntooling_repository: acme/tooling\nenrollment_id: " + "a" * 64 + "\n").encode("utf-8"))
     shutil.rmtree(e.root / "docs" / "dev")
     seen = []
     for script, args in (("scaffold_spec.py", ["--refresh-headers", "--apply", "--allow-no-git"]), ("generate_dev_skill.py", ["--apply"]), ("plan_repair.py", ["--apply"])):
@@ -476,7 +476,7 @@ def _(base):
     record = V.verify_local_request(V.load_local_evidence(str(c.workspace), rid), rid)
     replay = V.local_replay(str(c.workspace)).replay
     RS.verify_receipt_bytes(path.read_bytes(), record.request, record.manifest_bytes, replay.requests[rid], record.approval)
-    receipt = json.loads(path.read_text())
+    receipt = json.loads(path.read_text(encoding="utf-8"))
     check(not any(a["path"].startswith("docs/release/") for a in receipt["artifacts"]))
     mismatched = 0
     for key in RS.RECEIPT_KEYS:
@@ -660,7 +660,7 @@ def _(base):
         np_.prepare()
         np_.approve()
         np_.land()
-        (np_.root / "README.md").write_text("uncommitted edit\n", encoding="utf-8")
+        (np_.root / "README.md").write_bytes(("uncommitted edit\n").encode("utf-8"))
         before, status = tree(np_.root), F.sh(["git", "status", "--porcelain"], np_.root).stdout
         code, out, err = np_.export(apply=False)
         check(code == 0 and tree(np_.root) == before)

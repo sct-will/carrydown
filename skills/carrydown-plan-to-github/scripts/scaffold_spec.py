@@ -715,7 +715,7 @@ def main(argv=None):
         print(f"{verb}set up continuous integration with three parts: the workflow (.github/workflows/check-specs.yml), "
               "the pull request template (.github/pull_request_template.md) and the checker copy (tools/carrydown/).")
     for what, path, kind in actions:
-        print(f"{verb}{what}: {path.relative_to(root)}  [{kind}]")
+        print(f"{verb}{what}: {path.relative_to(root).as_posix()}  [{kind}]")
     missing = [it for it in plan["items"] if not L.spec_path(plan, root, it).exists()]
     if missing and not a.stubs:
         print(f"{len(missing)} specification stub(s) do not exist yet. Add --stubs to {'write' if a.apply else 'include'} them.")

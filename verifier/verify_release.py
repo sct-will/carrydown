@@ -126,7 +126,7 @@ def openssl_sign(private_key_pem, data, runner=subprocess.run):
     path = os.path.join(folder, "key.pem")
     try:
         fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        with os.fdopen(fd, "w") as handle:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
             handle.write(private_key_pem)
         done = runner(["openssl", "dgst", "-sha256", "-sign", path], input=data, capture_output=True, timeout=30)
         if done.returncode != 0 or not done.stdout:
@@ -233,7 +233,8 @@ def cmd_scan(args):
     for line in report_lines(report):
         print(line)
     if args.record_file:
-        Path(args.record_file).write_text(json.dumps({"health": report.health_record(), "records": report.records}, sort_keys=True) + "\n", encoding="utf-8")
+        with open(args.record_file, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(json.dumps({"health": report.health_record(), "records": report.records}, sort_keys=True) + "\n")
     return 0 if report.complete else 1
 
 

@@ -57,7 +57,7 @@ class RenderCase(unittest.TestCase):
     def link_workspace(self, path=None):
         pointer = self.project / ".carrydown" / "local.yaml"
         pointer.parent.mkdir(exist_ok=True)
-        pointer.write_text(f"workspace: {json.dumps(str(path or self.workspace))}\n", encoding="utf-8")
+        pointer.write_bytes((f"workspace: {json.dumps(str(path or self.workspace))}\n").encode("utf-8"))
 
     def strip_handling(self, project=None):
         """Remove a copied project's project.handling block so each test starts from a project with
@@ -74,7 +74,7 @@ class RenderCase(unittest.TestCase):
                 continue
             skipping = False
             out.append(line)
-        plan.write_text("".join(out), encoding="utf-8")
+        plan.write_bytes(("".join(out)).encode("utf-8"))
 
     def set_handling(self, repo_audience_approved):
         """Set the answer to the one question. The fixture already carries a handling block
@@ -90,7 +90,7 @@ class RenderCase(unittest.TestCase):
                      "    state: migrated\n")
             self.assertIn("project:\n", text)
             text = text.replace("project:\n", block, 1)
-        plan.write_text(text, encoding="utf-8")
+        plan.write_bytes((text).encode("utf-8"))
         return plan
 
     def make_docx(self, mode, name=None):
@@ -263,9 +263,9 @@ class LinkAndCommentTests(RenderCase):
 
     def test_markdown_links_with_other_schemes_lose_the_target(self):
         md = self.project / "ground-truth" / "links.md"
-        md.write_text("# Links\n\n## 1. Ways\n\nSee [web](https://example.com/a), [local](file:///Users/me/x), "
+        md.write_bytes(("# Links\n\n## 1. Ways\n\nSee [web](https://example.com/a), [local](file:///Users/me/x), "
                       "[mail](mailto:a@b.example), [rel](other.md#top), [anchor](#ways) and `[code](file:///kept)`.\n\n"
-                      "![img](https://example.com/i.png)\n", encoding="utf-8")
+                      "![img](https://example.com/i.png)\n").encode("utf-8"))
         code, out = self.render(md, "--out-dir", "docs/ground-truth")
         self.assertEqual(code, 0, out)
         self.assertIn("link scheme removed in links (2 links)", out)
@@ -276,9 +276,9 @@ class LinkAndCommentTests(RenderCase):
 
     def test_html_comments_are_stripped_and_counted(self):
         md = self.project / "ground-truth" / "notes.md"
-        md.write_text("# Notes\n\n<!-- reviewer: ask legal -->\n## 1. Scope\n\nText <!-- inline remark --> stays.\n\n"
+        md.write_bytes(("# Notes\n\n<!-- reviewer: ask legal -->\n## 1. Scope\n\nText <!-- inline remark --> stays.\n\n"
                       "<!--\nmultiline\nnote\n-->\n\n```\n<!-- kept in code -->\n```\n\nUse `<!-- kept too -->` here.\n\n"
-                      "<!-- never closed\nhidden to the end\n", encoding="utf-8")
+                      "<!-- never closed\nhidden to the end\n").encode("utf-8"))
         code, out = self.render(md, "--out-dir", "docs/ground-truth")
         self.assertEqual(code, 0, out)
         self.assertIn("HTML comments removed in notes: 4", out)
@@ -447,14 +447,14 @@ class DestinationTests(RenderCase):
         self.assertEqual(others, [])
 
     def test_an_unreadable_plan_stops_the_render(self):
-        (self.project / "docs" / "spec" / "plan.yaml").write_text("project: [unclosed\n", encoding="utf-8")
+        (self.project / "docs" / "spec" / "plan.yaml").write_bytes(("project: [unclosed\n").encode("utf-8"))
         code, out = self.render(self.project / "ground-truth" / "architecture.md")
         self.assertEqual(code, 2, out)
         self.assertIn("cannot be read", out)
 
     def test_an_unknown_classification_stops_the_render(self):
         plan = self.project / "docs" / "spec" / "plan.yaml"
-        plan.write_text(plan.read_text(encoding="utf-8").replace("classification: restricted", "classification: secret"), encoding="utf-8")
+        plan.write_bytes((plan.read_text(encoding="utf-8").replace("classification: restricted", "classification: secret")).encode("utf-8"))
         code, out = self.render(self.project / "ground-truth" / "company-governance.md")
         self.assertEqual(code, 2, out)
         self.assertIn("must be public, repo-readers or restricted", out)
@@ -495,7 +495,7 @@ class DigestTests(RenderCase):
         first = plan.read_bytes()
         self.assertEqual(self.render(source, "--version", "0.3")[0], 0)
         self.assertEqual(plan.read_bytes(), first)
-        source.write_text(source.read_text(encoding="utf-8") + "\n## 99. Added\n\nNew rule.\n", encoding="utf-8")
+        source.write_bytes((source.read_text(encoding="utf-8") + "\n## 99. Added\n\nNew rule.\n").encode("utf-8"))
         self.assertEqual(self.render(source, "--version", "0.4")[0], 0)
         entry = self.source_entry(plan, "architecture")
         self.assertEqual(entry["content_sha256"], sha256_bytes(source.read_bytes()))
@@ -586,7 +586,7 @@ class DigestTests(RenderCase):
         original.parent.mkdir(parents=True)
         original.write_bytes(b"original bytes of the policy")
         extraction = self.tmp / "extraction.md"
-        extraction.write_text("# Policy\n\n## 1. Rule\n\nUse the approved control.\n", encoding="utf-8")
+        extraction.write_bytes(("# Policy\n\n## 1. Rule\n\nUse the approved control.\n").encode("utf-8"))
         code, out = self.render(extraction, "--source-id", "architecture", "--name", "architecture",
                                 "--source-label", "docs/source/policy.txt")
         self.assertEqual(code, 0, out)
@@ -718,7 +718,7 @@ class PreviousRenderingTests(RenderCase):
         self.set_handling(True)
         old_md, old_idx = self.old_files()
         source = self.project / "ground-truth" / "architecture.md"
-        source.write_text(source.read_text(encoding="utf-8") + "\n## 99. Added\n\nNew rule.\n", encoding="utf-8")
+        source.write_bytes((source.read_text(encoding="utf-8") + "\n## 99. Added\n\nNew rule.\n").encode("utf-8"))
         code, out = self.render(source, "--version", "9.1")
         self.assertEqual(code, 0, out)
         self.assertEqual(self.history(), [f"architecture.{sha256_bytes(old_md)[:12]}.md", f"architecture.{sha256_bytes(old_idx)[:12]}.index.txt"])
@@ -743,7 +743,7 @@ class PreviousRenderingTests(RenderCase):
                     "GIT_COMMITTER_EMAIL": "owner@example.com", "HOME": str(self.tmp), "GIT_CONFIG_NOSYSTEM": "1"}
         with mock.patch.dict(os.environ, identity):
             subprocess.run(["git", "init", "-q"], cwd=str(self.workspace), check=True)
-            (self.workspace / "workspace.yaml").write_text("format: 1\nslug: confidential-fixture\nstate: drafting\n", encoding="utf-8")
+            (self.workspace / "workspace.yaml").write_bytes(("format: 1\nslug: confidential-fixture\nstate: drafting\n").encode("utf-8"))
             ground = self.project / "docs" / "ground-truth"
             descriptor = {"plan_sha256": sha256_bytes(b"plan"), "sources": [{"id": "architecture", "version": "0.3"}]}
             prepared = W.checkpoint_prepare(self.project, self.workspace, [ground / "architecture.md", ground / "architecture.index.txt"], descriptor, apply=True)
@@ -777,7 +777,7 @@ class PreviousRenderingTests(RenderCase):
         code, out = self.render(source, "--version", "0.3")
         self.assertEqual(code, 0, out)
         self.assertNotIn("previous rendering of architecture: version", out)        # nothing replaced, nothing to say
-        source.write_text(source.read_text(encoding="utf-8") + "\n## 99. Added\n\nNew rule.\n", encoding="utf-8")
+        source.write_bytes((source.read_text(encoding="utf-8") + "\n## 99. Added\n\nNew rule.\n").encode("utf-8"))
         code, out = self.render(source, "--version", "0.3", "--dry-run")
         self.assertEqual(code, 0, out)
         self.assertIn("previous rendering of architecture: version 0.3\n", out)

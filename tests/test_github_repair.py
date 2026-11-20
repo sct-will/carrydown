@@ -150,7 +150,7 @@ class RepairTests(unittest.TestCase):
         self.m.private = False
         with tempfile.TemporaryDirectory() as tmp:
             before = Path(tmp) / "before.yaml"
-            before.write_text((self.root / "docs/spec/plan.yaml").read_text())
+            before.write_bytes((self.root / "docs/spec/plan.yaml").read_bytes())
             original_init = G.GitHub.__init__
             def init(obj, token, **kwargs):
                 original_init(obj, token, api=self.url, pause=0)

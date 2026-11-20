@@ -29,11 +29,11 @@ LOG = os.environ.get("FAKE_GH_LOG", "")
 
 def load():
     p = Path(STATE)
-    return json.loads(p.read_text()) if p.is_file() else {}
+    return json.loads(p.read_text(encoding="utf-8")) if p.is_file() else {}
 
 
 def save(s):
-    Path(STATE).write_text(json.dumps(s))
+    Path(STATE).write_bytes((json.dumps(s)).encode("utf-8"))
 
 
 def sha1(text):

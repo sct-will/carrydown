@@ -246,7 +246,7 @@ def _workspace_log(state, request_id, decision, write_class, artifact_path):
         os.makedirs(folder, exist_ok=True)
         line = "{} {} {} {} {}\n".format(time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), request_id or "-", decision,
                                          write_class, str(artifact_path).replace("\n", " ").replace("\r", " "))
-        with open(os.path.join(folder, "gate.log"), "a", encoding="utf-8") as handle:
+        with open(os.path.join(folder, "gate.log"), "a", encoding="utf-8", newline="\n") as handle:
             handle.write(line)
     except OSError:
         pass

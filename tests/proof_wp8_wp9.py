@@ -470,7 +470,7 @@ def _(base):
         shutil.rmtree(root / "docs/dev")
         plan = root / "docs/spec/plan.yaml"
         text = plan.read_text(encoding="utf-8").replace("    state: migrated\n", f"    state: migrated\n    engineer_edits: {mode}\n", 1)
-        plan.write_text(text, encoding="utf-8")
+        plan.write_bytes((text).encode("utf-8"))
         out = script("generate_dev_skill.py", "--root", root, "--apply")
         check(out.returncode == 0, out.stdout + out.stderr)
         skill = (root / "docs/dev/skills/expense-approvals-dev/SKILL.md").read_text(encoding="utf-8")
@@ -494,7 +494,7 @@ def _(base):
     yp = exported(base / "p")
     first = yp.request_id
     spec = next((yp.drafts / "docs/spec").rglob("wi-06-*.md"))
-    spec.write_text(spec.read_text(encoding="utf-8").rstrip("\n") + "\n\n## Decisions recorded\n\n- Clarified after a rule clarification request.\n", encoding="utf-8")
+    spec.write_bytes((spec.read_text(encoding="utf-8").rstrip("\n") + "\n\n## Decisions recorded\n\n- Clarified after a rule clarification request.\n").encode("utf-8"))
     out = script("release.py", "preview", "--root", yp.root)
     check(out.returncode == 0 and "Changed:" in out.stdout, out.stdout[-200:] + out.stderr)
     code, out2, err = yp.prepare(nonce="ffeeddccbbaa99887766554433221100")

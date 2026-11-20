@@ -188,7 +188,7 @@ class CompileFixtureTests(Compiled):
     def test_trailing_blanks_in_a_rendering_do_not_change_the_text(self):
         with tempfile.TemporaryDirectory() as tmp:
             for p in RENDERINGS.glob("*.md"):
-                (Path(tmp) / p.name).write_text(p.read_text(encoding="utf-8").replace("\n1. ", " \t\n1. "), encoding="utf-8")
+                (Path(tmp) / p.name).write_bytes((p.read_text(encoding="utf-8").replace("\n1. ", " \t\n1. ")).encode("utf-8"))
             again = CB.compile_bundles(load_fixture_plan(), tmp, SPEC_DIR)
         self.assertEqual(again["docs/context/wi-06.md"], self.files["docs/context/wi-06.md"])
 
@@ -209,7 +209,7 @@ class CompletenessTests(unittest.TestCase):
 
     def test_a_missing_section_is_named_by_source_and_number(self):
         arch = self.renderings / "architecture.md"
-        arch.write_text(arch.read_text(encoding="utf-8").replace("### 3.5 Routing", "### Routing"), encoding="utf-8")
+        arch.write_bytes((arch.read_text(encoding="utf-8").replace("### 3.5 Routing", "### Routing")).encode("utf-8"))
         result = CB.compile_report(self.plan, self.renderings, SPEC_DIR)
         self.assertEqual(result.files, {})
         self.assertIn("obligation not found: architecture 3.5 (cited by WI-03)", result.problems)
@@ -234,7 +234,7 @@ class CompletenessTests(unittest.TestCase):
 
     def test_text_that_looks_like_the_bundle_layout_is_refused(self):
         arch = self.renderings / "architecture.md"
-        arch.write_text(arch.read_text(encoding="utf-8").replace("### 3.5 Routing\n", "### 3.5 Routing\n\n```\n## Shared obligations\n```\n", 1), encoding="utf-8")
+        arch.write_bytes((arch.read_text(encoding="utf-8").replace("### 3.5 Routing\n", "### 3.5 Routing\n\n```\n## Shared obligations\n```\n", 1)).encode("utf-8"))
         problems = CB.compile_report(self.plan, self.renderings, SPEC_DIR).problems
         self.assertIn("obligation text collides with the bundle layout: architecture 3.5 (cited by WI-06)", problems)
 
@@ -298,7 +298,7 @@ class SidecarFieldTests(unittest.TestCase):
             versions = {(o["source"], o["version"]) for o in self.side(plan, tmp)["obligations"]}
             self.assertEqual(versions, {("architecture", "0.3"), ("company-governance", "2027.1")})   # from the header comment
             for p in Path(tmp).glob("*.md"):
-                p.write_text(re.sub(r"<!-- Generated from .*? -->", "", p.read_text(encoding="utf-8")), encoding="utf-8")
+                p.write_bytes((re.sub(r"<!-- Generated from .*? -->", "", p.read_text(encoding="utf-8"))).encode("utf-8"))
             versions = {o["version"] for o in self.side(plan, tmp)["obligations"]}
             self.assertEqual(versions, {"unversioned"})
 
@@ -374,7 +374,7 @@ class CommandLineTests(unittest.TestCase):
             shutil.copy(p, ws / "renderings" / p.name)
         shutil.rmtree(self.root / "docs" / "ground-truth")        # the "no" path keeps no rendering in the project
         (self.root / ".carrydown").mkdir()
-        (self.root / ".carrydown" / "local.yaml").write_text(f"workspace: {ws}\n", encoding="utf-8")
+        (self.root / ".carrydown" / "local.yaml").write_bytes((f"workspace: {ws}\n").encode("utf-8"))
         return ws
 
     def test_the_dry_run_prints_the_table_and_writes_nothing(self):
@@ -420,7 +420,7 @@ class CommandLineTests(unittest.TestCase):
 
     def test_a_missing_obligation_exits_1_and_writes_nothing(self):
         arch = self.root / "docs" / "ground-truth" / "architecture.md"
-        arch.write_text(arch.read_text(encoding="utf-8").replace("### 7.1 REST API", "### REST API"), encoding="utf-8")
+        arch.write_bytes((arch.read_text(encoding="utf-8").replace("### 7.1 REST API", "### REST API")).encode("utf-8"))
         target = self.base / "snapshot"
         code, out, err = run_cli(["--root", str(self.root), "--renderings", str(arch.parent), "--out", str(target), "--apply"])
         self.assertEqual(code, 1, out + err)
@@ -462,7 +462,7 @@ class CommandLineTests(unittest.TestCase):
     def test_stale_files_are_reported_and_left_alone(self):
         target = self.base / "snapshot"
         (target / "docs" / "context").mkdir(parents=True)
-        (target / "docs" / "context" / "wi-99.md").write_text("old\n", encoding="utf-8")
+        (target / "docs" / "context" / "wi-99.md").write_bytes(("old\n").encode("utf-8"))
         code, out, err = run_cli(["--root", str(self.root), "--renderings", str(RENDERINGS), "--out", str(target), "--apply"])
         self.assertEqual(code, 0, out + err)
         self.assertIn("not in this compile and left in place: docs/context/wi-99.md", out)
@@ -472,7 +472,7 @@ class CommandLineTests(unittest.TestCase):
         released = L.project_released_plan(load_fixture_plan())
         text = json.dumps(released)
         plan_path = self.base / "released.json"
-        plan_path.write_text(text, encoding="utf-8")
+        plan_path.write_bytes((text).encode("utf-8"))
         code, out, err = run_cli(["--root", str(self.root), "--plan", str(plan_path)])
         self.assertEqual(code, 2, out + err)
         self.assertIn("schema-view-mismatch", out + err)
@@ -563,17 +563,17 @@ def released_project(base, source, edit=lambda text: text):
     shutil.copytree(source, root, ignore=shutil.ignore_patterns(".gitignore", "people.yaml", "__pycache__", "ground-truth", "dev", "tools", ".github", "release"))
     stored_path = base / "workspace-plan.yaml"
     owner_plan = WORKING_PLAN if Path(source).resolve() == SAMPLE.resolve() else source / "docs" / "spec" / "plan.yaml"   # the sample is committed as a released project
-    stored_path.write_text(edit(owner_plan.read_text(encoding="utf-8")), encoding="utf-8")
+    stored_path.write_bytes((edit(owner_plan.read_text(encoding="utf-8"))).encode("utf-8"))
     stored, problems = L.load_plan(stored_path, source)
     assert not problems, problems
     plan_path = root / "docs" / "spec" / "plan.yaml"
-    plan_path.write_text(PR.dump(L.project_released_plan(stored)) + "\n", encoding="utf-8")
+    plan_path.write_bytes((PR.dump(L.project_released_plan(stored)) + "\n").encode("utf-8"))
     plan, problems = L.load_plan(plan_path, root)
     assert not problems and plan["_view"] == "released", problems
     for it in plan["items"]:
         path = L.spec_path(plan, root, it)
         want = dict(L.expected_header(plan, it))["Ground truth"]
-        path.write_text(re.sub(r"(?m)^\| Ground truth \| .* \|$", lambda m: f"| Ground truth | {want} |", path.read_text(encoding="utf-8")), encoding="utf-8")
+        path.write_bytes((re.sub(r"(?m)^\| Ground truth \| .* \|$", lambda m: f"| Ground truth | {want} |", path.read_text(encoding="utf-8"))).encode("utf-8"))
     files = CB.compile_bundles(stored, source / "docs" / "ground-truth", root / "docs" / "spec")
     for rel, data in files.items():
         (root / rel).parent.mkdir(parents=True, exist_ok=True)
@@ -620,12 +620,12 @@ class SpecCitationTests(unittest.TestCase):
             spec_dir = Path(tmp) / "spec"
             shutil.copytree(SPEC_DIR, spec_dir)
             spec = spec_dir / "m3-enforce-policy" / "wi-07-audit-log.md"
-            spec.write_text(spec.read_text(encoding="utf-8").replace("## References\n", "## References\n\n- company-governance section 3.1, Retention\n- architecture section 2.2\n", 1), encoding="utf-8")
+            spec.write_bytes((spec.read_text(encoding="utf-8").replace("## References\n", "## References\n\n- company-governance section 3.1, Retention\n- architecture section 2.2\n", 1)).encode("utf-8"))
             files = CB.compile_bundles(load_fixture_plan(), RENDERINGS, spec_dir)
             self.assertLessEqual({("company-governance", "3.1"), ("architecture", "2.2")}, self.sections(files, "WI-07"))
             self.assertIn("### company-governance 3.1 Retention", files["docs/context/wi-07.md"].decode("utf-8"))
             bad = spec.read_text(encoding="utf-8").replace("architecture section 2.2", "architecture section 9.9")
-            spec.write_text(bad, encoding="utf-8")
+            spec.write_bytes((bad).encode("utf-8"))
             problems = CB.compile_report(load_fixture_plan(), RENDERINGS, spec_dir).problems
             self.assertEqual(problems, ["obligation not found: architecture 9.9 (cited by WI-07)"])
 

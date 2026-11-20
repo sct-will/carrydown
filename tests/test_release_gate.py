@@ -204,7 +204,7 @@ class GateDecisionTests(TempCase):
         shutil.copytree(self.yp.root, self.root)
         shutil.copytree(self.yp.workspace, self.ws)
         (self.root / ".carrydown").mkdir(exist_ok=True)
-        (self.root / ".carrydown" / "local.yaml").write_text(f'workspace: "{self.ws.as_posix()}"\n', encoding="utf-8")
+        L.write_lf(self.root / ".carrydown" / "local.yaml", f'workspace: "{self.ws.as_posix()}"\n')
         os.chmod(self.ws, 0o700)
 
     def context(self, receipts=None):
@@ -278,7 +278,7 @@ class GateDecisionTests(TempCase):
         # the handling policy lives in the owner's working plan: after a yes-path release that is
         # drafts/plan.yaml in the private workspace, and the project holds the released copy
         path = L.owner_plan(self.root)
-        path.write_text(path.read_text(encoding="utf-8").replace("policy_version: 1", "policy_version: 2", 1), encoding="utf-8")
+        L.write_lf(path, path.read_text(encoding="utf-8").replace("policy_version: 1", "policy_version: 2", 1))
         d = self.check("release", "docs/spec/README.md", self.digest_of("docs/spec/README.md"), verified_context=ctx)
         self.assertEqual(d.code, "policy-revision-mismatch")
 
@@ -337,12 +337,12 @@ class GateDecisionTests(TempCase):
         folder.mkdir(parents=True)
         (folder / "inputs.json").write_bytes(inputs + (b" " if tamper else b""))
         blocks = [{"ref": "architecture/3.5"}] + ([{"ref": "architecture/3.6"}] if extra_block else [])
-        (folder / "blocks.json").write_text(json.dumps({"format": 1, "blocks": blocks}), encoding="utf-8")
+        L.write_lf(folder / "blocks.json", json.dumps({"format": 1, "blocks": blocks}))
         records = [{"block": "architecture/3.5", "disposition": "update", "item": "WI-01",
                     "patch": {"item": "WI-01", "path": patch_path or rel, "before_sha256": before, "after_text": after_text}}]
         if pending:
             records.append({"block": "architecture/3.7", "disposition": "pending"})
-        (folder / "dispositions.json").write_text(json.dumps({"format": 1, "dispositions": records}), encoding="utf-8")
+        L.write_lf(folder / "dispositions.json", json.dumps({"format": 1, "dispositions": records}))
         return change_id
 
     def test_a_reviewed_update_patch_may_replace_a_working_copy_an_engineer_annotated(self):
@@ -386,7 +386,7 @@ class GateDecisionTests(TempCase):
                 d = self.check("draft", rel, digest, update_proposal=change_id)
                 self.assertEqual((d.allowed, d.code), (False, "working-copy-differs"))
         applied = self.saved_update(rel, current, after + "w")
-        (self.ws / "drafts" / "proposals" / applied / "applied.json").write_text("{}", encoding="utf-8")
+        L.write_lf(self.ws / "drafts" / "proposals" / applied / "applied.json", "{}")
         d = self.check("draft", rel, RS.sha256_text(after + "w"), update_proposal=applied)
         self.assertEqual((d.allowed, d.code), (False, "working-copy-differs"), "an applied proposal is not applied twice")
         # the reviewed update changes no other answer: a release write still needs a verified context
@@ -405,11 +405,11 @@ class GateDecisionTests(TempCase):
 
     def test_maintenance_class_follows_the_policy_pointer(self):
         self.assertEqual(RG.maintenance_class(self.root), "draft")
-        (self.root / ".carrydown" / "release-policy.yaml").write_text("format: 1\ntooling_repository: acme/t\nenrollment_id: " + "a" * 64 + "\n", encoding="utf-8")
+        L.write_lf(self.root / ".carrydown" / "release-policy.yaml", "format: 1\ntooling_repository: acme/t\nenrollment_id: " + "a" * 64 + "\n")
         self.assertEqual(RG.maintenance_class(self.root), "release")
         d = self.check("release", "docs/spec/README.md", ZERO)
         self.assertEqual(d.code, "not-approved")
-        (self.root / ".carrydown" / "release-policy.yaml").write_text("format: 1\nnonsense: 2\n", encoding="utf-8")
+        L.write_lf(self.root / ".carrydown" / "release-policy.yaml", "format: 1\nnonsense: 2\n")
         self.assertEqual(self.check("draft", "docs/spec/README.md", ZERO).code, "policy-pointer-mismatch")
 
 
@@ -438,7 +438,7 @@ class GateNoPathTests(TempCase):
     def test_an_enrolled_project_without_handling_is_refused(self):
         strip_handling(self.root)
         (self.root / ".carrydown").mkdir(exist_ok=True)
-        (self.root / ".carrydown" / "release-policy.yaml").write_text("format: 1\ntooling_repository: acme/t\nenrollment_id: " + "a" * 64 + "\n", encoding="utf-8")
+        L.write_lf(self.root / ".carrydown" / "release-policy.yaml", "format: 1\ntooling_repository: acme/t\nenrollment_id: " + "a" * 64 + "\n")
         for write_class in ("draft", "release"):
             with self.subTest(write_class=write_class):
                 self.assertEqual(self.check(write_class, "docs/spec/README.md").code, "enrolled-project-missing-handling")
@@ -447,9 +447,9 @@ class GateNoPathTests(TempCase):
         strip_handling(self.root)
         ws = self.base / "workspace"
         ws.mkdir(mode=0o700)
-        (ws / "workspace.yaml").write_text("format: 1\nslug: x\nstaging_repository: acme/x-releases\n", encoding="utf-8")
+        L.write_lf(ws / "workspace.yaml", "format: 1\nslug: x\nstaging_repository: acme/x-releases\n")
         (self.root / ".carrydown").mkdir(exist_ok=True)
-        (self.root / ".carrydown" / "local.yaml").write_text(f'workspace: "{ws.as_posix()}"\n', encoding="utf-8")
+        L.write_lf(self.root / ".carrydown" / "local.yaml", f'workspace: "{ws.as_posix()}"\n')
         self.assertEqual(self.check("draft", "docs/spec/README.md").code, "drafting-is-private")
 
 

@@ -128,7 +128,7 @@ class PlanViewTests(unittest.TestCase):
 
     def load(self, text, view=None, name="plan.yaml"):
         path = self.base / name
-        path.write_text(text, encoding="utf-8")
+        path.write_bytes((text).encode("utf-8"))
         return L.load_plan(path, FIXTURE, view)
 
     def replaced(self, old, new):
@@ -228,7 +228,7 @@ class PlanViewTests(unittest.TestCase):
         released = L.project_released_plan(self.load(self.text)[0])
         path = self.base / "released.yaml"
         import plan_repair
-        path.write_text(plan_repair.dump(released) + "\n", encoding="utf-8")
+        path.write_bytes((plan_repair.dump(released) + "\n").encode("utf-8"))
         _, problems = L.load_plan(path, FIXTURE, "workspace")
         self.assertIn("plan_view is released, but this check needs the workspace view (schema-view-mismatch)", problems)
         _, problems = L.load_plan(path, FIXTURE, "released")
@@ -292,15 +292,15 @@ class PlanViewTests(unittest.TestCase):
         plan = self.legacy_plan()
         text = (project / "docs/spec/plan.yaml").read_text(encoding="utf-8")
         legacy_text = self.base / "legacy.yaml"
-        (project / "docs/spec/plan.yaml").write_text(legacy_text.read_text(encoding="utf-8"), encoding="utf-8")
+        (project / "docs/spec/plan.yaml").write_bytes((legacy_text.read_text(encoding="utf-8")).encode("utf-8"))
         _, problems = L.load_plan(project / "docs/spec/plan.yaml", project)
         self.assertEqual(problems, [])
         pointer = project / ".carrydown"
         pointer.mkdir()
-        (pointer / "release-policy.yaml").write_text("format: 1\ntooling_repository: acme/tooling\nenrollment_id: " + "a" * 64 + "\n", encoding="utf-8")
+        (pointer / "release-policy.yaml").write_bytes(("format: 1\ntooling_repository: acme/tooling\nenrollment_id: " + "a" * 64 + "\n").encode("utf-8"))
         _, problems = L.load_plan(project / "docs/spec/plan.yaml", project)
         self.assertTrue(any("(enrolled-project-missing-handling)" in p for p in problems), problems)
-        (project / "docs/spec/plan.yaml").write_text(text, encoding="utf-8")   # a migrated plan in an enrolled repository is fine
+        (project / "docs/spec/plan.yaml").write_bytes((text).encode("utf-8"))   # a migrated plan in an enrolled repository is fine
         _, problems = L.load_plan(project / "docs/spec/plan.yaml", project)
         self.assertEqual(problems, [])
         del plan
@@ -486,7 +486,7 @@ class ProjectionTests(unittest.TestCase):
         out = L.project_released_plan(self.plan)
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "plan.yaml"
-            path.write_text(plan_repair.dump(out) + "\n", encoding="utf-8")
+            path.write_bytes((plan_repair.dump(out) + "\n").encode("utf-8"))
             plan, problems = L.load_plan(path, None, "released")
         self.assertEqual(problems, [])
         again = L.project_released_plan.__wrapped__ if hasattr(L.project_released_plan, "__wrapped__") else None
@@ -571,7 +571,7 @@ class WorkspaceInitTests(TempProject):
     def test_running_init_again_changes_nothing(self):
         self.init()
         before = {p.name: p.read_bytes() for p in (self.workspace / "workspace.yaml", self.workspace / "retention.yaml")}
-        (self.workspace / "people.yaml").write_text("people:\n  - id: tamsin\n    name: \"Fictional Person\"\nadvisors: []\n", encoding="utf-8")
+        (self.workspace / "people.yaml").write_bytes(("people:\n  - id: tamsin\n    name: \"Fictional Person\"\nadvisors: []\n").encode("utf-8"))
         code, out, err = self.init()
         self.assertEqual(code, 0, out + err)
         self.assertEqual({p.name: p.read_bytes() for p in (self.workspace / "workspace.yaml", self.workspace / "retention.yaml")}, before)
@@ -619,7 +619,7 @@ class WorkspaceInitTests(TempProject):
 
     def test_a_folder_that_is_not_a_workspace_is_never_used(self):
         self.workspace.mkdir(parents=True)
-        (self.workspace / "stranger.txt").write_text("not mine", encoding="utf-8")
+        (self.workspace / "stranger.txt").write_bytes(("not mine").encode("utf-8"))
         code, out, err = self.init()
         self.assertEqual(code, 2)
         self.assertIn("not empty, and it is not a carrydown workspace", err)
@@ -758,7 +758,7 @@ class WorkspaceStatusAndDoctorTests(TempProject):
     def test_doctor_fails_on_an_unreadable_checkpoint_list_and_says_so_without_content(self):
         self.init()
         path = self.workspace / "workspace.yaml"
-        path.write_text(path.read_text(encoding="utf-8") + "checkpoints: nonsense\n", encoding="utf-8")
+        path.write_bytes((path.read_text(encoding="utf-8") + "checkpoints: nonsense\n").encode("utf-8"))
         level, detail = self.rows()["checkpoints"]
         self.assertEqual(level, "FAIL")
         self.assertIn("checkpoint-mismatch", detail)
@@ -787,7 +787,7 @@ class WorkspaceStatusAndDoctorTests(TempProject):
 
     def test_doctor_fails_when_the_pointer_is_not_ignored_or_is_tracked(self):
         self.init()
-        (self.root / ".gitignore").write_text("__pycache__/\n", encoding="utf-8")
+        (self.root / ".gitignore").write_bytes(("__pycache__/\n").encode("utf-8"))
         pointer_rule = [r for r in W.doctor_rows(self.root) if r[1] == "ignore rule" and r[2].startswith(".carrydown/local.yaml")]
         self.assertEqual([r[0] for r in pointer_rule], ["FAIL"])
         git(self.root, "add", "-f", ".carrydown/local.yaml")
@@ -805,7 +805,7 @@ class WorkspaceStatusAndDoctorTests(TempProject):
         inside = self.root / "inside"
         inside.mkdir()
         (self.root / ".carrydown").mkdir()
-        (self.root / ".carrydown" / "local.yaml").write_text(f"workspace: {inside}\n", encoding="utf-8")
+        (self.root / ".carrydown" / "local.yaml").write_bytes((f"workspace: {inside}\n").encode("utf-8"))
         rows = self.rows()
         self.assertEqual(rows["path separation"][0], "FAIL")
         self.assertIn("workspace-inside-repository", rows["pointer"][1])
@@ -813,7 +813,7 @@ class WorkspaceStatusAndDoctorTests(TempProject):
     def test_doctor_counts_plan_problems_without_printing_the_plan(self):
         self.init()
         plan = self.root / "docs/spec/plan.yaml"
-        plan.write_text(plan.read_text(encoding="utf-8").replace("  - id: idris\n    track: experience\n", '  - id: idris\n    name: "Secret Person"\n    track: experience\n'), encoding="utf-8")
+        plan.write_bytes((plan.read_text(encoding="utf-8").replace("  - id: idris\n    track: experience\n", '  - id: idris\n    name: "Secret Person"\n    track: experience\n')).encode("utf-8"))
         level, detail = self.rows()["plan schema"]
         self.assertEqual(level, "FAIL")
         self.assertIn("1 problem(s)", detail)
@@ -824,7 +824,7 @@ class WorkspaceStatusAndDoctorTests(TempProject):
         self.init()
         shutil.copyfile(FIXTURE / "people.yaml", self.workspace / "people.yaml")
         self.assertEqual(self.rows()["people.yaml"], ("ok", "2 people, 1 advisors"))
-        (self.workspace / "people.yaml").write_text("people:\n  - name: \"Secret Person\"\n", encoding="utf-8")
+        (self.workspace / "people.yaml").write_bytes(("people:\n  - name: \"Secret Person\"\n").encode("utf-8"))
         level, detail = self.rows()["people.yaml"]
         self.assertEqual(level, "FAIL")
         self.assertNotIn("Secret", detail)

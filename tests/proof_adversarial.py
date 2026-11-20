@@ -139,8 +139,8 @@ def _(base):
     o = Owner(base)
     rid = o.prepare()
     folder = o.ws / "requests" / rid
-    (folder / "approval.json").write_text(json.dumps({"type": "local-owner", "authenticated": True, "request_sha256": rid}), encoding="utf-8")
-    (folder / "state.json").write_text(json.dumps({"request_id": rid, "state": "active"}), encoding="utf-8")
+    (folder / "approval.json").write_bytes((json.dumps({"type": "local-owner", "authenticated": True, "request_sha256": rid})).encode("utf-8"))
+    (folder / "state.json").write_bytes((json.dumps({"request_id": rid, "state": "active"})).encode("utf-8"))
     before = sorted(p.name for p in (o.root / "docs" / "release").iterdir())
     out = o.export(rid, ok=False)
     check(sorted(p.name for p in (o.root / "docs" / "release").iterdir()) == before, "a receipt was written")
@@ -201,7 +201,7 @@ def _(base):
     o = Owner(base)
     o.released()
     spec = next((o.root / "docs" / "spec").rglob("wi-03*.md"))
-    spec.write_text(spec.read_text(encoding="utf-8") + "\nAn edit after approval.\n", encoding="utf-8")
+    spec.write_bytes((spec.read_text(encoding="utf-8") + "\nAn edit after approval.\n").encode("utf-8"))
     alias = Path(base) / "alias"
     os.symlink(str(o.root), str(alias))
     return refused(o.run("scaffold_spec.py", "--refresh-headers", "--apply", "--root", alias, ok=False), "working-copy-differs")
@@ -212,9 +212,9 @@ def _(base):
     o = Owner(base)
     rid = o.prepare()
     pointer = o.root / ".carrydown" / "release-policy.yaml"
-    pointer.write_text("format: 1\ntooling_repository: acme/carrydown-tooling\nenrollment_id: " + "7" * 64 + "\n", encoding="utf-8")
+    pointer.write_bytes(("format: 1\ntooling_repository: acme/carrydown-tooling\nenrollment_id: " + "7" * 64 + "\n").encode("utf-8"))
     first = refused(o.approve(rid, ok=False), "unauthenticated-release")
-    pointer.write_text("format: 1.0\ntooling_repository: acme/carrydown-tooling\nenrollment_id: " + "7" * 64 + "\n", encoding="utf-8")
+    pointer.write_bytes(("format: 1.0\ntooling_repository: acme/carrydown-tooling\nenrollment_id: " + "7" * 64 + "\n").encode("utf-8"))
     refused(o.approve(rid, ok=False), "unauthenticated-release")
     import release_gate as RG
     RG._STATE_CACHE.clear()
@@ -387,7 +387,7 @@ def _(base):
     cache = clone / ".carrydown" / "cache" / "last-refresh"
     record = json.loads(cache.read_text(encoding="utf-8"))
     record["time"] = "2999-01-01T00:00:00Z"
-    cache.write_text(json.dumps(record), encoding="utf-8")
+    cache.write_bytes((json.dumps(record)).encode("utf-8"))
     shutil.move(str(origin), str(Path(base) / "gone.git"))
     out = subprocess.run([PY, str(clone / CHECK_CONTEXT), "WI-03"], cwd=str(clone), capture_output=True, text=True, timeout=120)
     check(out.returncode == 11 and "could-not-refresh" in out.stdout, f"exit {out.returncode}: {out.stdout}")

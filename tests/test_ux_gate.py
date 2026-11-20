@@ -79,7 +79,7 @@ class MockCase(unittest.TestCase):
 
     def edit_spec(self):
         path = self.root / SPEC
-        path.write_text(path.read_text(encoding="utf-8").rstrip("\n") + " Added after the preview.\n", encoding="utf-8")
+        path.write_bytes((path.read_text(encoding="utf-8").rstrip("\n") + " Added after the preview.\n").encode("utf-8"))
 
 
 class ReleaseCommandTests(MockCase):
@@ -151,7 +151,7 @@ class ReleaseCommandTests(MockCase):
 
     def test_the_no_path_is_refused(self):
         plan = self.root / "docs" / "spec" / "plan.yaml"
-        plan.write_text(plan.read_text(encoding="utf-8").replace("repo_audience_approved: true", "repo_audience_approved: false"), encoding="utf-8")
+        plan.write_bytes((plan.read_text(encoding="utf-8").replace("repo_audience_approved: true", "repo_audience_approved: false")).encode("utf-8"))
         code, out, err = self.release()
         self.assertEqual(code, 1, out + err)
         self.assertIn("unauthenticated-release", out + err)

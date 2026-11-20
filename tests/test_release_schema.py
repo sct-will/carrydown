@@ -783,14 +783,14 @@ class LibraryWrapperTests(Base):
         root = self.project()
         ws = Path(self.temp.name) / "workspaces" / "demo"
         ws.mkdir(parents=True)
-        (root / ".carrydown/local.yaml").write_text("workspace: %s\n" % ws, encoding="utf-8")
+        (root / ".carrydown/local.yaml").write_bytes(("workspace: %s\n" % ws).encode("utf-8"))
         self.assertEqual(L.workspace_root(root), (ws.resolve(), None))
 
     def test_workspace_root_refuses_a_path_inside_the_repository(self):
         root = self.project()
         (root / "private").mkdir()
         for value in (str(root / "private"), str(root), "private", "./private/../private", str(root / "not yet made")):
-            (root / ".carrydown/local.yaml").write_text("workspace: %s\n" % value, encoding="utf-8")
+            (root / ".carrydown/local.yaml").write_bytes(("workspace: %s\n" % value).encode("utf-8"))
             with self.subTest(value=value):
                 self.assertEqual(L.workspace_root(root), (None, "workspace-inside-repository"))
 
@@ -802,7 +802,7 @@ class LibraryWrapperTests(Base):
             os.symlink(str(root / "private"), str(link))
         except (OSError, NotImplementedError):
             self.skipTest("symbolic links are not available here")
-        (root / ".carrydown/local.yaml").write_text("workspace: %s\n" % link, encoding="utf-8")
+        (root / ".carrydown/local.yaml").write_bytes(("workspace: %s\n" % link).encode("utf-8"))
         self.assertEqual(L.workspace_root(root), (None, "workspace-inside-repository"))
 
     def test_workspace_root_uses_the_enclosing_repository_not_only_the_given_root(self):
@@ -811,19 +811,19 @@ class LibraryWrapperTests(Base):
         root = top / "services" / "demo"
         (root / ".carrydown").mkdir(parents=True)
         (top / "elsewhere").mkdir()
-        (root / ".carrydown/local.yaml").write_text("workspace: %s\n" % (top / "elsewhere"), encoding="utf-8")
+        (root / ".carrydown/local.yaml").write_bytes(("workspace: %s\n" % (top / "elsewhere")).encode("utf-8"))
         self.assertEqual(L.workspace_root(root), (None, "workspace-inside-repository"))
 
     def test_workspace_root_bad_files_and_values(self):
         root = self.project()
         pointer = root / ".carrydown/local.yaml"
         for text in ("", "other: 1\n", "workspace:\n", "workspace: ''\n", "workspace: [a, b]\n", "- a\n- b\n", "workspace: {\n"):
-            pointer.write_text(text, encoding="utf-8")
+            pointer.write_bytes((text).encode("utf-8"))
             with self.subTest(text=text):
                 self.assertEqual(L.workspace_root(root), (None, "workspace-unavailable"))
         pointer.write_bytes(b"workspace: \xff\xfe\n")
         self.assertEqual(L.workspace_root(root), (None, "workspace-unavailable"))
-        pointer.write_text("workspace: %s\n" % (Path(self.temp.name) / "does-not-exist"), encoding="utf-8")
+        pointer.write_bytes(("workspace: %s\n" % (Path(self.temp.name) / "does-not-exist")).encode("utf-8"))
         self.assertEqual(L.workspace_root(root), (None, "workspace-unavailable"))
         pointer.unlink()
         pointer.mkdir()

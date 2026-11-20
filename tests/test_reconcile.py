@@ -138,13 +138,13 @@ class Base(unittest.TestCase):
         return (self.root / rel).read_text(encoding="utf-8")
 
     def write(self, rel, text):
-        (self.root / rel).write_text(text, encoding="utf-8")
+        (self.root / rel).write_bytes((text).encode("utf-8"))
 
     def dispositions(self, change_id):
         return json.loads((self.proposal_dir(change_id) / "dispositions.json").read_text(encoding="utf-8"))
 
     def save_dispositions(self, change_id, doc):
-        (self.proposal_dir(change_id) / "dispositions.json").write_text(json.dumps(doc, indent=2), encoding="utf-8")
+        (self.proposal_dir(change_id) / "dispositions.json").write_bytes((json.dumps(doc, indent=2)).encode("utf-8"))
 
     def make_checkpoint(self):
         project = R.Project(self.root)
@@ -163,7 +163,7 @@ class Base(unittest.TestCase):
         targets = {p[len("payloads/"):-5]: {"state": "completed"} for p in manifest if p.startswith("payloads/")}
         folder = self.ws / "publication"
         folder.mkdir(exist_ok=True)
-        (folder / f"{rid}.journal.json").write_text(json.dumps({"journal_format": 1, "request_id": rid, "targets": targets}), encoding="utf-8")
+        (folder / f"{rid}.journal.json").write_bytes((json.dumps({"journal_format": 1, "request_id": rid, "targets": targets})).encode("utf-8"))
 
     def edit_reminder(self):
         text = self.read(RENDERING)
@@ -298,7 +298,7 @@ class ReleasedStatusTests(Base):
         self.make_checkpoint()
         plan = (self.ws / "drafts" / "plan.yaml").read_text(encoding="utf-8")
         self.assertIn('use: "Full specification.', plan)
-        (self.ws / "drafts" / "plan.yaml").write_text(plan.replace('use: "Full specification.', 'use: "Reference only. Full specification.'), encoding="utf-8")
+        (self.ws / "drafts" / "plan.yaml").write_bytes((plan.replace('use: "Full specification.', 'use: "Reference only. Full specification.')).encode("utf-8"))
         data = self.status()
         self.assertEqual(data["state"], "changed-sources")
 
@@ -391,7 +391,7 @@ class ClarificationStatusTests(Base):
         doc = {"format": 1, "observed": "2027-02-01T10:00:00Z", "repository": "sct-will/carrydown-sample", "requests": requests}
         doc.update(more)
         (self.ws / "events").mkdir(exist_ok=True)
-        (self.ws / "events" / "clarifications.json").write_text(json.dumps(doc), encoding="utf-8")
+        (self.ws / "events" / "clarifications.json").write_bytes((json.dumps(doc)).encode("utf-8"))
 
     def request(self, issue, item, state, **more):
         r = {"issue": issue, "item": item, "state": state, "url": f"https://github.com/sct-will/carrydown-sample/issues/{issue}#issuecomment-{issue}",
@@ -430,7 +430,7 @@ class ClarificationStatusTests(Base):
                      json.dumps({"format": 1, "observed": "x", "repository": "a/b", "requests": [{"issue": "twelve"}]}),
                      '{"format": 1, "format": 1, "observed": "x", "repository": "a/b", "requests": []}'):
             with self.subTest(text=text[:30]):
-                (self.ws / "events" / "clarifications.json").write_text(text, encoding="utf-8")
+                (self.ws / "events" / "clarifications.json").write_bytes((text).encode("utf-8"))
                 data = self.status()
                 self.assertFalse(data["requests"]["observed"])
                 self.assertIn("could not be read", data["requests"]["reason"])
@@ -668,7 +668,7 @@ class PrepareTests(Base):
         plan_path = self.ws / "drafts" / "plan.yaml"
         plan = plan_path.read_text(encoding="utf-8")
         self.assertIn('label: "Approval routing engine"', plan)
-        plan_path.write_text(plan.replace('label: "Approval routing engine"', 'label: "Approval routing engine and reminders"', 1), encoding="utf-8")
+        plan_path.write_bytes((plan.replace('label: "Approval routing engine"', 'label: "Approval routing engine and reminders"', 1)).encode("utf-8"))
         data = self.status()
         self.assertEqual(data["changed_sources"], [], data)
         self.assertNotEqual(data["state"], "changed-sources")
@@ -686,7 +686,7 @@ class PrepareTests(Base):
         self.write(WI03, self.read(WI03) + "\nAn added line.\n")
         third = self.prepare(apply=False)
         self.assertEqual(third["index_cache"], "built")
-        cached[0].write_text("{broken", encoding="utf-8")
+        cached[0].write_bytes(("{broken").encode("utf-8"))
         again = self.prepare(apply=False)
         self.assertEqual(again["index_cache"], "built")
 
@@ -767,7 +767,7 @@ class PrepareTests(Base):
     def test_a_changed_classification_is_a_descriptor_block(self):
         self.make_checkpoint()
         plan = (self.ws / "drafts" / "plan.yaml").read_text(encoding="utf-8")
-        (self.ws / "drafts" / "plan.yaml").write_text(plan.replace("classification: repo-readers", "classification: public"), encoding="utf-8")
+        (self.ws / "drafts" / "plan.yaml").write_bytes((plan.replace("classification: repo-readers", "classification: public")).encode("utf-8"))
         prep = self.prepare(apply=False)
         self.assertEqual([(b["ref"], b["kind"]) for b in prep["blocks"]], [("architecture/descriptor", "descriptor")])
         self.assertEqual(prep["comparison"], "compared")
@@ -870,7 +870,7 @@ class CheckTests(Base):
     def test_a_symbolic_link_in_the_specification_folder_is_never_patched(self):
         change_id = self.prepared_update()
         outside = self.base / "outside.md"
-        outside.write_text("# Outside\n", encoding="utf-8")
+        outside.write_bytes(("# Outside\n").encode("utf-8"))
         (self.root / "docs" / "spec" / "linked.md").symlink_to(outside)
         (self.root / "docs" / "spec" / "linked-folder").symlink_to(self.base, target_is_directory=True)
         inside = self.root / "docs" / "spec" / "linked-inside.md"
@@ -971,14 +971,14 @@ class CheckTests(Base):
         code, out, err = self.r("check", "--proposal", "not-an-id")
         self.assertEqual(code, 2)
         change_id = self.prepared_update()
-        (self.proposal_dir(change_id) / "inputs.json").write_text("{}", encoding="utf-8")
+        (self.proposal_dir(change_id) / "inputs.json").write_bytes(("{}").encode("utf-8"))
         code, out, err = self.r("check", "--proposal", change_id)
         self.assertEqual(code, 2)
         self.assertIn("Prepare the comparison again", err)
 
     def test_a_dispositions_file_with_an_unknown_format_is_rejected(self):
         change_id = self.prepared_update()
-        (self.proposal_dir(change_id) / "dispositions.json").write_text(json.dumps({"format": 9, "dispositions": []}), encoding="utf-8")
+        (self.proposal_dir(change_id) / "dispositions.json").write_bytes((json.dumps({"format": 9, "dispositions": []})).encode("utf-8"))
         code, out, err = self.r("check", "--proposal", change_id)
         self.assertEqual(code, 2)
         self.assertIn("unsupported format", err)
@@ -1128,7 +1128,7 @@ class ApplyTests(Base):
             {"path": f"project/{WI03}", "before_sha256": first["before_sha256"], "after_sha256": sha(after), "state": "written"},
             {"path": f"project/{WI06}", "before_sha256": patches[1]["before_sha256"], "after_sha256": sha(patches[1]["after_text"].encode()), "state": "planned"}]}
         (self.proposal_dir(change_id) / "journal.json").write_bytes(R.json_bytes(journal))
-        (self.root / WI06).write_text(self.read(WI06) + "\nSomeone edited this meanwhile.\n", encoding="utf-8")
+        (self.root / WI06).write_bytes((self.read(WI06) + "\nSomeone edited this meanwhile.\n").encode("utf-8"))
         wi06 = (self.root / WI06).read_bytes()
         code, out, err = self.r("apply", "--proposal", change_id, "--apply")
         self.assertEqual(code, 1)
@@ -1144,7 +1144,7 @@ class ApplyTests(Base):
         patches, findings = R.plan_patches(project, proposal)
         self.assertEqual(findings, [])
         victim = next(p for p in patches if p["key"].endswith("wi-06-limits-and-duties.md"))
-        victim["path"].write_text("changed under us\n", encoding="utf-8")
+        victim["path"].write_bytes(("changed under us\n").encode("utf-8"))
         with R.Lock(project, change_id):
             result = R.apply_patches(project, change_id, proposal, patches)
         self.assertEqual(result["stopped"], victim["key"])
@@ -1287,7 +1287,7 @@ class PatchCommandTests(Base):
         text = self.read(rel)
         self.assertIn(old, text)
         path = self.base / name
-        path.write_text(text.replace(old, new), encoding="utf-8")
+        path.write_bytes((text.replace(old, new)).encode("utf-8"))
         return path
 
     def patch(self, change_id, block, item, rel, source, *more):
@@ -1477,7 +1477,7 @@ class NoAnswerTests(Base):
         shutil.move(str(self.root / "docs" / "spec"), str(drafts / "docs" / "spec"))
         plan = (drafts / "docs" / "spec" / "plan.yaml").read_text(encoding="utf-8")
         plan = plan.replace("repo_audience_approved: true", "repo_audience_approved: false")
-        (drafts / "plan.yaml").write_text(plan, encoding="utf-8")
+        (drafts / "plan.yaml").write_bytes((plan).encode("utf-8"))
         (drafts / "docs" / "spec" / "plan.yaml").unlink()
         (self.ws / "renderings").mkdir(exist_ok=True)
         for suffix in (".md", ".index.txt"):
@@ -1496,7 +1496,7 @@ class NoAnswerTests(Base):
     def test_a_patch_in_the_workspace_drafts_is_applied_there_and_the_project_stays_clean(self):
         self.make_checkpoint()
         path = self.ws / "renderings" / "architecture.md"
-        path.write_text(path.read_text(encoding="utf-8").replace(REMINDER, "after 4 business days without a decision"), encoding="utf-8")
+        path.write_bytes((path.read_text(encoding="utf-8").replace(REMINDER, "after 4 business days without a decision")).encode("utf-8"))
         change_id = self.prepare()["proposal"]
         spec = self.ws / "drafts" / WI03
         text = spec.read_text(encoding="utf-8")

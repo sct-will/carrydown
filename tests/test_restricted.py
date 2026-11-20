@@ -333,7 +333,7 @@ class ReleaseTests(unittest.TestCase):
         block = text[start:end]
         marker = block.index("    complete_by")
         block = block[:marker] + '    restricted: true\n    restricted_summary: "Handled by the platform team."\n' + block[marker:]
-        plan_path.write_text(text[:start] + block + text[end:], encoding="utf-8")
+        plan_path.write_bytes((text[:start] + block + text[end:]).encode("utf-8"))
         for path in (yp.drafts / "docs/spec").rglob("*.md"):
             if "wi-11" in path.name:
                 continue
@@ -342,7 +342,7 @@ class ReleaseTests(unittest.TestCase):
             new = re.sub(r"(?i)release readiness and runbook", "the release item", new)
             new = re.sub(r"\bWI-11\b", "the release item", new)
             if new != body:
-                path.write_text(new, encoding="utf-8")
+                path.write_bytes((new).encode("utf-8"))
         asm = A.assemble(yp.root, with_board=False)
         self.assertEqual(asm.problems, [], asm.problems)
         everything = b"\n".join(asm.files.values()).decode("utf-8")
@@ -355,7 +355,7 @@ class ReleaseTests(unittest.TestCase):
     def test_a_leak_of_the_label_in_another_file_stops_the_release_and_names_no_text(self):
         yp = RF.restricted_project(self.base / "l1")
         spec_path = next((yp.drafts / "docs/spec").rglob("wi-02-*.md"))
-        spec_path.write_text(spec_path.read_text(encoding="utf-8").rstrip("\n") + "\n\nSee also the audit log and retention work.\n", encoding="utf-8")
+        spec_path.write_bytes((spec_path.read_text(encoding="utf-8").rstrip("\n") + "\n\nSee also the audit log and retention work.\n").encode("utf-8"))
         asm = A.assemble(yp.root, with_board=False)
         leaks = [p for p in asm.problems if p.startswith("restricted-leak:")]
         self.assertTrue(leaks, asm.problems)
@@ -372,8 +372,8 @@ class ReleaseTests(unittest.TestCase):
         yp = RF.restricted_project(self.base / "e1")
         plan_path = yp.drafts / "plan.yaml"
         text = plan_path.read_text(encoding="utf-8")
-        plan_path.write_text(text.replace('    restricted_summary: "' + RF.SUMMARY + '"\n',
-                                          '    restricted_summary: "' + RF.SUMMARY + '"\n    restricted_evidence: "Signed off by the records office, note PRIVATE-NOTE-88."\n', 1), encoding="utf-8")
+        plan_path.write_bytes((text.replace('    restricted_summary: "' + RF.SUMMARY + '"\n',
+                                          '    restricted_summary: "' + RF.SUMMARY + '"\n    restricted_evidence: "Signed off by the records office, note PRIVATE-NOTE-88."\n', 1)).encode("utf-8"))
         code, out, err = F.run(R.main, ["preview", "--root", str(yp.root)])
         self.assertEqual(code, 0, out + err)
         self.assertIn("Restricted work item WI-07 is done: you recorded evidence in your workspace plan. Nothing is posted to GitHub for it.", out)
@@ -499,15 +499,15 @@ class ChangeRequestTests(unittest.TestCase):
             skill_dir = yp.drafts / "docs/dev/skills/expense-approvals-dev"
             for rel, text in GD.skill_files(yp_plan(yp), yp.drafts, engineer_edits="allowed").items():
                 (skill_dir / rel).parent.mkdir(parents=True, exist_ok=True)
-                (skill_dir / rel).write_text(text, encoding="utf-8")
-            (skill_dir / "SKILL.md").write_text((skill_dir / "SKILL.md").read_text(encoding="utf-8") + "\nOwner's own line.\n", encoding="utf-8")
+                (skill_dir / rel).write_bytes((text).encode("utf-8"))
+            (skill_dir / "SKILL.md").write_bytes(((skill_dir / "SKILL.md").read_text(encoding="utf-8") + "\nOwner's own line.\n").encode("utf-8"))
             asm = A.assemble(yp.root, with_board=False, engineer_edits="request-only")
             kept = asm.files["repo/docs/dev/skills/expense-approvals-dev/SKILL.md"].decode("utf-8")
             self.assertIn(GD.DECISION_NOTES_REQUEST_ONLY, kept)
             self.assertIn("Owner's own line.", kept)
             # a sentence the owner rewrote is not touched. The decision note paragraph still follows the policy.
             rewritten = (skill_dir / "SKILL.md").read_text(encoding="utf-8").replace(GD.DECISIONS_ALLOWED, "Write decisions down however you like.")
-            (skill_dir / "SKILL.md").write_text(rewritten, encoding="utf-8")
+            (skill_dir / "SKILL.md").write_bytes((rewritten).encode("utf-8"))
             asm = A.assemble(yp.root, with_board=False, engineer_edits="request-only")
             after = asm.files["repo/docs/dev/skills/expense-approvals-dev/SKILL.md"].decode("utf-8")
             self.assertIn("Write decisions down however you like.", after)
@@ -532,13 +532,13 @@ class ConfidentialFixtureTests(unittest.TestCase):
         def scrub(t):
             t = re.sub(r"(?i)approval limits and separation of duties", "the limits item", t)
             return re.sub(r"\bWI-06\b", "the limits item", t)
-        plan_path.write_text(scrub(text[:start]) + block + scrub(text[end:]), encoding="utf-8")
+        plan_path.write_bytes((scrub(text[:start]) + block + scrub(text[end:])).encode("utf-8"))
         for path in sorted((drafts / "docs/spec").rglob("*.md")):
             if not path.name.startswith("wi-06"):
                 body = path.read_text(encoding="utf-8")
                 new = scrub(re.sub(r"\[[^\]]*\]\([^)]*wi-06[^)]*\)", "the limits item", body))
                 if new != body:
-                    path.write_text(new, encoding="utf-8")
+                    path.write_bytes((new).encode("utf-8"))
         cls.asm = A.assemble(cls.np.root, with_board=False)
 
     @classmethod
@@ -603,11 +603,11 @@ class SupersessionTests(unittest.TestCase):
             self.assertEqual(yp.export()[0], 0)
             # the engineer's request is answered: the owner clarifies a rule in the workspace draft
             spec_path = next((yp.drafts / "docs/spec").rglob("wi-06-*.md"))
-            spec_path.write_text(spec_path.read_text(encoding="utf-8").rstrip("\n") + "\n", encoding="utf-8")
+            spec_path.write_bytes((spec_path.read_text(encoding="utf-8").rstrip("\n") + "\n").encode("utf-8"))
             body = spec_path.read_text(encoding="utf-8").replace("## Decisions recorded", "## Decisions recorded\n\n- Clarified after a rule clarification request.", 1)
             if "## Decisions recorded" not in spec_path.read_text(encoding="utf-8"):
                 body = spec_path.read_text(encoding="utf-8") + "\n## Decisions recorded\n\n- Clarified after a rule clarification request.\n"
-            spec_path.write_text(body, encoding="utf-8")
+            spec_path.write_bytes((body).encode("utf-8"))
             code, out, err = F.run(R.main, ["preview", "--root", str(yp.root)])
             self.assertEqual(code, 0, out + err)
             self.assertIn("Changed:", out)

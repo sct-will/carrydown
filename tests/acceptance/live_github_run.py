@@ -1165,14 +1165,13 @@ class Runner:
             if not self.apply:
                 raise DryRunStop("write the App manifest page " + str(page))
             self.work.mkdir(parents=True, exist_ok=True)
-            (self.work / "app-manifest.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-            page.write_text(
-                "<!doctype html>\n<meta charset=\"utf-8\"><title>Create the carrydown verifier App</title>\n"
+            (self.work / "app-manifest.json").write_bytes((json.dumps(manifest, indent=2) + "\n").encode("utf-8"))
+            page.write_bytes(("<!doctype html>\n<meta charset=\"utf-8\"><title>Create the carrydown verifier App</title>\n"
                 f"<h1>Create the verifier App for {html.escape(self.org)}</h1>\n"
                 "<p>The button sends the manifest to GitHub. GitHub asks you to confirm the name.</p>\n"
                 f"<form method=\"post\" action=\"https://github.com/organizations/{html.escape(self.org)}/settings/apps/new\">\n"
                 f"<input type=\"hidden\" name=\"manifest\" value=\"{html.escape(json.dumps(manifest), quote=True)}\">\n"
-                "<button type=\"submit\">Create the GitHub App</button>\n</form>\n", encoding="utf-8")
+                "<button type=\"submit\">Create the GitHub App</button>\n</form>\n").encode("utf-8"))
         lines = [
             f"1. Open this page in a browser where you are signed in to GitHub as an owner of {self.org}: file://{page}",
             "2. Click Create the GitHub App, then confirm the name on GitHub. The App has webhooks off and four permissions: "
@@ -1272,7 +1271,7 @@ class Runner:
         """The stable enrollment id, from the repository's own digests command. A file with one entry that carries only a repository id."""
         with tempfile.TemporaryDirectory(prefix="carrydown-acc-") as tmp:
             f = Path(tmp) / "enrollment.yaml"
-            f.write_text(f"format: 1\nhost: github.com\ntooling_repository_id: {tooling_id}\nrepositories:\n  - repository_id: {repo_id}\n", encoding="utf-8")
+            f.write_bytes((f"format: 1\nhost: github.com\ntooling_repository_id: {tooling_id}\nrepositories:\n  - repository_id: {repo_id}\n").encode("utf-8"))
             out = self.script("verify_release.py", ["digests", "--policy-file", f], folder="verifier")
         found = re.search(r"enrollment_id ([0-9a-f]{64})", out.out)
         if not found:
@@ -1283,7 +1282,7 @@ class Runner:
         """(enrollment_id, policy_sha256, matches) of the single entry in text, from the repository's own digests command."""
         with tempfile.TemporaryDirectory(prefix="carrydown-acc-") as tmp:
             f = Path(tmp) / "enrollment.yaml"
-            f.write_text(text, encoding="utf-8")
+            f.write_bytes((text).encode("utf-8"))
             out = self.script("verify_release.py", ["digests", "--policy-file", f], folder="verifier")
         found = re.search(r"enrollment_id ([0-9a-f]{64}), policy_sha256 ([0-9a-f]{64}) \((matches|differs from) the file\)", out.out)
         if not found:
@@ -1994,7 +1993,7 @@ def write_candidate(carry, workspace, org, owner_login):
     sample = Path(carry) / "sample" / "expense-approvals"
     plan = Path(carry) / "tests" / "fixtures" / "sample-workspace" / "drafts" / "plan.yaml"
     (Path(workspace) / "drafts").mkdir(parents=True, exist_ok=True)
-    (Path(workspace) / "drafts" / "plan.yaml").write_text(working_plan_text(plan.read_text(encoding="utf-8"), org, owner_login), encoding="utf-8")
+    (Path(workspace) / "drafts" / "plan.yaml").write_bytes((working_plan_text(plan.read_text(encoding="utf-8"), org, owner_login)).encode("utf-8"))
     spec = Path(workspace) / "drafts" / "docs" / "spec"
     if spec.exists():
         shutil.rmtree(spec)

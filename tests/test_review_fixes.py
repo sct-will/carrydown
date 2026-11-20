@@ -92,7 +92,7 @@ class FormatFieldTests(unittest.TestCase):
             (root / ".carrydown").mkdir()
             pointer = root / ".carrydown" / "release-policy.yaml"
             for text, ok in (("format: 1\n", True), ("format: 1.0\n", False), ("format: true\n", False)):
-                pointer.write_text(text + "tooling_repository: acme/carrydown-tooling\nenrollment_id: " + "7" * 64 + "\n", encoding="utf-8")
+                pointer.write_bytes((text + "tooling_repository: acme/carrydown-tooling\nenrollment_id: " + "7" * 64 + "\n").encode("utf-8"))
                 RG._STATE_CACHE.clear()
                 state = RG.project_state(str(root))
                 self.assertTrue(state.enrolled)
@@ -182,9 +182,9 @@ class RetentionTests(unittest.TestCase):
         sources = self.ws / "sources"
         (sources / "notes").mkdir(parents=True)
         (sources / "architecture.docx").write_bytes(b"original bytes of a raw input\n")
-        (sources / "notes" / "interview.txt").write_text("raw interview notes\n", encoding="utf-8")
+        (sources / "notes" / "interview.txt").write_bytes(("raw interview notes\n").encode("utf-8"))
         self.outside = self.tmp / "elsewhere.md"
-        self.outside.write_text("a file the owner keeps elsewhere\n", encoding="utf-8")
+        self.outside.write_bytes(("a file the owner keeps elsewhere\n").encode("utf-8"))
         if os.name == "posix":
             os.symlink(str(self.outside), str(sources / "linked.md"))
         out = self.run_script("release.py", "prepare", "--root", self.root, "--repository-id", "4200", "--apply")
@@ -223,20 +223,20 @@ class RetentionTests(unittest.TestCase):
         import workspace as W
         ws = self.tmp / "ws"
         (ws / "sources").mkdir(parents=True)
-        (ws / "retention.yaml").write_text("raw_inputs: delete-after-release\nhistory: keep\n", encoding="utf-8")
-        (ws / "sources" / "a.txt").write_text("a\n", encoding="utf-8")
+        (ws / "retention.yaml").write_bytes(("raw_inputs: delete-after-release\nhistory: keep\n").encode("utf-8"))
+        (ws / "sources" / "a.txt").write_bytes(("a\n").encode("utf-8"))
         lines = W.apply_retention(ws, "0" * 64, apply=False)
         self.assertTrue(lines and "would be deleted" in lines[0])
         self.assertTrue((ws / "sources" / "a.txt").exists())
         if os.name == "posix":
             other = self.tmp / "other"
             other.mkdir()
-            (other / "keep.txt").write_text("keep\n", encoding="utf-8")
+            (other / "keep.txt").write_bytes(("keep\n").encode("utf-8"))
             shutil.rmtree(str(ws / "sources"))
             os.symlink(str(other), str(ws / "sources"))
             self.assertEqual(W.apply_retention(ws, "0" * 64, apply=True), [])
             self.assertTrue((other / "keep.txt").exists())
-        (ws / "retention.yaml").write_text("raw_inputs: delete-after-relase\n", encoding="utf-8")
+        (ws / "retention.yaml").write_bytes(("raw_inputs: delete-after-relase\n").encode("utf-8"))
         self.assertEqual(W.retention_choice(ws), "keep")
 
 

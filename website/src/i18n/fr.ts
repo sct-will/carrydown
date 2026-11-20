@@ -158,6 +158,13 @@ export const fr: Strings = {
     anchorLabel: 'Lien vers cette question',
     items: [
       {
+        id: 'what-is-carried-context-development',
+        group: 'method',
+        q: 'Qu’est-ce que carried-context development ?',
+        a: 'Carried-context development est une approche du développement agentique qui fait descendre les décisions et le contexte du projet jusqu’à l’agent de codage de chaque ingénieur, pour que le projet reste aligné et que rien ne dérive. Carried-context development fait descendre la vérité de référence convenue par une équipe jusque dans le plan, chaque spécification, chaque ticket et les instructions de chaque agent de codage, avec citation par section, et la fait descendre à nouveau quand elle change.',
+        more: { label: 'Lire la définition et les règles sur la page de définition.', href: '/definition/' },
+      },
+      {
         id: 'spec-driven',
         group: 'method',
         q: 'En quoi carried-context development diffère-t-il du développement piloté par les spécifications classique ?',
@@ -182,6 +189,13 @@ export const fr: Strings = {
         q: 'Carried-context development, n’est-ce pas simplement un modèle en cascade ?',
         a: 'Non. Le modèle en cascade fige tout le plan au départ et traite un changement comme un échec du plan. Ici, le plan, les spécifications et les tickets sont des fichiers dans Git. Les changer coûte peu et le changement est relu comme du code. Les unités de travail durent le temps que demande le travail, pas des cases de longueur fixe. Chaque jalon se termine par une démonstration que les parties prenantes valident ou refusent, et ce que l’équipe apprend retourne dans la vérité de référence puis redescend. Vous pouvez planifier, construire un peu, apprendre et mettre le plan à jour aussi souvent que le projet le demande.',
         more: { label: 'Lire dans la méthode comment un changement redescend.', href: '/docs/method/#when-the-project-changes' },
+      },
+      {
+        id: 'what-is-carrydown',
+        group: 'carrydown',
+        q: 'Qu’est-ce que carrydown, et en quoi diffère-t-il de carried-context development ?',
+        a: 'Carried-context development est une approche du développement agentique. Carried-context development fait descendre la vérité de référence convenue par une équipe jusque dans le plan, chaque spécification, chaque ticket et les instructions de chaque agent de codage, avec citation par section, et la fait descendre à nouveau quand elle change. carrydown en est l’implémentation de référence : deux Agent Skills que vous installez ensemble avec une seule commande, un troisième qu’elle génère pour vos ingénieurs, et les contrôles qui valident chaque citation. Elle est open source sous Apache 2.0 et fonctionne avec l’agent de codage que votre équipe utilise déjà.',
+        more: { label: 'Lire dans les docs comment cela fonctionne.', href: '/docs/#how-it-works' },
       },
       {
         id: 'reconciled',
@@ -399,7 +413,7 @@ export const fr: Strings = {
       /** The word between a title and the path that follows it, where there is one. */
       inWord: 'dans',
       items: [
-        { title: 'Un plan', path: 'docs/spec/plan.yaml', body: 'Jalons, pistes, responsables et dates ajustés à vos personnes et à votre temps, avec une raison écrite pour chaque jalon.' },
+        { title: 'Un plan que vous relisez comme une page dans votre navigateur web', path: '', body: 'Jalons, pistes, responsables et dates ajustés à vos personnes et à votre temps, avec un tableau de charge et un chemin critique, et une raison écrite pour chaque jalon. Le plan validé dans le dépôt, docs/spec/plan.yaml, ne contient que les identifiants et les pistes.' },
         { title: 'Une spécification par élément de travail', path: '', body: 'La plus petite unité de travail qu’un ingénieur peut terminer et montrer, citant ses sections et vérifiée par rapport au plan à chaque pull request.' },
         { title: 'Un contexte approuvé par élément de travail', path: 'docs/context/', body: 'Le texte exact des sections citées et les décisions qui le fondent, approuvés par vous. La seule partie de vos documents qui atteint les agents des ingénieurs.' },
         { title: 'Un reçu de publication', path: 'docs/release/', body: 'Un petit fichier public qui nomme la publication approuvée, son état et son expiration.' },
