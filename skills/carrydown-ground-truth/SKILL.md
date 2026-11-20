@@ -66,7 +66,7 @@ Routing works after this skill activates. It is not a startup event, and it does
 
 The scripts and templates folders sit next to this SKILL.md. In the commands below, `<skill>` stands for this folder, and the commands start with `python3`. Step 0 tells you which Python command your system uses in its place. Run the scripts from the user's project root with `--root .`. Every script has `--help`. None of these scripts writes to GitHub. They write local files inside the project: the scaffold only with `--apply`, the renderer unless you pass `--dry-run`. `workspace.py` creates the private workspace outside the project, and writes in the project only the untracked pointer `.carrydown/local.yaml` and one line in `.gitignore`, and only with `--apply`.
 
-**Where the plan and the specifications are drafted.** On the yes answer, in the project, as the commands below show. On the no answer, in the private workspace. Then every command below that reads or writes the plan or the specification folder (`scaffold_spec.py`, `check_specs.py` and `plan_repair.py`) takes two extra flags in place of `--root .`: `--root <workspace>/drafts --plan <workspace>/drafts/plan.yaml`. The plan is then `<workspace>/drafts/plan.yaml` and the specifications are in `<workspace>/drafts/docs/spec/`. The renderer, `workspace.py` and `release.py` keep `--root .`. The scaffold prints a warning that the workspace is not the top folder of its git repository. That is expected there. On the no answer never run the scaffold with `--root .`: that would write drafts into the project, where every reader of the repository can see them. If a command refuses with `drafting-is-private`, you used the wrong root.
+**Where the plan and the specifications are drafted.** On the yes answer, in the project, as the commands below show. On the no answer, in the private workspace. Then every command below that reads or writes the plan or the specification folder (`scaffold_spec.py`, `check_specs.py`, `plan_repair.py` and `plan_page.py`) takes two extra flags in place of `--root .`: `--root <workspace>/drafts --plan <workspace>/drafts/plan.yaml`. The plan is then `<workspace>/drafts/plan.yaml` and the specifications are in `<workspace>/drafts/docs/spec/`. The renderer, `workspace.py` and `release.py` keep `--root .`. The scaffold prints a warning that the workspace is not the top folder of its git repository. That is expected there. On the no answer never run the scaffold with `--root .`: that would write drafts into the project, where every reader of the repository can see them. If a command refuses with `drafting-is-private`, you used the wrong root.
 
 ## The flow
 
@@ -107,6 +107,14 @@ This writes a starter `docs/spec/plan.yaml` from the template and appends these 
 
 Read `references/planning.md` and follow its steps, stopping for a decision at each: what must exist, milestones and their composition, work units, work items, optional staffing matches, dates, the load table and critical path, the work outside the plan, an adversarial review of the plan, and the rationale. Start that review with this sentence, word for word: "List what is missing, wrong or improvable in this plan, reading it as each engineer would live it week by week." The plan records its rationale: why each milestone holds its items, what the engineers show together at its demonstration, and why each track's items are in their order. Run `python3 <skill>/scripts/check_specs.py --root . --report` and show the user the staffing context, load table and planning review blocks. Save the result in `plan.yaml` and run the report again.
 
+Then write the plan page, the owner's review view, and give the owner its path as a link to open:
+
+```bash
+python3 <skill>/scripts/plan_page.py --root .
+```
+
+It writes `review/plan-page.html` in the private workspace from the plan, the people file, the specifications and the checker, so it shows the same numbers the checks use. It is static HTML with no scripts and no external resources. Refresh it after every change to the plan or a specification, including the fixes of step 6 and the repairs of step 7, so the owner always reviews the current version. The owner asks for changes in the conversation. Never write the page into the project, and do not open it yourself.
+
 ### 5. Write milestones and specifications
 
 Read `references/writing-specs.md` and `references/milestone-and-demo.md`. Fill the TODO lines in each `milestone.md` and each stub. Write the specifications in batches of two or three related items, with `references/spec-writer-brief.md` as the brief for each batch. Run the checker after each batch. Review every file yourself afterward. The user reviews the finished files with you in step 8.
@@ -129,7 +137,7 @@ After the finished set passes step 6, load `templates/plan-review-prompt.md` and
 
 ### 8. Review and hand off
 
-Show the user the index, review tables, updated load table and checker result. Review the files with them as the engineer who will build each item. Record unresolved decisions and accepted risks, verify accepted repairs and ask for final plan approval: "The plan and specifications are correct." Then suggest `carrydown-plan-to-github` with the sentence "Put the plan on GitHub." This skill commits nothing, so tell the owner that the plan is not committed or pushed yet and that "Put the plan on GitHub." releases it and asks before it pushes anything. That skill releases the approved plan and then publishes it, as one step for the user. Nothing reaches the engineers or GitHub before the release. Do not run `release.py` from this skill.
+Refresh the plan page and give the owner its path. Show the user the index, review tables, updated load table and checker result. Review the files with them as the engineer who will build each item. Record unresolved decisions and accepted risks, verify accepted repairs and ask for final plan approval: "The plan and specifications are correct." Then suggest `carrydown-plan-to-github` with the sentence "Put the plan on GitHub." This skill commits nothing, so tell the owner that the plan is not committed or pushed yet and that "Put the plan on GitHub." releases it and asks before it pushes anything. That skill releases the approved plan and then publishes it, as one step for the user. Nothing reaches the engineers or GitHub before the release. Do not run `release.py` from this skill.
 
 Open step 8 with this completion line, word for word, then the maintenance notice below it, both before the index, any routine counts or links and the final approval question:
 
@@ -147,7 +155,7 @@ Open step 8 with this completion line, word for word, then the maintenance notic
 
 A release is exact content plus one permission decision. Presence of every cited obligation is checked by the compiler. Whether each item's approved context is enough to do the work is the owner's review, so say so when you review the files. Fix a detector finding by rewording. A copied passage or an organization phrase can be cleared only by an exception the owner approves.
 
-**After the first release on the yes answer**, `docs/spec/plan.yaml` in the project is the released copy, exactly as approved. The owner's working plan, with its comments, is `drafts/plan.yaml` in the private workspace. Edit that one. `check_specs.py`, `scaffold_spec.py`, `plan_repair.py` and `generate_dev_skill.py` find it with `--root .`, as `release.py` and the renderer do. The specifications stay in the project. A change to the plan, a specification or a source after a release needs a new release, which `carrydown-plan-to-github` runs. Never edit a file under `docs/context/` or `docs/release/`.
+**After the first release on the yes answer**, `docs/spec/plan.yaml` in the project is the released copy, exactly as approved. The owner's working plan, with its comments, is `drafts/plan.yaml` in the private workspace. Edit that one. `check_specs.py`, `scaffold_spec.py`, `plan_repair.py`, `plan_page.py` and `generate_dev_skill.py` find it with `--root .`, as `release.py` and the renderer do. The specifications stay in the project. A change to the plan, a specification or a source after a release needs a new release, which `carrydown-plan-to-github` runs. Never edit a file under `docs/context/` or `docs/release/`.
 
 **On the no answer** the release goes through the private staging repository and needs the organization setup in the setup guide. `carrydown-plan-to-github` runs it too. Do not describe it to a yes-path owner.
 
@@ -190,7 +198,7 @@ An editorial change takes a lighter path. A small edit to a number, an exception
    python3 <skill>/scripts/reconcile.py check --root . --proposal CHANGE_ID
    ```
 
-7. Present one consolidated review with `templates/reconcile-review.md`. Lead with the counts, in plain words: "Two specifications need updates. One completed item needs a follow-up decision. One engineer correction conflicts with the revised source." Then the patches, the evidence for unchanged work, the decisions needed, the disclosure effects and the next action. Settle conflicts before the final approval. Keep the technical record out of the conversation. Do not merge distinct permissions.
+7. Present one consolidated review with `templates/reconcile-review.md`. Lead with the counts, in plain words: "Two specifications need updates. One completed item needs a follow-up decision. One engineer correction conflicts with the revised source." Then the patches, the evidence for unchanged work, the decisions needed, the disclosure effects and the next action. Settle conflicts before the final approval. Keep the technical record out of the conversation. Do not merge distinct permissions. Refresh the plan page with `plan_page.py` (step 4 of the flow): with a saved proposal it leads with what changed and what needs a decision, and the complete revised plan follows. Give the owner its path.
 8. Apply the accepted patches after the owner approves. The command rechecks the source, draft and proposal digests, and stops if anything changed. Preview, read it, then apply:
 
    ```bash

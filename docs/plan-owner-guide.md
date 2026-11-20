@@ -94,6 +94,8 @@ Optional preparation: the [detailed inputs checklist](inputs.md) includes exampl
 
 ## Reviewing the plan
 
+The agent writes the plan page, a page in your private workspace that you open in your browser, and gives you its path. The page is written from the plan, the specifications and the checker, so it shows the same numbers the checks use. It has five parts: the project overview, people and feasibility, the milestones, the work items with their acceptance criteria and sources, and the review findings. Ask for changes in the conversation, for example "Move milestone 2 back a week." The agent edits the files, runs the checks and refreshes the page. Approve the version you read: the page says when it was written. Approving the schedule does not approve every specification, so read the work items and their sources too. When the project changes later, the page leads with what changed and what needs your decision.
+
 The agent drafts. You decide. It shows you:
 
 - the **milestones**, each with an exit gate you can check at a demonstration,
@@ -423,6 +425,7 @@ For installation problems, use the [setup guide's troubleshooting](setup.md#when
 - **Sub-issue.** An issue placed under another issue. Each work item is a sub-issue of its sub-epic.
 - **Iteration field.** A GitHub Project field that groups items into time blocks with start dates and lengths. Here it is called Work unit.
 - **YAML.** A plain text format for structured data. `plan.yaml` holds the plan in it.
+- **Plan page.** The review page the agent writes into your private workspace from the plan, the specifications and the checker. You open it in your browser and ask for changes in the conversation. It never enters the repository.
 - **Load table.** A table of how much work each person has in each work unit.
 - **Critical path.** The longest chain of items that depend on each other. It sets the earliest finish date.
 - **Exit gate.** The one sentence that must be true for a work unit to count as done.

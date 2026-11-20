@@ -36,7 +36,7 @@ REPO = Path(__file__).resolve().parent.parent
 NEEDS = {
     "carrydown-ground-truth": {
         "scripts": ["render_ground_truth.py", "scaffold_spec.py", "check_specs.py", "plan_repair.py", "release_schema.py", "workspace.py", "compile_bundles.py", "check_python.py",
-                    "reconcile.py", "reconcile_core.py", "decision_overlay.py"],
+                    "reconcile.py", "reconcile_core.py", "decision_overlay.py", "plan_page.py"],
         "references": ["preflight.md"],
         "templates": ["plan.yaml", "spec.md", "milestone.md", "spec-README.md", "closing-comment.md", "checkpoint-comment.md", "check-specs-workflow.yml", "pull-request-template.md", "plan-review-prompt.md", "plan-review-report.md", "plan-review-repair.md", "staging/open-release-request.yml", "staging/ruleset.json",
                       "maintenance-notice.md", "reconcile-review.md"],

@@ -878,6 +878,61 @@ def planning_review(plan):
     return findings, lines
 
 
+def load_table(plan):
+    """The load table of the report, from L.load_rows: (head, rows, sentences, over). rows are the cells per person,
+    sentences say each row again in words for a screen reader, and over lists (person, work unit, sized, capacity,
+    percent) for each work unit past 100 percent. Without the people overlay there are no rows."""
+    staffed = L.staffing_loaded(plan)
+    people = {p["id"]: p for p in plan["people"]}
+    head = ["Person", "Alloc"] + [f"WU{m['number']}" for m in plan["milestones"]] + ["Total"]
+    rows = []
+    over = []
+    by_person = {}
+    for pid, mnum, sized, cap, pct in (L.load_rows(plan) if staffed else []):
+        by_person.setdefault(pid, []).append((mnum, sized, cap, pct))
+    sentences = []      # the table's values again, one labeled sentence per person, for a screen reader
+    for pid, p in (people.items() if staffed else []):
+        cells, tot_sized, tot_cap, said = [], 0.0, 0.0, []
+        for mnum, sized, cap, pct in by_person.get(pid, []):
+            if sized == 0:
+                cells.append(f"0 of {cap:.0f}d")
+                said.append(f"work unit {mnum}, 0 of {cap:.0f} days")
+            else:
+                flag = "  OVER" if (pct is not None and pct > 100) else ""
+                cells.append(f"{sized:g} of {cap:.0f}d ({pct:.0f}%){flag}" if pct not in (None, float("inf")) else f"{sized:g} of 0d (no capacity){flag or '  OVER'}")
+                said.append(f"work unit {mnum}, {sized:g} of {cap:.0f} days ({pct:.0f} percent{', over' if flag else ''})" if pct not in (None, float("inf"))
+                            else f"work unit {mnum}, {sized:g} of 0 days (no capacity, over)")
+                if pct is None or pct > 100:
+                    over.append((pid, mnum, sized, cap, pct))
+            tot_sized += sized
+            tot_cap += cap
+        tot = f"{tot_sized:g} of {tot_cap:.0f}d" + (f" ({100 * tot_sized / tot_cap:.0f}%)" if tot_cap else "")
+        rows.append([pid, f"{p.get('allocation', 100)}%"] + cells + [tot])
+        said.append(f"total {tot_sized:g} of {tot_cap:.0f} days" + (f" ({100 * tot_sized / tot_cap:.0f} percent)" if tot_cap else ""))
+        sentences.append(f"{pid}, {p.get('allocation', 100)} percent allocated: {'; '.join(said)}.")
+    return head, rows, sentences, over
+
+
+def target_lines(plan):
+    """The lines of the report's Target block: the target and whether the critical path meets it, or the derived
+    target when the plan has no target that constrains it. [] when the plan has no items."""
+    items = L.item_by_id(plan)
+    if not items:
+        return []
+    _, path = L.critical_path(plan)
+    tdate, ttext = L.target_date(plan)
+    end_date = L.parse_date(items[path[-1]]["complete_by"])
+    if tdate and L.target_is_constraint(plan):
+        gap = (tdate - end_date).days
+        verdict = f"meets the target with {gap} day(s) to spare" if gap >= 0 else f"misses the target by {-gap} day(s)"
+        return [f"Target: {ttext}", f"The critical path ends {fmt(end_date)}: it {verdict}."]
+    why = "The target in plan.yaml is marked derived" if tdate else "There is no target in plan.yaml"
+    out = [f"Critical path ends {fmt(end_date)} (derived from the critical path). {why}, so this is the derived target: the plan's end date, not a constraint."]
+    if tdate and tdate != end_date:
+        out.append(f"The derived target in plan.yaml says {fmt(tdate)}. Update it to {fmt(end_date)}.")
+    return out
+
+
 def report(plan):
     people = {p["id"]: p for p in plan["people"]}
     print(f"Plan: {plan['project']['name']}")
@@ -931,32 +986,7 @@ def report(plan):
         print("  Not shown: allocation, start dates and days off are in the private people file.")
     if staffed:
         print("  Capacity is the working days a person has in the work unit, minus days off, times their percent allocation.")
-    head = ["Person", "Alloc"] + [f"WU{m['number']}" for m in plan["milestones"]] + ["Total"]
-    rows = []
-    over = []
-    by_person = {}
-    for pid, mnum, sized, cap, pct in (L.load_rows(plan) if staffed else []):
-        by_person.setdefault(pid, []).append((mnum, sized, cap, pct))
-    sentences = []      # the table's values again, one labeled sentence per person, for a screen reader
-    for pid, p in (people.items() if staffed else []):
-        cells, tot_sized, tot_cap, said = [], 0.0, 0.0, []
-        for mnum, sized, cap, pct in by_person.get(pid, []):
-            if sized == 0:
-                cells.append(f"0 of {cap:.0f}d")
-                said.append(f"work unit {mnum}, 0 of {cap:.0f} days")
-            else:
-                flag = "  OVER" if (pct is not None and pct > 100) else ""
-                cells.append(f"{sized:g} of {cap:.0f}d ({pct:.0f}%){flag}" if pct not in (None, float("inf")) else f"{sized:g} of 0d (no capacity){flag or '  OVER'}")
-                said.append(f"work unit {mnum}, {sized:g} of {cap:.0f} days ({pct:.0f} percent{', over' if flag else ''})" if pct not in (None, float("inf"))
-                            else f"work unit {mnum}, {sized:g} of 0 days (no capacity, over)")
-                if pct is None or pct > 100:
-                    over.append((pid, mnum, sized, cap, pct))
-            tot_sized += sized
-            tot_cap += cap
-        tot = f"{tot_sized:g} of {tot_cap:.0f}d" + (f" ({100 * tot_sized / tot_cap:.0f}%)" if tot_cap else "")
-        rows.append([pid, f"{p.get('allocation', 100)}%"] + cells + [tot])
-        said.append(f"total {tot_sized:g} of {tot_cap:.0f} days" + (f" ({100 * tot_sized / tot_cap:.0f} percent)" if tot_cap else ""))
-        sentences.append(f"{pid}, {p.get('allocation', 100)} percent allocated: {'; '.join(said)}.")
+    head, rows, sentences, over = load_table(plan)
     widths = [max(len(str(r[i])) for r in [head] + rows) for i in range(len(head))]
     if staffed:
         print("  " + "  ".join(h.ljust(w) for h, w in zip(head, widths)))
@@ -980,19 +1010,9 @@ def report(plan):
         print("  " + " -> ".join(L.tag(plan, n) for n in path) + f"  ({days} calendar days)")
         for n in path:
             print(f"    {L.tag(plan, n)} {items[n]['label']}, by {items[n]['complete_by']}, {people.get(items[n]['owner'], {}).get('id', items[n]['owner'])}")
-        tdate, ttext = L.target_date(plan)
-        end_date = L.parse_date(items[path[-1]]["complete_by"])
         print("\nTarget")
-        if tdate and L.target_is_constraint(plan):
-            gap = (tdate - end_date).days
-            verdict = f"meets the target with {gap} day(s) to spare" if gap >= 0 else f"misses the target by {-gap} day(s)"
-            print(f"  Target: {ttext}")
-            print(f"  The critical path ends {fmt(end_date)}: it {verdict}.")
-        else:
-            why = "The target in plan.yaml is marked derived" if tdate else "There is no target in plan.yaml"
-            print(f"  Critical path ends {fmt(end_date)} (derived from the critical path). {why}, so this is the derived target: the plan's end date, not a constraint.")
-            if tdate and tdate != end_date:
-                print(f"  The derived target in plan.yaml says {fmt(tdate)}. Update it to {fmt(end_date)}.")
+        for line in target_lines(plan):
+            print("  " + line)
     print("\nFit (working days each item needs, from its size and its owner's allocation, against its window)")
     fits = L.fit_findings(plan) if staffed else []
     if not staffed:
@@ -1037,6 +1057,11 @@ def report(plan):
 
 
 PLAN_ERRORS = (KeyError, ValueError, TypeError, AttributeError, IndexError, ZeroDivisionError, OverflowError, RecursionError, OSError)
+
+
+def summary_line(plan, results, ok, n_items, item=None):
+    """The first line of the text output: files clean, files with findings, and what was checked."""
+    return f"{ok} files clean, {len(results)} with findings ({n_items} work items, {0 if item else len(plan['milestones'])} milestones)"
 
 
 def print_plan_problems(problems):
@@ -1476,7 +1501,7 @@ def main(argv=None):
     if a.json:
         print(json.dumps({"clean": ok, "files": n_files, "findings": results, "notes": notes}, indent=2))
     else:
-        print(f"{ok} files clean, {len(results)} with findings ({n_items} work items, {0 if a.item else len(plan['milestones'])} milestones)")
+        print(summary_line(plan, results, ok, n_items, a.item))
         if not L.staffing_loaded(plan):
             print(OVERLAY_NOTE)
         if plan_problems:
