@@ -52,6 +52,16 @@ import sys
 import tempfile
 from pathlib import Path
 
+# Never crash on a character the console cannot show. The scripts get this from the library at
+# import time; the self test does not import the library, so it does the same here. A Windows
+# console or a pipe read by the runner may use a code page such as cp1252, and a step name can
+# hold full-width digits. Such characters are printed as escapes instead.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(errors="backslashreplace")
+    except (AttributeError, ValueError, OSError):
+        pass
+
 ROOT = Path(__file__).resolve().parent.parent
 PY = sys.executable
 HOME = tempfile.mkdtemp(prefix="carrydown-selftest-home-")
