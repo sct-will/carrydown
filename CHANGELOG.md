@@ -61,6 +61,7 @@ These changes let a project keep documents and staffing notes private and share 
 
 ### Other changes
 
+- **The self test workflow runs on Ubuntu and macOS.** The two Windows legs, which reported without gating the workflow, are removed until the self test passes there.
 - Both skills start with a Python preflight. It detects the system, checks for Python 3.9 or newer with `check_python.py`, and offers to install Python with the official installer after one yes, with separate steps for macOS, Windows and Linux. The engineers' skill keeps one first command, `check_context.py`, and turns to the same preflight only when that command cannot run because Python is missing or older than 3.9.
 - Checkpoint recovery previews name affected item and milestone references. Publication verification preserves unrelated milestone children while checking every planned parent. Work unit configuration and view assignments retry transient failures with the intended value in permanent errors.
 - Everything is now licensed Apache 2.0; the CC BY 4.0 content license is removed.
