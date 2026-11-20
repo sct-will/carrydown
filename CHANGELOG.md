@@ -14,6 +14,7 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ### Documentation
 
+- **The glossary is in alphabetical order.** The 31 entries of [the plan owner guide’s glossary](docs/plan-owner-guide.md#glossary) are sorted by term.
 - **A troubleshooting page replaces the FAQ.** [Troubleshooting](docs/troubleshooting.md) has 15 entries in three groups, installing, planning, and publishing and updating, each written as the symptom you have, followed by the cause and the fix. Six answers moved into the guides beside what they explain: the private path into the setup guide, assignments, names and external inputs into the plan owner guide, work units into the method and the YAML subset into the contributing guide. The answers that other pages already gave were removed, and questions about the method are on [the carried-context development FAQ](https://carriedcontext.dev/faq/).
 
 ### Onboarding fixes

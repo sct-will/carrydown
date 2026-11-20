@@ -166,6 +166,13 @@ export const en = {
      * site path gets the locale prefix, an address is used as written. */
     items: [
       {
+        id: 'what-is-carried-context-development',
+        group: 'method',
+        q: 'What is carried-context development?',
+        a: 'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent, so the project stays aligned and nothing drifts. It carries a team’s agreed ground truth down into the plan, every specification, every issue and every coding agent’s instructions, cited by section, and carries it down again when the ground truth changes. Citations and human checkpoints keep every handoff traceable. Team constraints such as dates, capacity, skills and preferences shape the plan. People still decide the owners, scope and order.',
+        more: { label: 'Read the definition and the rules on the definition page.', href: '/definition/' },
+      },
+      {
         id: 'spec-driven',
         group: 'method',
         q: 'How is carried-context development different from traditional spec-driven development?',
@@ -190,6 +197,13 @@ export const en = {
         q: 'Isn’t carried-context development just waterfall?',
         a: 'No. Waterfall fixes the whole plan up front and treats a change as a failure of the plan. Here the plan, the specs and the issues are files in Git, so changing them is cheap and the change is reviewed like code. Work units take the length the work needs rather than fixed-length boxes. Each milestone ends with a demonstration that the stakeholders pass or fail, and what the team learns goes back into the ground truth and is carried down again. You can plan, build a little, learn and update the plan as often as the project needs.',
         more: { label: 'Read how a change is carried down in the method.', href: '/docs/method/#when-the-project-changes' },
+      },
+      {
+        id: 'what-is-carrydown',
+        group: 'carrydown',
+        q: 'What is carrydown and how does it differ from carried-context development?',
+        a: 'Carried-context development is an approach to agentic development. It carries a team’s agreed ground truth down into the plan, every specification, every issue and every coding agent’s instructions, cited by section, and carries it down again when the ground truth changes. carrydown is the reference implementation of that approach: two Agent Skills you install together with one command, a third it generates for your engineers, and the checks that validate every citation. It is open source under Apache 2.0 and works with the coding agent your team already uses. You work with your agent to turn your documents, team availability and deadlines into a connected plan. The agent writes a spec for every work item and creates the GitHub issues and project board once you approve. Each issue links to its spec, which cites the source sections behind the work.',
+        more: { label: 'Read how it works in the docs.', href: '/docs/#how-it-works' },
       },
       {
         id: 'reconciled',
@@ -408,7 +422,7 @@ export const en = {
       /** The word between a title and the path that follows it, where there is one. */
       inWord: 'in',
       items: [
-        { title: 'A plan', path: 'docs/spec/plan.yaml', body: 'Milestones, tracks, owners and dates fitted to your people and time, with a reason for every milestone.' },
+        { title: 'A plan you review as a page in your web browser', path: '', body: 'Milestones, tracks, owners and dates fitted to your people and time, with a load table and a critical path, and a reason for every milestone. The committed plan, docs/spec/plan.yaml, holds ids and tracks only.' },
         { title: 'One specification per work item', path: '', body: 'The smallest piece of work an engineer can finish and show, citing its sections and checked against the plan on every pull request.' },
         { title: 'One approved context per work item', path: 'docs/context/', body: 'The exact source text the item cites and the decisions behind it, approved by you. The only part of your documents that reaches the engineers’ agents.' },
         { title: 'A release receipt', path: 'docs/release/', body: 'A small public file naming the approved release, its state and its expiry.' },

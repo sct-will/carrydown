@@ -158,6 +158,13 @@ export const de: Strings = {
     anchorLabel: 'Link zu dieser Frage',
     items: [
       {
+        id: 'what-is-carried-context-development',
+        group: 'method',
+        q: 'Was ist carried-context development?',
+        a: 'Carried-context development ist ein Ansatz für agentische Entwicklung, der Projektentscheidungen und Kontext bis zum Coding-Agenten jedes Entwicklers trägt, damit das Projekt ausgerichtet bleibt und nichts auseinanderdriftet. Carried-context development trägt die vereinbarte Faktengrundlage eines Teams hinunter in den Plan, in jede Spezifikation, jedes Issue und die Anweisungen jedes Coding-Agenten, mit Abschnittsangabe, und trägt sie erneut hinunter, wenn sich die Faktengrundlage ändert.',
+        more: { label: 'Die Definition und die Regeln auf der Definitionsseite lesen.', href: '/definition/' },
+      },
+      {
         id: 'spec-driven',
         group: 'method',
         q: 'Was unterscheidet carried-context development von klassischer spezifikationsgetriebener Entwicklung?',
@@ -182,6 +189,13 @@ export const de: Strings = {
         q: 'Ist carried-context development nicht einfach Wasserfall?',
         a: 'Nein. Das Wasserfallmodell legt den ganzen Plan im Voraus fest und behandelt eine Änderung als Versagen des Plans. Hier sind Plan, Spezifikationen und Issues Dateien in Git, also ist eine Änderung billig und wird wie Code geprüft. Arbeitseinheiten dauern so lange, wie die Arbeit braucht, statt in Kästen fester Länge zu passen. Jeder Meilenstein endet mit einer Vorführung, über die die Stakeholder mit bestanden oder nicht bestanden entscheiden, und was das Team lernt, fließt in die Faktengrundlage zurück und wird erneut hinuntergetragen. Sie können planen, ein wenig bauen, lernen und den Plan so oft anpassen, wie das Projekt es braucht.',
         more: { label: 'In der Methode lesen, wie eine Änderung hinuntergetragen wird.', href: '/docs/method/#when-the-project-changes' },
+      },
+      {
+        id: 'what-is-carrydown',
+        group: 'carrydown',
+        q: 'Was ist carrydown, und was unterscheidet es von carried-context development?',
+        a: 'Carried-context development ist ein Ansatz für agentische Entwicklung. Carried-context development trägt die vereinbarte Faktengrundlage eines Teams hinunter in den Plan, in jede Spezifikation, jedes Issue und die Anweisungen jedes Coding-Agenten, mit Abschnittsangabe, und trägt sie erneut hinunter, wenn sich die Faktengrundlage ändert. carrydown ist die Referenzimplementierung: zwei Agent Skills, die Sie zusammen mit einem Befehl installieren, ein dritter, den sie für Ihre Entwickler generiert, und die Prüfungen, die jeden Beleg validieren. Sie ist Open Source unter Apache 2.0 und arbeitet mit dem Coding-Agenten, den Ihr Team bereits nutzt.',
+        more: { label: 'In der Doku lesen, wie es funktioniert.', href: '/docs/#how-it-works' },
       },
       {
         id: 'reconciled',
@@ -399,7 +413,7 @@ export const de: Strings = {
       /** The word between a title and the path that follows it, where there is one. */
       inWord: 'in',
       items: [
-        { title: 'Ein Plan', path: 'docs/spec/plan.yaml', body: 'Meilensteine, Tracks, Verantwortliche und Termine, an Ihre Leute und Ihre Zeit angepasst, mit einer Begründung für jeden Meilenstein.' },
+        { title: 'Ein Plan, den Sie als Seite in Ihrem Webbrowser prüfen', path: '', body: 'Meilensteine, Tracks, Verantwortliche und Termine, an Ihre Leute und Ihre Zeit angepasst, mit einer Lasttabelle und einem kritischen Pfad und einer Begründung für jeden Meilenstein. Der eingecheckte Plan, docs/spec/plan.yaml, enthält nur Ids und Tracks.' },
         { title: 'Eine Spezifikation pro Arbeitspaket', path: '', body: 'Das kleinste Stück Arbeit, das ein Entwickler abschließen und vorführen kann, mit Belegen auf seine Abschnitte und bei jedem Pull Request gegen den Plan geprüft.' },
         { title: 'Ein freigegebener Kontext pro Arbeitspaket', path: 'docs/context/', body: 'Der genaue Quelltext der belegten Abschnitte und die Entscheidungen dahinter, von Ihnen freigegeben. Der einzige Teil Ihrer Dokumente, der die Agenten der Entwickler erreicht.' },
         { title: 'Eine Release-Quittung', path: 'docs/release/', body: 'Eine kleine öffentliche Datei, die das freigegebene Release, seinen Zustand und sein Ablaufdatum nennt.' },

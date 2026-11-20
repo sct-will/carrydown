@@ -405,34 +405,34 @@ For installation problems, use the [setup guide's troubleshooting](setup.md#when
 
 ## Glossary
 
-- **Ground truth.** The document or documents the project must obey, such as an architecture document, requirements, rules and standards.
-- **Dry run.** A preview of what a command would do. It writes nothing. The agent shows you the dry run and asks before the real run writes anything.
-- **Private workspace.** An owner-only, versioned folder on your machine, outside the project. It holds the staffing file, restricted documents and their renderings, drafts and every release record. carrydown never copies it anywhere.
-- **Approved context.** One file per work item, `docs/context/<id>.md`, with the exact text of the source sections the item cites. You approve it for everyone who can read the repository.
-- **Release.** Approved content, named by its release id, together with one permission decision, named by its request id.
-- **Receipt.** The small public file in `docs/release/` that names a release, its state and its expiry.
-- **Staging repository.** A private repository where a release candidate is reviewed and approved before anything reaches the engineering repository. The private path only.
-- **Tooling repository and enrollment.** The organization's protected repository that holds the independent verifier and the list of repositories that use the private path. The private path only.
-- **Reconciliation.** The step in which your agent compares revised sources or an engineer's correction with the reviewed sources and the current work, prepares focused corrections and shows conflicts for your decision.
-- **Source checkpoint.** A private copy of the source renderings you reviewed, kept in your private workspace, that the next change is compared with.
-- **Disposition.** The recorded outcome for one changed source passage or one engineer request, such as updated, no downstream impact, deferred or unresolved.
-- **Working drafts.** Your copy of the plan and specifications that an update changes. The released plan is what engineers see. It changes only with a new release.
-- **Proposal.** The saved comparison of one update, kept in your private workspace, so an interrupted update can resume.
-- **Baseline.** The approved release and specification an engineer started from. The engineers' check prints it.
 - **Agent Skills.** An open format for packaging instructions for a coding agent as a folder with a `SKILL.md` file.
-- **Epic.** A parent GitHub issue that stands for the whole project.
-- **Sub-epic.** An issue for one milestone, placed under the Epic.
-- **Sub-issue.** An issue placed under another issue. Each work item is a sub-issue of its sub-epic.
-- **Iteration field.** A GitHub Project field that groups items into time blocks with start dates and lengths. Here it is called Work unit.
-- **YAML.** A plain text format for structured data. `plan.yaml` holds the plan in it.
-- **Plan page.** The review page the agent writes into your private workspace from the plan, the specifications and the checker. You open it in your browser and ask for changes in the conversation. It never enters the repository.
-- **Load table.** A table of how much work each person has in each work unit.
-- **Critical path.** The longest chain of items that depend on each other. It sets the earliest finish date.
-- **Exit gate.** The one sentence that must be true for a work unit to count as done.
-- **Work unit.** A time block with its own length and an exit gate. It replaces the fixed-length sprint.
-- **Track.** A lane of work one engineer owns, such as back end or front end. Each work item belongs to one track.
+- **Approved context.** One file per work item, `docs/context/<id>.md`, with the exact text of the source sections the item cites. You approve it for everyone who can read the repository.
+- **Baseline.** The approved release and specification an engineer started from. The engineers' check prints it.
 - **Checkpoint.** A dated integration check between the tracks, listed under `checkpoints` in `plan.yaml`. Each one runs a joint check, and each work item names the checkpoint it must be done by.
+- **Critical path.** The longest chain of items that depend on each other. It sets the earliest finish date.
+- **Demonstration.** A meeting at the end of a work unit where the engineers show the stakeholders the milestone working, against criteria written in advance.
+- **Disposition.** The recorded outcome for one changed source passage or one engineer request, such as updated, no downstream impact, deferred or unresolved.
+- **Dry run.** A preview of what a command would do. It writes nothing. The agent shows you the dry run and asks before the real run writes anything.
+- **Epic.** A parent GitHub issue that stands for the whole project.
+- **Exit gate.** The one sentence that must be true for a work unit to count as done.
+- **External item.** Work outside the plan, owned outside the team, such as recruiting a pilot team or getting an approval. It keeps an id, left as a gap in the numbering, and is listed under `external` in `plan.yaml`. An item that waits for it carries an "external input" note.
+- **Ground truth.** The document or documents the project must obey, such as an architecture document, requirements, rules and standards.
+- **Iteration field.** A GitHub Project field that groups items into time blocks with start dates and lengths. Here it is called Work unit.
 - **Joint check.** The test a checkpoint runs, written in one sentence in the plan: what the tracks run together to prove the parts they built fit, such as a report going from the form to the database.
 - **Joint demonstration.** What the engineers whose tracks meet show together at the end of a milestone, one demonstration of the completed items working as one. The plan says what each of them shows.
-- **Demonstration.** A meeting at the end of a work unit where the engineers show the stakeholders the milestone working, against criteria written in advance.
-- **External item.** Work outside the plan, owned outside the team, such as recruiting a pilot team or getting an approval. It keeps an id, left as a gap in the numbering, and is listed under `external` in `plan.yaml`. An item that waits for it carries an "external input" note.
+- **Load table.** A table of how much work each person has in each work unit.
+- **Plan page.** The review page the agent writes into your private workspace from the plan, the specifications and the checker. You open it in your browser and ask for changes in the conversation. It never enters the repository.
+- **Private workspace.** An owner-only, versioned folder on your machine, outside the project. It holds the staffing file, restricted documents and their renderings, drafts and every release record. carrydown never copies it anywhere.
+- **Proposal.** The saved comparison of one update, kept in your private workspace, so an interrupted update can resume.
+- **Receipt.** The small public file in `docs/release/` that names a release, its state and its expiry.
+- **Reconciliation.** The step in which your agent compares revised sources or an engineer's correction with the reviewed sources and the current work, prepares focused corrections and shows conflicts for your decision.
+- **Release.** Approved content, named by its release id, together with one permission decision, named by its request id.
+- **Source checkpoint.** A private copy of the source renderings you reviewed, kept in your private workspace, that the next change is compared with.
+- **Staging repository.** A private repository where a release candidate is reviewed and approved before anything reaches the engineering repository. The private path only.
+- **Sub-epic.** An issue for one milestone, placed under the Epic.
+- **Sub-issue.** An issue placed under another issue. Each work item is a sub-issue of its sub-epic.
+- **Tooling repository and enrollment.** The organization's protected repository that holds the independent verifier and the list of repositories that use the private path. The private path only.
+- **Track.** A lane of work one engineer owns, such as back end or front end. Each work item belongs to one track.
+- **Work unit.** A time block with its own length and an exit gate. It replaces the fixed-length sprint.
+- **Working drafts.** Your copy of the plan and specifications that an update changes. The released plan is what engineers see. It changes only with a new release.
+- **YAML.** A plain text format for structured data. `plan.yaml` holds the plan in it.
