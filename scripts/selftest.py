@@ -538,6 +538,9 @@ def confidentiality(tmp):
     cmds = [[PY, "scripts/check_specs.py", "--root", str(sample), "--report"],
             [PY, "scripts/check_specs.py", "--root", str(sample), "--report", "--people", f"{SAMPLE}/people.yaml"]]
     step("the workspace overlay and the explicit --people file give the same report", [PY, "-c", same, json.dumps(cmds)])
+    page = Path(HOME) / ".carrydown" / "workspaces" / "sample-staffing" / "review" / "plan-page.html"
+    step("plan_page writes the plan page into the private workspace", [PY, "scripts/plan_page.py", "--root", str(sample)],
+         contains=["plan page: ", "sample-staffing/review/plan-page.html"], files={page: ["Tamsin Hale", "Review findings"]})
     step("the workspace overlay also feeds the sync dry run's capacity summary", [PY, "scripts/github_sync.py", "--root", str(sample), "--offline"],
          contains=["Track Workflow: 1 person, 100 percent allocated", "Track Experience: 1 person, 60 percent allocated"])
 
@@ -1016,6 +1019,8 @@ def main():
          contains=["offline: nothing read from GitHub; no files written"])
     step("dry run: generate_dev_skill", [PY, "scripts/generate_dev_skill.py", "--root", SAMPLE])
     step("dry run: plan_repair", [PY, "scripts/plan_repair.py", "--root", SAMPLE], contains=["repair action(s)", "Dry run"])
+    step("plan_page refuses a project with no private workspace", [PY, "scripts/plan_page.py", "--root", SAMPLE, "--dry-run"],
+         expect=2, contains=["workspace-unavailable", "workspace.py init"])
     step("dry run: github_token", [PY, "scripts/github_token.py", "--dry-run"])
     step("the Python preflight check passes on this interpreter", [PY, "scripts/check_python.py"], contains=["Python", "is ready"])
     step("the Python preflight check answers --help", [PY, "scripts/check_python.py", "--help"], contains=["usage:"])

@@ -4,6 +4,10 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ## Unreleased
 
+### The plan page
+
+- **The plan owner reviews a page, not a YAML file.** `plan_page.py` writes the plan page into the private workspace from the plan, the people file, the specifications and the checker: the project overview, people and feasibility, the milestones, the work items with their acceptance criteria and sources, and the review findings. During an update it leads with what changed and what needs a decision. The planning skill writes it as soon as the draft exists and refreshes it after every change, and the owner asks for changes in the conversation. It is static HTML with no scripts and no external resources, and it never enters the repository.
+
 ### Documentation
 
 - **A troubleshooting page replaces the FAQ.** [Troubleshooting](docs/troubleshooting.md) has 15 entries in three groups, installing, planning, and publishing and updating, each written as the symptom you have, followed by the cause and the fix. Six answers moved into the guides beside what they explain: the private path into the setup guide, assignments, names and external inputs into the plan owner guide, work units into the method and the YAML subset into the contributing guide. The answers that other pages already gave were removed, and questions about the method are on [the carried-context development FAQ](https://carriedcontext.dev/faq/).
