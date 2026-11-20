@@ -47,7 +47,8 @@ only) and the mode is read back; if it is not 0o700, or the folder is not yours,
 Windows the workspace is %USERPROFILE%\\.carrydown\\workspaces\\<slug>\\ and init applies an access
 control list that names the current user only, with
   icacls <folder> /inheritance:r /grant:r "<DOMAIN\\user>:(OI)(CI)F"
-then reads it back with `icacls <folder>`. Any other principal in the list stops init. The folder is
+then reads it back with `icacls <folder>`. The system account (NT AUTHORITY\\SYSTEM), BUILTIN\\Administrators
+and OWNER RIGHTS may stay on the list, as they do on a profile folder. Any other principal stops init. The folder is
 refused when its path is inside the engineering repository (workspace-inside-repository).
 
 HOME (USERPROFILE on Windows) decides where ~ is, so a test can point it at a temporary folder.
@@ -173,15 +174,20 @@ def parse_icacls(output, path):
     return principals
 
 
+WINDOWS_OWN = ("nt authority\\system", "builtin\\administrators", "owner rights")   # beside the user on a profile folder
+
+
 def windows_acl_problem(principals, user):
     """Why an access control list is not current-user-only, or None. principals is parse_icacls output,
-    user is DOMAIN\\name (or just the name)."""
+    user is DOMAIN\\name (or just the name). The system account, the administrators group and the owner
+    rights entry may stay, as they do on a Windows profile folder."""
     if not principals:
         return "the access control list could not be read back"
     wanted = {user.casefold(), user.casefold().split("\\")[-1]}
-    others = sorted({p for p in principals if p.casefold() not in wanted and p.casefold().split("\\")[-1] not in wanted})
+    others = sorted({p for p in principals if p.casefold() not in wanted and p.casefold().split("\\")[-1] not in wanted
+                     and p.casefold() not in WINDOWS_OWN})
     if others:
-        return f"{len(others)} other principal(s) can open the workspace. Only the current user may"
+        return f"{len(others)} other principal(s) can open the workspace ({', '.join(others)}). Only the current user may"
     return None
 
 
