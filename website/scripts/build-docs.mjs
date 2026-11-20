@@ -2,10 +2,11 @@
 // Builds the docs section of the site from the repository's Markdown. It runs before `astro build`.
 //
 // Reads README.md, every docs/*.md and sample/expense-approvals/README.md from the repository root and
-// writes them into Starlight's content collection with front matter (title from the first heading,
-// description from the first paragraph). Relative links between those files become links between site
-// routes. A link to any other repository file becomes its GitHub URL. Referenced images are copied into
-// the site. A line at the top of each page says where it came from.
+// writes them into Starlight's content collection with front matter (title from the first heading, or
+// the title the page list below names; description from the first paragraph). Relative links between
+// those files become links between site routes. A link to any other repository file becomes its GitHub
+// URL. Referenced images are copied into the site. A line at the top of each page says where it came
+// from.
 //
 // Locales: a file at docs/i18n/<locale>/<name>.md is served at /<locale>/docs/<name>/. When a locale has
 // no translation of a page, the English page is served there with a note in that locale.
@@ -53,10 +54,14 @@ export const MANAGED = [
 const IMAGE_EXT = /\.(png|jpe?g|gif|svg|webp|avif)$/i;
 const SAMPLE_README = 'sample/expense-approvals/README.md';
 
-/** The English pages: repository path, slug, group. The order here is the Start here order. */
+/**
+ * The English pages: repository path, slug, group. The order here is the Start here order. A page with a
+ * title here is titled so on the site instead of by its first heading: the README's heading is the
+ * product name, right on GitHub, while on the site the page is what the Docs link promises.
+ */
 function listEnglishPages(repo) {
   const pages = [
-    { source: 'README.md', slug: 'docs', group: 'start' },
+    { source: 'README.md', slug: 'docs', group: 'start', title: 'Documentation' },
     { source: 'docs/setup.md', slug: 'docs/setup', group: 'start' },
     { source: 'docs/plan-owner-guide.md', slug: 'docs/plan-owner-guide', group: 'start' },
   ];
@@ -332,6 +337,8 @@ export function generate({ repo = repoRootDefault, out = websiteDir } = {}) {
   function emit({ page, locale, source, fallbackOf }) {
     const text = read(join(repo, source));
     const doc = readDocument(text);
+    // The page list's title applies to the English file wherever it is served; a translation keeps its own heading.
+    const title = page.title && source === page.source ? page.title : doc.title;
     const route = routeFor(page.slug, locale);
     const mdPath = contentPath(page.slug, locale);
     const rewriter = makeRewriter(repo, pagesByPath, translations, images, {
@@ -349,9 +356,9 @@ export function generate({ repo = repoRootDefault, out = websiteDir } = {}) {
       body = `<div lang="en">\n\n${body}\n\n</div>`;
     }
     const description = describe(doc.paragraph);
-    const front = `---\ntitle: ${yaml(doc.title)}\n${description ? `description: ${yaml(description)}\n` : ''}head:\n  - tag: style\n    content: ${yaml(PAGE_CSS)}\n---\n`;
+    const front = `---\ntitle: ${yaml(title)}\n${description ? `description: ${yaml(description)}\n` : ''}head:\n  - tag: style\n    content: ${yaml(PAGE_CSS)}\n---\n`;
     write(out, mdPath, `${front}\n${top}\n\n${body}\n`);
-    return { slug: page.slug, locale, title: doc.title, description, source, fallback: Boolean(fallbackOf) };
+    return { slug: page.slug, locale, title, description, source, fallback: Boolean(fallbackOf) };
   }
 
   for (const page of pages) {

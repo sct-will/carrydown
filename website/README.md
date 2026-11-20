@@ -68,7 +68,7 @@ All settings are in `site.config.mjs`.
 
 ## How the docs are generated
 
-`scripts/build-docs.mjs` reads `README.md`, every `docs/*.md` and `sample/expense-approvals/README.md` from the repository root. It writes them into Starlight's content collection with front matter, rewrites links between those files to site routes and links to other repository files to their GitHub addresses, copies the images they use, and builds the sidebar from the page titles. The generated files are not committed. Every generated page starts with a line saying which repository file it came from.
+`scripts/build-docs.mjs` reads `README.md`, every `docs/*.md` and `sample/expense-approvals/README.md` from the repository root. It writes them into Starlight's content collection with front matter, rewrites links between those files to site routes and links to other repository files to their GitHub addresses, copies the images they use, and builds the sidebar from the page titles. A page's title is its first heading, except the README's: on GitHub that heading is the product name, so on the site the page is titled "Documentation", from the page list in the script. The generated files are not committed. Every generated page starts with a line saying which repository file it came from.
 
 To translate a docs page, put a translated copy under `docs/i18n/<locale>/` with the same file name. It is served at `/<locale>/docs/<file>/`. Until then the site shows the English page with a note.
 
