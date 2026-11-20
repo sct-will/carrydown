@@ -181,7 +181,7 @@ def windows_acl_problem(principals, user):
     wanted = {user.casefold(), user.casefold().split("\\")[-1]}
     others = sorted({p for p in principals if p.casefold() not in wanted and p.casefold().split("\\")[-1] not in wanted})
     if others:
-        return f"{len(others)} other principal(s) can open the workspace. Only the current user may"
+        return f"{len(others)} other principal(s) can open the workspace ({', '.join(others)}). Only the current user may"
     return None
 
 

@@ -117,6 +117,13 @@ def step(name, cmd, cwd=ROOT, expect=0, contains=(), absent=("Traceback",), env=
     return ok
 
 
+def skipped(name, why):
+    """Record a sequence that could not run because an earlier step failed: one FAIL line, so the
+    original error stays in the log and nothing after it crashes on a folder that does not exist."""
+    results.append((False, name))
+    print(f"FAIL {name}: not run, {why}")
+
+
 def fixtures(tmp):
     """Word documents built on the fly, so no binary file is kept in the repository."""
     make = [PY, "tests/fixtures/make_numbered_docx.py"]
@@ -524,9 +531,13 @@ def confidentiality(tmp):
     # staffing: the sample's fictional overlay, loaded from a temporary private workspace
     sample = d / "sample-project"
     copy_sample(sample)
-    step("a workspace for the sample", ws + ["init", "--root", str(sample), "--slug", "sample-staffing", "--answer", "yes", "--apply"],
-         contains=["carrydown: private workspace ready at"], absent=("Traceback", "gh repo create"))
-    shutil.copyfile(ROOT / SAMPLE / "people.yaml", Path(HOME) / ".carrydown" / "workspaces" / "sample-staffing" / "people.yaml")
+    made = step("a workspace for the sample", ws + ["init", "--root", str(sample), "--slug", "sample-staffing", "--answer", "yes", "--apply"],
+                contains=["carrydown: private workspace ready at"], absent=("Traceback", "gh repo create"))
+    staffing_ws = Path(HOME) / ".carrydown" / "workspaces" / "sample-staffing"
+    if not made or not staffing_ws.is_dir():
+        skipped("the staffing checks on the sample workspace", "the workspace was not created (see the step above)")
+        return
+    shutil.copyfile(ROOT / SAMPLE / "people.yaml", staffing_ws / "people.yaml")
     table = ["tamsin  100%   3 of 10d (30%)  5 of 14d (36%)  6 of 10d (60%)  4 of 10d (40%)  0 of 10d       18 of 54d (33%)",
              "idris   60%    3 of 6d (50%)   4 of 9d (44%)   4 of 5d (74%)   0 of 6d         3 of 6d (50%)  14 of 32d (43%)",
              "No person is over 100 percent of allocated capacity in any work unit.", "0 finding(s)."]
@@ -560,8 +571,11 @@ def update_path(tmp):
     copy_sample(proj, ignore=shutil.ignore_patterns("release"))
     for cmd in (["git", "init", "-q"],):
         subprocess.run(cmd, cwd=proj, env=ENV, check=True, capture_output=True)
-    step("a workspace for the update path check", [PY, "scripts/workspace.py", "init", "--root", str(proj), "--slug", "reconcile-check", "--answer", "yes", "--apply"],
-         contains=["carrydown: private workspace ready at"], absent=("Traceback", "gh repo create"))
+    made = step("a workspace for the update path check", [PY, "scripts/workspace.py", "init", "--root", str(proj), "--slug", "reconcile-check", "--answer", "yes", "--apply"],
+                contains=["carrydown: private workspace ready at"], absent=("Traceback", "gh repo create"))
+    if not made or not (Path(HOME) / ".carrydown" / "workspaces" / "reconcile-check").is_dir():
+        skipped("the update path checks on a project with a workspace", "the workspace was not created (see the step above)")
+        return
     step("status of a project with a working plan and no release is an unapproved draft", rec + ["status", "--root", str(proj)],
          contains=["State: Unapproved draft", "Continue reviewing the existing draft"])
     step("prepare without a checkpoint says so and still builds the index", rec + ["prepare", "--root", str(proj)],
