@@ -847,7 +847,7 @@ def main(argv=None):
         return 2
     text = render_report(result)
     if not a.no_write:
-        (Path(a.dir).resolve() / "report.md").write_text(text, encoding="utf-8")
+        (Path(a.dir).resolve() / "report.md").write_bytes((text).encode("utf-8"))
     if a.json:
         print(json.dumps(result, indent=2, default=str))
     else:

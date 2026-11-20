@@ -136,7 +136,7 @@ def main(argv=None):
     folder = workspace / "drafts" / "proposals" / pid
     doc = json.loads((folder / "dispositions.json").read_text(encoding="utf-8"))
     doc = build_dispositions(r.project, doc, manifest)
-    (folder / "dispositions.json").write_text(json.dumps(doc, indent=2) + "\n", encoding="utf-8")
+    (folder / "dispositions.json").write_bytes((json.dumps(doc, indent=2) + "\n").encode("utf-8"))
     r.script("reconcile.py", "check", "--root", ".", "--proposal", pid)
     r.script("reconcile.py", "apply", "--root", ".", "--proposal", pid)
     r.script("reconcile.py", "apply", "--root", ".", "--proposal", pid, "--apply")

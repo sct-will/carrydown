@@ -151,7 +151,7 @@ def strip_handling(root):
     text = re.sub(r"(?ms)^  handling:.*?(?=^\S|^  \S)", "", text, count=1)
     text = re.sub(r"(?m)^plan_(format|view):.*\n", "", text)
     text = re.sub(r"(?m)^  - id: (\w+)\n    track: (\w+)\n", lambda m: f'  - id: {m.group(1)}\n    name: "{m.group(1).title()}"\n    track: {m.group(2)}\n', text)
-    path.write_text(text, encoding="utf-8")
+    L.write_lf(path, text)
 
 
 class NoProject:
@@ -171,8 +171,7 @@ class NoProject:
         sh(["git", "config", "user.email", "owner@example.com"], self.root)
         enrollment = self.world.enrollment()
         (self.root / ".carrydown").mkdir()
-        (self.root / ".carrydown" / "release-policy.yaml").write_text(
-            f"format: 1\ntooling_repository: acme/carrydown-tooling\nenrollment_id: {enrollment.enrollment_id}\n", encoding="utf-8")
+        L.write_lf(self.root / ".carrydown" / "release-policy.yaml", f"format: 1\ntooling_repository: acme/carrydown-tooling\nenrollment_id: {enrollment.enrollment_id}\n")
         sh(["git", "add", ".carrydown/release-policy.yaml"], self.root)
         sh(["git", "commit", "-q", "-m", "Add the policy pointer"], self.root)
         sh(["git", "push", "-q", "origin", "main"], self.root)
@@ -183,7 +182,7 @@ class NoProject:
         assert code == 0, out + err
         text = (FIXTURE / "docs" / "spec" / "plan.yaml").read_text(encoding="utf-8").replace("repo: sct-will/carrydown-sample", "repo: acme/expense-approvals")
         (self.workspace / "drafts").mkdir(exist_ok=True)
-        (self.workspace / "drafts" / "plan.yaml").write_text(text, encoding="utf-8")
+        L.write_lf(self.workspace / "drafts" / "plan.yaml", text)
         shutil.copytree(FIXTURE / "docs" / "spec", self.workspace / "drafts" / "docs" / "spec", ignore=shutil.ignore_patterns("plan.yaml"))
         shutil.copytree(FIXTURE / "docs" / "ground-truth", self.workspace / "renderings", dirs_exist_ok=True)
         self.request_id = None

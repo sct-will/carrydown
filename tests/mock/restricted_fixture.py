@@ -20,6 +20,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "tests" / "mock"))
+import carrydown_lib as L  # noqa: E402
 import release_fixture as F  # noqa: E402
 
 ITEM = 7                    # the work item that is restricted
@@ -58,7 +59,7 @@ def restricted_project(base, summary=SUMMARY, placeholder=None, label=LABEL, slu
             extra += f'    restricted_placeholder: "{placeholder}"\n'
         marker = block.index("    complete_by")
         block = block[:marker] + extra + block[marker:]
-    plan_path.write_text(text[:start] + block + text[end:], encoding="utf-8")
+    L.write_lf(plan_path, text[:start] + block + text[end:])
     spec_root = root / "docs" / "spec"
     if restrict:
         # the sample's other files name the item by its label and its id: reword them, as an owner would
@@ -71,13 +72,13 @@ def restricted_project(base, summary=SUMMARY, placeholder=None, label=LABEL, slu
             new = re.sub(r"(?i)audit log and retention", "the retention work", new)
             new = re.sub(r"\bWI-07\b", "the retention work", new)
             if new != body:
-                path.write_text(new, encoding="utf-8")
+                L.write_lf(path, new)
     spec = next(spec_root.rglob("wi-07-*.md"))
     if label != LABEL or extra_spec_line:
         body = spec.read_text(encoding="utf-8").replace(f"# WI-07 {LABEL}", f"# WI-07 {label}", 1)
         if extra_spec_line:
             body = body.rstrip("\n") + "\n\n" + extra_spec_line + "\n"
-        spec.write_text(body, encoding="utf-8")
+        L.write_lf(spec, body)
     if slug:
         spec.rename(spec.with_name(f"wi-07-{slug}.md"))
     for folder in ("context", "dev", "release"):

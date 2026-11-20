@@ -39,7 +39,7 @@ def with_clarification(plan_path, block=CLARIFICATION_KEY):
     text = Path(plan_path).read_text(encoding="utf-8")
     text, count = re.subn(r"(?m)^(  dev_skill_path:.*\n)", lambda m: m.group(1) + block, text, count=1)
     assert count == 1, "the plan has no dev_skill_path line to add the block after"
-    Path(plan_path).write_text(text, encoding="utf-8")
+    Path(plan_path).write_bytes((text).encode("utf-8"))
 
 
 def refresh_generated_files(root):
@@ -51,7 +51,7 @@ def refresh_generated_files(root):
         text = source.read_text(encoding="utf-8")
         for name, value in (("id_prefix", "WI"), ("spec_dir", "docs/spec"), ("skill_path", "docs/dev/skills/expense-approvals-dev"), ("engineer_edits", "allowed")):
             text = text.replace("{{" + name + "}}", value)
-        (skill / "scripts" / "check_context.py").write_text(text, encoding="utf-8")
+        (skill / "scripts" / "check_context.py").write_bytes((text).encode("utf-8"))
 
 
 class ParserTests(unittest.TestCase):
@@ -194,7 +194,7 @@ class IssueBodyTests(unittest.TestCase):
 
     def body(self, block):
         plan_path = self.root / "docs" / "spec" / "plan.yaml"
-        plan_path.write_text(WORKING_PLAN.read_text(encoding="utf-8"), encoding="utf-8")
+        plan_path.write_bytes((WORKING_PLAN.read_text(encoding="utf-8")).encode("utf-8"))
         if block:
             with_clarification(plan_path, block)
         plan, problems = L.load_plan(plan_path, self.root)
@@ -221,7 +221,7 @@ class IssueBodyTests(unittest.TestCase):
 
     def test_the_offline_show_body_prints_the_line(self):
         plan_path = self.root / "docs" / "spec" / "plan.yaml"
-        plan_path.write_text(WORKING_PLAN.read_text(encoding="utf-8"), encoding="utf-8")
+        plan_path.write_bytes((WORKING_PLAN.read_text(encoding="utf-8")).encode("utf-8"))
         with_clarification(plan_path)
         import release_fixture as F
         code, out, err = F.run(GS.run, ["--root", str(self.root), "--offline", "--show-body", "3"])

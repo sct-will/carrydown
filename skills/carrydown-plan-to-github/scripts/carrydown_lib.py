@@ -9,6 +9,7 @@ Contents
 This module is imported by the other scripts. It is not run on its own.
 """
 import datetime as _dt
+import errno
 import json
 import os
 import re
@@ -427,16 +428,23 @@ def inside(root, path, what="output"):
     return target
 
 
+def write_lf(path, text):
+    """Write text as UTF-8 with LF line endings on every platform. Path.write_text uses the
+    platform's line ending, CRLF on Windows, and only takes newline= from Python 3.10."""
+    with open(str(path), "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(text)
+
+
 def write_text(path, text):
-    """Write a UTF-8 text file, creating its folder. A path that cannot be written stops the script
-    with a one-line message instead of a traceback."""
+    """Write a UTF-8 text file with LF line endings, creating its folder. A path that cannot be
+    written stops the script with a one-line message instead of a traceback."""
     path = Path(path)
     try:
         if path.exists() and not path.is_file():
             # opening a named pipe for writing waits for a reader, so it is refused, as is a folder
             die(f"cannot write {path}: it is {'a folder' if path.is_dir() else 'not a regular file'}. Move it out of the way, then run this again")
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text, encoding="utf-8")
+        write_lf(path, text)
     except OSError as e:
         die(f"cannot write {path}: {e.strerror or e}. Check that the folder exists and that you may write to it")
 
@@ -2246,9 +2254,13 @@ def section_text(spec, *names):
 def say(msg=""):
     try:
         print(msg, flush=True)
-    except BrokenPipeError:
-        # The reader closed the pipe, as `| head` does. Stop quietly: send the rest of the
-        # output to the null device so the exit flush raises nothing, then exit.
+    except OSError as e:
+        # The reader closed the pipe, as `| head` does. POSIX raises BrokenPipeError (EPIPE).
+        # Windows raises OSError with EINVAL. Any other error is real and is raised.
+        if not isinstance(e, BrokenPipeError) and e.errno not in (errno.EPIPE, errno.EINVAL):
+            raise
+        # Stop quietly: send the rest of the output to the null device so the exit flush
+        # raises nothing, then exit.
         try:
             os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
         except (OSError, ValueError):

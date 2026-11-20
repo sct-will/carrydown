@@ -173,7 +173,7 @@ class PrepareTests(CheckpointCase):
     def test_the_id_changes_with_a_rendering_or_the_plan_digest(self):
         first = self.prepare(apply=False)["id"]
         changed = self.ground / "architecture.md"
-        changed.write_text(changed.read_text(encoding="utf-8") + "\nOne more rule.\n", encoding="utf-8")
+        changed.write_bytes((changed.read_text(encoding="utf-8") + "\nOne more rule.\n").encode("utf-8"))
         self.assertNotEqual(self.prepare(apply=False)["id"], first)
         other = dict(self.descriptor, plan_sha256=sha(b"another plan"))
         self.assertNotEqual(self.prepare(apply=False, descriptor=other)["id"], self.prepare(apply=False)["id"])
@@ -223,7 +223,7 @@ class PrepareTests(CheckpointCase):
         e = self.problem(W.checkpoint_prepare, self.root, self.workspace, [self.ground / "architecture.md"], self.descriptor, apply=True)
         self.assertIn("company-governance", e.message)
         stray = self.ground / "stray.md"
-        stray.write_text(self.files[0].read_text(encoding="utf-8"), encoding="utf-8")
+        stray.write_bytes((self.files[0].read_text(encoding="utf-8")).encode("utf-8"))
         e = self.problem(W.checkpoint_prepare, self.root, self.workspace, self.files + [stray], self.descriptor, apply=True)
         self.assertEqual(e.code, "checkpoint-invalid")
 
@@ -307,10 +307,10 @@ class CommitTests(CheckpointCase):
     def test_people_sources_retention_and_workspace_yaml_never_enter_the_commit(self):
         (self.workspace / "sources").mkdir(exist_ok=True)
         (self.workspace / "sources" / "architecture.docx").write_bytes(b"raw original")
-        (self.workspace / ".env").write_text("TOKEN=secret\n", encoding="utf-8")
+        (self.workspace / ".env").write_bytes(("TOKEN=secret\n").encode("utf-8"))
         (self.workspace / "drafts").mkdir(exist_ok=True)
-        (self.workspace / "drafts" / "plan.yaml").write_text("people: []\n", encoding="utf-8")
-        (self.workspace / "people.yaml").write_text("people:\n  - id: tamsin\n    name: \"Tamsin Secret\"\n", encoding="utf-8")
+        (self.workspace / "drafts" / "plan.yaml").write_bytes(("people: []\n").encode("utf-8"))
+        (self.workspace / "people.yaml").write_bytes(("people:\n  - id: tamsin\n    name: \"Tamsin Secret\"\n").encode("utf-8"))
         cid, commit = self.committed()
         names = self.ref_tree()
         for bad in ("people.yaml", "retention.yaml", "workspace.yaml", ".env", "drafts/plan.yaml", "sources/architecture.docx"):
@@ -322,7 +322,7 @@ class CommitTests(CheckpointCase):
 
     def test_an_unrelated_staged_change_is_refused_and_never_enters_the_checkpoint(self):
         cid = self.prepare()["id"]
-        (self.workspace / "people.yaml").write_text("people:\n  - id: tamsin\n    name: \"Tamsin Secret\"\n", encoding="utf-8")
+        (self.workspace / "people.yaml").write_bytes(("people:\n  - id: tamsin\n    name: \"Tamsin Secret\"\n").encode("utf-8"))
         self.assertEqual(self.git("add", "people.yaml").returncode, 0)
         e = self.problem(W.checkpoint_commit, self.workspace, cid, apply=True, root=self.root)
         self.assertEqual(e.code, "checkpoint-staged-changes")
@@ -366,7 +366,7 @@ class CommitTests(CheckpointCase):
         self.assertEqual(e.code, "checkpoint-invalid")
         cid = self.prepare()["id"]
         copy = self.workspace / "renderings" / "reviewed" / "architecture" / "architecture.md"
-        copy.write_text(copy.read_text(encoding="utf-8") + "edited\n", encoding="utf-8")
+        copy.write_bytes((copy.read_text(encoding="utf-8") + "edited\n").encode("utf-8"))
         e = self.problem(W.checkpoint_commit, self.workspace, cid, apply=True)
         self.assertEqual(e.code, "checkpoint-mismatch")
         self.assertIsNone(self.ref_tree())
@@ -376,7 +376,7 @@ class CommitTests(CheckpointCase):
         meta_path = self.workspace / "drafts" / "checkpoints" / cid / "checkpoint.json"
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
         meta["files"].append({"path": "people.yaml", "sha256": sha(b"x" * 3)})
-        meta_path.write_text(json.dumps(meta), encoding="utf-8")
+        meta_path.write_bytes((json.dumps(meta)).encode("utf-8"))
         e = self.problem(W.checkpoint_commit, self.workspace, cid, apply=True)
         self.assertEqual(e.code, "checkpoint-path-refused")
         self.assertIsNone(self.ref_tree())
@@ -391,7 +391,7 @@ class CommitTests(CheckpointCase):
     def test_a_second_checkpoint_chains_and_the_first_still_reads_its_own_text(self):
         first, first_commit = self.committed()
         reviewed = self.ground / "architecture.md"
-        reviewed.write_text(reviewed.read_text(encoding="utf-8") + "\n## 99. New\n\nA new obligation.\n", encoding="utf-8")
+        reviewed.write_bytes((reviewed.read_text(encoding="utf-8") + "\n## 99. New\n\nA new obligation.\n").encode("utf-8"))
         second = self.prepare(descriptor=dict(self.descriptor, plan_sha256=sha(b"later plan")))["id"]
         self.assertNotEqual(first, second)
         result = W.checkpoint_commit(self.workspace, second, apply=True)
@@ -423,7 +423,7 @@ class ReadBackAndBindTests(CheckpointCase):
         cid, _ = self.committed()
         copy = self.workspace / "renderings" / "reviewed" / "architecture" / "architecture.md"
         original = (self.ground / "architecture.md").read_text(encoding="utf-8")
-        copy.write_text("tampered\n", encoding="utf-8")
+        copy.write_bytes(("tampered\n").encode("utf-8"))
         data = W.checkpoint_read(self.workspace, cid)
         self.assertEqual(data["renderings"]["architecture/architecture.md"], original)
         self.assertEqual(data["working_copy_differs"], ["renderings/reviewed/architecture/architecture.md"])
@@ -431,7 +431,7 @@ class ReadBackAndBindTests(CheckpointCase):
     def test_a_tampered_working_file_is_detected_when_the_working_copy_is_checked(self):
         cid, _ = self.committed()
         copy = self.workspace / "renderings" / "reviewed" / "architecture" / "architecture.md"
-        copy.write_text("tampered\n", encoding="utf-8")
+        copy.write_bytes(("tampered\n").encode("utf-8"))
         e = self.problem(W.checkpoint_read, self.workspace, cid, check_working=True)
         self.assertEqual(e.code, "checkpoint-mismatch")
         self.assertEqual(W.checkpoint_verify(self.workspace, cid, check_working=True), "checkpoint-mismatch")
@@ -449,7 +449,7 @@ class ReadBackAndBindTests(CheckpointCase):
         forged = plain_git(self.workspace, "commit-tree", tree, "-m", "forged").stdout.decode().strip()
         index.unlink()
         path = self.workspace / "workspace.yaml"
-        path.write_text(path.read_text(encoding="utf-8").replace(commit, forged), encoding="utf-8")
+        path.write_bytes((path.read_text(encoding="utf-8").replace(commit, forged)).encode("utf-8"))
         return forged
 
     def test_a_commit_whose_content_was_replaced_is_a_mismatch(self):
@@ -463,15 +463,15 @@ class ReadBackAndBindTests(CheckpointCase):
         cid, commit = self.committed()
         path = self.workspace / "workspace.yaml"
         recorded = sha((self.ground / "architecture.md").read_bytes())
-        path.write_text(path.read_text(encoding="utf-8").replace(recorded, "0" * 64), encoding="utf-8")
+        path.write_bytes((path.read_text(encoding="utf-8").replace(recorded, "0" * 64)).encode("utf-8"))
         self.assertEqual(W.checkpoint_verify(self.workspace, cid), "checkpoint-mismatch")
-        path.write_text(path.read_text(encoding="utf-8").replace("0" * 64, recorded).replace(PLAN_SHA, "1" * 64), encoding="utf-8")
+        path.write_bytes((path.read_text(encoding="utf-8").replace("0" * 64, recorded).replace(PLAN_SHA, "1" * 64)).encode("utf-8"))
         self.assertEqual(W.checkpoint_verify(self.workspace, cid), "checkpoint-mismatch")
 
     def test_a_commit_that_is_gone_is_missing(self):
         cid, commit = self.committed()
         path = self.workspace / "workspace.yaml"
-        path.write_text(path.read_text(encoding="utf-8").replace(commit, "e" * 40), encoding="utf-8")
+        path.write_bytes((path.read_text(encoding="utf-8").replace(commit, "e" * 40)).encode("utf-8"))
         e = self.problem(W.checkpoint_read, self.workspace, cid)
         self.assertEqual(e.code, "checkpoint-missing")
         self.assertIn("Review the current sources", e.message)
@@ -536,7 +536,7 @@ class ReadBackAndBindTests(CheckpointCase):
 class CommandAndReportTests(CheckpointCase):
     def write_descriptor(self):
         path = Path(self.temp.name) / "descriptor.json"
-        path.write_text(json.dumps(self.descriptor), encoding="utf-8")
+        path.write_bytes((json.dumps(self.descriptor)).encode("utf-8"))
         return path
 
     def args(self, *more):
@@ -608,7 +608,7 @@ class CommandAndReportTests(CheckpointCase):
     def test_status_and_doctor_show_a_checkpoint_that_no_longer_verifies(self):
         cid, commit = self.committed()
         path = self.workspace / "workspace.yaml"
-        path.write_text(path.read_text(encoding="utf-8").replace(commit, "e" * 40), encoding="utf-8")
+        path.write_bytes((path.read_text(encoding="utf-8").replace(commit, "e" * 40)).encode("utf-8"))
         code, out, err = run_main(["status", "--root", str(self.root)])
         self.assertIn("commit does NOT verify: checkpoint-missing", out)
         code, doc, err = run_main(["doctor", "--root", str(self.root)])
@@ -619,7 +619,7 @@ class CommandAndReportTests(CheckpointCase):
 
     def test_an_unreadable_record_is_reported_and_not_hidden_as_no_checkpoint(self):
         path = self.workspace / "workspace.yaml"
-        path.write_text(path.read_text(encoding="utf-8") + "checkpoints: nonsense\n", encoding="utf-8")
+        path.write_bytes((path.read_text(encoding="utf-8") + "checkpoints: nonsense\n").encode("utf-8"))
         row = {name: (level, detail) for level, name, detail in W.doctor_rows(self.root)}["checkpoints"]
         self.assertEqual(row[0], "FAIL")
 
@@ -632,7 +632,7 @@ class RetentionTextTests(CheckpointCase):
         self.assertIn("Reconciliation keeps earlier reviewed renderings privately", retention["limits"])
         self.assertIn("does not erase rendering history, backups or earlier copies", retention["limits"])
         self.assertTrue(W.RETENTION_LIMITS.startswith("Deleting files from this workspace does not remove them"))
-        (self.workspace / "retention.yaml").write_text(W.retention_yaml_text("delete-after-release"), encoding="utf-8")
+        (self.workspace / "retention.yaml").write_bytes((W.retention_yaml_text("delete-after-release")).encode("utf-8"))
         (self.workspace / "sources").mkdir(exist_ok=True)
         (self.workspace / "sources" / "a.docx").write_bytes(b"x")
         lines = W.apply_retention(self.workspace, "r" * 8, False)

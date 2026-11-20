@@ -74,6 +74,7 @@ os.environ["CARRYDOWN_GITHUB_TOKEN"] = "ghp_" + "Z" * 36
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "scripts"))
 import mockgh  # noqa: E402
+import carrydown_lib as L  # noqa: E402
 import github_client as G  # noqa: E402
 import github_project as GP  # noqa: E402
 import github_sync as GS  # noqa: E402
@@ -277,7 +278,7 @@ def scenario_tokenfile():
     rc, out = call(GT.main, ["--from-file", str(src), "--token-file", str(dest), "--delete-after", "--repo", "o/r"])
     check(rc == 0 and not src.exists(), "--delete-after deletes the file")
     n = len(M.log)
-    src.write_text("password123456789012345\n", encoding="utf-8")
+    L.write_lf(src, "password123456789012345\n")
     rc, out = call(GT.main, ["--from-file", str(src), "--token-file", str(dest)])
     check(rc == 2 and "that is not a GitHub personal access token (it starts with ghp_ or github_pat_). Nothing was sent." in out,
           "text that is not a token is refused")
@@ -295,7 +296,7 @@ def scenario_tokenenv():
     check(bool(M.auth) and M.auth[-1] == "Bearer " + env_token, "the token sent is the one from CARRYDOWN_GITHUB_TOKEN")
     check(env_token not in out, "the token is not printed")
     token_file = Path(TMP) / "explicit_token"
-    token_file.write_text(file_token + "\n", encoding="utf-8")
+    L.write_lf(token_file, file_token + "\n")
     token_file.chmod(0o600)
     rc, out = call(GT.main, ["--check", "--token-file", str(token_file)])
     check(rc == 0 and M.auth[-1] == "Bearer " + file_token, f"--token-file wins over CARRYDOWN_GITHUB_TOKEN, as in the GitHub scripts (got {rc})")
@@ -337,7 +338,7 @@ def scenario_tokenrules():
         return out
 
     loose = d / "loose"
-    loose.write_text(good + "\n", encoding="utf-8")
+    L.write_lf(loose, good + "\n")
     loose.chmod(0o644)
     if os.name == "posix":
         out = refused(["--check", "--token-file", str(loose)], f"Fix: chmod 600 {loose}", "a token file others can read is refused")
@@ -364,7 +365,7 @@ def scenario_tokenrules():
         return
     # storing: never through a symbolic link, only new folders are made private, no traceback on a folder that cannot be written
     target = d / "elsewhere"
-    target.write_text("keep\n", encoding="utf-8")
+    L.write_lf(target, "keep\n")
     link = d / "link"
     link.symlink_to(target)
     feed(good + "\n")
@@ -490,7 +491,7 @@ def scenario_board():
     proj = Path(TMP) / "moved"
     shutil.copytree(SAMPLE, proj)
     plan = proj / "docs/spec/plan.yaml"
-    plan.write_text(plan.read_text(encoding="utf-8").replace("    end: 2027-04-23\n", "    end: 2027-04-30\n"), encoding="utf-8")
+    L.write_lf(plan, plan.read_text(encoding="utf-8").replace("    end: 2027-04-23\n", "    end: 2027-04-30\n"))
     rc, out = board("--apply", root=str(proj))
     check(rc == 1 and "iterations differ from the plan" in out and "updateProjectV2Field" not in M.gql, "changed dates fail verification until --reconfigure-iterations is approved")
     rc, out = board("--apply", "--reconfigure-iterations", root=str(proj))
@@ -664,12 +665,12 @@ def scenario_titleformat():
     text = plan.read_text(encoding="utf-8")
     for fmt, want in (('"{id} {nope}"', "{nope}"), ('"{0}{"', "not a valid title format"), ('"{id"', "not a valid title format"),
                       ('"}{"', "not a valid title format"), ('"{id:abc}"', "{id:abc}"), ('"{id.x}"', "{id.x}"), ('"{label}"', "must hold {id} or {lower}")):
-        plan.write_text(text.replace('title_format: "{id} {label}"', "title_format: " + fmt), encoding="utf-8")
+        L.write_lf(plan, text.replace('title_format: "{id} {label}"', "title_format: " + fmt))
         n = len(M.log)
         rc, out = call(GS.run, ["--root", str(proj), "--repo", "o/r", "--skip-check", "--apply", "--create-epic"])
         check(rc == 1 and want in out and "Traceback" not in out and "unhandled" not in str(rc) and len(M.log) == n and not M.issues,
               f"title_format {fmt}: a plan problem, nothing sent (got {rc}: {out.strip()[:120]})")
-    plan.write_text(text.replace('title_format: "{id} {label}"', 'title_format: "[{lower}] {label} {{x}}"'), encoding="utf-8")
+    L.write_lf(plan, text.replace('title_format: "{id} {label}"', 'title_format: "[{lower}] {label} {{x}}"'))
     rc, out = call(GS.run, ["--root", str(proj), "--repo", "o/r", "--skip-check", "--apply", "--create-epic"])
     check(rc == 0 and "[wi-01] Service scaffold, flag and API contract {x}" in titles(), f"a valid format with doubled braces works (got {rc})")
 
@@ -677,7 +678,7 @@ def scenario_titleformat():
 def scenario_tokenloose():
     src = Path(TMP) / "loose-token.txt"
     dest = Path(TMP) / "store2" / "github_token"
-    src.write_text("ghp_" + "L" * 36 + "\n", encoding="utf-8")
+    L.write_lf(src, "ghp_" + "L" * 36 + "\n")
     src.chmod(0o644)
     rc, out = call(GT.main, ["--from-file", str(src), "--token-file", str(dest)])
     warn = [ln for ln in out.splitlines() if ln.startswith("warning:")]

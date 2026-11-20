@@ -135,7 +135,7 @@ python3 -m unittest discover -s tests -v
 python3 scripts/sync_skill_assets.py --check
 ```
 
-The suite uses separate temporary projects and mocked REST and GraphQL responses. Continuous integration runs Python 3.9 and the current stable Python on Ubuntu and macOS. Tests cover path separators, Unicode, newlines, temporary files, pagination, identity decisions, reconciliation, permission failures, retries and token retention.
+The suite uses separate temporary projects and mocked REST and GraphQL responses. Continuous integration runs the self test with Python 3.9 and the current stable Python on Ubuntu, macOS and Windows, and runs this suite on Ubuntu and macOS. The suite has not been ported to Windows yet. Tests cover path separators, Unicode, newlines, temporary files, pagination, identity decisions, reconciliation, permission failures, retries and token retention.
 
 Live GitHub mutation tests remain optional. A plan owner may approve them in a disposable private repository after reviewing the exact dry run. Keep the token outside the project. The default suite never runs them.
 

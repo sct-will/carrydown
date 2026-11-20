@@ -45,9 +45,9 @@ class PlanRecoveryTests(unittest.TestCase):
             refs = item.pop("source_refs", None)
             if refs:
                 item["ground_truth"] = "Sections " + refs[0]["sections"]
-        self.path.write_text(R.dump(self.raw), encoding="utf-8")
+        self.path.write_bytes((R.dump(self.raw)).encode("utf-8"))
         for spec in (self.root / "docs/spec").glob("m*/wi-*.md"):    # and the specifications name no source in their Ground truth row
-            spec.write_text(spec.read_text(encoding="utf-8").replace("| Ground truth | Architecture document: Sections", "| Ground truth | Sections"), encoding="utf-8")
+            spec.write_bytes((spec.read_text(encoding="utf-8").replace("| Ground truth | Architecture document: Sections", "| Ground truth | Sections")).encode("utf-8"))
 
     def recover(self, raw=None, decisions=None):
         return R.recover(raw or self.raw, self.root, decisions)
@@ -57,7 +57,7 @@ class PlanRecoveryTests(unittest.TestCase):
             with self.subTest(group=group, key=key):
                 data = copy.deepcopy(self.raw)
                 data[group][1][key] = data[group][0][key]
-                self.path.write_text(R.dump(data), encoding="utf-8")
+                self.path.write_bytes((R.dump(data)).encode("utf-8"))
                 _, problems = L.load_plan(self.path, self.root)
                 self.assertTrue(any("duplicate" in p for p in problems), problems)
 
@@ -152,7 +152,7 @@ class PlanRecoveryTests(unittest.TestCase):
 
     def test_specification_prose_cannot_replace_plan_refs(self):
         self.raw["items"][0]["ground_truth"] = ""
-        self.path.write_text(R.dump(self.raw), encoding="utf-8")
+        self.path.write_bytes((R.dump(self.raw)).encode("utf-8"))
         _, problems = L.load_plan(self.path, self.root)
         self.assertTrue(any("plan-level source_refs" in p for p in problems))
         result, _, questions = self.recover()
@@ -174,7 +174,7 @@ class PlanRecoveryTests(unittest.TestCase):
         other = copy.deepcopy(self.raw["sources"][0])
         other.update(id="governance", name="Company governance", path="docs/ground-truth/governance.md")
         self.raw["sources"].append(other)
-        (self.root / other["path"]).write_text("# 1 Rules\n", encoding="utf-8")
+        (self.root / other["path"]).write_bytes(("# 1 Rules\n").encode("utf-8"))
         self.raw["items"][0]["ground_truth"] = ""
         _, _, questions = self.recover()
         question = next(q for q in questions if q["path"] == "items.1.source_refs")
@@ -296,7 +296,7 @@ class TokenRetentionTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.source = Path(self.temp.name) / "explicit-source.txt"
         # Synthetic test data never leaves the mocked client.
-        self.source.write_text("ghp_" + "a" * 36, encoding="utf-8")
+        self.source.write_bytes(("ghp_" + "a" * 36).encode("utf-8"))
         self.dest = Path(self.temp.name) / "private" / "stored"
         self.argv = ["--from-file", str(self.source), "--token-file", str(self.dest), "--repo", "o/r", "--delete-after"]
 
@@ -336,7 +336,7 @@ class TokenRetentionTests(unittest.TestCase):
         def checked(*args, **kwargs):
             old = self.source.with_suffix(".old")
             self.source.rename(old)
-            self.source.write_text("replacement", encoding="utf-8")
+            self.source.write_bytes(("replacement").encode("utf-8"))
             return 0
         with patch.object(G, "GitHub", return_value=Mock(whoami=Mock(return_value={"login": "person"}))), patch.object(T, "check", side_effect=checked):
             self.assertEqual(quiet(T.main, self.argv), 1)
@@ -369,13 +369,13 @@ class ProseDiscoveryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="carrydown-prose-regression-") as tmp:
             root = Path(tmp)
             subprocess.run(["git", "init", str(root)], capture_output=True, check=True)
-            (root / ".gitignore").write_text("scratch/\n", encoding="utf-8")
-            (root / "tracked.md").write_text("Clean.\n", encoding="utf-8")
+            (root / ".gitignore").write_bytes(("scratch/\n").encode("utf-8"))
+            (root / "tracked.md").write_bytes(("Clean.\n").encode("utf-8"))
             subprocess.run(["git", "-C", str(root), "add", "tracked.md", ".gitignore"], check=True)
-            (root / "new.md").write_text("New.\r\n", encoding="utf-8")
+            (root / "new.md").write_bytes(("New.\r\n").encode("utf-8"))
             (root / "scratch").mkdir()
             ignored = root / "scratch/ignored.md"
-            ignored.write_text(chr(0x2014), encoding="utf-8")
+            ignored.write_bytes((chr(0x2014)).encode("utf-8"))
             with patch.object(LP, "ROOT", root):
                 files = list(LP.files([]))
                 self.assertEqual(files, [root / "new.md", root / "tracked.md"])
@@ -390,7 +390,7 @@ class ProseDiscoveryTests(unittest.TestCase):
             for name in ("z.md", "a.md", ".venv/a.md", "build/a.md"):
                 file = root / name
                 file.parent.mkdir(exist_ok=True)
-                file.write_text("Clean", encoding="utf-8")
+                file.write_bytes(("Clean").encode("utf-8"))
             with patch.object(LP, "ROOT", root):
                 self.assertEqual([p.name for p in LP.files([])], ["a.md", "z.md"])
 

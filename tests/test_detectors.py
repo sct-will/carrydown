@@ -49,7 +49,7 @@ class DetectorTests(unittest.TestCase):
     def write(self, rel, text, base=None):
         path = (base or self.snap) / rel
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text, encoding="utf-8")
+        path.write_bytes((text).encode("utf-8"))
         return rel
 
     def fixture_root(self):
@@ -173,7 +173,7 @@ class DetectorTests(unittest.TestCase):
             self.assertEqual([r[1] for r in resolution.refused], ["schema-invalid"])
 
     def test_org_phrases_are_found_in_any_case_and_resolve_by_the_phrase_digest(self):
-        (self.workspace / "phrases.txt").write_text("# the organization's own phrases\nProject Nightingale\n\n", encoding="utf-8")
+        (self.workspace / "phrases.txt").write_bytes(("# the organization's own phrases\nProject Nightingale\n\n").encode("utf-8"))
         self.write("repo/docs/spec/readme.md", "# Plan\n\nThis is about PROJECT nightingale in the second quarter.\n")
         found = D.run_all(self.fixture_root(), self.workspace, {"repo/docs/spec/readme.md": self.snap / "repo/docs/spec/readme.md"})
         self.assertEqual([(f[0], f[1], f[2]) for f in found], [("org_phrases", "organization-phrase", "repo/docs/spec/readme.md:3")])
@@ -248,7 +248,7 @@ class DetectorTests(unittest.TestCase):
     def test_the_pointer_file_names_the_workspace_to_hide(self):
         proj = self.base / "proj"
         (proj / ".carrydown").mkdir(parents=True)
-        (proj / ".carrydown" / "local.yaml").write_text("workspace: /elsewhere/secret-workspace\n", encoding="utf-8")
+        (proj / ".carrydown" / "local.yaml").write_bytes(("workspace: /elsewhere/secret-workspace\n").encode("utf-8"))
         hits = D.private_paths({"a.md": "Path: /elsewhere/secret-workspace/people.yaml\n"}, None, proj)
         self.assertEqual([tuple(h) for h in hits], [("workspace-path", "a.md:1")])
 
@@ -277,7 +277,7 @@ class DetectorTests(unittest.TestCase):
         proj = self.base / "sample"
         copy_sample(proj)
         spec = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
-        spec.write_text(spec.read_text(encoding="utf-8") + f"\nKey: {FAKE_TOKEN}\n", encoding="utf-8")
+        spec.write_bytes((spec.read_text(encoding="utf-8") + f"\nKey: {FAKE_TOKEN}\n").encode("utf-8"))
         code, out = self.run_cli("--root", proj)
         self.assertEqual(code, 1)
         self.assertRegex(out, r"detector:credentials:github-token at docs/spec/m1-submit-report/wi-01-service-scaffold\.md:\d+")
@@ -287,7 +287,7 @@ class DetectorTests(unittest.TestCase):
         code, out = self.run_cli("--root", SAMPLE, "--request", self.base / "missing.json")
         self.assertEqual(code, 2)
         request = self.base / "request.json"
-        request.write_text(json.dumps({"detector_exceptions": []}), encoding="utf-8")
+        request.write_bytes((json.dumps({"detector_exceptions": []})).encode("utf-8"))
         self.assertEqual(self.run_cli("--root", SAMPLE, "--request", request)[0], 0)
 
 

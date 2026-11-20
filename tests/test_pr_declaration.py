@@ -83,7 +83,7 @@ class DeclarationTests(Base):
         text = plan.read_text(encoding="utf-8")
         match = re.search(r"^  - id: 3\n", text, re.M)
         self.assertIsNotNone(match)
-        plan.write_text(text[:match.end()] + "    restricted: true\n" + text[match.end():], encoding="utf-8")
+        plan.write_bytes((text[:match.end()] + "    restricted: true\n" + text[match.end():]).encode("utf-8"))
         code, out, err = self.declare("Work items: WI-03\n", root=project)
         self.assertEqual(code, 1, out + err)
         self.assertIn("WI-03 is not a work item of this plan", out)
@@ -91,7 +91,7 @@ class DeclarationTests(Base):
     def test_a_declared_item_must_pass_the_released_checks(self):
         project = copy_sample(self.base / "proj", working=False)
         for path in (project / "docs" / "context").glob("wi-03.bundle.json"):
-            path.write_text(path.read_text(encoding="utf-8") + " ", encoding="utf-8")
+            path.write_bytes((path.read_text(encoding="utf-8") + " ").encode("utf-8"))
         code, out, _ = self.declare("Work items: WI-03, WI-04\n", root=project)
         self.assertEqual(code, 1)
         self.assertIn("WI-03 ", out)
@@ -317,7 +317,7 @@ class ScaffoldCiTests(Base):
             project = self.project()
             (project / ".github").mkdir()
             mine = "My own template.\n"
-            (project / ".github" / "pull_request_template.md").write_text(mine, encoding="utf-8")
+            (project / ".github" / "pull_request_template.md").write_bytes((mine).encode("utf-8"))
             code, out, err = run(SCAFFOLD, "--root", project, "--ci", "--apply", "--allow-no-git", *force, home=self.base)
             self.assertEqual(code, 0, out + err)
             self.assertEqual((project / ".github" / "pull_request_template.md").read_text(encoding="utf-8"), mine)
@@ -327,7 +327,7 @@ class ScaffoldCiTests(Base):
     def test_a_template_in_another_place_github_reads_is_kept_too(self):
         project = self.project()
         (project / "docs").mkdir(exist_ok=True)
-        (project / "docs" / "pull_request_template.md").write_text("Mine.\n", encoding="utf-8")
+        (project / "docs" / "pull_request_template.md").write_bytes(("Mine.\n").encode("utf-8"))
         code, out, err = run(SCAFFOLD, "--root", project, "--ci", "--apply", "--allow-no-git", home=self.base)
         self.assertEqual(code, 0, out + err)
         self.assertFalse((project / ".github" / "pull_request_template.md").exists())

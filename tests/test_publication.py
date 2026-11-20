@@ -433,7 +433,7 @@ class SyncTests(PubCase):
 
     def test_an_approved_assignee_login_is_published_and_one_that_does_not_resolve_stops_the_run(self):
         self.project()
-        (self.ws / "people.yaml").write_text((SAMPLE / "people.yaml").read_text(encoding="utf-8").replace("github: \"\"", 'github: "tamsin-gh"', 1), encoding="utf-8")
+        (self.ws / "people.yaml").write_bytes(((SAMPLE / "people.yaml").read_text(encoding="utf-8").replace("github: \"\"", 'github: "tamsin-gh"', 1)).encode("utf-8"))
         text = (self.ws / "people.yaml").read_text(encoding="utf-8")
         self.assertIn("tamsin-gh", text, "the fixture people file has no github field to fill")
         self.assertEqual(self.yp.prepare("--assignees", "yes")[0], 0)
@@ -454,7 +454,7 @@ class SyncTests(PubCase):
         self.assertEqual(self.sync("--apply")[0], 0)
         numbers = {i["title"]: i["number"] for i in mockgh.S.issues}
         spec = self.root / "docs/spec/m2-route-to-approvers/wi-03-routing-engine.md"
-        spec.write_text(spec.read_text(encoding="utf-8").replace("## Acceptance criteria\n", "## Acceptance criteria\n\n- A replacement release changed this criterion.\n", 1), encoding="utf-8")
+        spec.write_bytes((spec.read_text(encoding="utf-8").replace("## Acceptance criteria\n", "## Acceptance criteria\n\n- A replacement release changed this criterion.\n", 1)).encode("utf-8"))
         self.assertEqual(self.yp.prepare(nonce=None, created=None)[0], 0)
         second = self.yp.request_id
         self.assertNotEqual(first, second)

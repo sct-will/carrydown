@@ -121,7 +121,7 @@ def first_line(text):
 
 def pretend(tmp, system, machine, version):
     stub = Path(tmp) / "fake_python.py"
-    stub.write_text(STUB, encoding="utf-8")
+    stub.write_bytes((STUB).encode("utf-8"))
     return run([PY, stub, system, machine, version, ROOT / "scripts" / "check_python.py"])
 
 

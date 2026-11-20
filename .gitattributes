@@ -1,0 +1,18 @@
+# Check out every text file with LF line endings on every platform.
+# The sample's bundles are identified by the SHA-256 of their bytes, and the
+# self test compares generated files byte for byte with the committed ones.
+# A CRLF checkout on Windows would break both.
+* text=auto eol=lf
+
+# Binary files are never converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.pdf binary
+*.docx binary
+*.zip binary
+*.woff binary
+*.woff2 binary

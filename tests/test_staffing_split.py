@@ -72,7 +72,7 @@ class WithTemp(unittest.TestCase):
 
     def people_file(self, text, name="people.yaml"):
         path = self.base / name
-        path.write_text(text, encoding="utf-8")
+        path.write_bytes((text).encode("utf-8"))
         return path
 
     def variant(self, **swaps):
@@ -166,7 +166,7 @@ class OverlayTests(WithTemp):
         ws = self.base / "ws"
         ws.mkdir()
         (root / ".carrydown").mkdir()
-        (root / ".carrydown" / "local.yaml").write_text(f"workspace: {ws}\n", encoding="utf-8")
+        (root / ".carrydown" / "local.yaml").write_bytes((f"workspace: {ws}\n").encode("utf-8"))
         plan, _ = L.load_plan_with_people(root / "docs/spec/plan.yaml", root)
         self.assertIsNone(plan["_people_overlay"])           # a workspace with no people.yaml gives no overlay
         shutil.copyfile(PEOPLE, ws / "people.yaml")
@@ -180,7 +180,7 @@ class OverlayTests(WithTemp):
         inside.mkdir()
         shutil.copyfile(PEOPLE, inside / "people.yaml")
         (root / ".carrydown").mkdir()
-        (root / ".carrydown" / "local.yaml").write_text(f"workspace: {inside}\n", encoding="utf-8")
+        (root / ".carrydown" / "local.yaml").write_bytes((f"workspace: {inside}\n").encode("utf-8"))
         self.assertEqual(L.resolve_people_path(root), (None, "workspace-inside-repository"))
         plan, _ = L.load_plan_with_people(root / "docs/spec/plan.yaml", root)
         self.assertIsNone(plan["_people_overlay"])
@@ -202,7 +202,7 @@ class OverlayTests(WithTemp):
         p0, p1 = legacy.index("people:"), legacy.index("\nmilestones:\n")
         legacy = legacy[:p0] + 'people:\n  - id: tamsin\n    name: "Legacy Person"\n    track: workflow\n  - id: idris\n    name: "Other Person"\n    track: experience\n    allocation: 60\n' + legacy[p1:]
         path = self.base / "legacy.yaml"
-        path.write_text(legacy, encoding="utf-8")
+        path.write_bytes((legacy).encode("utf-8"))
         plan, problems = L.load_plan_with_people(path, SAMPLE, people_path=None)
         self.assertEqual(problems, [])
         self.assertFalse(plan["_modern"])
@@ -268,7 +268,7 @@ class OverlayProblemTests(WithTemp):
     def test_a_placeholder_person_needs_no_entry(self):
         text = PLAN.read_text(encoding="utf-8").replace("  - id: idris\n    track: experience\n", "  - id: idris\n    track: experience\n    derived: true\n", 1)
         path = self.base / "derived-plan.yaml"
-        path.write_text(text, encoding="utf-8")
+        path.write_bytes((text).encode("utf-8"))
         only_tamsin = PEOPLE.read_text(encoding="utf-8")
         only_tamsin = only_tamsin[:only_tamsin.index("  - id: idris")] + only_tamsin[only_tamsin.index("advisors:"):]
         merged, problems = L.load_plan_with_people(path, SAMPLE, people_path=self.people_file(only_tamsin))
@@ -334,7 +334,7 @@ class BannedNamesTests(unittest.TestCase):
         self.addCleanup(shutil.rmtree, str(root), True)
         copy_sample(root / "p")
         spec = root / "p" / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
-        spec.write_text(spec.read_text(encoding="utf-8") + "\nReviewed by Tamsin Hale.\n", encoding="utf-8")
+        spec.write_bytes((spec.read_text(encoding="utf-8") + "\nReviewed by Tamsin Hale.\n").encode("utf-8"))
         code, out, err = check(["--root", root / "p"])
         self.assertEqual(code, 0, out + err)
         code, out, err = check(["--root", root / "p", "--people", PEOPLE])
@@ -391,7 +391,7 @@ class CheckerTests(WithTemp):
     def test_the_labeled_sentence_says_over_where_the_table_says_over(self):
         with tempfile.TemporaryDirectory(prefix="carrydown-load-") as tmp:
             people = Path(tmp) / "people.yaml"
-            people.write_text(PEOPLE.read_text(encoding="utf-8").replace("allocation: 100 ", "allocation: 20  ", 1), encoding="utf-8")
+            people.write_bytes((PEOPLE.read_text(encoding="utf-8").replace("allocation: 100 ", "allocation: 20  ", 1)).encode("utf-8"))
             code, out, err = check(["--root", SAMPLE, "--report", "--people", people])
         sentence = next((ln for ln in out.splitlines() if ln.startswith("  tamsin, 20 percent allocated: ")), None)
         self.assertIsNotNone(sentence, out + err)
@@ -423,7 +423,7 @@ class CheckerTests(WithTemp):
         ws.mkdir()
         shutil.copyfile(PEOPLE, ws / "people.yaml")
         (root / ".carrydown").mkdir()
-        (root / ".carrydown" / "local.yaml").write_text(f"workspace: {ws}\n", encoding="utf-8")
+        (root / ".carrydown" / "local.yaml").write_bytes((f"workspace: {ws}\n").encode("utf-8"))
         code, out, err = check(["--root", root, "--report"])
         self.assertEqual(code, 0, out + err)
         self.assertNotIn(NOTE, out)
@@ -450,7 +450,7 @@ class DownstreamFlagTests(WithTemp):
             self.assertIn(old.replace("__", " "), text)
             text = text.replace(old.replace("__", " "), new, 1)
         path = self.base / "plan-flags.yaml"
-        path.write_text(text, encoding="utf-8")
+        path.write_bytes((text).encode("utf-8"))
         plan, problems = L.load_plan(path, SAMPLE)
         self.assertEqual(problems, [])
         return plan
@@ -505,7 +505,7 @@ class DownstreamFlagTests(WithTemp):
         with_logins = self.people_file(self.variant(**{'github: ""                     # GitHub login for issue assignment. Empty in the sample.': "github: tamsin-login"}))
         on_text = PLAN.read_text(encoding="utf-8").replace("      assignees: false", "      assignees: true")
         on_path = self.base / "assignees-on.yaml"
-        on_path.write_text(on_text, encoding="utf-8")
+        on_path.write_bytes((on_text).encode("utf-8"))
         merged_on, _ = L.load_plan_with_people(on_path, SAMPLE, people_path=with_logins)
         merged_off, _ = L.load_plan_with_people(PLAN, SAMPLE, people_path=with_logins)
         stored_on, _ = L.load_plan(on_path, SAMPLE)

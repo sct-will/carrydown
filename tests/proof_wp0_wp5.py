@@ -129,14 +129,14 @@ def copy_sample(base, name="project", working=True):
 def point_workspace(project, workspace):
     pointer = Path(project) / ".carrydown" / "local.yaml"
     pointer.parent.mkdir(parents=True, exist_ok=True)
-    pointer.write_text(f"workspace: {json.dumps(str(workspace))}\n", encoding="utf-8")
+    pointer.write_bytes((f"workspace: {json.dumps(str(workspace))}\n").encode("utf-8"))
 
 
 def set_answer(plan_path, value):
     text = Path(plan_path).read_text(encoding="utf-8")
     new = re.sub(r"(?m)^(    repo_audience_approved: )\S+", r"\g<1>" + ("true" if value else "false"), text, count=1)
     check(new != text or ("repo_audience_approved: " + ("true" if value else "false")) in text, "no handling block to edit")
-    Path(plan_path).write_text(new, encoding="utf-8")
+    Path(plan_path).write_bytes((new).encode("utf-8"))
 
 
 def files_under(folder):
@@ -393,7 +393,7 @@ def _(base):
     check(m, "no people id in the released plan")
     secret = "Quentin Proofname"
     text = text.replace(m.group(0), m.group(0) + f"    name: {secret}\n", 1)
-    plan.write_text(text, encoding="utf-8")
+    plan.write_bytes((text).encode("utf-8"))
     code, out = run(base, ["check_specs.py", "--root", project, "--view", "released"], cwd=ROOT)
     check(code != 0 and secret not in out, f"exit {code}")
     return line_with(out, f"people:{m.group(1).strip(chr(34))}:name")
@@ -455,7 +455,7 @@ def prepare_sample(base, *flags, logins=False):
         text = (ws / "people.yaml").read_text(encoding="utf-8")
         n = iter(range(1, 100))
         text = re.sub(r'github: ""', lambda m: f'github: "proof-login-{next(n)}"', text)
-        (ws / "people.yaml").write_text(text, encoding="utf-8")
+        (ws / "people.yaml").write_bytes((text).encode("utf-8"))
     code, out = run(base, ["release.py", "prepare", "--root", project, "--repository-id", "4200", "--apply",
                            "--created", "2027-01-20T14:03:00Z", "--nonce", "ab" * 16] + list(flags), cwd=project)
     check(code == 0, out[-500:])
@@ -509,16 +509,16 @@ def seeded_project(base):
     spec_dir = project / "docs" / "spec"
     specs = sorted(spec_dir.rglob("wi-*.md"))
     targets = {"token": specs[0], "home": specs[1], "passage": specs[2]}
-    targets["token"].write_text(targets["token"].read_text(encoding="utf-8") + f"\nDeploy with {FAKE_TOKEN} to staging.\n", encoding="utf-8")
-    targets["home"].write_text(targets["home"].read_text(encoding="utf-8") + f"\nRead the notes in {HOME_PATH} first.\n", encoding="utf-8")
-    targets["passage"].write_text(targets["passage"].read_text(encoding="utf-8") + f"\n{passage}\n", encoding="utf-8")
+    targets["token"].write_bytes((targets["token"].read_text(encoding="utf-8") + f"\nDeploy with {FAKE_TOKEN} to staging.\n").encode("utf-8"))
+    targets["home"].write_bytes((targets["home"].read_text(encoding="utf-8") + f"\nRead the notes in {HOME_PATH} first.\n").encode("utf-8"))
+    targets["passage"].write_bytes((targets["passage"].read_text(encoding="utf-8") + f"\n{passage}\n").encode("utf-8"))
     released = copy_sample(base, "released", working=False)
     plan = (released / "docs" / "spec" / "plan.yaml").read_text(encoding="utf-8")
     m = re.search(r"(?m)^  - id: (\S+)\n    track: \S+\n", plan)
     check(m, "no people row to seed")
     staffed = plan.replace(m.group(0), m.group(0) + "    days_off: [2027-02-22]\n", 1)
     (spec_dir / "released-copy").mkdir()
-    (spec_dir / "released-copy" / "plan.yaml").write_text(staffed, encoding="utf-8")
+    (spec_dir / "released-copy" / "plan.yaml").write_bytes((staffed).encode("utf-8"))
     return project, ws, passage
 
 
@@ -544,12 +544,12 @@ def _(base):
     digest = re.search(r"passage_sha256 ([0-9a-f]{64})", copied)
     check(digest, copied)
     request = Path(base) / "request.json"
-    request.write_text(json.dumps({"detector_exceptions": [
-        {"type": "copied_restricted", "passage_sha256": digest.group(1), "destinations": ["engineering-repo"], "reason": "approved quotation"}]}), encoding="utf-8")
+    request.write_bytes((json.dumps({"detector_exceptions": [
+        {"type": "copied_restricted", "passage_sha256": digest.group(1), "destinations": ["engineering-repo"], "reason": "approved quotation"}]})).encode("utf-8"))
     code, cleared = run(base, ["detectors.py", "--root", project, "--request", request], cwd=ROOT)
     check("copied-passage" not in cleared, cleared[-300:])
-    request.write_text(json.dumps({"detector_exceptions": [
-        {"type": "credentials", "passage_sha256": digest.group(1), "destinations": ["engineering-repo"], "reason": "please"}]}), encoding="utf-8")
+    request.write_bytes((json.dumps({"detector_exceptions": [
+        {"type": "credentials", "passage_sha256": digest.group(1), "destinations": ["engineering-repo"], "reason": "please"}]})).encode("utf-8"))
     code, refused = run(base, ["detectors.py", "--root", project, "--request", request], cwd=ROOT)
     check("credentials:github-token" in refused, "the credential finding went away")
     return f"with exception: {len([x for x in cleared.splitlines() if x.startswith('detector:')])} findings, no copied-passage; credential exception: {line_with(refused, 'exception-not-permitted')}"
@@ -576,7 +576,7 @@ def _(base):
     project = copy_sample(base, working=False)
     code, ok = run(base, ["check_specs.py", "--root", project, "--view", "released"], cwd=ROOT)
     check(code == 0, ok[-300:])
-    (project / "docs" / "spec" / "plan.yaml").write_text("plan_format: 2\nplan_view: released\npeople: [\n", encoding="utf-8")
+    (project / "docs" / "spec" / "plan.yaml").write_bytes(("plan_format: 2\nplan_view: released\npeople: [\n").encode("utf-8"))
     code2, bad = run(base, ["check_specs.py", "--root", project, "--view", "released"], cwd=ROOT)
     check(code2 != 0, f"a malformed plan exited {code2}")
     return f"clean released sample: {line_with(ok, 'with findings') if 'with findings' in ok else last_line(ok)}; malformed plan: exit {code2}"
@@ -611,7 +611,7 @@ def _(base):
     sidecar = clone / "docs" / "context" / "wi-06.bundle.json"
     data = json.loads(sidecar.read_text(encoding="utf-8"))
     dropped = data["obligations"].pop(0)
-    sidecar.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    sidecar.write_bytes((json.dumps(data, indent=2)).encode("utf-8"))
     code, out = run(base, ["check_specs.py", "--root", clone, "--view", "released"], cwd=ROOT)
     check(code != 0, "a dropped obligation passed")
     clone2 = clean_clone(base, "clone2")
@@ -634,8 +634,8 @@ def _(base):
     rows = people.get("people") if isinstance(people, dict) else people
     name = next(p["name"] for p in rows if p.get("name"))
     spec = sorted((project / "docs" / "spec").rglob("wi-*.md"))[0]
-    spec.write_text(spec.read_text(encoding="utf-8") + f"\nAsk {name} about this.\n", encoding="utf-8")
-    (project / "docs" / "spec" / "plan-review.md").write_text(f"# Plan review\n\nReviewed by {name}.\n", encoding="utf-8")
+    spec.write_bytes((spec.read_text(encoding="utf-8") + f"\nAsk {name} about this.\n").encode("utf-8"))
+    (project / "docs" / "spec" / "plan-review.md").write_bytes((f"# Plan review\n\nReviewed by {name}.\n").encode("utf-8"))
     code, out = run(base, ["check_specs.py", "--root", project, "--people", SAMPLE / "people.yaml"], cwd=ROOT)
     hits = [x.strip() for x in out.splitlines() if "person name or handle from the plan at" in x]
     check(code != 0 and len(hits) >= 2, out[-400:])
@@ -688,7 +688,7 @@ def _(base):
     import make_numbered_docx as MD
     project, ws = render_project(base, answer=False)
     plan = project / "docs" / "spec" / "plan.yaml"
-    plan.write_text(plan.read_text(encoding="utf-8").replace("classification: restricted", "classification: repo-readers"), encoding="utf-8")
+    plan.write_bytes((plan.read_text(encoding="utf-8").replace("classification: restricted", "classification: repo-readers")).encode("utf-8"))
     set_answer(plan, True)
     docx = project / "ground-truth" / "marked.docx"
     MD.build(str(docx), "confidential")
@@ -718,7 +718,7 @@ def _(base):
     check(code == 2 and not (project / "docs" / "ground-truth" / "gov.md").exists(), f"exit {code}: {out[-300:]}")
     refusal = last_line(out)
     set_answer(plan, True)
-    plan.write_text(plan.read_text(encoding="utf-8").replace("repo_audience_approved: true", "repo_audience_approved: false"), encoding="utf-8")
+    plan.write_bytes((plan.read_text(encoding="utf-8").replace("repo_audience_approved: true", "repo_audience_approved: false")).encode("utf-8"))
     code, out2 = run(base, ["render_ground_truth.py", docx, "--source-id", "company-governance", "--name", "gov", "--root", project], cwd=project)
     check(code == 0 and (ws / "renderings" / "gov.md").is_file(), f"exit {code}: {out2[-300:]}")
     check(not (project / "docs" / "ground-truth" / "gov.md").exists(), "a copy landed in the repository")
@@ -730,7 +730,7 @@ def _(base):
     import make_numbered_docx as MD
     project, ws = render_project(base, answer=False)
     plan = project / "docs" / "spec" / "plan.yaml"
-    plan.write_text(plan.read_text(encoding="utf-8").replace("classification: restricted", "classification: repo-readers"), encoding="utf-8")
+    plan.write_bytes((plan.read_text(encoding="utf-8").replace("classification: restricted", "classification: repo-readers")).encode("utf-8"))
     set_answer(plan, True)
     docx = project / "ground-truth" / "plain.docx"
     MD.build(str(docx), "style")
@@ -746,7 +746,7 @@ def _(base):
     import make_numbered_docx as MD
     project, ws = render_project(base, answer=False)
     plan = project / "docs" / "spec" / "plan.yaml"
-    plan.write_text(plan.read_text(encoding="utf-8").replace("classification: restricted", "classification: repo-readers"), encoding="utf-8")
+    plan.write_bytes((plan.read_text(encoding="utf-8").replace("classification: restricted", "classification: repo-readers")).encode("utf-8"))
     set_answer(plan, True)
     docx = project / "ground-truth" / "links.docx"
     MD.build(str(docx), "links")
@@ -757,7 +757,7 @@ def _(base):
         check(scheme not in text.split("-->", 1)[1], f"{scheme} survived")
     check("https://" in text, "the web link was dropped")
     md = project / "ground-truth" / "notes.md"
-    md.write_text("# Notes\n\n## 1 Scope\n\nVisible.<!-- a private remark -->\n\n<!-- another -->\n", encoding="utf-8")
+    md.write_bytes(("# Notes\n\n## 1 Scope\n\nVisible.<!-- a private remark -->\n\n<!-- another -->\n").encode("utf-8"))
     code, out2 = run(base, ["render_ground_truth.py", md, "--source-id", "architecture", "--name", "notes", "--root", project], cwd=project)
     check(code == 0, out2[-300:])
     body = (project / "docs" / "ground-truth" / "notes.md").read_text(encoding="utf-8")
@@ -841,7 +841,7 @@ def _(base):
     renderings = Path(base) / "renderings"
     shutil.copytree(str(project / "docs" / "ground-truth"), str(renderings))
     arch = renderings / "architecture.md"
-    arch.write_text(re.sub(r"(?m)^(#+) 3\.5 ", r"\1 3.55 ", arch.read_text(encoding="utf-8")), encoding="utf-8")
+    arch.write_bytes((re.sub(r"(?m)^(#+) 3\.5 ", r"\1 3.55 ", arch.read_text(encoding="utf-8"))).encode("utf-8"))
     code, out = run(base, ["compile_bundles.py", "--root", project, "--renderings", renderings, "--out", Path(base) / "c", "--apply"], cwd=project)
     check(code == 1 and not (Path(base) / "c").exists(), f"exit {code}")
     return line_with(out, "obligation not found: architecture 3.5")
@@ -887,7 +887,7 @@ def _(base):
     check(code == 0, out[-300:])
     shutil.move(str(project / "people.yaml"), str(ws / "people.yaml"))
     bad = Path(base) / "exceptions.json"
-    bad.write_text("{ not json", encoding="utf-8")
+    bad.write_bytes(("{ not json").encode("utf-8"))
     code, out = run(base, ["release.py", "prepare", "--root", project, "--repository-id", "4200", "--exceptions", bad], cwd=project)
     shown = line_with(out, "schema-invalid")
     check(code != 0 and "not json" not in out, f"exit {code}: {out[-300:]}")
@@ -1022,7 +1022,7 @@ def _(base):
     cache = clone / ".carrydown" / "cache" / "last-refresh"
     record = json.loads(cache.read_text(encoding="utf-8"))
     record["time"] = "2000-01-01T00:00:00Z"
-    cache.write_text(json.dumps(record), encoding="utf-8")
+    cache.write_bytes((json.dumps(record)).encode("utf-8"))
     code, outside = check_context(base, clone, "WI-03")
     lines = [x for x in outside.splitlines() if x.strip()]
     check(code == 11 and lines[0] == "carrydown: the approved context for WI-03 is stale" and "could-not-refresh" in outside, f"exit {code}: {outside}")

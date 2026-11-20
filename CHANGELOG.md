@@ -8,6 +8,10 @@ All notable changes to this project are written here. The format follows Keep a 
 
 - **The plan owner reviews a page, not a YAML file.** `plan_page.py` writes the plan page into the private workspace from the plan, the people file, the specifications and the checker: the project overview, people and feasibility, the milestones, the work items with their acceptance criteria and sources, and the review findings. During an update it leads with what changed and what needs a decision. The planning skill writes it as soon as the draft exists and refreshes it after every change, and the owner asks for changes in the conversation. It is static HTML with no scripts and no external resources, and it never enters the repository.
 
+### Windows
+
+- **The self test passes on Windows, and the Windows legs gate continuous integration.** A `.gitattributes` file checks out every text file with LF line endings, so the sample's bundles match their recorded digests on a Windows checkout. Every text file the scripts write is UTF-8 with LF line endings on every platform. The specification scaffold prints project paths with forward slashes, and output to a reader that stops early ends quietly on Windows too. The unit test suite still runs on Ubuntu and macOS only; its port to Windows is a separate change.
+
 ### Documentation
 
 - **The glossary is in alphabetical order.** The 31 entries of [the plan owner guide’s glossary](docs/plan-owner-guide.md#glossary) are sorted by term.
@@ -62,7 +66,6 @@ These changes let a project keep documents and staffing notes private and share 
 
 ### Other changes
 
-- **The self test workflow runs on Ubuntu and macOS.** The two Windows legs, which reported without gating the workflow, are removed until the self test passes there.
 - Both skills start with a Python preflight. It detects the system, checks for Python 3.9 or newer with `check_python.py`, and offers to install Python with the official installer after one yes, with separate steps for macOS, Windows and Linux. The engineers' skill keeps one first command, `check_context.py`, and turns to the same preflight only when that command cannot run because Python is missing or older than 3.9.
 - Checkpoint recovery previews name affected item and milestone references. Publication verification preserves unrelated milestone children while checking every planned parent. Work unit configuration and view assignments retry transient failures with the intended value in permanent errors.
 - Everything is now licensed Apache 2.0; the CC BY 4.0 content license is removed.

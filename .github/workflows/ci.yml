@@ -25,7 +25,7 @@ jobs:
       fail-fast: false
       matrix:
         # ubuntu-latest is Ubuntu 26.04, which has no Python 3.9 build, so the Ubuntu leg stays on 24.04.
-        os: [ubuntu-24.04, macos-latest]
+        os: [ubuntu-24.04, macos-latest, windows-latest]
         python: ["3.9", "3.x"]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -35,6 +35,10 @@ jobs:
       - name: Run the self test
         run: python scripts/selftest.py
       - name: Run recovery regression tests
+        # The unit tests have not been ported to Windows. Their fixtures put a shebang script on PATH as gh,
+        # set POSIX file modes, remove read-only Git objects with a plain rmtree, and compare paths in POSIX
+        # form. The self test above and the checks below gate Windows. The port is a separate change.
+        if: runner.os != 'Windows'
         run: python -m unittest discover -s tests -v
       - name: Check prose and packaged assets
         run: |

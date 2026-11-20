@@ -443,18 +443,18 @@ def _():
     work.mkdir()
     canary = work / "canary.txt"
     for name in ("carrydown_lib", "release_verify", "release_schema", "github_client"):
-        (work / f"{name}.py").write_text(f"open({str(canary)!r}, 'w').write('imported')\n", encoding="utf-8")
+        (work / f"{name}.py").write_bytes((f"open({str(canary)!r}, 'w').write('imported')\n").encode("utf-8"))
     run = subprocess.run([PY, "-I", str(ROOT / "verifier" / "verify_release.py"), "ruleset", "--kind", "staging", "--app-id", "5"],
                          cwd=str(work), capture_output=True, text=True, env=dict(os.environ, PYTHONPATH=str(work)))
     check(run.returncode == 0 and not canary.exists(), run.stderr)
     repo = TMP / "codecheckout"
     repo.mkdir()
     F.init_git(repo)
-    (repo / "a.py").write_text("a = 1\n", encoding="utf-8")
+    (repo / "a.py").write_bytes(("a = 1\n").encode("utf-8"))
     F.sh(["git", "add", "a.py"], repo)
     F.sh(["git", "commit", "-q", "-m", "one"], repo)
     sha = VR.detect_code_sha(repo)
-    (repo / "a.py").write_text("a = 2\n", encoding="utf-8")
+    (repo / "a.py").write_bytes(("a = 2\n").encode("utf-8"))
     try:
         VR.detect_code_sha(repo)
         dirty = "accepted"
@@ -737,7 +737,7 @@ def _():
     schema = (ROOT / "verifier" / "enrollment.schema.md").read_text(encoding="utf-8")
     block = re.search(r"## Example.*?```yaml\n(.*?)```", schema, re.S).group(1)
     path = TMP / "enrollment-example.yaml"
-    path.write_text(block, encoding="utf-8")
+    path.write_bytes((block).encode("utf-8"))
     digests = subprocess.run([PY, "-I", str(ROOT / "verifier" / "verify_release.py"), "digests", "--policy-file", str(path)], capture_output=True, text=True)
     check(digests.returncode == 0 and "matches the file" in digests.stdout, digests.stdout + digests.stderr)
     return f"staging and engineering rulesets pass with App 77; {digests.stdout.strip().splitlines()[0][:80]}..."

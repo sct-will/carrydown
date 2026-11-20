@@ -320,8 +320,7 @@ def write_publication_journal(workspace, release_id, request_id):
     targets = {p[len("payloads/"):-5]: {"state": "completed"} for p in paths if p.startswith("payloads/") and p.endswith(".json")}
     folder = workspace / "publication"
     folder.mkdir(exist_ok=True)
-    (folder / f"{request_id}.journal.json").write_text(
-        json.dumps({"journal_format": 1, "request_id": request_id, "targets": targets}), encoding="utf-8")
+    (folder / f"{request_id}.journal.json").write_bytes((json.dumps({"journal_format": 1, "request_id": request_id, "targets": targets})).encode("utf-8"))
 
 
 def establish_checkpoint(gt_skill, project, env):
@@ -391,7 +390,7 @@ def build_sample(out, env, gt_skill, pub_skill):
     text = spec.read_text(encoding="utf-8")
     if "## Decisions recorded\n\nNone yet.\n" not in text:
         raise PrepareError("the WI-03 specification of the sample has changed: its Decisions recorded section is not empty")
-    spec.write_text(text.replace("## Decisions recorded\n\nNone yet.\n", "## Decisions recorded\n\n" + ENTRY + "\n"), encoding="utf-8")
+    spec.write_bytes((text.replace("## Decisions recorded\n\nNone yet.\n", "## Decisions recorded\n\n" + ENTRY + "\n")).encode("utf-8"))
     git(project, env, "commit", "-q", "-am", "Record a decision in WI-03 (pull request 12)")
     release = [sys.executable, pub_skill / "scripts" / "release.py"]
     made = run(release + ["prepare", "--root", ".", "--repository-id", REPOSITORY_ID, "--apply"] + BOARD, project, env)
@@ -424,14 +423,14 @@ def build_real(out, env, gt_skill, project_src, workspace_src, checkpoint):
     os.chmod(str(workspace), 0o700)
     pointer = project / ".carrydown" / "local.yaml"
     pointer.parent.mkdir(parents=True, exist_ok=True)
-    pointer.write_text(f"workspace: {workspace}\n", encoding="utf-8")
+    pointer.write_bytes((f"workspace: {workspace}\n").encode("utf-8"))
     # the workspace names its engineering folder: in the copy that is the copied project
     record = workspace / "workspace.yaml"
     old = (str(project_src), os.path.realpath(str(project_src)))
     text = record.read_text(encoding="utf-8")
     for form in old:
         text = text.replace(f'path: "{form}"', f'path: "{project}"')
-    record.write_text(text, encoding="utf-8")
+    record.write_bytes((text).encode("utf-8"))
     name = git(project, env, "config", "user.name", ok=(0, 1)).strip()
     email = git(project, env, "config", "user.email", ok=(0, 1)).strip()
     if not name or not email:
@@ -663,8 +662,8 @@ def write_documents(out, manifest, real):
     install = out / "install"
     params = {"out": str(out), "install": str(install), "project": str(out / "project"), "home": str(out / "home"),
               "helper": str(out / "run_logged.py"), "sentence": manifest["owner_sentence"]}
-    (out / "OWNER_AGENT_BRIEF.md").write_text(OWNER_BRIEF.format(**params), encoding="utf-8")
-    (out / "OBSERVER_BRIEF.md").write_text(OBSERVER_BRIEF.format(**params), encoding="utf-8")
+    (out / "OWNER_AGENT_BRIEF.md").write_bytes((OWNER_BRIEF.format(**params)).encode("utf-8"))
+    (out / "OBSERVER_BRIEF.md").write_bytes((OBSERVER_BRIEF.format(**params)).encode("utf-8"))
     name, file = manifest["source_name"], manifest["revised_file"]
     if real:
         knowledge = REAL_KNOWLEDGE
@@ -675,11 +674,11 @@ def write_documents(out, manifest, real):
         p2 = (f"Yes. The document at `revision/{file}` is the new version of the architecture document. It replaces the earlier one. "
               "It is the only source that changed, and no source is kept anywhere else.")
     p1 = "This one. The project is the folder you are working in, `project/`. The owner has no other project."
-    (out / "persona.md").write_text(PERSONA.format(knowledge=knowledge, p1=p1, p2=p2), encoding="utf-8")
+    (out / "persona.md").write_bytes((PERSONA.format(knowledge=knowledge, p1=p1, p2=p2)).encode("utf-8"))
     transcript = out / "transcript"
     transcript.mkdir(exist_ok=True)
     for f in ("questions.md", "to_owner.md", "commands.log", "notes.md", "observer.md"):
-        (transcript / f).write_text("", encoding="utf-8")
+        (transcript / f).write_bytes(("").encode("utf-8"))
 
 
 PERSONA_IDS = ["P1", "P2", "P3", "P4", "P5"]
@@ -719,7 +718,7 @@ def build(out, a, real):
     home.mkdir()
     os.chmod(str(home), 0o700)
     name, email = IDENTITY
-    (home / ".gitconfig").write_text(f"[user]\n\tname = {name}\n\temail = {email}\n[init]\n\tdefaultBranch = main\n", encoding="utf-8")
+    (home / ".gitconfig").write_bytes((f"[user]\n\tname = {name}\n\temail = {email}\n[init]\n\tdefaultBranch = main\n").encode("utf-8"))
     env = run_env(home)
     copy_skills(out / "install")
     gt_skill = out / "install" / SKILLS[0]
@@ -743,7 +742,7 @@ def build(out, a, real):
     else:
         original = (SAMPLE / "ground-truth" / "architecture.md").read_text(encoding="utf-8")
         revised = revise_architecture(original)
-        (revision / "architecture.md").write_text(revised, encoding="utf-8")
+        (revision / "architecture.md").write_bytes((revised).encode("utf-8"))
         build_docx(revised, revision / "architecture.docx")
         project, workspace = build_sample(out, env, gt_skill, pub_skill)
         manifest["source_name"] = "architecture"
@@ -769,7 +768,7 @@ def build(out, a, real):
     manifest["baseline_commit"] = git(project, env, "rev-parse", "HEAD").strip()
     write_helper(out)
     write_documents(out, manifest, real)
-    (out / "field-run.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    (out / "field-run.json").write_bytes((json.dumps(manifest, indent=2) + "\n").encode("utf-8"))
     print(f"field run folder: {out}")
     print(f"  install/   {', '.join(SKILLS)}")
     print(f"  project/   {'copy of ' + a.project if real else 'the released sample'}, origin {out / 'origin.git'}")

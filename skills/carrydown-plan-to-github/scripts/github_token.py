@@ -105,7 +105,7 @@ def store(path, token):
         fd, tmp = tempfile.mkstemp(prefix=".carrydown-token-", dir=str(path.parent))
         try:
             os.chmod(tmp, stat.S_IRUSR | stat.S_IWUSR)
-            with os.fdopen(fd, "w", encoding="utf-8") as f:
+            with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
                 f.write(token.strip() + "\n")
             os.replace(tmp, str(path))
         except BaseException:
