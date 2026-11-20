@@ -158,6 +158,13 @@ export const ptBR: Strings = {
     anchorLabel: 'Link para esta pergunta',
     items: [
       {
+        id: 'what-is-carried-context-development',
+        group: 'method',
+        q: 'O que é carried-context development?',
+        a: 'Carried-context development é uma abordagem de desenvolvimento com agentes que leva as decisões e o contexto do projeto até o agente de programação de cada engenheiro, para que o projeto fique alinhado e nada se afaste. Carried-context development leva a verdade de referência acordada por uma equipe até o plano, cada especificação, cada issue e as instruções de cada agente de programação, citada por seção, e a leva de novo quando ela muda.',
+        more: { label: 'Ler a definição e as regras na página de definição.', href: '/definition/' },
+      },
+      {
         id: 'spec-driven',
         group: 'method',
         q: 'Em que carried-context development difere do desenvolvimento orientado por especificações tradicional?',
@@ -182,6 +189,13 @@ export const ptBR: Strings = {
         q: 'Carried-context development não é só cascata?',
         a: 'Não. A cascata fixa o plano inteiro de antemão e trata uma mudança como falha do plano. Aqui o plano, as especificações e as issues são arquivos no Git, então mudá-los é barato e a mudança é revisada como código. As unidades de trabalho duram o que o trabalho precisa, não caixas de tamanho fixo. Cada marco termina com uma demonstração que as partes interessadas aprovam ou reprovam, e o que a equipe aprende volta para a verdade de referência e se propaga de novo. Você pode planejar, construir um pouco, aprender e atualizar o plano quantas vezes o projeto precisar.',
         more: { label: 'Ler no método como uma mudança se propaga.', href: '/docs/method/#when-the-project-changes' },
+      },
+      {
+        id: 'what-is-carrydown',
+        group: 'carrydown',
+        q: 'O que é o carrydown e em que ele difere de carried-context development?',
+        a: 'Carried-context development é uma abordagem de desenvolvimento com agentes. Carried-context development leva a verdade de referência acordada por uma equipe até o plano, cada especificação, cada issue e as instruções de cada agente de programação, citada por seção, e a leva de novo quando ela muda. O carrydown é a implementação de referência: dois Agent Skills que você instala juntos com um único comando, um terceiro que ele gera para seus engenheiros e as verificações que validam cada citação. É de código aberto sob Apache 2.0 e funciona com o agente de programação que sua equipe já usa.',
+        more: { label: 'Ler na documentação como funciona.', href: '/docs/#how-it-works' },
       },
       {
         id: 'reconciled',
@@ -399,7 +413,7 @@ export const ptBR: Strings = {
       /** The word between a title and the path that follows it, where there is one. */
       inWord: 'em',
       items: [
-        { title: 'Um plano', path: 'docs/spec/plan.yaml', body: 'Marcos, trilhas, responsáveis e datas ajustados às suas pessoas e ao seu tempo, com uma razão escrita para cada marco.' },
+        { title: 'Um plano que você revisa como uma página no seu navegador web', path: '', body: 'Marcos, trilhas, responsáveis e datas ajustados às suas pessoas e ao seu tempo, com uma tabela de carga e um caminho crítico, e uma razão escrita para cada marco. O plano confirmado no repositório, docs/spec/plan.yaml, contém apenas identificadores e trilhas.' },
         { title: 'Uma especificação por item de trabalho', path: '', body: 'A menor parte do trabalho que um engenheiro consegue terminar e mostrar, citando suas seções e verificada contra o plano a cada pull request.' },
         { title: 'Um contexto aprovado por item de trabalho', path: 'docs/context/', body: 'O texto exato das seções que o item cita e as decisões por trás dele, aprovados por você. A única parte dos seus documentos que chega aos agentes dos engenheiros.' },
         { title: 'Um recibo de release', path: 'docs/release/', body: 'Um pequeno arquivo público que nomeia o release aprovado, seu estado e sua validade.' },

@@ -158,6 +158,13 @@ export const es: Strings = {
     anchorLabel: 'Enlace a esta pregunta',
     items: [
       {
+        id: 'what-is-carried-context-development',
+        group: 'method',
+        q: '¿Qué es carried-context development?',
+        a: 'Carried-context development es un enfoque de desarrollo con agentes que lleva las decisiones y el contexto del proyecto hasta el agente de programación de cada ingeniero, para que el proyecto siga alineado y nada se desvíe. Carried-context development lleva la verdad de referencia acordada por un equipo hasta el plan, cada especificación, cada incidencia y las instrucciones de cada agente de programación, citada por sección, y la lleva de nuevo cuando cambia.',
+        more: { label: 'Leer la definición y las reglas en la página de definición.', href: '/definition/' },
+      },
+      {
         id: 'spec-driven',
         group: 'method',
         q: '¿En qué se diferencia carried-context development del desarrollo guiado por especificaciones tradicional?',
@@ -182,6 +189,13 @@ export const es: Strings = {
         q: '¿No es carried-context development simplemente cascada?',
         a: 'No. La cascada fija todo el plan por adelantado y trata un cambio como un fallo del plan. Aquí el plan, las especificaciones y las incidencias son archivos en Git, así que cambiarlos es barato y el cambio se revisa como el código. Las unidades de trabajo duran lo que el trabajo necesita, no cajas de longitud fija. Cada hito termina con una demostración que las partes interesadas aprueban o rechazan, y lo que el equipo aprende vuelve a la verdad de referencia y se propaga de nuevo. Puede planificar, construir un poco, aprender y actualizar el plan tantas veces como el proyecto lo necesite.',
         more: { label: 'Leer en el método cómo se propaga un cambio.', href: '/docs/method/#when-the-project-changes' },
+      },
+      {
+        id: 'what-is-carrydown',
+        group: 'carrydown',
+        q: '¿Qué es carrydown y en qué se diferencia de carried-context development?',
+        a: 'Carried-context development es un enfoque de desarrollo con agentes. Carried-context development lleva la verdad de referencia acordada por un equipo hasta el plan, cada especificación, cada incidencia y las instrucciones de cada agente de programación, citada por sección, y la lleva de nuevo cuando cambia. carrydown es la implementación de referencia: dos Agent Skills que usted instala juntos con un solo comando, un tercero que genera para sus ingenieros y las comprobaciones que validan cada cita. Es de código abierto bajo Apache 2.0 y funciona con el agente de programación que su equipo ya usa.',
+        more: { label: 'Leer en la documentación cómo funciona.', href: '/docs/#how-it-works' },
       },
       {
         id: 'reconciled',
@@ -399,7 +413,7 @@ export const es: Strings = {
       /** The word between a title and the path that follows it, where there is one. */
       inWord: 'en',
       items: [
-        { title: 'Un plan', path: 'docs/spec/plan.yaml', body: 'Hitos, líneas de trabajo, responsables y fechas ajustados a sus personas y su tiempo, con una razón escrita para cada hito.' },
+        { title: 'Un plan que usted revisa como una página en su navegador web', path: '', body: 'Hitos, líneas de trabajo, responsables y fechas ajustados a sus personas y su tiempo, con una tabla de carga y una ruta crítica, y una razón escrita para cada hito. El plan confirmado en el repositorio, docs/spec/plan.yaml, contiene solo identificadores y líneas de trabajo.' },
         { title: 'Una especificación por elemento de trabajo', path: '', body: 'La pieza de trabajo más pequeña que un ingeniero puede terminar y mostrar, que cita sus secciones y se comprueba contra el plan en cada pull request.' },
         { title: 'Un contexto aprobado por elemento de trabajo', path: 'docs/context/', body: 'El texto exacto de las secciones que cita el elemento y las decisiones que lo sustentan, aprobados por usted. La única parte de sus documentos que llega a los agentes de los ingenieros.' },
         { title: 'Un recibo de publicación', path: 'docs/release/', body: 'Un pequeño archivo público que nombra la publicación aprobada, su estado y su caducidad.' },

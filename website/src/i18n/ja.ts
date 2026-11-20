@@ -150,6 +150,13 @@ export const ja: Strings = {
     anchorLabel: 'この質問へのリンク',
     items: [
       {
+        id: 'what-is-carried-context-development',
+        group: 'method',
+        q: 'Carried-context development とは何ですか？',
+        a: 'Carried-context development は、プロジェクトの決定とコンテキストを各エンジニアのコーディングエージェントまで伝え、プロジェクトのずれや漂流を防ぐ、エージェント開発のアプローチです。Carried-context development は、チームが合意したグラウンドトゥルースを、計画、すべての仕様、すべてのイシュー、すべてのコーディングエージェントへの指示まで、セクションを引用して伝え、グラウンドトゥルースが変わったときには再び伝えます。',
+        more: { label: '定義ページで定義とルールを読む。', href: '/definition/' },
+      },
+      {
         id: 'spec-driven',
         group: 'method',
         q: 'Carried-context development は従来の仕様駆動開発と何が違うのですか？',
@@ -174,6 +181,13 @@ export const ja: Strings = {
         q: 'Carried-context development は結局ウォーターフォールではないのですか？',
         a: 'いいえ。ウォーターフォールは計画全体を最初に固定し、変更を計画の失敗として扱います。ここでは計画、仕様、イシューは Git 上のファイルなので、変更は安価で、コードと同じようにレビューされます。作業単位は固定長の箱ではなく、作業に必要な長さになります。各マイルストーンはステークホルダーが合格か不合格かを決めるデモで終わり、チームが学んだことはグラウンドトゥルースに戻され、再び下へ伝えられます。計画し、少し作り、学び、プロジェクトに必要なだけ何度でも計画を更新できます。',
         more: { label: '変更がどう伝わるかを手法のページで読む。', href: '/docs/method/#when-the-project-changes' },
+      },
+      {
+        id: 'what-is-carrydown',
+        group: 'carrydown',
+        q: 'carrydown とは何ですか？carried-context development とは何が違うのですか？',
+        a: 'Carried-context development はエージェント開発のアプローチです。Carried-context development は、チームが合意したグラウンドトゥルースを、計画、すべての仕様、すべてのイシュー、すべてのコーディングエージェントへの指示まで、セクションを引用して伝え、グラウンドトゥルースが変わったときには再び伝えます。carrydown はそのリファレンス実装です。ひとつのコマンドでまとめてインストールする二つの Agent Skills、エンジニア向けに生成される三つ目、そしてすべての引用を検証するチェックで構成されます。Apache 2.0 のオープンソースで、チームがすでに使っているコーディングエージェントで動きます。',
+        more: { label: '仕組みをドキュメントで読む。', href: '/docs/#how-it-works' },
       },
       {
         id: 'reconciled',
@@ -391,7 +405,7 @@ export const ja: Strings = {
       /** The word between a title and the path that follows it, where there is one. */
       inWord: '',
       items: [
-        { title: '計画', path: 'docs/spec/plan.yaml', body: 'マイルストーン、トラック、担当者、期日を、あなたの人と時間に合わせて決め、各マイルストーンに理由を添えます。' },
+        { title: 'Web ブラウザーでページとして確認する計画', path: '', body: 'マイルストーン、トラック、担当者、期日を、あなたの人と時間に合わせて決め、負荷表とクリティカルパスを添え、各マイルストーンに理由を添えます。コミットされる計画 docs/spec/plan.yaml には、ID とトラックだけが入ります。' },
         { title: '作業項目ごとの仕様', path: '', body: 'エンジニアが完了して見せられる最小の作業単位です。根拠のセクションを引用し、プルリクエストごとに計画と照合されます。' },
         { title: '作業項目ごとの承認済みコンテキスト', path: 'docs/context/', body: '項目が引用する出典の正確な本文と、その背後の決定を、あなたが承認したものです。エンジニアのエージェントに届く、文書の唯一の部分です。' },
         { title: 'リリースの受領記録', path: 'docs/release/', body: '承認されたリリース、その状態と有効期限を記した小さな公開ファイルです。' },
