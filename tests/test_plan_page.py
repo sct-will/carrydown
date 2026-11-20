@@ -252,7 +252,7 @@ class PlanPageTests(unittest.TestCase):
         rendering = self.root / RENDERING
         text = rendering.read_text(encoding="utf-8")
         self.assertIn(REMINDER, text)
-        rendering.write_text(text.replace(REMINDER, "after 4 business days without a decision"), encoding="utf-8")
+        rendering.write_bytes((text.replace(REMINDER, "after 4 business days without a decision")).encode("utf-8"))
         code, out, err = call(R.main, ["prepare", "--root", str(self.root), "--apply"])
         self.assertEqual(code, 0, out + err)
         change_id = out.strip().splitlines()[-1].split()[-1]

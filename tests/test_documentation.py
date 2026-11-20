@@ -153,7 +153,7 @@ class ScaffoldOnAReleasedProjectTests(Temp):
         plan = project / "docs" / "spec" / "plan.yaml"
         text = plan.read_text(encoding="utf-8")
         self.assertIn('complete_by: "2027-02-03"', text)
-        plan.write_text(text.replace('complete_by: "2027-02-03"', 'complete_by: "2027-02-04"', 1), encoding="utf-8")
+        plan.write_bytes((text.replace('complete_by: "2027-02-03"', 'complete_by: "2027-02-04"', 1)).encode("utf-8"))
         out = run([ROOT / "scripts" / "scaffold_spec.py", "--root", project, "--refresh-headers"])
         self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
         self.assertIn("wi-01-service-scaffold.md", out.stdout)
@@ -231,11 +231,10 @@ class LinkCheckTests(Temp):
         self.assertEqual(broken, [], "\n".join(f"{f}:{n}: {t}: {w}" for f, n, t, w in broken))
 
     def test_the_checker_finds_a_missing_file_a_missing_anchor_and_skips_code_and_web_links(self):
-        (self.base / "a.md").write_text(
-            "# Title\n\n## Second part\n\n[ok](b.md) [heading](#second-part) [bad](nowhere.md) [anchor](b.md#absent) [anchor ok](b.md#start)\n"
+        (self.base / "a.md").write_bytes(("# Title\n\n## Second part\n\n[ok](b.md) [heading](#second-part) [bad](nowhere.md) [anchor](b.md#absent) [anchor ok](b.md#start)\n"
             "[web](https://example.com/x) [mail](mailto:a@example.com) `[code](missing.md)` {{x}} [t]({{target}})\n\n"
-            "```\n[fenced](missing.md)\n```\n![image](pic.png)\n", encoding="utf-8")
-        (self.base / "b.md").write_text("# Start\n", encoding="utf-8")
+            "```\n[fenced](missing.md)\n```\n![image](pic.png)\n").encode("utf-8"))
+        (self.base / "b.md").write_bytes(("# Start\n").encode("utf-8"))
         found = CL.check(self.base)
         self.assertEqual(sorted((t, w) for _, _, t, w in found),
                          [("b.md#absent", "anchor is not a heading of the target"), ("nowhere.md", "target does not exist"),
@@ -243,7 +242,7 @@ class LinkCheckTests(Temp):
 
     def test_a_link_that_climbs_out_of_the_folder_is_reported(self):
         (self.base / "inner").mkdir()
-        (self.base / "inner" / "a.md").write_text("[up](../../outside.md)\n", encoding="utf-8")
+        (self.base / "inner" / "a.md").write_bytes(("[up](../../outside.md)\n").encode("utf-8"))
         found = CL.check(self.base / "inner")
         self.assertEqual([w for _, _, _, w in found], ["points outside the folder"])
 

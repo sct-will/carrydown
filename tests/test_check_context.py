@@ -278,7 +278,7 @@ class LocalValidityTests(LocalProject):
         text = spec_path.read_text(encoding="utf-8")
         for line in ("- architecture section 9.9, Missing", "- other-source section 1.1",
                      "- [Company governance policy, section 3.1, Records](../../ground-truth/company-governance.md#31-retention)"):
-            spec_path.write_text(text.replace("## References\n", "## References\n\n" + line + "\n", 1), encoding="utf-8")
+            spec_path.write_bytes((text.replace("## References\n", "## References\n\n" + line + "\n", 1)).encode("utf-8"))
             code, lines = self.run_check(self.root)
             self.assertEqual((code, lines[0]), (12, CITES), line)
             self.assertEqual(lines[1:], ["Ask the plan owner. Do not guess the rule."])
@@ -289,10 +289,10 @@ class LocalValidityTests(LocalProject):
         cited = CC.spec_citations(self.root, "WI-06", {"architecture", "company-governance"})
         self.assertEqual(cited, [("architecture", "3.5"), ("architecture", "4.1"), ("architecture", "7.1"),
                                  ("company-governance", "1.5"), ("company-governance", "2.3")])
-        spec_path.write_text(text.replace("## References\n", "## References\n\n- company-governance section 2.3, Approval limits\n- architecture section 3.5\n", 1), encoding="utf-8")
+        spec_path.write_bytes((text.replace("## References\n", "## References\n\n- company-governance section 2.3, Approval limits\n- architecture section 3.5\n", 1)).encode("utf-8"))
         self.assertIn(("company-governance", "2.3"), CC.spec_citations(self.root, "WI-06", set()))
         # a link whose file name is not a source of the bundle cannot be read as a citation, so it is not a finding
-        spec_path.write_text(text.replace("## References\n", "## References\n\n- [Section 1.1](../../ground-truth/unrelated.md#x)\n", 1), encoding="utf-8")
+        spec_path.write_bytes((text.replace("## References\n", "## References\n\n- [Section 1.1](../../ground-truth/unrelated.md#x)\n", 1)).encode("utf-8"))
         self.assertEqual(CC.spec_citations(self.root, "WI-06", {"architecture"})[0:1], [("architecture", "3.5")])
         self.assertNotIn("1.1", [n for _, n in CC.spec_citations(self.root, "WI-06", {"architecture"})])
 
@@ -606,12 +606,12 @@ class OfflineGraceTests(OriginTests):
             "format 2": json.dumps(dict(good, cache_format=2)),
         }
         for name, text in bad_records.items():
-            path.write_text(text, encoding="utf-8")
+            path.write_bytes((text).encode("utf-8"))
             code, lines = self.run_check(self.eng)
             self.assertEqual((code, lines[1]), (11, reason_line("could-not-refresh")), name)
         path.unlink()
         self.assertEqual(self.run_check(self.eng)[0], 11)
-        path.write_text(json.dumps(good), encoding="utf-8")
+        path.write_bytes((json.dumps(good)).encode("utf-8"))
         self.assertEqual(self.run_check(self.eng)[0], 0)
 
     def test_a_failed_first_fetch_records_nothing(self):
@@ -1068,7 +1068,7 @@ class ApprovedDeltaTests(OriginTests):
         self.refresh_once()
         record = self.cache()
         record["items"]["WI-06"]["files"][SPEC_FILE] = "9" * 64            # a version no history holds
-        (self.eng / ".carrydown/cache/last-refresh").write_text(json.dumps(record), encoding="utf-8")
+        (self.eng / ".carrydown/cache/last-refresh").write_bytes((json.dumps(record)).encode("utf-8"))
         code, lines = self.run_check(self.eng)
         self.assertEqual(code, 0, lines)
         self.assertIn(CC.DELTA_HEADLINE.format(id="WI-06"), lines)
@@ -1136,7 +1136,7 @@ class MessageHygieneTests(OriginTests):
         (self.eng / "docs/context/wi-03.md").write_bytes(b"changed")
         outputs.append(self.run_check(self.eng, "WI-03")[1])
         spec_path = self.eng / SPEC_FILE
-        spec_path.write_text(spec_path.read_text(encoding="utf-8").replace("## References\n", "## References\n\n- architecture section 9.9, Sole approver\n", 1), encoding="utf-8")
+        spec_path.write_bytes((spec_path.read_text(encoding="utf-8").replace("## References\n", "## References\n\n- architecture section 9.9, Sole approver\n", 1)).encode("utf-8"))
         outputs.append(self.run_check(self.eng)[1])
         self.git(self.eng, "checkout", "--", SPEC_FILE)
         _, data = build_receipt(self.files, state="withdrawn")
@@ -1166,11 +1166,11 @@ class CommandLineTests(OriginTests):
     def test_the_exit_codes(self):
         self.assertEqual(self.run_script("WI-99").returncode, 10)
         spec_path = self.eng / SPEC_FILE
-        spec_path.write_text(spec_path.read_text(encoding="utf-8").replace("## References\n", "## References\n\n- architecture section 9.9\n", 1), encoding="utf-8")
+        spec_path.write_bytes((spec_path.read_text(encoding="utf-8").replace("## References\n", "## References\n\n- architecture section 9.9\n", 1)).encode("utf-8"))
         run = self.run_script("WI-06")
         self.assertEqual((run.returncode, run.stdout.splitlines()[0]), (12, CITES))
         self.git(self.eng, "checkout", "--", SPEC_FILE)
-        spec_path.write_text(spec_path.read_text(encoding="utf-8").replace("## Outcome\n", "## Outcome\n\nA changed promise.\n", 1), encoding="utf-8")
+        spec_path.write_bytes((spec_path.read_text(encoding="utf-8").replace("## Outcome\n", "## Outcome\n\nA changed promise.\n", 1)).encode("utf-8"))
         run = self.run_script("WI-06")
         self.assertEqual((run.returncode, run.stdout.splitlines()[0]), (14, SPEC_MISMATCH))
         self.git(self.eng, "checkout", "--", SPEC_FILE)

@@ -124,7 +124,7 @@ class ReleaseInventoryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="carrydown-inventory-clean-") as tmp:
             root = Path(tmp) / "p"
             root.mkdir()
-            (root / "README.md").write_text("hello\n", encoding="utf-8")
+            (root / "README.md").write_bytes(("hello\n").encode("utf-8"))
             F.init_git(root)
             sh(["git", "add", "-A"], root)
             sh(["git", "commit", "-q", "-m", "first"], root)

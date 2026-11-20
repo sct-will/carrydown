@@ -20,10 +20,6 @@ permissions:
 jobs:
   selftest:
     runs-on: ${{ matrix.os }}
-    # The Windows legs fail on the private workspace's permission check, on output to an early-closed
-    # pipe and on a few path comparisons. They run and report, but do not fail the workflow until
-    # those gaps are fixed.
-    continue-on-error: ${{ matrix.os == 'windows-latest' }}
     strategy:
       # Every leg reports on its own; one failing operating system does not cancel the others.
       fail-fast: false

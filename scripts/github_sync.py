@@ -1026,7 +1026,7 @@ def write_observation(root, doc):
     RG.require("candidate", OBSERVATION_REL, L.sha256_text(text), "workspace", root)
     folder.mkdir(parents=True, exist_ok=True)
     temp = folder / ".clarifications.json.tmp"
-    temp.write_text(text, encoding="utf-8")
+    L.write_lf(temp, text)
     os.replace(temp, path)
     return path, ""
 

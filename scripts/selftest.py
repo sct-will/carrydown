@@ -64,6 +64,12 @@ SAMPLE = "sample/expense-approvals"
 WORKING_PLAN = ROOT / "tests" / "fixtures" / "sample-workspace" / "drafts" / "plan.yaml"
 
 
+def write_lf(path, text):
+    """Write a fixture as UTF-8 with LF line endings, as the scripts write, on every platform."""
+    with open(str(path), "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(text)
+
+
 def copy_sample(dst, **kw):
     shutil.copytree(ROOT / SAMPLE, dst, **kw)
     shutil.copyfile(WORKING_PLAN, Path(dst) / "docs" / "spec" / "plan.yaml")
@@ -144,15 +150,15 @@ def fixtures(tmp):
          files={out / "style.md": ["## 1 Overview\n", "### 1.1 Scope\n", "### 1.2 Goals\n", "## 2 Architecture\n", "### 2.1 Data\n", "#### 2.1.1 Interfaces\n", "## Appendix\n"]})
     step("docx: a part with a DOCTYPE is refused", render + [str(fx / "doctype.docx"), "--root", str(fx / "out"), "--dry-run"], expect=2, contains=["DOCTYPE declaration"])
     md = fx / "plain.md"
-    md.write_text("# Plain\n\n## Purpose\n\nText.\n\n## 1. Scope\n\nText.\n", encoding="utf-8")
+    write_lf(md, "# Plain\n\n## Purpose\n\nText.\n\n## 1. Scope\n\nText.\n")
     step("markdown: unnumbered headings are reported", render + [str(md), "--root", str(fx / "out"), "--dry-run"], contains=["1 of 2 headings have no number; specifications cite sections by number ('Purpose')"])
     step("markdown: the sample renders with every heading numbered", [PY, "scripts/render_ground_truth.py", f"{SAMPLE}/ground-truth/architecture.md", "--root", SAMPLE, "--version", "0.3", "--dry-run"], absent=("Traceback", "have no number"))
     plain = fx / "company-rules.txt"
-    plain.write_text("Never log a secret.\nRetain audit records for seven years.\n", encoding="utf-8")
+    write_lf(plain, "Never log a secret.\nRetain audit records for seven years.\n")
     step("plain text: content is rendered as one numbered source section", render + [str(plain), "--root", str(fx / "out"), "--version", "1"],
          files={out / "company-rules.md": ["## 1 Source text", "Never log a secret.", "Retain audit records for seven years."]})
     extracted = fx / "extracted.md"
-    extracted.write_text("# Policy image\n\n## 1 Rule\n\nUse the approved control.\n", encoding="utf-8")
+    write_lf(extracted, "# Policy image\n\n## 1 Rule\n\nUse the approved control.\n")
     step("reviewed extraction: generated header records the original source", render + [str(extracted), "--root", str(fx / "out"), "--name", "policy-image", "--source-label", "docs/source/policy.png", "--version", "2"],
          files={out / "policy-image.md": ['Generated from "docs/source/policy.png" version 2']})
 
@@ -162,14 +168,14 @@ def citations(tmp):
     proj = tmp / "citations"
     copy_sample(proj)
     spec = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
-    spec.write_text(spec.read_text(encoding="utf-8").replace("| Ground truth | Architecture document: Sections 3.1, 3.2, 5.1, 7.1 |", "| Ground truth | Architecture document: Sections 3.1, 9.9 |"), encoding="utf-8")
+    write_lf(spec, spec.read_text(encoding="utf-8").replace("| Ground truth | Architecture document: Sections 3.1, 3.2, 5.1, 7.1 |", "| Ground truth | Architecture document: Sections 3.1, 9.9 |"))
     cplan = proj / "docs/spec/plan.yaml"
-    cplan.write_text(cplan.read_text(encoding="utf-8").replace('        sections: "3.1, 3.2, 5.1, 7.1"', '        sections: "3.1, 9.9"', 1), encoding="utf-8")
+    write_lf(cplan, cplan.read_text(encoding="utf-8").replace('        sections: "3.1, 3.2, 5.1, 7.1"', '        sections: "3.1, 9.9"', 1))
     chk = [PY, "scripts/check_specs.py", "--root", str(proj)]
     step("a specification citing a section that does not exist fails", chk, expect=1, contains=["Ground truth cites Architecture document section 9.9, which is not a heading in docs/ground-truth/architecture.md"])
     gt = proj / "docs/ground-truth/architecture.md"
     import re
-    gt.write_text(re.sub(r"(?m)^(#{2,6}) \d+(?:\.\d+)*\.? ", r"\1 ", gt.read_text(encoding="utf-8")), encoding="utf-8")
+    write_lf(gt, re.sub(r"(?m)^(#{2,6}) \d+(?:\.\d+)*\.? ", r"\1 ", gt.read_text(encoding="utf-8")))
     step("an unnumbered ground truth is reported, not passed", chk, expect=1, contains=["ground truth citations not checked: the rendered document has no numbered headings"])
     gt.unlink()
     step("a missing ground truth is reported, not passed", chk, expect=1, contains=["ground truth citations not checked: the rendered document docs/ground-truth/architecture.md was not found"])
@@ -177,10 +183,10 @@ def citations(tmp):
     multi = tmp / "multiple-sources"
     copy_sample(multi)
     gov = multi / "docs/ground-truth/governance.md"
-    gov.write_text("# Company governance\n\n## 1 Security\n\nNever log secrets.\n\n## 2 Accessibility\n\nMeet the company standard.\n", encoding="utf-8")
+    write_lf(gov, "# Company governance\n\n## 1 Security\n\nNever log secrets.\n\n## 2 Accessibility\n\nMeet the company standard.\n")
     (multi / "docs/source").mkdir()
     (multi / "docs/source/governance.pdf").write_bytes(b"reviewed fixture")
-    (gov.parent / "governance.index.txt").write_text("3:## 1 Security\n7:## 2 Accessibility\n", encoding="utf-8")
+    write_lf(gov.parent / "governance.index.txt", "3:## 1 Security\n7:## 2 Accessibility\n")
     plan = multi / "docs/spec/plan.yaml"
     body = plan.read_text(encoding="utf-8")
     body = re.sub(r'(    rendering_sha256: "[0-9a-f]+"\n)',
@@ -188,14 +194,14 @@ def citations(tmp):
                   '    path: docs/ground-truth/governance.md\n    version: "1"\n    status: reviewed\n    limit: ""\n'
                   '    use: "Company rules."\n    classification: repo-readers\n', body, count=1)
     body = body.replace('        sections: "3.1, 3.2, 5.1, 7.1"', '        sections: "3.1, 3.2, 5.1, 7.1"\n      - source: governance\n        sections: "1, 2"', 1)
-    plan.write_text(body, encoding="utf-8")
+    write_lf(plan, body)
     step("multiple sources: refresh writes source-specific citations", [PY, "scripts/scaffold_spec.py", "--root", str(multi), "--refresh-headers", "--apply", "--allow-no-git"],
          files={multi / "docs/spec/m1-submit-report/wi-01-service-scaffold.md": ["Architecture document: Sections 3.1, 3.2, 5.1, 7.1; Company governance: Sections 1, 2"]})
     step("multiple sources: citations validate against their named rendering", [PY, "scripts/check_specs.py", "--root", str(multi)], contains=["15 files clean, 0 with findings"])
     bad = plan.read_text(encoding="utf-8").replace('        sections: "1, 2"', '        sections: "1, 9.9"')
-    plan.write_text(bad, encoding="utf-8")
+    write_lf(plan, bad)
     spec = multi / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
-    spec.write_text(spec.read_text(encoding="utf-8").replace("Company governance: Sections 1, 2", "Company governance: Sections 1, 9.9"), encoding="utf-8")
+    write_lf(spec, spec.read_text(encoding="utf-8").replace("Company governance: Sections 1, 2", "Company governance: Sections 1, 9.9"))
     step("multiple sources: a citation is checked only against its named source", [PY, "scripts/check_specs.py", "--root", str(multi)], expect=1,
          contains=["Ground truth cites Company governance section 9.9, which is not a heading in docs/ground-truth/governance.md"])
 
@@ -208,7 +214,7 @@ def citations(tmp):
         lambda m: m.group(1) + '  - id: regional-addendum\n    name: "Regional addendum"\n    source_path: docs/source/regional.png\n'
         '    version: "unknown"\n    status: unreadable\n    limit: "Image text could not be read reliably."\n    use: "Regional exceptions."\n    classification: repo-readers\n',
         pplan.read_text(encoding="utf-8"), count=1)
-    pplan.write_text(pbody, encoding="utf-8")
+    write_lf(pplan, pbody)
     step("an unreadable source is recorded while readable sources continue", [PY, "scripts/check_specs.py", "--root", str(partial)], contains=["15 files clean, 0 with findings"])
 
     none = tmp / "no-readable-sources"
@@ -216,7 +222,7 @@ def citations(tmp):
     nplan = none / "docs/spec/plan.yaml"
     nbody = nplan.read_text(encoding="utf-8").replace("    status: reviewed", "    status: unreadable", 1)
     nbody = nbody.replace('    limit: ""', '    limit: "The source could not be processed."', 1)
-    nplan.write_text(nbody, encoding="utf-8")
+    write_lf(nplan, nbody)
     step("processing stops when no ground-truth source is readable", [PY, "scripts/check_specs.py", "--root", str(none)], expect=1,
          contains=["sources must include at least one reviewed entry. Continue with every readable source, but stop when none can be processed"])
 
@@ -274,7 +280,7 @@ def error_paths(tmp, plan_text):
     step("the dry run counts the stubs --stubs would add", scaffold + ["--allow-no-git"], contains=["2 specification stub(s) do not exist yet. Add --stubs to include them."])
     step("scaffold writes stubs", scaffold + ["--allow-no-git", "--apply", "--stubs"], contains=["file(s) written"])
     plan_path = proj / "docs/spec/plan.yaml"
-    plan_path.write_text(plan_path.read_text(encoding="utf-8").replace("complete_by: 2027-01-06", "complete_by: 2027-01-09"), encoding="utf-8")
+    write_lf(plan_path, plan_path.read_text(encoding="utf-8").replace("complete_by: 2027-01-06", "complete_by: 2027-01-09"))
     step("plan findings come before unfinished stubs, one line per stub", [PY, "scripts/check_specs.py", "--root", str(proj)], expect=1,
          contains=["file(s) still hold template text (TODO)", "other finding(s) that usually go when the template text is replaced"],
          order=["plan.yaml:", "complete_by 2027-01-09 is a weekend", "unfinished template text (TODO)"])
@@ -288,14 +294,14 @@ def maintenance(tmp):
     text = plan.read_text(encoding="utf-8")
     text = text.replace('    size: "Medium, about 3 days"\n    depends: []\n', "    depends: []\n")      # WI-01 loses its size in the plan
     text = text.replace("complete_by: 2027-02-19", "complete_by: 2027-02-18")                               # WI-03 moves a day
-    plan.write_text(text, encoding="utf-8")
+    write_lf(plan, text)
     ms3 = proj / "docs/spec/m3-enforce-policy/milestone.md"
     custom = "| Demonstration | 2027-03-19, the engineers with the finance advisor, in the review room. |"
     t = ms3.read_text(encoding="utf-8")
     import re
-    ms3.write_text(re.sub(r"(?m)^\| Demonstration \|.*$", custom, t), encoding="utf-8")
+    write_lf(ms3, re.sub(r"(?m)^\| Demonstration \|.*$", custom, t))
     wi1 = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
-    wi1.write_text(re.sub(r"(?m)^(\| Ground truth \|.*)$", r"\1\n| Reviewer | Security review booked |", wi1.read_text(encoding="utf-8")), encoding="utf-8")
+    write_lf(wi1, re.sub(r"(?m)^(\| Ground truth \|.*)$", r"\1\n| Reviewer | Security review booked |", wi1.read_text(encoding="utf-8")))
     run = [PY, "scripts/scaffold_spec.py", "--root", str(proj), "--refresh-headers", "--apply", "--allow-no-git"]
     step("--refresh-headers follows the plan and counts what it wrote", run, contains=["refresh header: docs/spec/m2-route-to-approvers/wi-03-routing-engine.md",
          "refresh header: docs/spec/m2-route-to-approvers/milestone.md", "refresh tables: docs/spec/README.md", "3 file(s) written"],
@@ -307,7 +313,7 @@ def maintenance(tmp):
     legacy = tmp / "legacy-header"
     copy_sample(legacy)
     wi3 = legacy / "docs/spec/m2-route-to-approvers/wi-03-routing-engine.md"
-    wi3.write_text(wi3.read_text(encoding="utf-8").replace("| Field | Value |\n", "| | |\n", 1), encoding="utf-8")
+    write_lf(wi3, wi3.read_text(encoding="utf-8").replace("| Field | Value |\n", "| | |\n", 1))
     step("a header table with the older blank header row passes the checker", [PY, "scripts/check_specs.py", "--root", str(legacy)], contains=["0 with findings"])
     step("--refresh-headers gives the older header table its Field and Value header row",
          [PY, "scripts/scaffold_spec.py", "--root", str(legacy), "--refresh-headers", "--apply", "--allow-no-git"], contains=["1 file(s) written"],
@@ -320,18 +326,18 @@ def composition(tmp, plan_text):
     copy_sample(proj)
     plan = proj / "docs/spec/plan.yaml"
     old = 'rationale: "Routing and the inbox are the two halves of one capability'
-    plan.write_text(plan_text.replace(old, 'rationale: "Changed reason for milestone two. Routing and the inbox are the two halves of one capability'), encoding="utf-8")
+    write_lf(plan, plan_text.replace(old, 'rationale: "Changed reason for milestone two. Routing and the inbox are the two halves of one capability'))
     import re
     ms2 = proj / "docs/spec/m2-route-to-approvers/milestone.md"
-    ms2.write_text(ms2.read_text(encoding="utf-8").replace("## Expected outcomes\n", "## Expected outcomes\n\n- A line a person added by hand.\n", 1), encoding="utf-8")
+    write_lf(ms2, ms2.read_text(encoding="utf-8").replace("## Expected outcomes\n", "## Expected outcomes\n\n- A line a person added by hand.\n", 1))
     ms3 = proj / "docs/spec/m3-enforce-policy/milestone.md"
     t = ms3.read_text(encoding="utf-8")
     for head in ("Why these items form this milestone", "Joint demonstration"):
         t = re.sub(r"(?ms)^## " + head + r"\n.*?(?=^## )", "", t)
-    ms3.write_text(t, encoding="utf-8")
+    write_lf(ms3, t)
     readme = proj / "docs/spec/README.md"
     r = readme.read_text(encoding="utf-8")
-    readme.write_text(re.sub(r"(?ms)^## How this plan was composed\n.*?(?=^## )", "", r), encoding="utf-8")
+    write_lf(readme, re.sub(r"(?ms)^## How this plan was composed\n.*?(?=^## )", "", r))
     run = [PY, "scripts/scaffold_spec.py", "--root", str(proj), "--refresh-headers", "--apply", "--allow-no-git"]
     step("--refresh-headers rewrites the rationale sections and adds missing ones", run,
          contains=["refresh header: docs/spec/m2-route-to-approvers/milestone.md", "refresh header: docs/spec/m3-enforce-policy/milestone.md", "refresh tables: docs/spec/README.md", "3 file(s) written"],
@@ -394,7 +400,7 @@ def frontmatter(tmp, plan_text):
     copy_sample(proj, ignore=shutil.ignore_patterns("dev"))
     plan = proj / "docs/spec/plan.yaml"
     gen = [PY, "scripts/generate_dev_skill.py", "--root", str(proj)]
-    plan.write_text(plan_text.replace('name: "Expense approvals"', 'name: "Payments: phase 2 #core"'), encoding="utf-8")
+    write_lf(plan, plan_text.replace('name: "Expense approvals"', 'name: "Payments: phase 2 #core"'))
     step("a project name with ': ' and ' #' gives a quoted description", gen + ["--apply"], contains=["description length: 254 characters"])
     code = ("import json, re, sys; t = open(sys.argv[1], encoding='utf-8').read(); "
             "m = re.search(r'(?m)^description: (.*)$', t); d = json.loads(m.group(1)); "
@@ -408,12 +414,12 @@ def frontmatter(tmp, plan_text):
             "n = {k: t.count(k) for k in ('`npm test`', '`npm run lint`', '`EXPENSE_APPROVALS_ENABLED`', 'npm run test:contract')}; "
             "print(n); sys.exit(0 if set(n.values()) == {1} and 'developers' not in t else 1)")
     step("the generated skill states each command and the flag once", [PY, "-c", once, str(skill / "SKILL.md")])
-    plan.write_text(plan_text.replace("dev_skill_path: docs/dev/skills/expense-approvals-dev", "dev_skill_path: docs/dev/skills/other-name"), encoding="utf-8")
+    write_lf(plan, plan_text.replace("dev_skill_path: docs/dev/skills/expense-approvals-dev", "dev_skill_path: docs/dev/skills/other-name"))
     step("the skill folder must match the skill name", gen, expect=2, contains=["must equal project.dev_skill"])
     long_name = "a" + "-b" * 40
-    plan.write_text(plan_text.replace("expense-approvals-dev", long_name), encoding="utf-8")
+    write_lf(plan, plan_text.replace("expense-approvals-dev", long_name))
     step("a skill name over 64 characters is refused", gen, expect=2, contains=["at most 64"])
-    plan.write_text(plan_text.replace('name: "Expense approvals"', 'name: "' + "Very long project name " * 4 + '"'), encoding="utf-8")
+    write_lf(plan, plan_text.replace('name: "Expense approvals"', 'name: "' + "Very long project name " * 4 + '"'))
     step("a description over 300 characters is flagged", gen, contains=["warning: the description is over 300 characters"])
 
 
@@ -421,12 +427,12 @@ def path_safety(tmp, plan_text):
     """Nothing is copied or written outside the folders it belongs in."""
     d = tmp / "paths"
     (d / "doc/img").mkdir(parents=True)
-    (d / "secret.txt").write_text("not for the repository", encoding="utf-8")
+    write_lf(d / "secret.txt", "not for the repository")
     (d / "doc/img/ok.png").write_bytes(b"\x89PNG\r\n")
-    (d / "doc/notes.txt").write_text("text", encoding="utf-8")
+    write_lf(d / "doc/notes.txt", "text")
     md = d / "doc/design.md"
-    md.write_text("# Design\n\n## 1. Figures\n\n![ok](img/ok.png)\n\n![up](../secret.txt)\n\n"
-                  f"![abs]({(d / 'secret.txt').resolve()})\n\n![text](notes.txt)\n", encoding="utf-8")
+    write_lf(md, "# Design\n\n## 1. Figures\n\n![ok](img/ok.png)\n\n![up](../secret.txt)\n\n"
+                  f"![abs]({(d / 'secret.txt').resolve()})\n\n![text](notes.txt)\n")
     out = d / "out"
     out.mkdir()
     step("images outside the document folder, or not images, are not copied",
@@ -451,9 +457,9 @@ def path_safety(tmp, plan_text):
     proj = d / "proj"
     copy_sample(proj)
     plan = proj / "docs/spec/plan.yaml"
-    plan.write_text(plan_text.replace("folder: m4-pilot", "folder: ../../../m4-pilot"), encoding="utf-8")
+    write_lf(plan, plan_text.replace("folder: m4-pilot", "folder: ../../../m4-pilot"))
     step("a milestone folder outside the project is refused", [PY, "scripts/scaffold_spec.py", "--root", str(proj), "--allow-no-git"], expect=2, contains=["outside the project folder"])
-    plan.write_text(plan_text.replace("dev_skill_path: docs/dev/skills/expense-approvals-dev", "dev_skill_path: ../../expense-approvals-dev"), encoding="utf-8")
+    write_lf(plan, plan_text.replace("dev_skill_path: docs/dev/skills/expense-approvals-dev", "dev_skill_path: ../../expense-approvals-dev"))
     step("the engineers' skill path outside the project is refused", [PY, "scripts/generate_dev_skill.py", "--root", str(proj)], expect=2, contains=["outside the project folder"])
     leaked = [x for x in (d.parent.iterdir()) if x.name in ("m4-pilot", "expense-approvals-dev", "elsewhere")]
     results.append((not leaked, "nothing was written outside the project"))
@@ -465,13 +471,13 @@ def names(tmp, plan_text):
     proj = tmp / "names"
     copy_sample(proj)
     plan = proj / "docs/spec/plan.yaml"
-    plan.write_text(plan_text.replace("tamsin", "will"), encoding="utf-8")
+    write_lf(plan, plan_text.replace("tamsin", "will"))
     people = proj / "people.yaml"
-    people.write_text(people.read_text(encoding="utf-8").replace("Tamsin Hale", "Will Long").replace("id: tamsin", "id: will"), encoding="utf-8")
+    write_lf(people, people.read_text(encoding="utf-8").replace("Tamsin Hale", "Will Long").replace("id: tamsin", "id: will"))
     chk = [PY, "scripts/check_specs.py", "--root", str(proj), "--people", str(people)]
     step("a person named Will Long does not flag the words will and long", chk, contains=["0 with findings"])
     spec = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
-    spec.write_text(spec.read_text(encoding="utf-8") + "\nLong reviewed this with idris.\n", encoding="utf-8")
+    write_lf(spec, spec.read_text(encoding="utf-8") + "\nLong reviewed this with idris.\n")
     step("a capitalized name part and a handle are still flagged", chk, expect=1,
          contains=["person name or handle from the plan at docs/spec/m1-submit-report/wi-01-service-scaffold.md:"], absent=("Long reviewed this with idris.",))
 
@@ -484,7 +490,7 @@ def confidentiality(tmp):
     d = tmp / "confidential"
     d.mkdir()
     yes_plan = d / "yes-with-restricted-source.yaml"
-    yes_plan.write_text(plan_text.replace("repo_audience_approved: false", "repo_audience_approved: true"), encoding="utf-8")
+    write_lf(yes_plan, plan_text.replace("repo_audience_approved: false", "repo_audience_approved: true"))
     step("a plan that answers yes to the one question but holds a restricted source fails with a named finding",
          [PY, "scripts/check_specs.py", "--root", str(fixture), "--plan", str(yes_plan)], expect=1,
          contains=["sources:company-governance: classification is restricted, but project.handling.repo_audience_approved is true"])
@@ -550,8 +556,10 @@ def confidentiality(tmp):
             [PY, "scripts/check_specs.py", "--root", str(sample), "--report", "--people", f"{SAMPLE}/people.yaml"]]
     step("the workspace overlay and the explicit --people file give the same report", [PY, "-c", same, json.dumps(cmds)])
     page = Path(HOME) / ".carrydown" / "workspaces" / "sample-staffing" / "review" / "plan-page.html"
+    # The page is a file on the owner's machine, opened from a file manager or a browser, so its path is
+    # printed in the platform's own form. Compare it in that form.
     step("plan_page writes the plan page into the private workspace", [PY, "scripts/plan_page.py", "--root", str(sample)],
-         contains=["plan page: ", "sample-staffing/review/plan-page.html"], files={page: ["Tamsin Hale", "Review findings"]})
+         contains=["plan page: ", str(Path("sample-staffing", "review", "plan-page.html"))], files={page: ["Tamsin Hale", "Review findings"]})
     step("the workspace overlay also feeds the sync dry run's capacity summary", [PY, "scripts/github_sync.py", "--root", str(sample), "--offline"],
          contains=["Track Workflow: 1 person, 100 percent allocated", "Track Experience: 1 person, 60 percent allocated"])
 
@@ -616,7 +624,7 @@ def bundles(tmp):
     broken = tmp / "bundles-broken"
     shutil.copytree(fixture, broken)
     arch = broken / "docs/ground-truth/architecture.md"
-    arch.write_text(arch.read_text(encoding="utf-8").replace("### 3.5 Routing", "### Routing"), encoding="utf-8")
+    write_lf(arch, arch.read_text(encoding="utf-8").replace("### 3.5 Routing", "### Routing"))
     step("a cited section that is not in the rendering stops the compile", comp + ["--root", str(broken), "--renderings", str(arch.parent), "--out", str(tmp / "bundles-none"), "--apply"],
          expect=1, contains=["obligation not found: architecture 3.5 (cited by WI-06)", "WI-06  obligations present: 4 of 5", "No bundle was compiled."])
     nothing = not (tmp / "bundles-none").exists()
@@ -652,8 +660,8 @@ def lint_spelling(tmp):
     d = tmp / "lint"
     d.mkdir()
     bad, good = d / "british.md", d / "us.md"
-    bad.write_text("The organi" + "sation changed its behavio" + "ur. We author" + "ise it and label" + "led it. Restart it afterward" + "s.\n", encoding="utf-8")
-    good.write_text("The organization changed its behavior. We authorize it and labeled it. Restart it afterward. Advise, promise, exercise, enterprise, otherwise.\n", encoding="utf-8")
+    write_lf(bad, "The organi" + "sation changed its behavio" + "ur. We author" + "ise it and label" + "led it. Restart it afterward" + "s.\n")
+    write_lf(good, "The organization changed its behavior. We authorize it and labeled it. Restart it afterward. Advise, promise, exercise, enterprise, otherwise.\n")
     lint = [PY, "scripts/lint_prose.py"]
     step("lint: British spellings are flagged", lint + [str(bad)], expect=1, contains=["British spelling, use US English (organi" + "sation)", "(behavio" + "ur)", "(author" + "ise)", "(label" + "led)", "(afterward" + "s)"])
     step("lint: US spellings and real -ise words are clean", lint + [str(good)], contains=["0 findings"])
@@ -672,7 +680,7 @@ def regressions(tmp, plan_text):
         proj = d / name
         copy_sample(proj)
         if plan is not None:
-            (proj / "docs/spec/plan.yaml").write_text(plan, encoding="utf-8")
+            write_lf(proj / "docs/spec/plan.yaml", plan)
         return proj
 
     def every_script(label, proj, want, expect="nonzero", extra=()):
@@ -732,14 +740,14 @@ def regressions(tmp, plan_text):
     ]):
         assert old in people_text, label
         pf = d / f"people-wrong{i}.yaml"
-        pf.write_text(people_text.replace(old, new, 1), encoding="utf-8")
+        write_lf(pf, people_text.replace(old, new, 1))
         root_args = ["--root", SAMPLE, "--people", str(pf)]
         step(f"people.yaml with {label}: check_specs", chk + root_args, expect=1, contains=[want], timeout=60, absent=("Traceback", "Noor Castellan", "nobody"))
         step(f"people.yaml with {label}: check_specs --json", chk + root_args + ["--json"], expect=1, contains=[want], timeout=60, json_out=True)
     step("a people file that does not exist is one line", chk + ["--root", SAMPLE, "--people", str(d / "nowhere.yaml")], expect=2, contains=["people file", "does not exist"], timeout=60)
     step("an empty --people is refused", chk + ["--root", SAMPLE, "--people", ""], expect=2, contains=["--people is empty"], timeout=60)
     brokenp = d / "people-broken.yaml"
-    brokenp.write_text("people:\n  - id: tamsin\n    name: [Secret Person\n", encoding="utf-8")
+    write_lf(brokenp, "people:\n  - id: tamsin\n    name: [Secret Person\n")
     step("a people file with a syntax error names the line and quotes nothing", chk + ["--root", SAMPLE, "--people", str(brokenp)], expect=2,
          contains=["cannot read people file", "syntax error near line"], absent=("Traceback", "Secret Person"), timeout=60)
 
@@ -776,14 +784,14 @@ def regressions(tmp, plan_text):
     step("--report with --json is an error, as JSON", chk + s + ["--report", "--json"], expect=2, json_out=True)
     step("--json without a plan is JSON and exit 2", chk + ["--root", str(d), "--json"], expect=2, contains=["plan not found"], json_out=True)
     empty = d / "empty-plan.yaml"
-    empty.write_text("", encoding="utf-8")
+    write_lf(empty, "")
     step("--json with an empty plan is JSON and exit 2", chk + s + ["--plan", str(empty), "--json"], expect=2, json_out=True)
     cited = project("plan-cite", plan_text.replace('sections: "3.1, 3.2, 5.1, 7.1"', 'sections: "3.1, 9.9"', 1))
     step("a plan.yaml citation of a missing section is a finding", chk + ["--root", str(cited)], expect=1,
          contains=["Ground truth cites Architecture document section 9.9, which is not a heading in docs/ground-truth/architecture.md"])
     named = project("named")
     spec = named / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
-    spec.write_text(spec.read_text(encoding="utf-8") + "\nReviewed by Tamsin Hale.\n", encoding="utf-8")
+    write_lf(spec, spec.read_text(encoding="utf-8") + "\nReviewed by Tamsin Hale.\n")
     code = ("import subprocess, sys; o = subprocess.run(sys.argv[1:], capture_output=True, text=True).stdout; "
             "n = o.count('person name or handle from the plan'); print('findings', n); sys.exit(0 if n == 1 else 1)")
     step("a full name in a specification is one finding, not one per part", [PY, "-c", code] + chk + ["--root", str(named), "--people", str(named / "people.yaml")], contains=["findings 1"])
@@ -814,9 +822,9 @@ def regressions(tmp, plan_text):
     (doc / "img/i/x.png").write_bytes(b"\x89PNG first")
     (doc / "img/j/x.png").write_bytes(b"\x89PNG second")
     page = doc / "img/page.md"
-    page.write_text("# Page\n\n## 1. Figures\n\n![one](i/x.png)\n\n![two](j/x.png)\n", encoding="utf-8")
+    write_lf(page, "# Page\n\n## 1. Figures\n\n![one](i/x.png)\n\n![two](j/x.png)\n")
     for x in ("a", "b"):
-        (doc / x / "notes.md").write_text("# Notes\n\n## 1. Part\n", encoding="utf-8")
+        write_lf(doc / x / "notes.md", "# Notes\n\n## 1. Part\n")
     out = d / "render-out"
     out.mkdir()
     r = ["--root", str(out)]
@@ -918,7 +926,7 @@ def round_two(tmp, plan_text):
         out.mkdir()
         step("a named pipe as a renderer input is one line", render + [str(src), "--root", str(out), "--dry-run"], expect=2, contains=["is not a regular file"], timeout=30)
         md = d / "doc.md"
-        md.write_text("# Doc\n\n## 1. Part\n", encoding="utf-8")
+        write_lf(md, "# Doc\n\n## 1. Part\n")
         (out / "docs/ground-truth").mkdir(parents=True)
         os.mkfifo(str(out / "docs/ground-truth/doc.md"))
         step("a named pipe where the rendering goes is in the way", render + [str(md), "--root", str(out)], expect=2, contains=["is in the way", "pipe, socket or device"], timeout=30)
@@ -932,7 +940,7 @@ def round_two(tmp, plan_text):
     step("docx: level numbers that are not ASCII digits do not stop the renderer", render + [str(bad), "--root", str(d), "--dry-run"],
          contains=["1 document(s) checked"], timeout=60)
     md = d / "plain.md"
-    md.write_text("# Plain\n\n## 1. Part\n", encoding="utf-8")
+    write_lf(md, "# Plain\n\n## 1. Part\n")
     step("a --name too long for the file system is refused before anything is written", render + [str(md), "--root", str(d), "--name", "n" * 300], expect=2,
          contains=["longer than the"], timeout=30)
     step("an empty --out-dir is refused", render + [str(md), "--root", str(d), "--out-dir", ""], expect=2, contains=["--out-dir is empty"])
@@ -1042,7 +1050,7 @@ def main():
     with tempfile.TemporaryDirectory() as tmp:
         def variant(name, text):
             path = Path(tmp) / f"{name}.yaml"
-            path.write_text(text, encoding="utf-8")
+            write_lf(path, text)
             return str(path)
         chk = [PY, "scripts/check_specs.py", "--root", SAMPLE]
         people_file = f"{SAMPLE}/people.yaml"

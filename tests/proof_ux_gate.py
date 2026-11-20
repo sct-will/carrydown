@@ -186,7 +186,7 @@ def fresh_project(name, repo="o/r"):
         if child.name != "plan.yaml":
             (shutil.copytree if child.is_dir() else shutil.copy)(str(child), str(proj / "docs" / "spec" / child.name))
     text = WORKING_PLAN.read_text(encoding="utf-8").replace("repo: sct-will/carrydown-sample", f"repo: {repo}")
-    (proj / "docs" / "spec" / "plan.yaml").write_text(text, encoding="utf-8")
+    (proj / "docs" / "spec" / "plan.yaml").write_bytes((text).encode("utf-8"))
     return proj, origin, ws, (rc1, out1), (rc2, out2), (rc3, out3)
 
 
@@ -327,7 +327,7 @@ try:
     claim(rc == 0 and "(the active request)" in out, "withdraw (dry run) without --request names the active request", find(out, r".*the active request.*"))
 
     # ------------------------------------------------------------------ the engineers' skill alone, without a token
-    (proj / "docs" / "spec" / "README.md").write_text((proj / "docs" / "spec" / "README.md").read_text(encoding="utf-8"), encoding="utf-8")
+    (proj / "docs" / "spec" / "README.md").write_bytes(((proj / "docs" / "spec" / "README.md").read_text(encoding="utf-8")).encode("utf-8"))
     rc, out = run("release", ["release", "--root", str(proj), "--no-github"])
     claim(rc == 0 and "numeric id 4200" in out,
           "\"Generate the engineers' skill.\" without a token reads the repository id from the earlier release", find(out, r".*numeric id.*"))

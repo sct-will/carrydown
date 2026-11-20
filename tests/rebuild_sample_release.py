@@ -83,7 +83,7 @@ def rebuild(base, sample=SAMPLE):
     scripts = ROOT / "scripts"
     run([sys.executable, str(scripts / "workspace.py"), "init", "--root", str(project), "--slug", "expense-approvals", "--workspace", str(workspace), "--apply"],
         project, env)
-    (workspace / "workspace.yaml").write_text(WORKSPACE_YAML, encoding="utf-8")       # the fixture's own, with no machine path in it
+    (workspace / "workspace.yaml").write_bytes(WORKSPACE_YAML.encode("utf-8"))       # the fixture's own, with no machine path in it
     (workspace / "people.yaml").unlink()                                                # no staffing record is part of the fixture
     (workspace / "drafts").mkdir(parents=True, exist_ok=True)                           # the owner's working plan: classification, original and rendering paths
     shutil.copy(FIXTURE / "drafts" / "plan.yaml", workspace / "drafts" / "plan.yaml")
@@ -148,7 +148,7 @@ def main(argv=None):
             (FIXTURE / "drafts" / "plan.yaml").write_bytes(drafts)
             for name in KEEP:
                 shutil.copytree(workspace / name, FIXTURE / name)
-            (FIXTURE / "workspace.yaml").write_text(WORKSPACE_YAML, encoding="utf-8")
+            (FIXTURE / "workspace.yaml").write_bytes(WORKSPACE_YAML.encode("utf-8"))
             shutil.copy(workspace / "retention.yaml", FIXTURE / "retention.yaml")
             release_dir = sample / "docs" / "release"
             shutil.rmtree(release_dir, ignore_errors=True)

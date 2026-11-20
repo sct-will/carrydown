@@ -76,12 +76,12 @@ class Released:
         ignore = [".gitignore", "people.yaml", "__pycache__"] + ([] if keep_originals else ["ground-truth"])
         shutil.copytree(FIXTURE, self.root, ignore=shutil.ignore_patterns(*ignore))
         stored_path = Path(base) / "workspace-plan.yaml"
-        stored_path.write_text(workspace_plan_text(public), encoding="utf-8")
+        stored_path.write_bytes((workspace_plan_text(public)).encode("utf-8"))
         stored, problems = L.load_plan(stored_path, FIXTURE)
         assert not problems, problems
         released = L.project_released_plan(stored)
         self.plan_path = self.root / "docs/spec/plan.yaml"
-        self.plan_path.write_text(PR.dump(released) + "\n", encoding="utf-8")
+        self.plan_path.write_bytes((PR.dump(released) + "\n").encode("utf-8"))
         self.plan, problems = L.load_plan(self.plan_path, self.root)
         assert not problems, problems
         assert self.plan["_view"] == "released"
@@ -97,7 +97,7 @@ class Released:
             path = L.spec_path(self.plan, self.root, it)
             want = dict(L.expected_header(self.plan, it))["Ground truth"]
             text = path.read_text(encoding="utf-8")
-            path.write_text(re.sub(r"(?m)^\| Ground truth \| .* \|$", lambda m: f"| Ground truth | {want} |", text), encoding="utf-8")
+            path.write_bytes((re.sub(r"(?m)^\| Ground truth \| .* \|$", lambda m: f"| Ground truth | {want} |", text)).encode("utf-8"))
 
     def bundle_paths(self, it):
         low = L.tag(self.plan, it["id"]).lower()
@@ -281,7 +281,7 @@ class ReleasedViewTests(WithTemp):
         spec = next(L.spec_path(project.plan, project.root, i) for i in project.plan["items"] if i["id"] == 6)
         self.assertIn("](../../ground-truth/architecture.md#35-routing)", spec.read_text(encoding="utf-8"))
         # a link to a section the bundle does not hold is still broken
-        spec.write_text(spec.read_text(encoding="utf-8").replace("## Decisions recorded", "- [Section 9.9, Elsewhere](../../ground-truth/architecture.md#99-elsewhere)\n\n## Decisions recorded"), encoding="utf-8")
+        spec.write_bytes((spec.read_text(encoding="utf-8").replace("## Decisions recorded", "- [Section 9.9, Elsewhere](../../ground-truth/architecture.md#99-elsewhere)\n\n## Decisions recorded")).encode("utf-8"))
         code, out = project.check()
         self.assertEqual(code, 1)
         self.assertIn("broken relative link ../../ground-truth/architecture.md#99-elsewhere", out)
@@ -293,14 +293,14 @@ class ReleasedViewTests(WithTemp):
         text = spec.read_text(encoding="utf-8")
         refs = text.split("## References\n", 1)[1].split("\n## ", 1)[0]
         text = text.replace(refs, "\n- architecture section 3.5, Routing\n- architecture section 4.1\n- company-governance section 2.3, Approval limits\n\n")
-        spec.write_text(text, encoding="utf-8")
+        spec.write_bytes((text).encode("utf-8"))
         code, out = project.check()
         self.assertEqual(code, 0, out)
-        spec.write_text(text.replace("- architecture section 4.1\n", "- architecture section 4.1\n- architecture section 8.8, Not bundled\n"), encoding="utf-8")
+        spec.write_bytes((text.replace("- architecture section 4.1\n", "- architecture section 4.1\n- architecture section 8.8, Not bundled\n")).encode("utf-8"))
         code, out = project.check()
         self.assertEqual(code, 1)
         self.assertIn("obligation not in the approved context: architecture 8.8", out)
-        spec.write_text(text.replace("- architecture section 4.1\n", "- nowhere section 1.1\n"), encoding="utf-8")
+        spec.write_bytes((text.replace("- architecture section 4.1\n", "- nowhere section 1.1\n")).encode("utf-8"))
         code, out = project.check()
         self.assertIn("References cites unknown source nowhere", out)
 
@@ -359,7 +359,7 @@ class WorkspaceViewTests(WithTemp):
         self.assertEqual(code, 1)
         self.assertIn("ground truth citations not checked", out)   # nothing to read, nothing claimed
         (proj / ".carrydown").mkdir()
-        (proj / ".carrydown/local.yaml").write_text(f"workspace: {ws}\n", encoding="utf-8")
+        (proj / ".carrydown/local.yaml").write_bytes((f"workspace: {ws}\n").encode("utf-8"))
         code, out = check("--root", proj)
         self.assertEqual(code, 0, out)
 
@@ -367,13 +367,13 @@ class WorkspaceViewTests(WithTemp):
         proj = self.sample()
         spec = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
         text = spec.read_text(encoding="utf-8")
-        spec.write_text(text.replace("## Decisions recorded", "## Decisions recorded", 1), encoding="utf-8")
+        spec.write_bytes((text.replace("## Decisions recorded", "## Decisions recorded", 1)).encode("utf-8"))
         refs = text.split("## References\n", 1)[1].split("\n## ", 1)[0]
         good = text.replace(refs, "\n- architecture section 3.1, Overview\n- architecture section 3.2\n\n")
-        spec.write_text(good, encoding="utf-8")
+        spec.write_bytes((good).encode("utf-8"))
         code, out = check("--root", proj)
         self.assertEqual(code, 0, out)
-        spec.write_text(good.replace("- architecture section 3.2\n", "- architecture section 99.9, Nothing\n"), encoding="utf-8")
+        spec.write_bytes((good.replace("- architecture section 3.2\n", "- architecture section 99.9, Nothing\n")).encode("utf-8"))
         code, out = check("--root", proj)
         self.assertEqual(code, 1)
         self.assertIn("References cites architecture section 99.9 at line", out)
@@ -415,7 +415,7 @@ class TrackedSourceTests(WithTemp):
     def test_the_rendering_and_the_docs_source_folder_count_too(self):
         proj, plan = self.repo()
         text = (proj / "docs/spec/plan.yaml").read_text(encoding="utf-8")
-        (proj / "docs/spec/plan.yaml").write_text(text.replace("source_path: ground-truth/company-governance.md", "source_path: docs/source/company-governance.docx"), encoding="utf-8")
+        (proj / "docs/spec/plan.yaml").write_bytes((text.replace("source_path: ground-truth/company-governance.md", "source_path: docs/source/company-governance.docx")).encode("utf-8"))
         plan, _ = L.load_plan(proj / "docs/spec/plan.yaml", proj)
         (proj / "docs/source").mkdir()
         (proj / "docs/source/company-governance.docx").write_bytes(b"binary")
@@ -474,7 +474,7 @@ class TrackedSourceTests(WithTemp):
         ws = self.base / "ws"
         ws.mkdir()
         (proj / ".carrydown").mkdir()
-        (proj / ".carrydown/local.yaml").write_text(f"workspace: {ws}\n", encoding="utf-8")
+        (proj / ".carrydown/local.yaml").write_bytes((f"workspace: {ws}\n").encode("utf-8"))
         code, out = check("--root", proj)
         self.assertEqual(code, 1)
         self.assertIn("restricted source is tracked in git: company-governance", out)
@@ -490,7 +490,7 @@ class LogHygieneTests(WithTemp):
     def test_a_banned_name_prints_the_file_and_line_and_no_excerpt(self):
         proj = self.sample()
         spec = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
-        spec.write_text(spec.read_text(encoding="utf-8") + "\nQuestions go to tamsin before Friday.\n", encoding="utf-8")
+        spec.write_bytes((spec.read_text(encoding="utf-8") + "\nQuestions go to tamsin before Friday.\n").encode("utf-8"))
         for flags in ([], ["--json"]):
             code, out = check("--root", proj, *flags)
             self.assertEqual(code, 1)
@@ -509,7 +509,7 @@ class LogHygieneTests(WithTemp):
         text = re.sub(r"(?m)^\| Target \| .* \|$", "| Target | SECRETVALUE-TARGET |", text)
         text = re.sub(r"(?m)^\| Depends on \| .* \|$", "| Depends on | SECRETVALUE-DEPENDS |", text)
         text = text.replace("# WI-01 ", "# WI-01 SECRETVALUE-TITLE ", 1)
-        spec.write_text(text, encoding="utf-8")
+        spec.write_bytes((text).encode("utf-8"))
         for flags in ([], ["--json"]):
             code, out = check("--root", proj, *flags)
             self.assertEqual(code, 1)
@@ -541,7 +541,7 @@ class LogHygieneTests(WithTemp):
         plan_path = proj / "docs/spec/plan.yaml"
         broken = text.replace("  - id: workflow\n    label: Workflow\n", f"  - id: workflow\n    note: {secret}\n", 1)
         self.assertNotEqual(broken, text)
-        plan_path.write_text(broken, encoding="utf-8")
+        plan_path.write_bytes((broken).encode("utf-8"))
         for flags in ([], ["--json"]):
             code, out = check("--root", proj, *flags)
             self.assertEqual(code, 1)
@@ -549,7 +549,7 @@ class LogHygieneTests(WithTemp):
             self.assertNotIn(secret, out)
         checkpoints = text.replace("  - date: 2027-02-05\n    name: \"Contract freeze\"\n", f"  - date: 2027-02-05\n    note: {secret}\n", 1)
         self.assertNotEqual(checkpoints, text)
-        plan_path.write_text(checkpoints, encoding="utf-8")
+        plan_path.write_bytes((checkpoints).encode("utf-8"))
         code, out = check("--root", proj)
         self.assertIn("checkpoints: need date and name (checkpoint entry 1)", out)
         self.assertNotIn(secret, out)
@@ -559,20 +559,20 @@ class LogHygieneTests(WithTemp):
         code, out = check("--root", proj)
         self.assertEqual(code, 0, out)
         review = proj / "docs/spec/plan-review.md"
-        review.write_text("# Plan review\n\nIdris should take the inbox. Ask tamsin about the rest.\n", encoding="utf-8")
+        review.write_bytes(("# Plan review\n\nIdris should take the inbox. Ask tamsin about the rest.\n").encode("utf-8"))
         for flags in ([], ["--json"]):
             code, out = check("--root", proj, *flags)
             self.assertEqual(code, 1)
             self.assertRegex(out, r"person name or handle from the plan at docs/spec/plan-review\.md:3")
             self.assertNotIn("Ask tamsin", out)
-        review.write_text("# Plan review\n\nThe plan reads well.\n", encoding="utf-8")
+        review.write_bytes(("# Plan review\n\nThe plan reads well.\n").encode("utf-8"))
         self.assertEqual(check("--root", proj)[0], 0)
 
     def test_a_detector_finding_in_the_checker_gives_the_location_and_not_the_text(self):
         proj = self.sample()
         spec = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
         token = "ghp_ABCDEFGHIJKLMNOP1234567890"
-        spec.write_text(spec.read_text(encoding="utf-8") + f"\nUse {token} for it.\n", encoding="utf-8")
+        spec.write_bytes((spec.read_text(encoding="utf-8") + f"\nUse {token} for it.\n").encode("utf-8"))
         for flags in ([], ["--json"]):
             code, out = check("--root", proj, *flags)
             self.assertEqual(code, 1)
@@ -588,28 +588,28 @@ class LogHygieneTests(WithTemp):
         shutil.copytree(FIXTURE, proj, ignore=shutil.ignore_patterns("__pycache__"))
         ws = self.base / "ws"
         ws.mkdir()
-        (ws / "phrases.txt").write_text("Harbor Finance Group\n", encoding="utf-8")
+        (ws / "phrases.txt").write_bytes(("Harbor Finance Group\n").encode("utf-8"))
         (proj / ".carrydown").mkdir()
-        (proj / ".carrydown/local.yaml").write_text(f"workspace: {ws}\n", encoding="utf-8")
+        (proj / ".carrydown/local.yaml").write_bytes((f"workspace: {ws}\n").encode("utf-8"))
         text = (FIXTURE / "docs/ground-truth/company-governance.md").read_text(encoding="utf-8")
         passage = " ".join(text.split("### 2.3 Approval limits", 1)[1].split("###", 1)[0].split()[:20])
         spec = proj / "docs/spec/m3-enforce-policy/wi-07-audit-log.md"
-        spec.write_text(spec.read_text(encoding="utf-8") + f"\n{passage}\n", encoding="utf-8")
+        spec.write_bytes((spec.read_text(encoding="utf-8") + f"\n{passage}\n").encode("utf-8"))
         code, out = check("--root", proj)
         self.assertEqual(code, 1)
         self.assertRegex(out, r"detector:copied_restricted:copied-passage at docs/spec/m3-enforce-policy/wi-07-audit-log\.md:\d+ \(passage_sha256 [0-9a-f]{64}\)")
         self.assertNotIn(passage[:40], out)
         other = proj / "docs/spec/m1-submit-report/wi-01-service-scaffold.md"
-        other.write_text(other.read_text(encoding="utf-8") + "\nWritten for HARBOR finance group staff.\n", encoding="utf-8")
+        other.write_bytes((other.read_text(encoding="utf-8") + "\nWritten for HARBOR finance group staff.\n").encode("utf-8"))
         code, out = check("--root", proj)
         self.assertRegex(out, r"detector:org_phrases:organization-phrase at docs/spec/m1-submit-report/wi-01-service-scaffold\.md:\d+ \(passage_sha256 [0-9a-f]{64}\)")
         self.assertNotIn("HARBOR", out)
-        other.write_text(other.read_text(encoding="utf-8").replace("Written for HARBOR finance group staff.", ""), encoding="utf-8")
+        other.write_bytes((other.read_text(encoding="utf-8").replace("Written for HARBOR finance group staff.", "")).encode("utf-8"))
         # the bundle of a work item may quote the restricted section it was approved for
         bundle = proj / "docs/context"
         bundle.mkdir()
-        (bundle / "wi-06.md").write_text(f"# Approved context\n\n{passage}\n", encoding="utf-8")
-        spec.write_text(spec.read_text(encoding="utf-8").replace(passage, ""), encoding="utf-8")
+        (bundle / "wi-06.md").write_bytes((f"# Approved context\n\n{passage}\n").encode("utf-8"))
+        spec.write_bytes((spec.read_text(encoding="utf-8").replace(passage, "")).encode("utf-8"))
         code, out = check("--root", proj)
         self.assertNotIn("copied_restricted", out)
 
@@ -639,7 +639,7 @@ class ScaffoldIgnoreTests(WithTemp):
     def test_apply_appends_each_line_once_and_prints_it(self):
         proj = self.base / "p"
         proj.mkdir()
-        (proj / ".gitignore").write_text("__pycache__/\n*.pyc", encoding="utf-8")   # no trailing newline
+        (proj / ".gitignore").write_bytes(("__pycache__/\n*.pyc").encode("utf-8"))   # no trailing newline
         code, out = self.init(proj, "--apply")
         self.assertEqual(code, 0, out)
         for line in self.LINES:
@@ -654,7 +654,7 @@ class ScaffoldIgnoreTests(WithTemp):
     def test_the_pointer_line_that_workspace_init_wrote_is_not_added_twice(self):
         proj = self.base / "p"
         proj.mkdir()
-        (proj / ".gitignore").write_text(".carrydown/local.yaml\n", encoding="utf-8")
+        (proj / ".gitignore").write_bytes((".carrydown/local.yaml\n").encode("utf-8"))
         code, out = self.init(proj, "--apply")
         self.assertEqual(code, 0, out)
         self.assertNotIn(".gitignore: .carrydown/local.yaml", out)
@@ -664,7 +664,7 @@ class ScaffoldIgnoreTests(WithTemp):
         proj = self.base / "p"
         proj.mkdir()
         self.assertEqual(self.init(proj, "--apply")[0], 0)
-        (proj / ".gitignore").write_text("", encoding="utf-8")
+        (proj / ".gitignore").write_bytes(("").encode("utf-8"))
         code, out = self.init(proj, "--apply")
         self.assertEqual(code, 1)
         self.assertEqual((proj / ".gitignore").read_text(encoding="utf-8"), "")

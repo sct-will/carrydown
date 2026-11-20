@@ -396,12 +396,12 @@ def modernize_citations(plan_file, spec_root):
     plan_file = Path(plan_file)
     text = plan_file.read_text(encoding="utf-8")
     text = re.sub(r'(?m)^    ground_truth: "Sections ([^"]+)"$', r'    source_refs:\n      - source: architecture\n        sections: "\1"', text)
-    plan_file.write_text(text, encoding="utf-8")
+    plan_file.write_bytes((text).encode("utf-8"))
     for md in Path(spec_root).rglob("wi-*.md"):
         body = md.read_text(encoding="utf-8")
         new = re.sub(r"(?m)^\| Ground truth \| (Sections [^|]+?) \|$", r"| Ground truth | Architecture document: \1 |", body)
         if new != body:
-            md.write_text(new, encoding="utf-8")
+            md.write_bytes((new).encode("utf-8"))
 
 
 def legacy_citations(spec_root):
@@ -410,7 +410,7 @@ def legacy_citations(spec_root):
         body = md.read_text(encoding="utf-8")
         new = re.sub(r"(?m)^\| Ground truth \| Architecture document: (Sections [^|;]+?) \|$", r"| Ground truth | \1 |", body)
         if new != body:
-            md.write_text(new, encoding="utf-8")
+            md.write_bytes((new).encode("utf-8"))
 
 
 class YesFlow:
@@ -438,7 +438,7 @@ class YesFlow:
         text = text.replace("classification: restricted", "classification: repo-readers")
         for source in self.public:
             text = re.sub(r"(id: %s\n(?:.*\n)*?    classification: )repo-readers" % re.escape(source), r"\1public", text, count=1)
-        plan.write_text(text, encoding="utf-8")
+        plan.write_bytes((text).encode("utf-8"))
         if modern:
             modernize_citations(plan, self.root / "docs" / "spec")
         F.init_git(self.root)
@@ -500,7 +500,7 @@ class YesFlow:
         path = self.root / "ground-truth" / "company-governance.md"
         text = path.read_text(encoding="utf-8")
         need(old in text, "the section to edit is not in the source")
-        path.write_text(text.replace(old, new, 1), encoding="utf-8")
+        path.write_bytes((text.replace(old, new, 1)).encode("utf-8"))
         r = run_script("render_ground_truth.py", path, "--root", self.root, "--source-id", "company-governance", "--version", "2027.2",
                        "--date", "2027-01-25", cwd=self.root)
         need(r.returncode == 0, "the renderer refused: " + r.stdout[-200:] + r.stderr[-200:])
@@ -1012,7 +1012,7 @@ class NoFlow:
         path = self.ws / "sources" / "company-governance.md"
         text = path.read_text(encoding="utf-8")
         need(old in text, "the section to edit is not in the source")
-        path.write_text(text.replace(old, new, 1), encoding="utf-8")
+        path.write_bytes((text.replace(old, new, 1)).encode("utf-8"))
         r = run_script("render_ground_truth.py", path, "--root", self.root, "--source-id", "company-governance", "--version", "2027.2",
                        "--date", "2027-01-25", cwd=self.root)
         need(r.returncode == 0, "the renderer refused: " + r.stdout[-200:] + r.stderr[-200:])
@@ -1449,8 +1449,8 @@ def _():
 def _():
     n = no()
     stage("no.land")
-    (n.root / "README.md").write_text("uncommitted edit\n", encoding="utf-8")
-    (n.root / "scratch.txt").write_text("untracked\n", encoding="utf-8")
+    (n.root / "README.md").write_bytes(("uncommitted edit\n").encode("utf-8"))
+    (n.root / "scratch.txt").write_bytes(("untracked\n").encode("utf-8"))
     before, status = tree_state(n.root), git(n.root, "status", "--porcelain").stdout
     code, out, err = n.export(apply=False)
     need(code == 0, out + err)
@@ -1651,7 +1651,7 @@ def _():
                            ("another repository", {"cache_format": 1, "repository": "elsewhere/repo", "commit": head, "request_id": n.rid, "time": CLOCK0.strftime("%Y-%m-%dT%H:%M:%SZ")}),
                            ("a future time", {"cache_format": 1, "repository": identity, "commit": head, "request_id": n.rid, "time": "2027-12-31T00:00:00Z"})):
         (fresh / ".carrydown" / "cache").mkdir(parents=True, exist_ok=True)
-        (fresh / ".carrydown" / "cache" / "last-refresh").write_text(json.dumps(record), encoding="utf-8")
+        (fresh / ".carrydown" / "cache" / "last-refresh").write_bytes((json.dumps(record)).encode("utf-8"))
         code, text = check_context(skill_script(fresh), fresh, "WI-06", now=CLOCK0)
         need(code == 11 and "could-not-refresh" in text, f"{label_}: {text}")
 
@@ -1873,7 +1873,7 @@ def _(f):
         need(code == 11 and "could-not-refresh" in text, "malformed record: " + text)
         forged = json.loads(saved)
         forged["request_id"] = "0" * 64
-        cache.write_text(json.dumps(forged), encoding="utf-8")
+        cache.write_bytes((json.dumps(forged)).encode("utf-8"))
         code, text = check_context(skill_script(offline), offline, "WI-06", now=CLOCK0 + dt.timedelta(days=1))
         need(code == 11 and "could-not-refresh" in text, "a record of another request: " + text)
         cache.write_bytes(saved)
@@ -2319,7 +2319,7 @@ def _(f):
         for field, value in (("audience", "public"), ("destinations", ["engineering-repo"])):
             changed = json.loads(original)
             changed["receipt_template"][field] = value
-            path.write_text(json.dumps(changed), encoding="utf-8")
+            path.write_bytes((json.dumps(changed)).encode("utf-8"))
             code, out, err = f.export(rid, apply=False)
             need(code == 1 and "approval-scope-mismatch" in err, f"{field}: {out}{err}")
     finally:
@@ -2379,7 +2379,7 @@ def _(f):
     state_file = f.ws / "requests" / second / "state.json"
     state_file.parent.mkdir(parents=True, exist_ok=True)
     saved = state_file.read_bytes() if state_file.exists() else None
-    state_file.write_text(json.dumps({"request_id": second, "release_id": request_of(f, second)["release_id"], "state": "active", "event_id": "0" * 64, "staging_tip": "0" * 64}), encoding="utf-8")
+    state_file.write_bytes((json.dumps({"request_id": second, "release_id": request_of(f, second)["release_id"], "state": "active", "event_id": "0" * 64, "staging_tip": "0" * 64})).encode("utf-8"))
     try:
         code, out, err = f.export(second, apply=False)
         need(code == 1 and "withdrawn" in err, "export trusted a state file: " + out + err)
@@ -2702,14 +2702,14 @@ def _(f):
     if f.path == "yes":
         root = f.root
         spec = root / SPEC_FILE
-        spec.write_text(spec.read_text(encoding="utf-8").rstrip("\n") + " Edited after approval.\n", encoding="utf-8")
+        spec.write_bytes((spec.read_text(encoding="utf-8").rstrip("\n") + " Edited after approval.\n").encode("utf-8"))
         refusing = (("scaffold_spec.py", ["--refresh-headers", "--apply", "--allow-no-git"]), ("plan_repair.py", ["--apply"]))
         wanted = "working-copy-differs"
     else:
         root = S.tmp / "no-edited-clone"
         git(S.tmp, "clone", "-q", f.origin, root)
         spec = root / SPEC_FILE
-        spec.write_text(spec.read_text(encoding="utf-8").rstrip("\n") + " Edited after approval.\n", encoding="utf-8")
+        spec.write_bytes((spec.read_text(encoding="utf-8").rstrip("\n") + " Edited after approval.\n").encode("utf-8"))
         refusing = (("generate_dev_skill.py", ["--apply", "--force"]), ("plan_repair.py", ["--apply"]))
         wanted = "not-approved"
     before = tree_state(root)
@@ -2729,7 +2729,7 @@ def _(f):
     need(code == 0, out + err)
     equal(tree_state(f.ws), ws_before, "workspace after the preview")
     if f.path == "yes":
-        spec.write_text(spec.read_text(encoding="utf-8").replace(" Edited after approval.\n", "\n"), encoding="utf-8")
+        spec.write_bytes((spec.read_text(encoding="utf-8").replace(" Edited after approval.\n", "\n")).encode("utf-8"))
     else:
         shutil.rmtree(root)
     return "; ".join(seen) + "; the workspace write is allowed"

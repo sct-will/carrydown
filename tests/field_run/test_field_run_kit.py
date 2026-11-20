@@ -244,7 +244,7 @@ class PrepareTests(unittest.TestCase):
             parsed, unparsed = M.parse_commands(line + "\n")
             self.assertEqual((len(parsed), unparsed, parsed[0]["code"]), (1, 0, 3))
         finally:
-            log.write_text(before, encoding="utf-8")
+            log.write_bytes((before).encode("utf-8"))
 
     def test_a_folder_that_is_not_empty_is_refused_and_the_real_project_flags_go_together(self):
         code, out, err = prepare(self.fr)
@@ -544,7 +544,7 @@ class MeasureStateTests(unittest.TestCase):
             doc = json.loads(original)
             doc["dispositions"][1] = {"block": doc["dispositions"][1]["block"], "disposition": "pending"}
             del doc["dispositions"][0]
-            path.write_text(json.dumps(doc), encoding="utf-8")
+            path.write_bytes((json.dumps(doc)).encode("utf-8"))
             r = M.measure_dispositions(self.run_obj, self.proposal)
             self.assertFalse(r["complete"])
             codes = " ".join(r["problems"])
@@ -553,7 +553,7 @@ class MeasureStateTests(unittest.TestCase):
             targets = {name: v for name, v, _ in self.measure()["targets"]}
             self.assertEqual(targets["Every changed block has a disposition"], "not met")
         finally:
-            path.write_text(original, encoding="utf-8")
+            path.write_bytes((original).encode("utf-8"))
         self.assertTrue(M.measure_dispositions(self.run_obj, self.proposal)["complete"])
 
     def test_the_engineer_entry_surviving_is_detected_and_its_loss_is_too(self):
@@ -561,14 +561,14 @@ class MeasureStateTests(unittest.TestCase):
         original = spec.read_text(encoding="utf-8")
         try:
             self.assertTrue(M.measure_preservation(self.run_obj)["survived"])
-            spec.write_text(original.replace(P.ENTRY, P.ENTRY.replace("3 business days", "2 business days")), encoding="utf-8")
+            spec.write_bytes((original.replace(P.ENTRY, P.ENTRY.replace("3 business days", "2 business days"))).encode("utf-8"))
             self.assertFalse(M.measure_preservation(self.run_obj)["survived"])
-            spec.write_text(original.replace(P.ENTRY + "\n", "None yet.\n"), encoding="utf-8")
+            spec.write_bytes((original.replace(P.ENTRY + "\n", "None yet.\n")).encode("utf-8"))
             self.assertFalse(M.measure_preservation(self.run_obj)["survived"])
             targets = {name: v for name, v, _ in self.measure()["targets"]}
             self.assertEqual(targets["Engineer decision entry kept (WI-03)"], "not met")
         finally:
-            spec.write_text(original, encoding="utf-8")
+            spec.write_bytes((original).encode("utf-8"))
         self.assertTrue(M.measure_preservation(self.run_obj)["survived"])
 
     def test_wi_07_named_for_the_uncited_rule_is_detected_in_the_disposition_or_an_owner_message(self):
@@ -581,7 +581,7 @@ class MeasureStateTests(unittest.TestCase):
                 if rec["block"].endswith("4.3"):
                     rec.clear()
                     rec.update({"block": "architecture/none>4.3", "disposition": "no-impact", "reason": "Nothing cites it.", "context": "Read the index."})
-            path.write_text(json.dumps(doc), encoding="utf-8")
+            path.write_bytes((json.dumps(doc)).encode("utf-8"))
             missed = M.measure_candidate(self.run_obj, self.proposal, [])
             self.assertEqual((missed["block_found"], missed["in_disposition"], missed["named"]), (True, False, False))
             said = M.measure_candidate(self.run_obj, self.proposal, M.blocks_of(m(1, "The new audit rule in section 4.3 reaches WI-07, the audit log."), "M"))
@@ -589,14 +589,14 @@ class MeasureStateTests(unittest.TestCase):
             unrelated = M.measure_candidate(self.run_obj, self.proposal, M.blocks_of(m(1, "WI-07 is unaffected by the reminder."), "M"))
             self.assertFalse(unrelated["named"])
         finally:
-            path.write_text(original, encoding="utf-8")
+            path.write_bytes((original).encode("utf-8"))
         self.assertTrue(M.measure_candidate(self.run_obj, self.proposal, [])["named"])
 
     def test_a_patch_whose_file_no_longer_matches_is_reported_and_a_stale_consumer_fails_its_probe(self):
         spec = self.fr / "project" / "docs/spec/m3-enforce-policy/wi-08-notifications-delegates.md"
         original = spec.read_text(encoding="utf-8")
         try:
-            spec.write_text(original.replace("after 2 business days", "after 3 business days"), encoding="utf-8")
+            spec.write_bytes((original.replace("after 2 business days", "after 3 business days")).encode("utf-8"))
             r = M.measure_patches(self.run_obj, self.proposal)
             wi08 = [p for p in r["patches"] if p["item"] == "WI-08"][0]
             self.assertFalse(wi08["file_matches_patch"])
@@ -607,7 +607,7 @@ class MeasureStateTests(unittest.TestCase):
             targets = {name: v for name, v, _ in self.measure()["targets"]}
             self.assertEqual(targets["Applied patches match the proposal"], "not met")
         finally:
-            spec.write_text(original, encoding="utf-8")
+            spec.write_bytes((original).encode("utf-8"))
         self.assertTrue(all(p["file_matches_patch"] for p in M.measure_patches(self.run_obj, self.proposal)["patches"]))
 
     def test_a_whole_file_rewrite_is_flagged_as_a_large_patch(self):
@@ -618,11 +618,11 @@ class MeasureStateTests(unittest.TestCase):
             for rec in doc["dispositions"]:
                 if rec["block"] == "architecture/4.1":
                     rec["patch"]["after_text"] = "# Rewritten\n\n" + "\n".join(f"line {i}" for i in range(200)) + "\n"
-            path.write_text(json.dumps(doc), encoding="utf-8")
+            path.write_bytes((json.dumps(doc)).encode("utf-8"))
             wi06 = [p for p in M.measure_patches(self.run_obj, self.proposal)["patches"] if p["item"] == "WI-06"][0]
             self.assertTrue(wi06["large"])
         finally:
-            path.write_text(original, encoding="utf-8")
+            path.write_bytes((original).encode("utf-8"))
 
     def stamped_log(self, original):
         """commands.log with one line per minute from 10:00, so the times are fixed."""
@@ -635,9 +635,9 @@ class MeasureStateTests(unittest.TestCase):
         t = self.fr / "transcript"
         files = {name: (t / name).read_text(encoding="utf-8") for name in ("questions.md", "to_owner.md", "commands.log")}
         try:
-            (t / "to_owner.md").write_text(m(1, REVIEW, "2026-11-14T10:05:00Z") + m(2, STATES, "2026-11-14T10:12:00Z"), encoding="utf-8")
-            (t / "questions.md").write_text(q(1, "P3+P4", time="2026-11-14T10:05:10Z") + q(2, "P5", time="2026-11-14T10:06:00Z"), encoding="utf-8")
-            (t / "commands.log").write_text(self.stamped_log(files["commands.log"]), encoding="utf-8")
+            (t / "to_owner.md").write_bytes((m(1, REVIEW, "2026-11-14T10:05:00Z") + m(2, STATES, "2026-11-14T10:12:00Z")).encode("utf-8"))
+            (t / "questions.md").write_bytes((q(1, "P3+P4", time="2026-11-14T10:05:10Z") + q(2, "P5", time="2026-11-14T10:06:00Z")).encode("utf-8"))
+            (t / "commands.log").write_bytes((self.stamped_log(files["commands.log"])).encode("utf-8"))
             r = self.measure()
             targets = {name: v for name, v, _ in r["targets"]}
             self.assertEqual(targets["One compact review"], "met")
@@ -649,8 +649,8 @@ class MeasureStateTests(unittest.TestCase):
             self.assertEqual(r["elapsed"]["to_approval"], 360.0)
             self.assertIn("6 min 00 s", M.render_report(r))
             # the same run with the approval recorded after the write is a deviation, and three questions are too many
-            (t / "questions.md").write_text(q(1, "P3+P4", time="2026-11-14T10:05:10Z") + q(2, "none", time="2026-11-14T10:06:00Z")
-                                            + q(3, "P5", time="2026-11-14T10:13:00Z"), encoding="utf-8")
+            (t / "questions.md").write_bytes((q(1, "P3+P4", time="2026-11-14T10:05:10Z") + q(2, "none", time="2026-11-14T10:06:00Z")
+                                            + q(3, "P5", time="2026-11-14T10:13:00Z")).encode("utf-8"))
             late = self.measure()
             self.assertIn("apply-before-approval", [d["code"] for d in late["deviations"]["deviations"]])
             names = {name: v for name, v, _ in late["targets"]}
@@ -659,7 +659,7 @@ class MeasureStateTests(unittest.TestCase):
             self.assertEqual(len(late["interactions"]["unnecessary"]), 1)
         finally:
             for name, text in files.items():
-                (t / name).write_text(text, encoding="utf-8")
+                (t / name).write_bytes((text).encode("utf-8"))
 
 
 if __name__ == "__main__":

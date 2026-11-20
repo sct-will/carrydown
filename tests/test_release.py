@@ -64,7 +64,7 @@ class YesPathTests(Temp):
 
     def edit_spec(self, text=" Added after the release."):
         path = self.root / SPEC
-        path.write_text(path.read_text(encoding="utf-8").rstrip("\n") + text + "\n", encoding="utf-8")
+        path.write_bytes((path.read_text(encoding="utf-8").rstrip("\n") + text + "\n").encode("utf-8"))
 
     # --- preview and prepare ---
     def test_preview_answers_the_four_questions_in_order_and_writes_nothing(self):
@@ -122,7 +122,7 @@ class YesPathTests(Temp):
 
     def test_a_detector_finding_blocks_preparation_without_printing_the_text(self):
         path = self.root / SPEC
-        path.write_text(path.read_text(encoding="utf-8") + "\nsecret_token = " + "S" * 24 + "\n", encoding="utf-8")
+        path.write_bytes((path.read_text(encoding="utf-8") + "\nsecret_token = " + "S" * 24 + "\n").encode("utf-8"))
         code, out, err = self.yp.prepare()
         self.assertEqual(code, 1)
         self.assertIn("detector:credentials", out)
@@ -161,7 +161,7 @@ class YesPathTests(Temp):
 
     def test_local_approval_is_refused_for_an_enrolled_project(self):
         self.yp.prepare()
-        (self.root / ".carrydown" / "release-policy.yaml").write_text("format: 1\ntooling_repository: acme/t\nenrollment_id: " + "a" * 64 + "\n", encoding="utf-8")
+        (self.root / ".carrydown" / "release-policy.yaml").write_bytes(("format: 1\ntooling_repository: acme/t\nenrollment_id: " + "a" * 64 + "\n").encode("utf-8"))
         code, out, err = self.yp.approve()
         self.assertEqual(code, 1)
         self.assertIn("unauthenticated-release", err)
@@ -179,7 +179,7 @@ class YesPathTests(Temp):
         rid = self.yp.request_id
         fake = {"type": "local-owner", "authenticated": False, "request_sha256": rid, "content_manifest_sha256": R.load_request(self.ws, rid)["release_id"],
                 "approved_at": "2027-01-20T14:10:00Z", "git_identity": {"name": "x", "email": "y"}, "event_id": "e" * 64}
-        (self.ws / "requests" / rid / "approval.json").write_text(json.dumps(fake), encoding="utf-8")
+        (self.ws / "requests" / rid / "approval.json").write_bytes((json.dumps(fake)).encode("utf-8"))
         before = tree_state(self.root)
         code, out, err = self.yp.export()
         self.assertEqual(code, 1)
@@ -246,7 +246,7 @@ class YesPathTests(Temp):
             original = path.read_bytes()
             request = json.loads(original)
             request["receipt_template"][field] = value
-            path.write_text(json.dumps(request), encoding="utf-8")
+            path.write_bytes((json.dumps(request)).encode("utf-8"))
             code, out, err = self.yp.export()
             self.assertEqual(code, 1, field)
             self.assertIn("approval-scope-mismatch", err, field)
@@ -431,7 +431,7 @@ class YesPathTests(Temp):
 
     def test_G6_regeneration_in_an_enrolled_project_with_no_active_release_is_not_approved(self):
         """[G6]"""
-        (self.root / ".carrydown" / "release-policy.yaml").write_text("format: 1\ntooling_repository: acme/t\nenrollment_id: " + "a" * 64 + "\n", encoding="utf-8")
+        (self.root / ".carrydown" / "release-policy.yaml").write_bytes(("format: 1\ntooling_repository: acme/t\nenrollment_id: " + "a" * 64 + "\n").encode("utf-8"))
         shutil.rmtree(self.root / "docs" / "dev")
         before = tree_state(self.root)
         for argv, main in ((["--root", str(self.root), "--refresh-headers", "--apply", "--allow-no-git"], SS.main),
@@ -445,7 +445,7 @@ class YesPathTests(Temp):
     def test_a_working_plan_edit_is_still_a_draft_after_the_release(self):
         self.yp.release()
         path = self.root / "docs/spec/plan.yaml"
-        path.write_text(path.read_text(encoding="utf-8").replace("Full specification.", "Full specification, as the owner uses it.", 1), encoding="utf-8")
+        path.write_bytes((path.read_text(encoding="utf-8").replace("Full specification.", "Full specification, as the owner uses it.", 1)).encode("utf-8"))
         d = RG.check("draft", "docs/spec/plan.yaml", "0" * 64, "engineering-repo", str(self.root))
         self.assertTrue(d.allowed, d)
 
@@ -592,8 +592,8 @@ class NoPathTests(Temp):
         self.np.prepare()
         self.np.approve()
         self.np.land()
-        (self.root / "README.md").write_text("uncommitted edit\n", encoding="utf-8")
-        (self.root / "scratch.txt").write_text("untracked\n", encoding="utf-8")
+        (self.root / "README.md").write_bytes(("uncommitted edit\n").encode("utf-8"))
+        (self.root / "scratch.txt").write_bytes(("untracked\n").encode("utf-8"))
         before = tree_state(self.root)
         status_before = F.sh(["git", "status", "--porcelain"], self.root).stdout
         code, out, err = self.np.export(apply=False)
@@ -698,7 +698,7 @@ class NoPathTests(Temp):
         self.assertEqual(self.np.export()[0], 0)
         # a replacement: change a spec in the workspace drafts, prepare, approve in staging, export
         spec = self.ws / "drafts" / SPEC
-        spec.write_text(spec.read_text(encoding="utf-8").rstrip("\n") + " Second release.\n", encoding="utf-8")
+        spec.write_bytes((spec.read_text(encoding="utf-8").rstrip("\n") + " Second release.\n").encode("utf-8"))
         code, out, err = self.np.prepare()
         self.assertEqual(code, 0, out + err)
         second = self.np.request_id
@@ -755,7 +755,7 @@ class SampleReleaseTests(Temp):
         sample = self.base / "sample"
         copy_sample(sample, working=False)
         spec = sample / SPEC
-        spec.write_text(spec.read_text(encoding="utf-8").rstrip("\n") + " A drifting sentence.\n", encoding="utf-8")
+        spec.write_bytes((spec.read_text(encoding="utf-8").rstrip("\n") + " A drifting sentence.\n").encode("utf-8"))
         run = subprocess.run([sys.executable, str(ROOT / "tests" / "rebuild_sample_release.py"), "--check", "--sample", str(sample)],
                              capture_output=True, text=True, timeout=300)
         self.assertEqual(run.returncode, 1, run.stdout + run.stderr)

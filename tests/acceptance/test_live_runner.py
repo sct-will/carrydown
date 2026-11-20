@@ -63,7 +63,7 @@ class World:
         self.bin = self.tmp / "bin"
         self.bin.mkdir()
         wrapper = self.bin / "gh"
-        wrapper.write_text(f'#!{sys.executable} -S\nimport runpy\nrunpy.run_path("{HERE / "fake_gh.py"}", run_name="__main__")\n')
+        wrapper.write_bytes((f'#!{sys.executable} -S\nimport runpy\nrunpy.run_path("{HERE / "fake_gh.py"}", run_name="__main__")\n').encode("utf-8"))
         wrapper.chmod(wrapper.stat().st_mode | stat.S_IXUSR)
         self.state = self.tmp / "state.json"
         self.log = self.tmp / "calls.jsonl"
@@ -72,7 +72,7 @@ class World:
         # A fixed commit identity in a global configuration file of its own, as the rest of the suite does, so the doctor's
         # identity row does not depend on the person's own configuration, on HOME or on the checkout's local configuration.
         self.gitconfig = self.tmp / "gitconfig"
-        self.gitconfig.write_text("[user]\n\tname = Test Owner\n\temail = owner@example.com\n")
+        self.gitconfig.write_bytes(("[user]\n\tname = Test Owner\n\temail = owner@example.com\n").encode("utf-8"))
         self.env = {"PATH": str(self.bin) + os.pathsep + os.environ.get("PATH", ""), "FAKE_GH_STATE": str(self.state),
                     "FAKE_GH_LOG": str(self.log), "HOME": str(self.tmp / "home"), "USERPROFILE": str(self.tmp / "home"),
                     "XDG_CONFIG_HOME": str(self.tmp / "home" / "xdg"), "GIT_CONFIG_GLOBAL": str(self.gitconfig),
@@ -85,7 +85,7 @@ class World:
             state["install_repos"] = {"900": ["carrydown-tooling"]}
             state["pending_secrets"] = {"carrydown-tooling": ["CARRYDOWN_APP_PRIVATE_KEY"]}
         state.update(extra)
-        self.state.write_text(json.dumps(state))
+        self.state.write_bytes((json.dumps(state)).encode("utf-8"))
 
 
 def drive(world, argv, answers=None):
@@ -119,7 +119,7 @@ def snapshot():
         world.seed()
         code, out, asked = drive(world, ["run", "--org", ORG, "--throwaway", "--record", str(world.record), "--carrydown", str(ROOT), "--apply",
                                          "--to", "S5"], answers=["vouch"])
-        _SNAPSHOT.update(state=world.state.read_text(), record=world.record.read_text(), output=out, code=code, asked=asked)
+        _SNAPSHOT.update(state=world.state.read_text(encoding="utf-8"), record=world.record.read_text(encoding="utf-8"), output=out, code=code, asked=asked)
     return _SNAPSHOT
 
 
@@ -141,13 +141,13 @@ class Base(unittest.TestCase):
 
     def restore_after_s5(self):
         snap = snapshot()
-        self.state.write_text(snap["state"])
-        self.record.write_text(snap["record"])
+        self.state.write_bytes((snap["state"]).encode("utf-8"))
+        self.record.write_bytes((snap["record"]).encode("utf-8"))
 
     def calls(self):
         if not self.log.is_file():
             return []
-        return [json.loads(line) for line in self.log.read_text().splitlines() if line.strip()]
+        return [json.loads(line) for line in self.log.read_text(encoding="utf-8").splitlines() if line.strip()]
 
     def main(self, argv, answers=None):
         code, out, asked = drive(self.world, argv, answers)
@@ -229,7 +229,7 @@ class DoctorTests(Base):
 
     def test_doctor_without_a_commit_identity_is_not_ready(self):
         empty = self.tmp / "empty-gitconfig"
-        empty.write_text("")
+        empty.write_bytes(("").encode("utf-8"))
         self.world.env["GIT_CONFIG_GLOBAL"] = str(empty)
         code, out = self.main(["doctor", "--org", ORG])
         self.assertEqual(code, 1, out)
@@ -238,7 +238,7 @@ class DoctorTests(Base):
 
     def test_doctor_with_a_name_and_no_email_is_not_ready(self):
         half = self.tmp / "half-gitconfig"
-        half.write_text("[user]\n\tname = Test Owner\n")
+        half.write_bytes(("[user]\n\tname = Test Owner\n").encode("utf-8"))
         self.world.env["GIT_CONFIG_GLOBAL"] = str(half)
         code, out = self.main(["doctor", "--org", ORG])
         self.assertEqual(code, 1, out)
@@ -312,7 +312,7 @@ class DryRunTests(Base):
         self.assertIn("would act", out)
         self.assertFalse(self.record.exists(), "a dry run records nothing")
         self.assertFalse((self.tmp / "run.work").exists(), "a dry run writes no working folder")
-        self.assertEqual(json.loads(self.state.read_text())["repos"], {}, "nothing was created")
+        self.assertEqual(json.loads(self.state.read_text(encoding="utf-8"))["repos"], {}, "nothing was created")
 
     def test_apply_with_dry_run_still_only_reads(self):
         code, out = self.main(self.run_args("--apply", "--dry-run"))
@@ -372,7 +372,7 @@ class ApplyTests(Base):
         self.assertIn("verifier_app_id: 555", text)
         with tempfile.TemporaryDirectory() as t:
             f = Path(t) / "enrollment.yaml"
-            f.write_text(text)
+            f.write_bytes((text).encode("utf-8"))
             done = subprocess.run([sys.executable, str(ROOT / "verifier" / "verify_release.py"), "digests", "--policy-file", str(f)],
                                   capture_output=True, text=True)
             self.assertEqual(done.returncode, 0, done.stdout + done.stderr)
@@ -391,11 +391,11 @@ class ApplyTests(Base):
         self.seed(app=False)
 
         def operator_creates_the_app():
-            state = json.loads(self.state.read_text())
+            state = json.loads(self.state.read_text(encoding="utf-8"))
             state["installations"] = [APP]
             state["install_repos"] = {"900": ["carrydown-tooling"]}
             state["repos"][f"{ORG}/carrydown-tooling"]["secrets"].append("CARRYDOWN_APP_PRIVATE_KEY")
-            self.state.write_text(json.dumps(state))
+            self.state.write_bytes((json.dumps(state)).encode("utf-8"))
             return ""
         code, out = self.main(self.run_args("--apply", "--to", "S2"), answers=["", operator_creates_the_app])
         self.assertEqual(code, 0, out)
@@ -405,7 +405,7 @@ class ApplyTests(Base):
         self.assertEqual(len(self.asked), 2)
         self.assertEqual({r["step"]: r["state"] for r in self.records()}, {"S1": "done", "S2": "human"})
         page = self.tmp / "run.work" / "app-manifest.html"
-        text = page.read_text()
+        text = page.read_text(encoding="utf-8")
         self.assertIn("settings/apps/new", text)
         self.assertIn("&quot;pull_requests&quot;: &quot;read&quot;", text)
         self.assertNotIn("hook_attributes", text)
@@ -430,7 +430,7 @@ class ApplyTests(Base):
     def test_from_resumes_without_repeating_done_steps(self):
         self.restore_after_s5()
         rows = self.records()
-        self.record.write_text("".join(json.dumps(r) + "\n" for r in rows[:2]))      # S1 and S2 are done, the rest was never recorded
+        self.record.write_bytes(("".join(json.dumps(r) + "\n" for r in rows[:2])).encode("utf-8"))      # S1 and S2 are done, the rest was never recorded
         code, out = self.main(self.run_args("--apply", "--from", "S3", "--to", "S5"))
         self.assertEqual(code, 0, out)
         self.assertNotIn("[S1]", out)
@@ -446,7 +446,7 @@ class ApplyTests(Base):
 
     def test_a_later_step_reads_earlier_ids_from_github_when_the_record_is_lost(self):
         self.restore_after_s5()
-        self.record.write_text("")
+        self.record.write_bytes(("").encode("utf-8"))
         code, out = self.main(self.run_args("--apply", "--from", "S4", "--to", "S4"))
         self.assertEqual(code, 0, out)
         self.assertEqual([r["state"] for r in self.records()], ["skipped"])
@@ -456,9 +456,9 @@ class ApplyTests(Base):
         code, out = self.main(self.run_args("--apply", "--to", "S3"))
         self.assertEqual(code, 1)
         self.assertEqual([r["state"] for r in self.records()], ["done", "done", "failed"])
-        state = json.loads(self.state.read_text())
+        state = json.loads(self.state.read_text(encoding="utf-8"))
         state.pop("leak")
-        self.state.write_text(json.dumps(state))
+        self.state.write_bytes((json.dumps(state)).encode("utf-8"))
         code, out = self.main(self.run_args("--apply", "--to", "S3"))
         self.assertEqual(code, 0, out)
         self.assertEqual([r["state"] for r in self.records()], ["done", "done", "failed", "done"])
@@ -475,8 +475,7 @@ class ApplyTests(Base):
         (carry / "sample" / "expense-approvals").mkdir(parents=True)
         for part in ("docs/spec", "docs/ground-truth"):
             shutil.copytree(ROOT / "sample" / "expense-approvals" / part, carry / "sample" / "expense-approvals" / part)
-        (carry / "scripts" / "release.py").write_text(
-            "import sys\n"
+        (carry / "scripts" / "release.py").write_bytes(("import sys\n"
             "cmd = sys.argv[1]\n"
             "if cmd == 'doctor':\n"
             "    print('private upload to the staging repository: allowed')\n"
@@ -487,14 +486,14 @@ class ApplyTests(Base):
             f"    print('release id (content): {'cd' * 32}')\n"
             f"    print('request id (permission): {self.RID}')\n"
             "else:\n"
-            "    print('preview or a dry run')\n")
+            "    print('preview or a dry run')\n").encode("utf-8"))
         return carry
 
     def test_a2_to_a6_check_who_opened_the_pull_request_the_dismissal_and_the_merge(self):
         """The staging workflow's pull request is seeded, as the stub of release.py approve cannot open one. Everything else is the runner's own."""
         carry = self.stub_carry()
         self.restore_after_s5()
-        state = json.loads(self.state.read_text())
+        state = json.loads(self.state.read_text(encoding="utf-8"))
         stg = state["repos"][f"{ORG}/expense-approvals-releases"]
         main = stg["refs"]["main"]
         head = "11" * 20
@@ -502,13 +501,13 @@ class ApplyTests(Base):
         stg["refs"][f"request/{self.RID}"] = head
         stg["pulls"] = {"1": {"number": 1, "state": "open", "merged": False, "merge_commit_sha": None, "html_url": "https://github.com/x/pull/1",
                               "head": {"ref": f"request/{self.RID}", "sha": head}, "user": {"login": "github-actions[bot]", "type": "Bot"}, "reviews": []}}
-        self.state.write_text(json.dumps(state))
+        self.state.write_bytes((json.dumps(state)).encode("utf-8"))
 
         def owner_approves():
-            now = json.loads(self.state.read_text())
+            now = json.loads(self.state.read_text(encoding="utf-8"))
             pr = now["repos"][f"{ORG}/expense-approvals-releases"]["pulls"]["1"]
             pr["reviews"].append({"id": 300 + len(pr["reviews"]), "state": "APPROVED", "commit_id": pr["head"]["sha"], "user": {"login": "will-test"}})
-            self.state.write_text(json.dumps(now))
+            self.state.write_bytes((json.dumps(now)).encode("utf-8"))
             return ""
         code, out = self.main(self.run_args("--apply", "--from", "S6", "--to", "A6", carry=carry), answers=[owner_approves, owner_approves])
         self.assertEqual(code, 0, out)
@@ -535,7 +534,7 @@ class ApplyTests(Base):
         self.assertEqual(len(merges), 1)
         merged_body = [c["stdin"] for c in self.calls() if c["args"][:3] == ["api", "-X", "PUT"] and c["args"][3].endswith("/merge")][0]
         self.assertEqual(json.loads(merged_body)["merge_method"], "merge")
-        self.assertIsNone(TOKEN_SHAPE.search(self.record.read_text()))
+        self.assertIsNone(TOKEN_SHAPE.search(self.record.read_text(encoding="utf-8")))
 
     def test_s6_and_s7_create_the_candidate_and_record_the_request_id(self):
         carry = self.stub_carry()
@@ -548,7 +547,7 @@ class ApplyTests(Base):
         self.assertEqual(by["S6"]["evidence"]["settings"]["components"], {"enrollment": "verified", "scan-health": "verified"})
         self.assertEqual(by["S7"]["evidence"]["ids"]["request_id"], rid)
         work = self.tmp / "run.work"
-        plan = (work / "workspace" / "drafts" / "plan.yaml").read_text()
+        plan = (work / "workspace" / "drafts" / "plan.yaml").read_text(encoding="utf-8")
         self.assertIn(f"repo: {ORG}/expense-approvals", plan)
         self.assertIn("repo_audience_approved: false", plan)
         self.assertIn('approvers: ["will-test"]', plan)
@@ -585,7 +584,7 @@ class RedactionTests(Base):
         self.seed(leak={"path": r"repos/acme-throwaway/carrydown-tooling$", "text": leaked})
         code, out = self.main(self.run_args("--apply", "--to", "S1"))
         self.assertEqual(code, 1)
-        text = self.record.read_text()
+        text = self.record.read_text(encoding="utf-8")
         self.assertTrue(text.strip(), "the failure is recorded")
         self.assertIsNone(TOKEN_SHAPE.search(text))
         self.assertIsNone(TOKEN_SHAPE.search(out))
@@ -641,7 +640,7 @@ class RenderTests(Base):
             {"step": "A5", "started": "2027-02-01T11:30:00Z", "finished": "2027-02-01T11:35:00Z", "state": "failed", "sanitized": True,
              "evidence": {"reason_codes": ["staging-check-not-success-after-review"]}},
         ]
-        self.record.write_text("".join(json.dumps(r) + "\n" for r in rows))
+        self.record.write_bytes(("".join(json.dumps(r) + "\n" for r in rows)).encode("utf-8"))
 
     def test_render_fills_the_rows_that_have_records_and_leaves_the_rest(self):
         self.write_records()

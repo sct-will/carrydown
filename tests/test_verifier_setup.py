@@ -88,7 +88,7 @@ class ProgramTests(Temp):
         """[G5] Under python -I the current folder and PYTHONPATH are ignored, so a planted module is not run."""
         canary = self.base / "canary.txt"
         for name in ("carrydown_lib", "release_verify", "release_schema", "github_client"):
-            (self.base / f"{name}.py").write_text(f"open({str(canary)!r}, 'w').write('imported')\n", encoding="utf-8")
+            (self.base / f"{name}.py").write_bytes((f"open({str(canary)!r}, 'w').write('imported')\n").encode("utf-8"))
         run = subprocess.run([sys.executable, "-I", str(ROOT / "verifier" / "verify_release.py"), "ruleset", "--kind", "staging", "--app-id", "5"],
                              cwd=str(self.base), capture_output=True, text=True, env=dict(os.environ, PYTHONPATH=str(self.base)))
         self.assertEqual(run.returncode, 0, run.stderr)
@@ -113,7 +113,7 @@ class ProgramTests(Temp):
         repo = self.base / name
         repo.mkdir()
         F.init_git(repo)
-        (repo / "a.txt").write_text("a\n", encoding="utf-8")
+        (repo / "a.txt").write_bytes(("a\n").encode("utf-8"))
         F.sh(["git", "add", "a.txt"], repo)
         F.sh(["git", "commit", "-q", "-m", "one"], repo)
         return repo
@@ -122,10 +122,10 @@ class ProgramTests(Temp):
         repo = self.init_repo()
         sha = F.sh(["git", "rev-parse", "HEAD"], repo).stdout.strip()
         self.assertEqual(VR.detect_code_sha(repo), sha)
-        (repo / "a.txt").write_text("changed\n", encoding="utf-8")
+        (repo / "a.txt").write_bytes(("changed\n").encode("utf-8"))
         self.assertEqual(refused(VR.detect_code_sha, repo), "verifier-code-mismatch")
         F.sh(["git", "checkout", "--", "a.txt"], repo)
-        (repo / "new.py").write_text("print(1)\n", encoding="utf-8")
+        (repo / "new.py").write_bytes(("print(1)\n").encode("utf-8"))
         self.assertEqual(refused(VR.detect_code_sha, repo), "verifier-code-mismatch")
         self.assertEqual(refused(VR.detect_code_sha, self.base / "nowhere"), "verifier-code-mismatch")
 
@@ -302,7 +302,7 @@ class TokenTests(unittest.TestCase):
             path = args[-1]
             seen["mode"] = os.stat(path).st_mode & 0o777
             seen["path"] = path
-            seen["text"] = Path(path).read_text()
+            seen["text"] = Path(path).read_text(encoding="utf-8")
             return subprocess.CompletedProcess(args, 0, stdout=b"sig", stderr=b"")
         self.assertEqual(VR.openssl_sign("-----BEGIN PRIVATE KEY-----\nabc\n", b"data", runner), b"sig")
         self.assertEqual(seen["mode"], 0o600)
