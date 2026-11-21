@@ -14,7 +14,7 @@ The plan is built around your team's availability and target date. You can also 
 
 [![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
 
-[Start here](#start-here) | [What to say](#what-to-say) | [FAQ](https://carriedcontext.dev/faq/) | [How it works](#how-it-works) | [Explore the sample](#explore-the-sample) | [What you get](#what-you-get) | [AI governance](#how-does-carrydown-support-ai-governance) | [Contributing and license](#contributing-and-license)
+[Start here](#start-here) | [What to tell your agent, and when](#what-to-tell-your-agent-and-when) | [FAQ](https://carriedcontext.dev/faq/) | [How it works](#how-it-works) | [Explore the sample](#explore-the-sample) | [What you get](#what-you-get) | [AI governance](#how-does-carrydown-support-ai-governance) | [Contributing and license](#contributing-and-license)
 
 <br />
 
@@ -34,34 +34,26 @@ The plan is built around your team's availability and target date. You can also 
 
 <br />
 
-## What to say
+## What to tell your agent, and when
 
-Ordinary language is the normal entry point. You do not need to learn the names of the skills or the scripts.
+Use the phrases below to start planning, publish approved work, report a change or begin a work item. Your agent guides you through the steps, asks for your decisions and approvals, and tells you what to do next.
 
 **Plan owner**
 
 | What you want to do | What to say |
 | --- | --- |
-| Create a plan | "Set up a project plan from these documents." |
-| Publish the approved plan | "Put the plan on GitHub." |
-| Update an existing project | "This changed: [describe the change or provide revised documents]." |
+| Start a new plan | "Set up a project plan from these documents." |
+| Publish an approved plan or update | "Put the plan on GitHub." |
+| Update an existing carrydown plan | "This changed: [describe the change or provide revised documents]." |
 
 **Engineers**
 
 | What you want to do | What to say |
 | --- | --- |
 | Start a work item | "Work on WI-03." |
-| Raise a specification problem | "This specification seems wrong because [explanation]." |
+| Report a specification problem | "This specification seems wrong because [explanation]." |
 
-When an engineer raises a problem, the agent drafts a request and shows it. It is not sent until the engineer posts it.
-
-The first owner row is for a project that has no plan yet. For a project that already has one, use the third row, even when you bring revised documents.
-
-The plan owner uses the two installed skills, engineers use the generated project skill, and stakeholders review milestone outcomes.
-
-If your agent does not pick up the right skill, name it. This is a fallback, not the main phrase:
-
-> "Use carrydown-ground-truth to update this existing project."
+When you report a specification problem, your agent drafts a request for you to review and post.
 
 <br />
 
@@ -81,21 +73,21 @@ If your agent does not pick up the right skill, name it. This is a fallback, not
 
 ## When the project changes
 
-Projects change after planning. A requirement is revised, a company rule changes, or an engineer finds that a specification does not fit the implementation. The ground-truth skill compares that information with the reviewed sources and current work. It prepares focused corrections and shows conflicts to the plan owner. After approval, the existing publishing skill carries the update into the engineering handoff.
+Open your agent in the existing project folder and say:
 
-In more detail, and before any name for it: your agent looks at what changed, finds the work that the change could touch, and checks the work an engineer has already corrected. It keeps those corrections when they fit the change and shows you the ones that conflict. You see one review, decide, and approve. Nothing is rewritten because regenerating it would be easier. The same path serves a changed source and an engineer's report that a specification seems wrong. The method pages call this step reconciliation.
+> **“This changed: [describe the change or give the revised document’s path].”**
 
-**How to hand over a revised document.** Open your agent in the project's own folder, the one your plan was made in. Then name where the revised file is in the same sentence, for example: "This changed: the revised architecture document is at ~/Documents/architecture.docx." Keep the file where you keep your sources. You do not need to move it into the project. You can also describe the change in words or paste the changed passage. The agent reads and compares before it shows you anything, so the review takes a while to appear.
+Your documents can stay where they are. The agent identifies work that may be affected, preserves engineer corrections that still fit and brings conflicts to you for a decision. Review the proposed updates together and approve what should change.
 
-**One approval, then one more sentence.** Your approval of the review accepts the changes to the drafts. It publishes nothing. "Put the plan on GitHub." is a separate sentence: the publishing skill then shows what would be shared, with whom and where, and asks for that disclosure approval on its own line before it writes anything.
+When you’re ready to publish, say:
 
-**How engineers learn of an update.** Nothing is pushed or sent to them. GitHub may notify people who watch an updated issue, which is not a delivery guarantee. After the update is released and published, an engineer's next run of the check for a work item shows the approved delta: the files and passages that changed since their last check. An engineer who does not pull or does not run the check keeps the earlier material, so tell the team when the timing matters.
+> **“Put the plan on GitHub.”**
 
-Repository checks assess the material they can observe. For sources kept elsewhere, provide the revised material. A configured integration can add automatic observation later. The owner guidance also prompts review when the team makes significant decisions. When you are unsure whether a change is significant, say it anyway: the agent assesses it.
+The agent previews what will be shared and asks for your approval before publishing.
 
-There are still two skills you install and one skill generated for your engineers. The first skill, `carrydown-ground-truth`, now covers initial planning and updates. It does not watch your documents, and an update starts when you say so. The [owner guide](docs/plan-owner-guide.md#when-the-project-changes) lists what counts as a significant change, what the one review shows and how to resume an interrupted update.
+Engineers see updates after they pull the published files and their agent runs the work-item check. Tell the team when a change affects work already underway.
 
-[Recover a plan or publication](docs/recovery.md) covers identity choices, source references, issue reconciliation and resumable board updates. If an update stopped partway, say "Resume the project update." and read [resume a project update](docs/recovery.md#resume-a-project-update).
+The [owner guide](docs/plan-owner-guide.md#when-the-project-changes) explains the review. For an interrupted update, see [recovery](docs/recovery.md#resume-a-project-update).
 
 <br />
 

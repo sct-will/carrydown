@@ -58,7 +58,7 @@ The self test runs every script's `--help` and dry run on the sample. If you cha
 
 ## Using the skills from a user's project
 
-Follow the README's "Start here" link to the setup guide and install both skills there. The README's "What to say" section has the same tables. The plan owner has three actions:
+Follow the README's "Start here" link to the setup guide and install both skills there. The README's "What to tell your agent, and when" section has tables with the same phrases. The plan owner has three actions:
 
 1. "Set up a project plan from these documents." (`carrydown-ground-truth`) The plan owner then reviews the plan and the specifications with the agent and edits them until they are right.
 2. "Put the plan on GitHub." (`carrydown-plan-to-github`) Its last step generates the engineers' skill. "Generate the engineers' skill." runs that step on its own.

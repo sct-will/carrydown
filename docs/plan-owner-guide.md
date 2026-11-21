@@ -20,7 +20,7 @@ The agent drafts, checks and populates. You decide the owners, dates, scope and 
 
 **Bring a technical lead if you do not know the codebase well.** Do this for the interview and the plan review. Some questions need that knowledge: which document wins when two disagree, which coding agents the engineers use, and how code is built, tested and merged. The agent works from your answers. It does not know your system.
 
-**What to say.** Ordinary language is the normal entry point. The same tables are in [the README](../README.md#what-to-say).
+**What to say.** Ordinary language is the normal entry point. The same tables are in [the README](../README.md#what-to-tell-your-agent-and-when).
 
 Plan owner:
 

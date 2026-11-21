@@ -41,7 +41,7 @@ This runs, in order:
 
 - `scripts/check-docs-sync.mjs` regenerates the docs into a temporary folder and fails with a diff if the generated pages differ from the repository's Markdown.
 - `tests/routes.mjs` starts `astro preview` and expects 200 for every page, in every locale, and for every internal link and asset.
-- `tests/llms.mjs` checks `llms.txt` and `llms-full.txt`: the format, that every English page is listed once and no redirect is, the reading order, the "What to say" phrases against the README, that a second run writes the same bytes, and that every listed address answers 200.
+- `tests/llms.mjs` checks `llms.txt` and `llms-full.txt`: the format, that every English page is listed once and no redirect is, the reading order, the "What to tell your agent, and when" phrases against the README, that a second run writes the same bytes, and that every listed address answers 200.
 - `tests/reflow.mjs` takes screenshots of a bounded set of pages (the four site pages at six widths, plus Japanese, docs and fallback samples) in both themes into `tests/screenshots/` and fails on horizontal overflow, text under 12 px and tap targets under 44 px.
 - `tests/a11y.mjs` runs axe-core on a bounded set (the four site pages in every locale in both themes, every English docs page and one fallback docs page per locale in light) and fails on any violation.
 
@@ -86,7 +86,7 @@ Every docs page has a Copy page control beside its title, from `src/components/C
 
 `scripts/build-llms.mjs` writes two files for agents, in the format at [llmstxt.org](https://llmstxt.org/), from the built site:
 
-- `llms.txt`: the definition, what the site and carrydown are, the plan owner and engineer phrases from the README's "What to say" section, then the pages. A docs page links to its Markdown file. A site page has no Markdown file, so it links to its HTML page. Redirect pages are left out.
+- `llms.txt`: the definition, what the site and carrydown are, the plan owner and engineer phrases from the README's "What to tell your agent, and when" section, then the pages. A docs page links to its Markdown file. A site page has no Markdown file, so it links to its HTML page. Redirect pages are left out.
 - `llms-full.txt`: the whole Markdown of the documentation and the site pages, in the same order, each headed by its title and its address. A docs page is its Markdown file as served. A site page is the main content of the built page, converted to Markdown.
 
 The reading order is a short list of paths at the top of the script. A new docs page that is not on it is added at the end of the Documentation section. Worked examples, the recorded run, the maintainer notes and the accessibility statement are listed under Optional, the section a reader may skip, and are left out of `llms-full.txt`.

@@ -6,7 +6,7 @@
 // - Each page's title, description and canonical address come from its own tags.
 // - A docs page links to its Markdown form, the file `src/pages/[...path].md.ts` writes next to it.
 //   A page with no Markdown form links to its HTML page.
-// - The "What to say" phrases come from the Markdown form of the docs home page, which is the README.
+// - The "What to tell your agent, and when" phrases come from the Markdown form of the docs home page, which is the README.
 // - llms-full.txt holds the Markdown forms of the pages in the same reading order. A site page has no
 //   Markdown form, so its main content is converted from the built HTML.
 //
@@ -265,11 +265,11 @@ function siteMarkdown(p) {
 }
 
 // ---------------------------------------------------------------------------------------------------
-// The "What to say" section of the README, read from the Markdown form of the docs home page.
+// The "What to tell your agent, and when" section of the README, read from the Markdown form of the docs home page.
 
 /** { intro, groups: [{ label, rows: [{ want, say }] }] }, or null when the section is missing. */
 function whatToSay(markdown) {
-  const section = markdown.match(/^## What to say\n([\s\S]*?)(?=^## |(?![\s\S]))/m)?.[1];
+  const section = markdown.match(/^## What to tell your agent, and when\n([\s\S]*?)(?=^## |(?![\s\S]))/m)?.[1];
   if (!section) return null;
   const lines = section.split('\n');
   const intro = lines.find((l) => l.trim() && !/^(\*\*|\||<|>)/.test(l.trim()))?.trim() ?? '';
@@ -309,7 +309,7 @@ const languages = [...new Set(all.map((p) => p.rel.split('/')[0]).filter((s) => 
 
 const docsHome = byRel.get('docs');
 const phrases = docsHome && hasMarkdown(docsHome) ? whatToSay(readFileSync(markdownFile('docs'), 'utf8')) : null;
-if (!phrases) console.warn('build-llms: no "What to say" section found in the docs home page. The phrases are left out.');
+if (!phrases) console.warn('build-llms: no "What to tell your agent, and when" section found in the docs home page. The phrases are left out.');
 
 const lines = [
   `# ${name}`,
@@ -323,7 +323,7 @@ const lines = [
   '',
 ];
 if (phrases) {
-  lines.push(`${phrases.intro} These are the phrases from [What to say](${htmlUrl('docs')}#what-to-say) in the documentation:`, '');
+  lines.push(`${phrases.intro} These are the phrases from [What to tell your agent, and when](${htmlUrl('docs')}#what-to-tell-your-agent-and-when) in the documentation:`, '');
   for (const g of phrases.groups) {
     lines.push(`${g.label}:`, '', ...g.rows.map((r) => `- ${r.want}: ${r.say}`), '');
   }
