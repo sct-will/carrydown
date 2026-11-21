@@ -525,14 +525,22 @@ class MaintenanceNoticeTests(unittest.TestCase):
                     self.assertNotIn(old, text)
 
     def test_the_readme_and_the_guide_say_how_to_hand_over_a_document_and_that_one_approval_does_not_publish(self):
-        for page in (ROOT / "README.md", ROOT / "docs" / "plan-owner-guide.md"):
-            text = page.read_text(encoding="utf-8")
-            with self.subTest(page=page.name):
-                self.assertIn("This changed: the revised architecture document is at ~/Documents/architecture.docx.", text)
-                self.assertIn("you do not need to move it into the project", text.replace("You do not", "you do not"))
-                self.assertRegex(text, r"accepts the (changes to the )?drafts\. It (publishes nothing|does not publish anything)\.")
-                self.assertIn("Nothing is pushed or sent to them.", text)
-                self.assertIn("next run of the check for a work item shows the approved delta", text)
+        # The README says it in a few short sentences; the owner guide carries the detail.
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        with self.subTest(page="README.md"):
+            self.assertIn("This changed: [describe the change or give the revised document\u2019s path].", readme)
+            self.assertIn("Your documents can stay where they are.", readme)
+            self.assertIn("approve what should change", readme)
+            self.assertIn("When you\u2019re ready to publish, say:", readme)
+            self.assertIn("asks for your approval before publishing", readme)
+            self.assertIn("Engineers see updates after they pull the published files and their agent runs the work-item check.", readme)
+        guide = (ROOT / "docs" / "plan-owner-guide.md").read_text(encoding="utf-8")
+        with self.subTest(page="plan-owner-guide.md"):
+            self.assertIn("This changed: the revised architecture document is at ~/Documents/architecture.docx.", guide)
+            self.assertIn("you do not need to move it into the project", guide.replace("You do not", "you do not"))
+            self.assertRegex(guide, r"accepts the (changes to the )?drafts\. It (publishes nothing|does not publish anything)\.")
+            self.assertIn("Nothing is pushed or sent to them.", guide)
+            self.assertIn("next run of the check for a work item shows the approved delta", guide)
 
     def test_the_verification_and_maintenance_pages_carry_the_states_and_the_old_material_caveat(self):
         pub = ROOT / "skills" / "carrydown-plan-to-github" / "references"

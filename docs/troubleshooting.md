@@ -26,6 +26,14 @@ The installer put the skill folders in your project. Run `npx skills remove`, or
 
 ## Planning
 
+### My agent does not pick up the right skill
+
+Name the skill in your first sentence. This is a fallback, not the main phrase:
+
+> "Use carrydown-ground-truth to update this existing project."
+
+For a new plan, say "Use the carrydown-ground-truth skill." For publishing, say "Use the carrydown-plan-to-github skill."
+
 ### My document is a Word file with no section numbers
 
 The agent can render it, but numbered sections make citations easier to maintain. Ask the agent to propose numbering in the source document and review it before planning.

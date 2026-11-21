@@ -1,6 +1,6 @@
 // Checks dist/llms.txt and dist/llms-full.txt after `npm run build`: the llms.txt format, that every
 // English page is listed once and no redirect is, that the docs links go to the Markdown forms, the
-// reading order, the "What to say" phrases against the README, that llms-full.txt follows the same
+// reading order, the "What to tell your agent, and when" phrases against the README, that llms-full.txt follows the same
 // order, that every listed address answers 200 from `astro preview`, and that a second run of the
 // generator writes byte-identical files.
 import { execFileSync } from 'node:child_process';
@@ -62,11 +62,11 @@ const order = ['docs', 'docs/setup', 'docs/plan-owner-guide', 'docs/method', 'do
 const positions = order.map((u) => docs.indexOf(u));
 if (positions.some((p, i) => p !== i)) fail(`the Documentation section does not start in reading order: ${positions.join(', ')}`);
 
-// The "What to say" phrases are the README's, word for word.
+// The "What to tell your agent, and when" phrases are the README's, word for word.
 const readme = readFileSync(join(websiteDir, '..', 'README.md'), 'utf8');
-const say = readme.match(/^## What to say\n([\s\S]*?)^## /m)?.[1] ?? '';
+const say = readme.match(/^## What to tell your agent, and when\n([\s\S]*?)^## /m)?.[1] ?? '';
 const phrases = [...say.matchAll(/^\|[^|]+\|\s*("[^"]+")\s*\|$/gm)].map((m) => m[1]);
-if (phrases.length < 5) fail(`found ${phrases.length} phrases in the README's What to say section, expected at least 5`);
+if (phrases.length < 5) fail(`found ${phrases.length} phrases in the README's What to tell your agent, and when section, expected at least 5`);
 for (const p of phrases) if (!llms.includes(p)) fail(`llms.txt is missing the phrase ${p}`);
 
 // llms-full.txt has the Documentation and Pages entries in the same order, and no Optional page.
