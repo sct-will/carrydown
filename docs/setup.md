@@ -9,14 +9,14 @@
    npx skills add sct-will/carrydown
    ```
 
-3. **How you know it worked.** The installer's summary names `carrydown-ground-truth` and `carrydown-plan-to-github`. Start a new agent session in the same folder and say the sentence in step 4. The agent lists your files, then asks who may see them in a reply that begins `carrydown: interview, step 0 of 6`. If no reply carries that line, the agent has not loaded the skill: see [the agent does not see the skills](#the-agent-does-not-see-the-skills).
+3. **How you know it worked.** The installer's summary names `carrydown-ground-truth` and `carrydown-plan-to-github`. Start a new agent session in the same folder and say the sentence in step 4. The agent lists your files, then asks who may see them in a reply that begins `carrydown: interview, step 0 of 6`. If no reply carries that line, the agent has not loaded the skill: see [the agent does not see the skills](troubleshooting.md#the-agent-does-not-see-the-skills).
 4. **What to say to start.** In the agent's chat, say this and give the paths of your documents:
 
    > Set up a project plan from these documents.
 
 5. **What to have ready.** The locations of your documents and the answers in [what the agent asks you](plan-owner-guide.md#what-the-agent-asks-you). If some documents are confidential, read [who may see your documents](#before-you-add-documents-who-may-see-them) before you copy anything into a project.
 
-## Words you will meet
+## Helpful definitions
 
 - **Agent skill.** A folder of instructions that your coding agent loads to do one kind of work. carrydown installs two.
 - **Node.js and npx.** Node.js is a free program that runs JavaScript on your computer, and `npx` is the command it provides to download and run the skills installer.
@@ -30,7 +30,7 @@ The [glossary](plan-owner-guide.md#glossary) has the other words.
 
 ## The steps in detail
 
-Follow the steps below from computer setup through your first conversation with carrydown. They include installation, verification and troubleshooting.
+Follow the steps below from computer setup through your first conversation with carrydown. They include installation and verification.
 
 **My computer is ready:** skip to [open your project folder](#open-your-project-folder).
 
@@ -109,7 +109,7 @@ The installer supports [more agents](https://github.com/vercel-labs/skills/blob/
 
 Pick your system: [macOS](#macos), [Windows](#windows) or [Linux](#linux). These tools are free. Your coding agent may require a separate subscription. For [manual installation without Node.js](install-options.md#manual-install-without-nodejs), skip Node.js and prepare Python and Git before opening your project folder.
 
-Run the commands below in your terminal, one line at a time. For missing commands or installation errors, use [installation help](#when-something-does-not-work).
+Run the commands below in your terminal, one line at a time. For missing commands or installation errors, use [installation help](troubleshooting.md#installing).
 
 ### macOS
 
@@ -257,7 +257,7 @@ Look for both `carrydown-ground-truth` and `carrydown-plan-to-github`. Other ski
 npx skills list --global
 ```
 
-The list confirms the installed files. To make the agent load them, close and reopen the application or end the current agent session and start a new one. Open the same project folder. If the agent still cannot use either skill, follow [the help below](#the-agent-does-not-see-the-skills).
+The list confirms the installed files. To make the agent load them, close and reopen the application or end the current agent session and start a new one. Open the same project folder. If the agent still cannot use either skill, follow [the agent does not see the skills](troubleshooting.md#the-agent-does-not-see-the-skills).
 
 ## Before you add documents: who may see them
 
@@ -317,68 +317,4 @@ Only for the private path, when some documents are not for everyone who can read
 
 ## When something does not work
 
-### The install command is missing or blocked
-
-**`npx: command not found` or `npx` is not recognized.** Install Node.js using the instructions for your system, then close and reopen the terminal and agent. Check:
-
-```bash
-node --version
-npx --version
-```
-
-Both should print version numbers. If Node.js works but `npx` does not, repair or reinstall Node.js with its package tools included.
-
-**PowerShell says `npx.ps1` cannot run because scripts are disabled.** Use this command instead:
-
-```powershell
-npx.cmd skills add sct-will/carrydown
-```
-
-For the installation check, run:
-
-```powershell
-npx.cmd skills list
-```
-
-This uses the Windows command launcher without changing your execution policy.
-
-**The installer cannot download the skills.** Check your internet connection. On a managed computer, ask your support team whether downloads from the Node package registry and GitHub are allowed. Copy the error message when asking for help.
-
-### Python or Git is missing
-
-**The agent cannot find Python.** On macOS or Linux, check:
-
-```bash
-python3 --version
-```
-
-On Windows, check:
-
-```powershell
-python --version
-```
-
-If you installed it recently, close and reopen the agent. If the check still fails, return to your system's preparation steps. Tell the agent which command worked so it can use that command for the scripts.
-
-**`git` is not recognized or not found.** Follow your system's Git installation steps, then reopen the terminal and agent.
-
-**The folder is not a Git repository.** This is different from Git being missing. Ask the agent to initialize Git in your project folder. Review the folder it names, then approve. You can draft a plan locally before connecting a GitHub repository.
-
-### The agent does not see the skills
-
-Check these in order:
-
-1. Open the same project folder where you installed the skills. A project installation is available in that folder.
-2. Follow [check the installation](#check-the-installation) for your chosen scope. Both skill names should appear. For a manual installation, check the copied folders as described above.
-3. End the agent session and start a new one, or close and reopen the application. Enable Agent Skills in its settings if the agent requires that.
-4. In its chat, say:
-
-   > Use the carrydown-ground-truth skill. Set up a project plan from these documents.
-
-5. If the skills are still missing, use the complete command for your agent in the [agent command list](install-options.md#choose-where-to-install) and repeat the check. If the installer reports a permission error creating a symlink, choose **Copy** or use the manual installation route.
-
-### You need help from your organization
-
-If you cannot install software, send your support team this request:
-
-> I need to run the carrydown planning skills in a local project folder. Please help me set up an approved coding agent with file and command access, Node.js 22.20 or later with npx, a current Python 3 release and Git. The installer needs access to the Node package registry and GitHub. I will need repository and project-board permissions later, when I publish the reviewed plan.
+The [troubleshooting guide](troubleshooting.md#installing) covers a missing or blocked install command, missing Python or Git, an agent that does not see the skills, and what to ask your organization for.

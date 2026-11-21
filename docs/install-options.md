@@ -127,7 +127,7 @@ Use this route if you cannot install Node.js. You still need a coding agent, Pyt
 4. Copy both complete skill folders into that destination. Copy their contents together, including `SKILL.md`, `scripts`, `templates` and `references`. Copying only `SKILL.md` leaves the scripts out.
 5. If folders beginning with a dot are hidden, press Command, Shift and Period in macOS Finder. In Windows File Explorer, enable **Hidden items** in the View menu. On many Linux file managers, Control and H shows hidden files.
 6. Open each copied skill folder and confirm that `SKILL.md` and its supporting folders are inside. For example, a project installation using the shared skills folder has `.agents/skills/carrydown-ground-truth/SKILL.md` and `.agents/skills/carrydown-plan-to-github/SKILL.md`.
-7. Close and reopen your agent in the project folder. Continue at [start your plan](setup.md#start-your-plan). If the agent does not recognize the first skill, use the explicit start phrase in [the setup guide's help](setup.md#the-agent-does-not-see-the-skills).
+7. Close and reopen your agent in the project folder. Continue at [start your plan](setup.md#start-your-plan). If the agent does not recognize the first skill, use the explicit start phrase in [the troubleshooting guide](troubleshooting.md#the-agent-does-not-see-the-skills).
 
 A dot at the beginning of a folder name means it may be hidden. `~/` means your home folder, such as `/Users/your-name/` on macOS or `C:\Users\your-name\` on Windows.
 

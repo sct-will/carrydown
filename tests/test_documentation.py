@@ -605,7 +605,7 @@ class OwnerJourneyTests(unittest.TestCase):
         self.assertEqual(lines[2], "## The short path")
         start = next(n for n, line in enumerate(lines, 1) if "Set up a project plan from these documents." in line)
         self.assertLess(start, 40)
-        path = "\n".join(lines[:lines.index("## Words you will meet")])
+        path = "\n".join(lines[:lines.index("## Helpful definitions")])
         order = [path.index(s) for s in ("**What you need.**", "**Where you type the installer.**", "**How you know it worked.**",
                                          "**What to say to start.**", "**What to have ready.**")]
         self.assertEqual(order, sorted(order))
@@ -616,7 +616,7 @@ class OwnerJourneyTests(unittest.TestCase):
 
     def test_the_setup_guide_defines_the_first_words_in_one_sentence_each(self):
         text = self.page("docs/setup.md")
-        words = text.split("## Words you will meet\n", 1)[1].split("\n## ", 1)[0]
+        words = text.split("## Helpful definitions\n", 1)[1].split("\n## ", 1)[0]
         for term in ("Agent skill", "Node.js and npx", "Ground truth", "Track", "Milestone and demonstration", "Work item", "Dry run"):
             self.assertRegex(words, r"(?m)^- \*\*" + re.escape(term) + r"\.\*\* ", term)
         self.assertLess(len(words.split()), 200)
@@ -626,10 +626,16 @@ class OwnerJourneyTests(unittest.TestCase):
         self.assertNotIn("### Choose where to install", setup)
         self.assertNotIn("### Step 1: create the tooling repository", setup)
         for heading, target in (("## Other installation options", "(install-options.md)"),
-                                ("## Organization setup for private drafting", "(organization-setup.md)")):
+                                ("## Organization setup for private drafting", "(organization-setup.md)"),
+                                ("## When something does not work", "(troubleshooting.md#installing)")):
             pointer = setup.split(heading + "\n", 1)[1].split("\n## ", 1)[0]
             self.assertIn(target, pointer)
             self.assertEqual(len([line for line in pointer.split("\n") if line.strip()]), 1)
+        trouble = self.page("docs/troubleshooting.md")
+        for heading in ("### The install command is missing or blocked", "### Python or Git is missing",
+                        "### The agent does not see the skills", "### You need help from your organization"):
+            self.assertIn(heading, trouble)
+            self.assertNotIn(heading, setup)
         options = self.page("docs/install-options.md")
         for heading in ("## Choose where to install", "## Manual install, without Node.js"):
             self.assertIn(heading, options)
@@ -657,7 +663,7 @@ class OwnerJourneyTests(unittest.TestCase):
         self.assertRegex(text.split("## Glossary", 1)[1], r"(?m)^- \*\*Dry run\.\*\* ")
         section = text[text.index("## What the agent asks you"):]
         section = section[:section.index("\n## ", 3)]
-        self.assertIn("(setup.md#words-you-will-meet)", section)
+        self.assertIn("(setup.md#helpful-definitions)", section)
         self.assertIn("an approver can approve a submitted report from their inbox", section)
         prose = [p for p in section.split("\n\n") if p and not p.startswith(("|", "#"))]
         self.assertLess(max(len(p.split()) for p in prose), 100)
