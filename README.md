@@ -129,16 +129,6 @@ Your AI agent generates these artifacts using the carrydown skills. The plan rec
 - **A GitHub Project board** with work units, tracks, dates and checkpoints filled in.
 - **The engineers' skill**, generated from your specifications and committed in your repository, so "Work on [work item ID]" tells the coding agent to check and read that item's specification and approved context before touching code.
 
-> **Important: when the project changes**
->
-> If requirements, architecture or company rules change significantly, or an engineer finds a specification problem, say:
->
-> **"This changed: [describe the change or provide revised documents]."**
->
-> Your agent will review the existing project, preserve engineer corrections and show proposed updates for approval.
-
-The plan and specifications stay in version control, with source citations, recorded planning decisions and automated consistency checks. Your team reviews the generated work and approves what is shared and what is published. These provide a practical foundation for governing AI-generated planning and engineering handoffs.
-
 <details>
 <summary>Where the files go in your project</summary>
 
@@ -172,7 +162,7 @@ Your private workspace is not in the project. It lives in `~/.carrydown/workspac
 
 ## How does carrydown support AI governance?
 
-You can give the agent governance rules, engineering standards and company-specific context along with the technical document. Word, Markdown and plain text render directly. The agent can make reviewed Markdown extractions from readable PDF, image and other files. The plan records each source's version and precedence, and each work item records source-specific section references. The checker validates those references against the rendered document while you draft, and against the item's approved context in a clean clone. The generated engineers' skill checks that context and points the coding agent at it, so the agent reads the applicable rules before planning code.
+You can give the agent governance rules, engineering standards and company-specific context along with the technical document. Word, markdown and plain text render directly. The agent can make reviewed markdown extractions from readable PDF, image and other files. The plan records each source's version and precedence, and each work item records source-specific section references. The checker validates those references against the rendered document while you draft, and against the item's approved context in a clean clone. The generated engineers' skill checks that context and points the coding agent at it, so the agent reads the applicable rules before planning code.
 
 This makes organizational context part of the ordinary engineering handoff. A company can codify rules for security, privacy, accessibility, data handling, approved patterns or review evidence in maintained source documents, then trace each applicable rule into specifications, issues and the agentic editor. You review the drafts and approve exactly what is shared, with whom and where, after seeing a preview and a dry run. The plan, specifications, source versions and recorded decisions stay in your repository for review as the project changes.
 
@@ -185,7 +175,5 @@ Some documents are not for everyone who can read the project repository. carrydo
 ## Contributing and license
 
 [CONTRIBUTING.md](CONTRIBUTING.md) shows how to run the scripts and checks yourself, under the [code of conduct](CODE_OF_CONDUCT.md); [SECURITY.md](SECURITY.md) covers private reports. Everything in this repository is licensed under [Apache 2.0](LICENSE). Optional reading: [troubleshooting](docs/troubleshooting.md), [enterprise security questions](docs/enterprise-security.md) beside the [security guide](docs/security.md), [changelog](CHANGELOG.md).
-
-**Want to add an integration?** See the [community integration invitations](https://github.com/sct-will/carrydown/issues/1). We welcome contributors for Jira, Azure Boards, GitLab, Linear, Confluence, SharePoint, Figma and Slack. Each issue describes a first contribution and how the pieces could connect. Comment with your proposed approach before starting. These are community opportunities, with no committed delivery dates.
 
 If carrydown helped you, star the repository so the next plan owner finds it. If you see any bug, open an [issue](https://github.com/sct-will/carrydown/issues).

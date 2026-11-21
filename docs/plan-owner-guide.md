@@ -53,7 +53,7 @@ The steps are in [when the project changes](#when-the-project-changes).
 
 ## What the agent asks you
 
-The interview starts with step 0, the question about who may see your documents, and then has six steps. Replies start with `carrydown: interview, step N of 6`, with the current step number in place of `N`. The step column gives that number for each question. These questions tell you what to have ready. [Words you will meet](setup.md#words-you-will-meet) explains the terms in one sentence each, and the [glossary](#glossary) has the rest.
+The interview starts with step 0, the question about who may see your documents, and then has six steps. Replies start with `carrydown: interview, step N of 6`, with the current step number in place of `N`. The step column gives that number for each question. These questions tell you what to have ready. The setup guide's [helpful definitions](setup.md#helpful-definitions) explain the terms in one sentence each, and the [glossary](#glossary) has the rest.
 
 Steps 1, 5 and 6 need someone who knows the system. If that is not you, answer them with a technical lead at your side.
 
@@ -401,7 +401,7 @@ If specifications or engineering conventions changed, the release regenerates th
 - **An update stopped partway.** Say "Resume the project update." A failure is not permission to reset, to force an approval, to retry blindly or to remove human work. [Recover a plan or publication](recovery.md#resume-a-project-update) explains each state.
 - **You want to rebuild the draft.** Ask the agent to show the proposed changes and preserve reviewed work before replacing files.
 
-For installation problems, use the [setup guide's troubleshooting](setup.md#when-something-does-not-work). The [planning method](method.md) and [security guide](security.md) provide optional background.
+For installation problems, use the [troubleshooting guide](troubleshooting.md#installing). The [planning method](method.md) and [security guide](security.md) provide optional background.
 
 ## Glossary
 

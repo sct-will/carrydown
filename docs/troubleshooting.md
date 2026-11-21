@@ -4,15 +4,77 @@ This page lists the problems you may meet while you install, plan, publish and u
 
 ## Installing
 
-### The terminal says `npx: command not found`
+### The install command is missing or blocked
 
-The terminal cannot find the installer command supplied by Node.js. Follow [the installation fix](setup.md#the-install-command-is-missing-or-blocked) for the checks and next action.
+**`npx: command not found` or `npx` is not recognized.** Install Node.js using [the instructions for your system](setup.md#prepare-your-computer), then close and reopen the terminal and agent. Check:
+
+```bash
+node --version
+npx --version
+```
+
+Both should print version numbers. If Node.js works but `npx` does not, repair or reinstall Node.js with its package tools included.
+
+**PowerShell says `npx.ps1` cannot run because scripts are disabled.** Use this command instead:
+
+```powershell
+npx.cmd skills add sct-will/carrydown
+```
+
+For the installation check, run:
+
+```powershell
+npx.cmd skills list
+```
+
+This uses the Windows command launcher without changing your execution policy.
+
+**The installer cannot download the skills.** Check your internet connection. On a managed computer, ask your support team whether downloads from the Node package registry and GitHub are allowed. Copy the error message when asking for help.
 
 ### Something is missing on this computer
 
 carrydown needs a coding agent, Node.js for the installer, Python 3.9 or newer for the scripts and Git. You use a terminal to install and check the skills. After installation, you work in your agent's chat.
 
 The first thing each skill does is check for Python 3.9 or newer. If Python is missing, it asks once whether to install it, and installs it from the official source after your yes. You still install Node.js and Git yourself. The [computer preparation steps](setup.md#prepare-your-computer) list versions and checks. If you would rather install Python yourself, [follow your system's steps](setup.md#before-anything-python). The [installation walkthrough](setup.md#install-the-two-skills) explains where to enter the commands and what to select. [Manual installation](install-options.md#manual-install-without-nodejs) is available if you cannot use Node.js.
+
+### Python or Git is missing
+
+**The agent cannot find Python.** On macOS or Linux, check:
+
+```bash
+python3 --version
+```
+
+On Windows, check:
+
+```powershell
+python --version
+```
+
+If you installed it recently, close and reopen the agent. If the check still fails, return to [your system's preparation steps](setup.md#before-anything-python). Tell the agent which command worked so it can use that command for the scripts.
+
+**`git` is not recognized or not found.** Follow [your system's Git installation steps](setup.md#prepare-your-computer), then reopen the terminal and agent.
+
+**The folder is not a Git repository.** This is different from Git being missing. Ask the agent to initialize Git in your project folder. Review the folder it names, then approve. You can draft a plan locally before connecting a GitHub repository.
+
+### The agent does not see the skills
+
+Check these in order:
+
+1. Open the same project folder where you installed the skills. A project installation is available in that folder.
+2. Follow [check the installation](setup.md#check-the-installation) for your chosen scope. Both skill names should appear. For a manual installation, check the copied folders that [manual installation](install-options.md#manual-install-without-nodejs) names.
+3. End the agent session and start a new one, or close and reopen the application. Enable Agent Skills in its settings if the agent requires that.
+4. In its chat, say:
+
+   > Use the carrydown-ground-truth skill. Set up a project plan from these documents.
+
+5. If the skills are still missing, use the complete command for your agent in the [agent command list](install-options.md#choose-where-to-install) and repeat the check. If the installer reports a permission error creating a symlink, choose **Copy** or use the manual installation route.
+
+### You need help from your organization
+
+If you cannot install software, send your support team this request:
+
+> I need to run the carrydown planning skills in a local project folder. Please help me set up an approved coding agent with file and command access, Node.js 22.20 or later with npx, a current Python 3 release and Git. The installer needs access to the Node package registry and GitHub. I will need repository and project-board permissions later, when I publish the reviewed plan.
 
 ### A hosted coding agent cannot refresh the engineers' check
 
