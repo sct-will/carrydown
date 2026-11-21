@@ -1,6 +1,6 @@
 # carrydown
 
-Carried-context development is an approach to agentic development that ties every spec to the same ground truth, cites the sources, and delivers every approved change to every coding agent. carrydown is the open source reference implementation. Your agent uses two carrydown skills to turn agreed project sources into a project plan, specifications, GitHub epics and issues, and a project board. The sources can include architecture, requirements, governance rules, development standards and company context. The last step generates a project-specific skill for your engineers' coding agents.
+[Carried-context development](https://carriedcontext.dev) is an approach to agentic development that ties every spec to the same ground truth, cites the sources, and delivers every approved change to every coding agent. carrydown is the open source reference implementation. Your agent uses two carrydown skills to turn agreed project sources into a project plan, specifications, GitHub epics and issues, and a project board. The sources can include architecture, requirements, governance rules, development standards and company context. The last step generates a project-specific skill for your engineers' coding agents.
 
 **Keep your team aligned as the project changes.**
 
