@@ -293,6 +293,82 @@ class PrepareTests(unittest.TestCase):
         self.assertEqual(sha_of(workspace / "workspace.yaml"), yaml_before)
 
 
+@unittest.skipUnless(HAS_GIT, "git is needed")
+class RequestTraceScenarioTests(unittest.TestCase):
+    """The request-trace scenario of the update validation: one changed logging rule (section 4.2 item 6) and the
+    version line, and a staged decision in WI-09 that the driver releases. Its known patches must still apply."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.temp = tempfile.TemporaryDirectory(prefix="carrydown-field-trace-")
+        cls.fr = Path(cls.temp.name).resolve() / "run"
+        code, out, err = prepare(cls.fr, "--scenario", "request-trace")
+        if code != 0:
+            raise AssertionError(out + err)
+        cls.manifest = json.loads((cls.fr / "field-run.json").read_text(encoding="utf-8"))
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.temp.cleanup()
+
+    def test_the_revision_changes_the_logging_rule_and_the_version_line_only(self):
+        original = (P.SAMPLE / "ground-truth" / "architecture.md").read_text(encoding="utf-8")
+        revised = (self.fr / "revision" / "architecture.md").read_text(encoding="utf-8")
+        self.assertEqual(revised, P.revise_architecture(original, P.TRACE_EDITS))
+        removed = [ln for ln in original.split("\n") if ln not in revised.split("\n")]
+        self.assertEqual(len(removed), 2, removed)
+        self.assertIn("an identifier for the request or scheduled job run. They never carry amounts, comments or receipt contents.", revised)
+        self.assertIn("Version 0.4.", revised)
+
+    def test_the_word_revision_is_one_modified_block_in_section_4_2(self):
+        script = self.fr / "install" / "carrydown-ground-truth" / "scripts" / "render_ground_truth.py"
+        with tempfile.TemporaryDirectory(prefix="carrydown-field-trace-render-") as tmp:
+            res = subprocess.run([sys.executable, str(script), str(self.fr / "revision" / "architecture.docx"), "--root", tmp,
+                                  "--version", "0.4", "--date", "2026-11-22"], capture_output=True, text=True)
+            self.assertEqual(res.returncode, 0, res.stdout + res.stderr)
+            new = (Path(tmp) / "docs" / "ground-truth" / "architecture.md").read_text(encoding="utf-8")
+        old = (self.fr / "project" / "docs" / "ground-truth" / "architecture.md").read_text(encoding="utf-8")
+        blocks = RC.compare_sections(old, new, "architecture")
+        self.assertEqual({b["ref"]: b["kind"] for b in blocks}, {"architecture/4.2": "modified"})
+        self.assertFalse([b for b in blocks if b.get("formatting_only")])
+
+    def test_the_staged_decision_is_a_valid_overlay_committed_and_not_yet_released(self):
+        import decision_overlay as DO
+        committed = vcs(self.fr, "show", f"HEAD:{P.WI09}").stdout
+        self.assertEqual(committed.split("## Decisions recorded\n\n", 1)[1], P.TRACE_ENTRY + "\n")
+        approved = (P.SAMPLE / P.WI09).read_bytes()
+        result = DO.validate_overlay(approved, committed.encode("utf-8"), "allowed", require_pr_reference=True)
+        self.assertEqual((result.ok, result.reason), (True, "entries-appended"))
+        self.assertIn("example.invalid", P.TRACE_ENTRY)
+        self.assertFalse(self.manifest["released"])
+        self.assertEqual(self.manifest["planted_entry"], {"path": P.WI09, "text": P.TRACE_ENTRY})
+        self.assertNotIn(P.TRACE_ENTRY, "".join(p.read_text(encoding="utf-8") for p in (self.fr / "project" / "docs" / "context").glob("*.md")))
+        self.assertFalse(list((self.fr / "home").rglob("*.journal.json")), "no publication record is written by hand")
+
+    def test_the_reviewed_checkpoint_is_recorded_before_the_release(self):
+        workspace = self.fr / self.manifest["workspace"]
+        self.assertIn("checkpoints:", (workspace / "workspace.yaml").read_text(encoding="utf-8"))
+        self.assertNotIn("checkpoint is unavailable", status_text(self.fr))
+
+    def test_the_persona_and_the_sentence_carry_the_simulated_owner_answers(self):
+        persona = (self.fr / "persona.md").read_text(encoding="utf-8")
+        self.assertIn("### P6.", persona)
+        self.assertIn("API gateway", persona)
+        self.assertEqual(self.manifest["persona_ids"], P.PERSONA_IDS + ["P6"])
+        self.assertTrue(self.manifest["owner_sentence"].startswith("This changed: the logging rule now requires"))
+
+    def test_the_known_patches_still_apply_to_the_sample_and_keep_the_decisions(self):
+        sys.path.insert(0, str(HERE / "update_validation"))
+        import patches as KP
+        for item, path, edits in KP.PATCHES:
+            source = ROOT / "tests" / "fixtures" / "sample-workspace" / path[len("workspace/"):] if path.startswith("workspace/") else P.SAMPLE / path
+            text = source.read_text(encoding="utf-8")
+            new = KP.apply_edits(text, edits, path)
+            self.assertNotEqual(new, text, path)
+            if "## Decisions recorded" in text:
+                self.assertEqual(new.split("## Decisions recorded")[1], text.split("## Decisions recorded")[1], path)
+
+
 # ---------------------------------------------------------------------------
 # measure_field_run.py on synthetic transcripts
 # ---------------------------------------------------------------------------

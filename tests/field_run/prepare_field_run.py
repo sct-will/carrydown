@@ -26,6 +26,10 @@ sample/expense-approvals/ground-truth/architecture.md saved as architecture.md a
 
   python3 tests/field_run/prepare_field_run.py --out DIR
 
+With --scenario request-trace the revision changes only the logging rule (section 4.2 item 6) and the version line,
+and the planted entry is a staged test decision in the WI-09 specification, committed and not yet released. The
+release and the publication are left to tests/field_run/update_validation/driver.py.
+
 Real project (the coordinator's own):
 
   python3 tests/field_run/prepare_field_run.py --out DIR --project PATH --workspace PATH --revised-doc PATH
@@ -93,9 +97,25 @@ REVISION_EDITS = [
 ]
 
 
-def revise_architecture(text):
+# The request-trace scenario (specs/sample-before-and-after-demo.md, section 4): one changed logging rule and the
+# version line, nothing else. The staged decision goes into the ledger export specification (WI-09) and the
+# release, approval and publication are left to the caller (tests/field_run/update_validation/driver.py).
+TRACE_EDITS = [
+    ("*Fictional sample. Version 0.3.", "*Fictional sample. Version 0.4."),
+    ("6. Log lines carry report identifiers and event types. They never carry amounts, comments or receipt contents.",
+     "6. Log lines carry report identifiers, event types and an identifier for the request or scheduled job run. "
+     "They never carry amounts, comments or receipt contents."),
+]
+WI09 = "docs/spec/m4-pilot/wi-09-ledger-export.md"
+TRACE_ENTRY = ("- 2026-11-22. Test scenario decision: export tests will write files to a temporary folder instead of the finance "
+               "drop folder. Synthetic review reference https://example.invalid/test-scenario/pull/1, not a real pull request.")
+TRACE_SENTENCE = ("This changed: the logging rule now requires each entry to identify its request or scheduled job run. "
+                  "The revised architecture document is at revision/{file}")
+
+
+def revise_architecture(text, edits=None):
     """The revised Markdown of the sample's architecture document. Raises ValueError when an edit does not apply."""
-    for old, new in REVISION_EDITS:
+    for old, new in (REVISION_EDITS if edits is None else edits):
         if text.count(old) != 1:
             raise ValueError("the sample's architecture document changed: this text is not found once: " + old[:70])
         text = text.replace(old, new)
@@ -364,8 +384,10 @@ def make_origin(out, project, env):
     return origin
 
 
-def build_sample(out, env, gt_skill, pub_skill):
-    """The released sample, with an owner workspace, a history, a local origin and one planted engineer entry."""
+def build_sample(out, env, gt_skill, pub_skill, trace=False):
+    """The released sample, with an owner workspace, a history, a local origin and one planted engineer entry.
+    With trace, the entry is the staged WI-09 decision, committed but not released, and the reviewed checkpoint is
+    recorded before any new release: the caller runs the release, the approval and the publication."""
     home = Path(env["HOME"])
     project = out / "project"
     shutil.copytree(str(SAMPLE), str(project), ignore=shutil.ignore_patterns("__pycache__"))
@@ -386,11 +408,16 @@ def build_sample(out, env, gt_skill, pub_skill):
     make_origin(out, project, env)
     git(project, env, "push", "-q", "-u", "origin", "main")
     # an engineer's decision entry, merged and then released with the plan, so it is approved text
-    spec = project / WI03
+    rel, entry, name = (WI09, TRACE_ENTRY, "WI-09") if trace else (WI03, ENTRY, "WI-03")
+    spec = project / rel
     text = spec.read_text(encoding="utf-8")
     if "## Decisions recorded\n\nNone yet.\n" not in text:
-        raise PrepareError("the WI-03 specification of the sample has changed: its Decisions recorded section is not empty")
-    spec.write_bytes((text.replace("## Decisions recorded\n\nNone yet.\n", "## Decisions recorded\n\n" + ENTRY + "\n")).encode("utf-8"))
+        raise PrepareError(f"the {name} specification of the sample has changed: its Decisions recorded section is not empty")
+    spec.write_bytes((text.replace("## Decisions recorded\n\nNone yet.\n", "## Decisions recorded\n\n" + entry + "\n")).encode("utf-8"))
+    if trace:
+        git(project, env, "commit", "-q", "-am", "Stage a test scenario decision in WI-09")
+        establish_checkpoint(gt_skill, project, env)
+        return project, workspace
     git(project, env, "commit", "-q", "-am", "Record a decision in WI-03 (pull request 12)")
     release = [sys.executable, pub_skill / "scripts" / "release.py"]
     made = run(release + ["prepare", "--root", ".", "--repository-id", REPOSITORY_ID, "--apply"] + BOARD, project, env)
@@ -504,6 +531,19 @@ SAMPLE_KNOWLEDGE = """The owner of the fictional expense approvals project. The 
 The revised document is at `revision/architecture.docx`. It replaces the earlier version. Nothing else changed.
 The owner does not list the edits section by section. Finding them is the agent's job. The project is the folder `project/`.
 The owner has no other project and keeps no other source elsewhere."""
+
+TRACE_KNOWLEDGE = """The owner of the fictional expense approvals project. Internal audit revised the logging rule of the architecture
+document (version 0.4). The revised document is at `revision/architecture.docx`. It replaces the earlier version. Nothing else
+changed. The reason is that support must connect the log entries of one request or of one nightly export run. The owner does not
+list the edits section by section. Finding them is the agent's job. The project is the folder `project/`. The owner has no other
+project and keeps no other source elsewhere."""
+
+TRACE_P6 = """### P6. Which identifier is meant, and where does it come from?
+
+For a request, the identifier the API gateway assigns to each request. For a nightly job, the scheduler's run identifier.
+Both are opaque strings, carried in every log line of that operation. The revised document is version 0.4.
+
+"""
 
 REAL_KNOWLEDGE = """The owner of this project. The owner revised the source document named in the first sentence. It replaces the earlier version
 of the same source. The project is the folder `project/`. The coordinator edits this file before the run to add what the
@@ -670,11 +710,14 @@ def write_documents(out, manifest, real):
         p2 = (f"Yes. The document at `revision/{file}` is the new version of the source `{name}`. It replaces the earlier one. "
               "Nothing else changed, and no source is kept anywhere else.")
     else:
-        knowledge = SAMPLE_KNOWLEDGE
+        knowledge = TRACE_KNOWLEDGE if manifest.get("scenario") == "request-trace" else SAMPLE_KNOWLEDGE
         p2 = (f"Yes. The document at `revision/{file}` is the new version of the architecture document. It replaces the earlier one. "
               "It is the only source that changed, and no source is kept anywhere else.")
     p1 = "This one. The project is the folder you are working in, `project/`. The owner has no other project."
-    (out / "persona.md").write_bytes((PERSONA.format(knowledge=knowledge, p1=p1, p2=p2)).encode("utf-8"))
+    persona = PERSONA.format(knowledge=knowledge, p1=p1, p2=p2)
+    if manifest.get("scenario") == "request-trace":
+        persona = persona.replace("## Everything else\n", TRACE_P6 + "## Everything else\n", 1)
+    (out / "persona.md").write_bytes(persona.encode("utf-8"))
     transcript = out / "transcript"
     transcript.mkdir(exist_ok=True)
     for f in ("questions.md", "to_owner.md", "commands.log", "notes.md", "observer.md"):
@@ -690,12 +733,17 @@ def main(argv=None):
     ap.add_argument("--project", help="a real project to copy into the run (a git repository). Needs --workspace and --revised-doc")
     ap.add_argument("--workspace", help="the owner's private workspace of that project, copied into the run's home folder")
     ap.add_argument("--revised-doc", help="the revised source document (.docx, .md or .txt), copied to revision/")
+    ap.add_argument("--scenario", choices=("stock", "request-trace"), default="stock",
+                    help="the sample's revision: stock (the default) or request-trace, the logging rule of section 4.2 and a staged WI-09 "
+                         "decision, left unreleased for the update validation driver")
     ap.add_argument("--establish-checkpoint", action="store_true",
                     help="record the copy's current renderings as the reviewed baseline (a real project that has no checkpoint yet)")
     a = ap.parse_args(argv)
     real = any([a.project, a.workspace, a.revised_doc])
     if real and not all([a.project, a.workspace, a.revised_doc]):
         ap.error("--project, --workspace and --revised-doc go together")
+    if real and a.scenario != "stock":
+        ap.error("--scenario is for the sample")
     if a.establish_checkpoint and not real:
         ap.error("--establish-checkpoint is for a real project. The sample run always starts from a reviewed baseline")
     out = Path(a.out).expanduser().resolve()
@@ -739,6 +787,14 @@ def build(out, a, real):
         manifest["source_name"] = src.stem
         manifest["revised_file"] = src.name
         manifest["checkpoint_established"] = bool(a.establish_checkpoint)
+    elif a.scenario == "request-trace":
+        original = (SAMPLE / "ground-truth" / "architecture.md").read_text(encoding="utf-8")
+        revised = revise_architecture(original, TRACE_EDITS)
+        (revision / "architecture.md").write_bytes(revised.encode("utf-8"))
+        build_docx(revised, revision / "architecture.docx")
+        project, workspace = build_sample(out, env, gt_skill, pub_skill, trace=True)
+        manifest.update(scenario="request-trace", source_name="architecture", revised_file="architecture.docx",
+                        planted_entry={"path": WI09, "text": TRACE_ENTRY}, persona_ids=PERSONA_IDS + ["P6"], released=False)
     else:
         original = (SAMPLE / "ground-truth" / "architecture.md").read_text(encoding="utf-8")
         revised = revise_architecture(original)
@@ -763,7 +819,8 @@ def build(out, a, real):
             {"name": "WI-08 quotes the revised delegated approval rule (4.1 item 4)", "path": wi08, "must_contain": [delegate]},
             {"name": "WI-07 takes the new audit rule (4.3, cited by nothing)", "path": wi07, "must_contain": ["delegate.decision"]},
         ]
-    manifest["owner_sentence"] = OWNER_SENTENCE.format(name=manifest["source_name"], file=manifest["revised_file"])
+    sentence = TRACE_SENTENCE if manifest.get("scenario") == "request-trace" else OWNER_SENTENCE
+    manifest["owner_sentence"] = sentence.format(name=manifest["source_name"], file=manifest["revised_file"])
     manifest["workspace"] = os.path.relpath(str(workspace), str(out))
     manifest["baseline_commit"] = git(project, env, "rev-parse", "HEAD").strip()
     write_helper(out)
