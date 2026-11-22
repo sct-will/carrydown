@@ -1592,15 +1592,27 @@ def plan_patches(project, proposal, journal=None):
     return patches, findings
 
 
+CITED_KINDS = ("added", "modified", "moved", "renumbered")
+
+
+def also_blocks(record, refs):
+    """The other blocks a disposition says its patch also carries (reconcile.py patch --also-block writes them into its context)."""
+    context = str(record.get("context") or "")
+    return [ref for ref in refs if ref != record.get("block") and re.search(r"(?<![\w./>-])" + re.escape(ref) + r"(?![\w./>-])", context)]
+
+
 def citation_findings(project, proposal, patches):
-    """citation-missing findings: a specification patch filed under block B names B's section or an identifier from its
-    heading, but the item's citations after the proposal (its sections in the working plan, with the plan patch of the
-    proposal applied, and the References of the patched specification) do not include B. The release compiler builds
-    approved context only from those citations, so the context would omit the changed section."""
+    """citation-missing findings: a specification patch filed under a changed block (added, modified, moved or renumbered)
+    whose item does not cite that block's current section after the proposal. The citations are the item's sections in the
+    working plan, with the proposal's plan patch applied, and the References of the patched specification. A citation of a
+    parent section or of the whole document counts, because the release compiler puts a subsection inside its parent. A
+    patch filed under several blocks is checked against each. A plan patch that cannot be read is patch-plan-invalid. The
+    release compiler builds approved context only from citations, so the context would omit the changed section."""
     plan = project.plan
     if plan is None or not patches:
         return []
     blocks = {b.get("ref"): b for b in (proposal.get("blocks") or []) if isinstance(b, dict)}
+    records = {r.get("block"): r for r in (proposal.get("dispositions") or []) if isinstance(r, dict)}
     try:
         plan_key = project.key_of(project.plan_path)
     except Stopped:
@@ -1608,9 +1620,14 @@ def citation_findings(project, proposal, patches):
     for p in patches:
         if p["key"] == plan_key:
             try:
-                plan, _ = L.plan_from_data(L.loads(p["after_bytes"].decode("utf-8")), project.plan_path, project.root)
-            except (L.PlanError, ValueError, UnicodeDecodeError, RecursionError):
-                return []     # the plan patch itself is broken; the checker of the plan reports it
+                raw = L.loads(p["after_bytes"].decode("utf-8"))
+                if not isinstance(raw, dict):
+                    raise ValueError("the plan must be a mapping at the top level")
+                plan, _ = L.plan_from_data(raw, project.plan_path, project.root)
+            except (L.PlanError, ValueError, UnicodeDecodeError, RecursionError, TypeError, AttributeError) as e:
+                why = first_line(getattr(e, "msg", None) or str(e) or type(e).__name__)
+                return [finding("patch-plan-invalid", p["block"], f"{p['block']}: the patched working plan cannot be read: {why}",
+                                path=p["key"])]
     sources = {s["id"]: s for s in L.ground_truth_sources(plan) if isinstance(s, dict) and s.get("id")}
     sections = {e["id"]: CB.parse_rendering(e["text"]) for e in read_sources(project) if e.get("text") is not None}
     spec_items = {}
@@ -1622,24 +1639,25 @@ def citation_findings(project, proposal, patches):
     out = []
     for p in patches:
         it = spec_items.get(p["key"])
-        block = blocks.get(p["block"])
-        if it is None or block is None or not p["key"].endswith(".md"):
+        if it is None or not p["key"].endswith(".md"):
             continue
-        sid, number = block.get("source"), block.get("current_number") or block.get("previous_number")
-        if not sid or not number or sid not in sources:
-            continue
-        heading = block.get("current_heading") or block.get("previous_heading") or ""
         text = p["after_bytes"].decode("utf-8", "replace")
-        if not CB.named_obligations(text, [{"source": sid, "section": number, "heading": heading}], sources):
-            continue
         cited = CB.item_obligation_keys(plan, it, CB.spec_cited_keys(text, sources, sections.get))
-        if (sid, number) in cited:
-            continue
         tag = L.tag(plan, it["id"])
-        out.append(finding("citation-missing", p["block"],
-                           f"{p['block']}: the patch of {tag} relies on {sid} section {number}, which {tag} does not cite. Add {number} to its "
-                           f"sections in the working plan, its Ground truth row and its References in this proposal, because the approved "
-                           f"context holds only the sections an item cites", item=tag, path=p["key"]))
+        for ref in [p["block"]] + also_blocks(records.get(p["block"]) or {}, list(blocks)):
+            block = blocks.get(ref)
+            if block is None or block.get("kind") not in CITED_KINDS:
+                continue
+            sid, number = block.get("source"), block.get("current_number")
+            if not sid or not number or sid not in sources:
+                continue      # a removed section has no current number and cannot be cited
+            if (sid, CB.WHOLE) in cited or any(s == sid and (n == number or number.startswith(n + ".")) for s, n in cited):
+                continue
+            out.append(finding("citation-missing", ref,
+                               f"{ref}: the patch of {tag} is filed under {sid} section {number}, which {tag} does not cite. Add {number} "
+                               f"to its sections in the working plan or a References line of its specification, and keep its Ground "
+                               f"truth row in step, because the approved context holds only the sections an item cites", item=tag,
+                               path=p["key"]))
     return out
 
 

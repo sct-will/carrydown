@@ -1019,6 +1019,81 @@ class CheckTests(Base):
         self.disposition_update(change_id, "architecture/4.2", patches, item="WI-08")
         self.assertEqual(self.codes(change_id), [])
 
+    # the citation check: helpers and the cases the review named
+
+    WI04 = "docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md"
+    WI08 = "docs/spec/m3-enforce-policy/wi-08-notifications-delegates.md"
+    OLD_RULE = "Log lines carry report identifiers and event types."
+    NEW_RULE = "Log lines carry report identifiers, event types and an identifier for the request or scheduled job run."
+
+    def logging_rule_changed(self):
+        self.make_checkpoint()
+        self.write(RENDERING, self.read(RENDERING).replace("6. " + self.OLD_RULE, "6. " + self.NEW_RULE, 1))
+        return self.prepare()["proposal"]
+
+    def plan_patch(self, old, new, item):
+        plan = (self.ws / "drafts" / "plan.yaml").read_text(encoding="utf-8")
+        self.assertEqual(plan.count(old), 1, old)
+        return {"item": item, "path": "workspace/drafts/plan.yaml", "before_sha256": sha(plan.encode("utf-8")), "after_text": plan.replace(old, new)}
+
+    def citation_codes(self, change_id):
+        return [f for f in self.findings(change_id)[1]["findings"] if f["code"] == "citation-missing"]
+
+    def test_a_parent_section_or_the_whole_document_in_the_plan_counts_as_the_citation(self):
+        change_id = self.logging_rule_changed()
+        quote = self.patch_for(self.WI08, self.OLD_RULE, self.NEW_RULE, item="WI-08")
+        for sections in ("4, 6.1, 6.2, 7.2", "whole document"):
+            with self.subTest(sections=sections):
+                plan = self.plan_patch('        sections: "6.1, 6.2, 7.2"', f'        sections: "{sections}"', "WI-08")
+                self.disposition_update(change_id, "architecture/4.2", [quote, plan], item="WI-08")
+                self.assertEqual(self.citation_codes(change_id), [])
+
+    def test_a_patch_under_a_removed_section_gives_no_citation_finding(self):
+        self.make_checkpoint()
+        text = self.read(RENDERING)
+        start, end = text.index("### 4.2 GOV-2 Audit and retention"), text.index("## 5. Development standard")
+        self.write(RENDERING, text[:start] + text[end:])
+        change_id = self.prepare()["proposal"]
+        refs = [b["ref"] for b in json.loads((self.proposal_dir(change_id) / "blocks.json").read_text(encoding="utf-8"))["blocks"]]
+        self.assertIn("architecture/4.2>none", refs)
+        quote = self.patch_for(self.WI08, self.OLD_RULE, "Log lines carry report identifiers.", item="WI-08")
+        self.disposition_update(change_id, "architecture/4.2>none", [quote], item="WI-08")
+        self.assertEqual(self.citation_codes(change_id), [])
+
+    def test_a_patch_that_does_not_name_the_section_still_needs_the_citation(self):
+        """The reviewer's case: WI-04 takes the rule's text, without "4.2" or "GOV-2", under architecture/4.2."""
+        change_id = self.logging_rule_changed()
+        added = "## Acceptance criteria\n\n- [ ] Log lines carry the identifier of the request that caused them (`tests/inbox.test.js`).\n"
+        spec = self.patch_for(self.WI04, "## Acceptance criteria\n", added, item="WI-04")
+        self.assertNotIn("4.2", added)
+        self.assertNotIn("GOV-2", added)
+        self.disposition_update(change_id, "architecture/4.2", [spec], item="WI-04")
+        code, report = self.findings(change_id)
+        self.assertEqual(code, 1)
+        self.assertEqual([(f["block"], f["item"]) for f in self.citation_codes(change_id)], [("architecture/4.2", "WI-04")])
+        plan = self.plan_patch('        sections: "2.1, 3.4, 6.1, 7.1"', '        sections: "2.1, 3.4, 4.2, 6.1, 7.1"', "WI-04")
+        self.disposition_update(change_id, "architecture/4.2", [spec, plan], item="WI-04")
+        self.assertEqual(self.citation_codes(change_id), [])
+
+    def test_a_plan_patch_that_cannot_be_read_is_patch_plan_invalid_and_apply_writes_nothing(self):
+        change_id = self.logging_rule_changed()
+        quote = self.patch_for(self.WI08, self.OLD_RULE, self.NEW_RULE, item="WI-08")
+        plan_text = (self.ws / "drafts" / "plan.yaml").read_text(encoding="utf-8")
+        broken = {"item": "WI-08", "path": "workspace/drafts/plan.yaml", "before_sha256": sha(plan_text.encode("utf-8")),
+                  "after_text": "project: [unclosed\n"}
+        self.disposition_update(change_id, "architecture/4.2", [quote, broken], item="WI-08")
+        code, report = self.findings(change_id)
+        self.assertEqual(code, 1)
+        invalid = [f for f in report["findings"] if f["code"] == "patch-plan-invalid"]
+        self.assertEqual(len(invalid), 1, report["findings"])
+        self.assertEqual(invalid[0]["block"], "architecture/4.2")
+        self.assertEqual(len(invalid[0]["message"].splitlines()), 1)
+        before = (tree(self.ws), tree(self.root))
+        code, out, err = self.r("apply", "--proposal", change_id, "--apply")
+        self.assertNotEqual(code, 0)
+        self.assertIn("patch-plan-invalid", out)
+        self.assertEqual((tree(self.ws), tree(self.root)), before)
+
 
 # ---------------------------------------------------------------------------
 # apply
