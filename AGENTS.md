@@ -10,6 +10,14 @@ Read this when you open the carrydown repository.
 
 It carries a ground-truth document down into a plan, specifications, GitHub issues, a project board and the engineers' skill. When the project changes, it compares the change with the reviewed sources and the current work, and carries the approved update down again.
 
+## Product intent
+
+carrydown extends isolated specifications with three connected capabilities:
+
+- **Project decisions stay connected across work items.** The plan and specifications use agreed sources. Dependencies, shared interfaces and acceptance criteria are reviewed together for gaps and conflicts.
+- **Decisions and sources reach each coding agent.** The generated project skill checks approved inputs and directs the agent to read the specification, cited source excerpts and project conventions before planning code.
+- **The handoff stays aligned through reviewed changes.** Updates assess potentially affected work, preserve engineer corrections that still fit and return conflicts to the plan owner. The owner decides what changes and approves publication.
+
 ## What it is not
 
 It does not write application code. Planning decisions (owners, dates, scope, order) stay with the plan owner. The skills draft, check and populate. A person decides.
