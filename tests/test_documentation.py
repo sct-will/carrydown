@@ -258,9 +258,10 @@ class EnterpriseSecurityPageTests(unittest.TestCase):
     def text(self):
         return self.PAGE.read_text(encoding="utf-8")
 
-    def test_it_carries_a_visible_notice_that_the_labels_are_not_yet_supported(self):
+    def test_it_opens_with_the_answers_and_carries_no_draft_notice(self):
         text = self.text()
-        self.assertIn("**Draft notice: not yet supported.**", text.split("\n\n", 2)[1] if text.startswith("# ") else text)
+        self.assertNotIn("Draft notice", text)
+        self.assertTrue(text.split("\n\n", 2)[1].startswith("Plain-language answers"))
 
     def test_it_uses_the_three_support_labels_exactly(self):
         text = self.text()

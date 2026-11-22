@@ -197,12 +197,12 @@ def main():
         claim(out.returncode == 0, "The documentation tests pass: the scaffold on a released plan, the sample, the links, the support labels and the searches for obsolete instructions",
               (ran.group(0) if ran else "no test count") + " || " + last(out))
 
-        # 9. support labels and the draft notice
+        # 9. support labels, no draft notice
         page = (ROOT / "docs" / "enterprise-security.md").read_text(encoding="utf-8")
         labels = ("**supported** (implemented, documented and tested)", "**supported with prerequisites** (implemented and tested, but needs configuration your organization provides)",
                   "**planned** (the design exists, the feature does not)")
-        claim(all(l in page for l in labels) and "**Draft notice: not yet supported.**" in page and "not been performed" not in page,
-              "The security page carries the three support labels exactly and a visible draft notice, and states no acceptance run status",
+        claim(all(l in page for l in labels) and "Draft notice" not in page and "not been performed" not in page,
+              "The security page carries the three support labels exactly, no draft notice and no acceptance run status",
               "labels present; notice present")
         bold = sorted(set(re.findall(r"\*\*((?:S|s)upported[^*]*|(?:P|p)lanned[^*]*)\*\*", page)))
         exact = {"supported", "supported with prerequisites", "planned", "Supported.", "Supported with prerequisites.", "Planned."}
