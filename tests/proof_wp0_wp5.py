@@ -893,7 +893,7 @@ def _(base):
     check(code != 0 and "not json" not in out, f"exit {code}: {out[-300:]}")
     code, listing = run(base, [PY, "-c", "import sys; sys.path.insert(0, sys.argv[1]); import release_gate as RG; "
                                          "print(sorted(RG.ADDED_CODES), len(RG.PART_G_CODES), 'schema-invalid' in RG.REASON_CODES)", SCRIPTS])
-    check(code == 0 and listing.strip() == "['schema-invalid'] 42 True", listing)
+    check(code == 0 and listing.strip() == "['obligation-uncited', 'schema-invalid'] 42 True", listing)
     guide = (ROOT / "docs" / "security.md").read_text(encoding="utf-8")
     check("addition to the specification's list: `schema-invalid`" in guide, "the security guide does not mark the addition")
     return f"{shown} || gate list: {listing.strip()}"

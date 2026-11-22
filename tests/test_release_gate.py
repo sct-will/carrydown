@@ -139,9 +139,9 @@ class GateLegacyTests(TempCase):
         self.assertEqual(RG.OUTCOMES, ("legacy", "allow", "deny"))
         # Part G of the specification, its two lists, copied here so that a change to either side fails
         self.assertEqual(RG.PART_G_CODES, PART_G)
-        self.assertEqual(RG.ADDED_CODES, {"schema-invalid"})
-        self.assertEqual(RG.REASON_CODES, PART_G | {"schema-invalid"})
-        self.assertEqual(len(RG.REASON_CODES), 43)
+        self.assertEqual(RG.ADDED_CODES, {"schema-invalid", "obligation-uncited"})
+        self.assertEqual(RG.REASON_CODES, PART_G | {"schema-invalid", "obligation-uncited"})
+        self.assertEqual(len(RG.REASON_CODES), 44)
 
     def test_every_code_a_refusal_names_in_the_source_is_a_fixed_reason_code(self):
         used = refusal_codes()

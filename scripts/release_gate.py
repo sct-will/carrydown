@@ -73,8 +73,9 @@ unsafe-artifact-path artifact-operation-unsupported schema-view-mismatch
 """.split())
 # An addition to Part G: schema-invalid, a record (request, receipt, manifest, event, payload) does not match
 # its schema. The schema, release, build, payload, verifier and detector modules raise it; the message names
-# the field, never the value.
-ADDED_CODES = frozenset({"schema-invalid"})
+# the field, never the value. A second addition: obligation-uncited, release preparation found a rule that a
+# specification's Contract or Acceptance criteria name and that the item's approved context does not hold.
+ADDED_CODES = frozenset({"schema-invalid", "obligation-uncited"})
 REASON_CODES = PART_G_CODES | ADDED_CODES
 
 

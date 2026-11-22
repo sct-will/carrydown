@@ -34,6 +34,7 @@ from typing import NamedTuple, Optional
 
 sys.path.insert(0, str(Path(__file__).parent))
 import carrydown_lib as L  # noqa: E402
+import check_specs as CS  # noqa: E402
 import compile_bundles as CB  # noqa: E402
 import detectors as D  # noqa: E402
 import generate_dev_skill as GD  # noqa: E402
@@ -98,6 +99,38 @@ def spec_files(plan, spec_base):
         if path.is_symlink() or not path.is_file() or path.name in SKIPPED_SPEC_FILES or path.resolve() in skip:
             continue
         out[f"{rel}/{path.relative_to(folder).as_posix()}"] = path.read_bytes()
+    return out
+
+
+def obligation_problems(plan, spec_base, bundles):
+    """obligation-uncited problems over the compiled release: the rule of the released view of check_specs.py, read
+    from the bundles this release would publish. An identifier in the Contract or the Acceptance criteria of a
+    specification whose base is the identifier of an obligation heading in some bundle must match an obligation of
+    the item's own bundle. Problems name the item, the identifier and the sections, never the text."""
+    known, own = [], {}
+    for path, data in sorted(bundles.items()):
+        if not path.endswith(".bundle.json"):
+            continue
+        try:
+            found = CS.bundle_obligations(RS.loads_strict(data))
+        except RS.SchemaError:
+            continue
+        own[path] = found
+        known += [o for o in found if o not in known]
+    out = []
+    for it in plan["items"]:
+        if L.restricted_item(it):
+            continue
+        tag = L.tag(plan, it["id"])
+        sp = L.spec_path(plan, spec_base, it)
+        if not sp.is_file():
+            continue
+        try:
+            text = L.read_text(sp)
+        except L.TextError:
+            continue
+        for line in CS.bundle_obligation_findings(tag, text, own.get(f"{CB.CONTEXT_DIR}/{tag.lower()}.bundle.json", []), known):
+            out.append(f"{line[:-1]} ({CS.OBLIGATION_UNCITED})")
     return out
 
 
@@ -249,6 +282,8 @@ def assemble(root, *, plan_path=None, with_github=True, with_board=True, excepti
         sp = L.spec_path(plan, base, it)
         if not sp.is_file():
             problems.append(f"the specification of {L.tag(plan, it['id'])} does not exist yet. Run scaffold_spec.py --stubs and write it")
+    if not result.problems:
+        problems += obligation_problems(plan, base, result.files)
     if not (Path(base) / plan["project"]["spec_dir"] / "README.md").is_file():
         problems.append(f"{plan['project']['spec_dir']}/README.md does not exist yet. Run scaffold_spec.py --apply")
     try:

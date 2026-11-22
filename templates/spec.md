@@ -16,7 +16,7 @@ TODO: Facts the coding agent needs before it writes code. What exists today, whi
 
 ## Contract
 
-TODO: Copy the exact schemas, field tables, message texts and rules from the ground truth that this item must honor. Quote them faithfully. Do not paraphrase a schema. Use "## Protocol" instead of "## Contract" for items that have no interface, such as a pilot or a measurement.
+TODO: Copy the exact schemas, field tables, message texts and rules from the ground truth that this item must honor. Quote them faithfully. Do not paraphrase a schema. Use "## Protocol" instead of "## Contract" for items that have no interface, such as a pilot or a measurement. Cite in References the section of every rule named here or in the Acceptance criteria, such as 4.2 for GOV-2.6.
 
 ## Implementation guide
 
