@@ -618,7 +618,7 @@ def bundles(tmp):
     comp = [PY, "scripts/compile_bundles.py"]
     owner = copy_sample(tmp / "bundles-owner")       # the owner compiles from the working plan: the committed sample is a released project
     step("compile_bundles dry run on the sample lists every item and writes nothing", comp + ["--root", str(owner)],
-         contains=["WI-06  obligations present: 3 of 3", "WI-11  obligations present: 7 of 7", "18 file(s) would be written"])
+         contains=["WI-06  obligations present: 4 of 4", "WI-11  obligations present: 7 of 7", "18 file(s) would be written"])
     out = tmp / "bundles-out"
     step("compile_bundles --out --apply writes two files per work item", comp + ["--root", str(owner), "--out", str(out), "--apply"], contains=["18 file(s) written"])
     same = ("import sys\nfrom pathlib import Path\n"
