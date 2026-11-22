@@ -8,7 +8,7 @@
 export const customDomain = 'carriedcontext.dev';
 
 /** The GoatCounter site code. Empty means no analytics script is loaded. */
-export const goatcounterCode = '';
+export const goatcounterCode = 'carriedcontext';
 
 /** Indexing is off until launch. One flag drives the robots meta tag and robots.txt. */
 export const INDEXING_ENABLED = false;
