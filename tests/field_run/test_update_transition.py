@@ -51,8 +51,8 @@ PROHIBITION = "They never carry amounts, comments or receipt contents."
 
 # ---------------------------------------------------------------------------
 # The known patches of the scenario. Each is (item, path as reconcile.py patch takes it, [(old text, new text)]).
-# The old text occurs once, before "Decisions recorded", which no patch touches. WI-08 does not cite 4.2 in the
-# sample, so the working plan and its specification gain the citation.
+# The old text occurs once, before "Decisions recorded", which no patch touches. WI-07, WI-08 and WI-09 already
+# cite 4.2 in the sample, so no patch adds a citation.
 # ---------------------------------------------------------------------------
 
 OLD_RULE = "Log lines carry report identifiers and event types. They never carry amounts, comments or receipt contents."
@@ -63,7 +63,6 @@ OPERATION = ("the operation identifier: the identifier the API gateway assigns t
 WI07 = "docs/spec/m3-enforce-policy/wi-07-audit-log.md"
 WI08 = "docs/spec/m3-enforce-policy/wi-08-notifications-delegates.md"
 WI09 = P.WI09
-PLAN = "workspace/drafts/plan.yaml"
 
 PATCHES = [
     ("WI-07", WI07, [
@@ -80,7 +79,6 @@ PATCHES = [
          "say that log lines in the worker follow the same rule (report identifiers, event types and the request or job run identifier only)."),
     ]),
     ("WI-08", WI08, [
-        ("| Ground truth | Architecture document: Sections 6.1, 6.2, 7.2 |", "| Ground truth | Architecture document: Sections 4.2, 6.1, 6.2, 7.2 |"),
         ('- GOV-2.6 (GOV-2 is the audit and retention rule). "' + OLD_RULE + '"',
          '- GOV-2.6 (GOV-2 is the audit and retention rule). "' + NEW_RULE + '"'),
         ("send it, and log only the report id and event type.",
@@ -89,8 +87,6 @@ PATCHES = [
         ("- [ ] Captured log lines hold report ids and event types only, with no amount, comment, receipt content or address (GOV-2.6, `tests/notify-worker.test.js`).",
          "- [ ] Captured log lines hold report ids, event types and the identifier of the request that caused the event only, with no "
          "amount, comment, receipt content or address (GOV-2.6, `tests/notify-worker.test.js`)."),
-        ("- architecture section 6.1, What people asked for\n",
-         "- architecture section 4.2, GOV-2 Audit and retention\n- architecture section 6.1, What people asked for\n"),
     ]),
     ("WI-09", WI09, [
         ("- The file holds no personal data beyond its columns, and log lines hold no amounts (GOV-2.6).",
@@ -103,9 +99,6 @@ PATCHES = [
         ("and captured log lines hold no amount (GOV-2.3, GOV-2.6, `tests/export-ledger-job.test.js`).",
          "and captured log lines carry the scheduler's run identifier and hold no amount (GOV-2.3, GOV-2.6, "
          "`tests/export-ledger-job.test.js`)."),
-    ]),
-    ("WI-08", PLAN, [
-        ('        sections: "6.1, 6.2, 7.2"', '        sections: "4.2, 6.1, 6.2, 7.2"'),
     ]),
 ]
 
@@ -353,7 +346,9 @@ class UpdateTransitionTests(unittest.TestCase):
             released = self.show(self.commit_after, rel)
             self.assertIn(NEW_RULE, released, item)
             self.assertEqual(listed.get(rel), sha(released), item)
-        self.assertNotIn(NEW_RULE, self.show(self.commit_before, "docs/context/wi-08.md"), "WI-08 gains the rule only by its new citation")
+        before = self.show(self.commit_before, "docs/context/wi-08.md")
+        self.assertIn(OLD_RULE, before, "WI-08 cites 4.2, so its context held the rule before the update")
+        self.assertNotIn(NEW_RULE, before, "WI-08 gains the revised rule only through the update")
 
     # row 5, decision preservation
     def test_the_staged_decision_is_byte_identical_before_after_and_in_the_engineer_checkout(self):

@@ -990,33 +990,37 @@ class CheckTests(Base):
         self.assertEqual((tree(self.ws), tree(self.root)), before)
 
     def test_a_patch_that_relies_on_a_section_its_item_does_not_cite_is_citation_missing_until_the_citation_is_added(self):
-        """WI-08 quotes GOV-2.6 but cites only 6.1, 6.2 and 7.2. A patch of WI-08 under architecture/4.2 without a citation of
-        4.2 would leave the revised rule out of its approved context, which the release compiler builds from citations only."""
-        wi08 = "docs/spec/m3-enforce-policy/wi-08-notifications-delegates.md"
+        """WI-04 cites 2.1, 2.2, 3.4, 4.1, 5.1, 6.1 and 7.1, not 4.2. A patch of WI-04 under architecture/4.2 that makes it quote
+        GOV-2.6 without a citation of 4.2 would leave the revised rule out of its approved context, which the release compiler
+        builds from citations only."""
+        wi04 = "docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md"
         old_rule = "Log lines carry report identifiers and event types."
         new_rule = "Log lines carry report identifiers, event types and an identifier for the request or scheduled job run."
         self.make_checkpoint()
         self.write(RENDERING, self.read(RENDERING).replace("6. " + old_rule, "6. " + new_rule, 1))
         change_id = self.prepare()["proposal"]
-        quote = self.patch_for(wi08, old_rule, new_rule, item="WI-08")
-        self.disposition_update(change_id, "architecture/4.2", [quote], item="WI-08")
+        added = "## Acceptance criteria\n\n- [ ] GOV-2.6. " + new_rule + " (`tests/inbox.test.js`).\n"
+        quote = self.patch_for(wi04, "## Acceptance criteria\n", added, item="WI-04")
+        self.disposition_update(change_id, "architecture/4.2", [quote], item="WI-04")
         code, report = self.findings(change_id)
         self.assertEqual(code, 1)
         missing = [f for f in report["findings"] if f["code"] == "citation-missing"]
-        self.assertEqual([(f["block"], f["item"]) for f in missing], [("architecture/4.2", "WI-08")], report["findings"])
+        self.assertEqual([(f["block"], f["item"]) for f in missing], [("architecture/4.2", "WI-04")], report["findings"])
         self.assertIn("does not cite", missing[0]["message"])
         # the plan's sections, the Ground truth row and the References carry 4.2 in the same proposal: the finding clears
-        spec = quote["after_text"].replace("| Ground truth | Architecture document: Sections 6.1, 6.2, 7.2 |",
-                                           "| Ground truth | Architecture document: Sections 4.2, 6.1, 6.2, 7.2 |")
-        spec = spec.replace("- architecture section 6.1, What people asked for\n",
-                            "- architecture section 4.2, GOV-2 Audit and retention\n- architecture section 6.1, What people asked for\n")
+        spec = quote["after_text"].replace("| Ground truth | Architecture document: Sections 2.1, 3.4, 6.1, 7.1 |",
+                                           "| Ground truth | Architecture document: Sections 2.1, 3.4, 4.2, 6.1, 7.1 |")
+        spec = spec.replace("- architecture section 4.1, GOV-1 Approval limits and separation of duties\n",
+                            "- architecture section 4.1, GOV-1 Approval limits and separation of duties\n"
+                            "- architecture section 4.2, GOV-2 Audit and retention\n")
+        self.assertNotEqual(spec, quote["after_text"])
         plan_file = self.ws / "drafts" / "plan.yaml"
         plan = plan_file.read_text(encoding="utf-8")
-        self.assertEqual(plan.count('        sections: "6.1, 6.2, 7.2"'), 1)
+        self.assertEqual(plan.count('        sections: "2.1, 3.4, 6.1, 7.1"'), 1)
         patches = [dict(quote, after_text=spec),
-                   {"item": "WI-08", "path": "workspace/drafts/plan.yaml", "before_sha256": sha(plan.encode("utf-8")),
-                    "after_text": plan.replace('        sections: "6.1, 6.2, 7.2"', '        sections: "4.2, 6.1, 6.2, 7.2"')}]
-        self.disposition_update(change_id, "architecture/4.2", patches, item="WI-08")
+                   {"item": "WI-04", "path": "workspace/drafts/plan.yaml", "before_sha256": sha(plan.encode("utf-8")),
+                    "after_text": plan.replace('        sections: "2.1, 3.4, 6.1, 7.1"', '        sections: "2.1, 3.4, 4.2, 6.1, 7.1"')}]
+        self.disposition_update(change_id, "architecture/4.2", patches, item="WI-04")
         self.assertEqual(self.codes(change_id), [])
 
     # the citation check: helpers and the cases the review named
@@ -1040,12 +1044,16 @@ class CheckTests(Base):
         return [f for f in self.findings(change_id)[1]["findings"] if f["code"] == "citation-missing"]
 
     def test_a_parent_section_or_the_whole_document_in_the_plan_counts_as_the_citation(self):
+        """WI-04 does not cite 4.2. Its patch under architecture/4.2 is citation-missing until the plan names 4 or the whole document."""
         change_id = self.logging_rule_changed()
-        quote = self.patch_for(self.WI08, self.OLD_RULE, self.NEW_RULE, item="WI-08")
-        for sections in ("4, 6.1, 6.2, 7.2", "whole document"):
+        added = "## Acceptance criteria\n\n- [ ] GOV-2.6. " + self.NEW_RULE + " (`tests/inbox.test.js`).\n"
+        quote = self.patch_for(self.WI04, "## Acceptance criteria\n", added, item="WI-04")
+        self.disposition_update(change_id, "architecture/4.2", [quote], item="WI-04")
+        self.assertEqual([(f["block"], f["item"]) for f in self.citation_codes(change_id)], [("architecture/4.2", "WI-04")])
+        for sections in ("2.1, 3.4, 4, 6.1, 7.1", "whole document"):
             with self.subTest(sections=sections):
-                plan = self.plan_patch('        sections: "6.1, 6.2, 7.2"', f'        sections: "{sections}"', "WI-08")
-                self.disposition_update(change_id, "architecture/4.2", [quote, plan], item="WI-08")
+                plan = self.plan_patch('        sections: "2.1, 3.4, 6.1, 7.1"', f'        sections: "{sections}"', "WI-04")
+                self.disposition_update(change_id, "architecture/4.2", [quote, plan], item="WI-04")
                 self.assertEqual(self.citation_codes(change_id), [])
 
     def test_a_patch_under_a_removed_section_gives_no_citation_finding(self):
