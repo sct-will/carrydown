@@ -595,6 +595,86 @@ class DigestTests(RenderCase):
         self.assertEqual(code, 0, out)
         self.assertIn("content_sha256 of architecture was not recorded", out)
 
+    def test_the_given_version_is_recorded_with_the_digests_in_the_workspace_plan(self):
+        self.set_handling(False)
+        project_plan = self.project / "docs" / "spec" / "plan.yaml"
+        (self.workspace / "drafts").mkdir()
+        ws_plan = self.workspace / "drafts" / "plan.yaml"
+        shutil.copy(project_plan, ws_plan)
+        before_project, before_lines = project_plan.read_bytes(), ws_plan.read_text(encoding="utf-8").splitlines()
+        code, out = self.render(self.project / "ground-truth" / "architecture.md", "--version", "0.4")
+        self.assertEqual(code, 0, out)
+        self.assertIn("recorded version 0.4 for architecture in the workspace plan", out)
+        self.assertEqual(project_plan.read_bytes(), before_project)
+        entry = self.source_entry(ws_plan, "architecture")
+        self.assertEqual(entry["version"], "0.4")
+        self.assertEqual(entry["rendering_sha256"], sha256_bytes(self.ws_rendering("architecture").read_bytes()))
+        after_lines = ws_plan.read_text(encoding="utf-8").splitlines()
+        self.assertIn('    version: "0.4"', after_lines)
+        self.assertNotIn('    version: "0.3"', after_lines)
+        # the version line is replaced where it was; only the two digest lines are added
+        self.assertEqual(len([ln for ln in after_lines if ln not in before_lines]), 3)
+        self.assertEqual(len(after_lines), len(before_lines) + 2)
+
+    def test_the_given_version_is_recorded_in_the_project_plan_when_there_is_no_workspace_plan(self):
+        plan = self.set_handling(True)
+        code, out = self.render(self.project / "ground-truth" / "architecture.md", "--version", "0.4")
+        self.assertEqual(code, 0, out)
+        self.assertIn("recorded version 0.4 for architecture in docs/spec/plan.yaml", out)
+        entry = self.source_entry(plan, "architecture")
+        self.assertEqual(entry["version"], "0.4")
+        self.assertEqual(entry["rendering_sha256"], sha256_bytes(self.project_rendering("architecture").read_bytes()))
+        self.assertEqual(plan.read_text(encoding="utf-8").count("version: \"0.4\""), 1)
+
+    def test_without_a_version_the_plan_keeps_its_version_and_a_note_says_so(self):
+        plan = self.set_handling(True)
+        code, out = self.render(self.project / "ground-truth" / "architecture.md")
+        self.assertEqual(code, 0, out)
+        self.assertIn("note: --version was not given, so the version of architecture in docs/spec/plan.yaml is left as it is", out)
+        self.assertIn("recorded content_sha256 and rendering_sha256 for architecture", out)
+        self.assertNotIn("recorded version", out)
+        entry = self.source_entry(plan, "architecture")
+        self.assertEqual(entry["version"], "0.3")
+        self.assertTrue(entry["rendering_sha256"])
+        self.assertIn("version unversioned", self.project_rendering("architecture").read_text(encoding="utf-8").split("\n", 1)[0])
+
+    def test_a_dry_run_with_a_version_leaves_the_plan_byte_identical(self):
+        plan = self.set_handling(True)
+        before = plan.read_bytes()
+        code, out = self.render(self.project / "ground-truth" / "architecture.md", "--version", "0.4", "--dry-run")
+        self.assertEqual(code, 0, out)
+        self.assertIn("would record version 0.4 for architecture in docs/spec/plan.yaml", out)
+        self.assertEqual(plan.read_bytes(), before)
+
+    def test_a_released_plan_gets_no_version_from_an_explicit_write(self):
+        before = (SAMPLE / "docs" / "spec" / "plan.yaml").read_bytes()
+        code, out, plan = self.render_sample(False, "--version", "0.4")
+        self.assertEqual(code, 0, out)
+        self.assertNotIn("recorded version", out)
+        self.assertEqual(plan.read_bytes(), before)
+        self.assertIn("version 0.4", (plan.parents[2] / "my-test" / "ground-truth" / "architecture.md").read_text(encoding="utf-8").split("\n", 1)[0])
+
+    def test_record_replaces_a_quoted_version_in_place_and_the_dumper_carries_it(self):
+        path = self.write_plan('sources:\n  # the source\n  - id: "alpha"\n    version: "0.3"\n    name: "Alpha"\n')
+        self.assertEqual(R.record_source_digests(path, {"alpha": {"rendering_sha256": "b" * 64, "version": "0.4"}}), (["alpha"], [], None))
+        text = path.read_text(encoding="utf-8")
+        self.assertIn('  # the source\n  - id: "alpha"\n    version: "0.4"\n    name: "Alpha"\n', text)
+        path = self.write_plan('sources:\n  - {id: alpha, name: "Alpha", version: "0.3"}\n')
+        self.assertEqual(R.record_source_digests(path, {"alpha": {"rendering_sha256": "b" * 64, "version": "0.4"}}), (["alpha"], [], None))
+        self.assertEqual(L.load_file(path)["sources"][0], {"id": "alpha", "name": "Alpha", "version": "0.4", "rendering_sha256": "b" * 64})
+
+    def test_record_keeps_a_trailing_comment_and_replaces_a_value_holding_a_hash(self):
+        for old in ('"0.3"', "0.3", "'0.3'"):
+            path = self.write_plan(f'sources:\n  - id: alpha\n    version: {old}   # bump on each issue\n    name: "Alpha"\n')
+            self.assertEqual(R.record_source_digests(path, {"alpha": {"version": "0.4"}}), (["alpha"], [], None), old)
+            self.assertIn('\n    version: "0.4"   # bump on each issue\n', path.read_text(encoding="utf-8"), old)
+            self.assertEqual(L.load_file(path)["sources"][0]["version"], "0.4", old)
+        for old, comment in (('"a #b"', ""), ('"a #b"  # note', "  # note")):
+            path = self.write_plan(f'sources:\n  - id: alpha\n    version: {old}\n    name: "Alpha"\n')
+            self.assertEqual(R.record_source_digests(path, {"alpha": {"version": "0.4"}}), (["alpha"], [], None), old)
+            self.assertIn(f'\n    version: "0.4"{comment}\n    name', path.read_text(encoding="utf-8"), old)
+            self.assertNotIn("#b", path.read_text(encoding="utf-8"), old)
+
     def write_plan(self, text):
         path = self.tmp / "plan.yaml"
         path.write_bytes(text.encode("utf-8"))

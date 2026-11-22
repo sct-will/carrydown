@@ -346,18 +346,18 @@ export const es: Strings = {
     values: [
       {
         eyebrow: 'Plan conectado',
-        title: 'Planificado como un todo conectado.',
-        body: 'Un solo plan y todas las especificaciones salen de la misma verdad de referencia. Las dependencias, las interfaces y los criterios de aceptación se revisan en conjunto para detectar huecos y conflictos, y una comprobación valida cada cita.',
+        title: 'Las decisiones del proyecto siguen conectadas entre especificaciones.',
+        body: 'Su agente construye el plan y las especificaciones a partir de los mismos documentos y decisiones acordados. Las dependencias, las interfaces compartidas y los criterios de aceptación se revisan en conjunto para detectar huecos y conflictos. Las comprobaciones validan las citas de las fuentes.',
       },
       {
         eyebrow: 'Traspaso a ingeniería',
-        title: 'Un traspaso que llega al agente de programación.',
-        body: 'Cada incidencia enlaza su especificación y cita sus secciones de la verdad de referencia. Un agent skill específico del proyecto pone la especificación aprobada, esas secciones y sus convenciones ante el agente de programación antes de que planifique código.',
+        title: 'Las decisiones y las fuentes llegan a cada agente de programación.',
+        body: 'Un skill generado para su proyecto indica al agente de programación de cada ingeniero que lea la especificación aprobada, los fragmentos citados de las fuentes y las convenciones del proyecto antes de planificar código. Cada incidencia enlaza su especificación para que los ingenieros también puedan revisar el contexto.',
       },
       {
         eyebrow: 'Contexto del proyecto sincronizado',
-        title: 'Los cambios que plantea el líder del proyecto o los ingenieros se propagan.',
-        body: 'Un líder de proyecto informa de una fuente modificada, o un ingeniero señala una especificación errónea. El agente encuentra el trabajo afectado, conserva las correcciones que siguen valiendo y le presenta los conflictos. Las actualizaciones aprobadas fluyen por las especificaciones, las incidencias y el traspaso.',
+        title: 'Mantenga el traspaso alineado a medida que cambia el proyecto.',
+        body: 'Avise al agente con el que planifica cuando cambie una fuente o una especificación parezca errónea. El agente identifica el trabajo que puede verse afectado y conserva las correcciones de los ingenieros que siguen valiendo. Usted decide cómo se resuelven los conflictos y aprueba las actualizaciones de las especificaciones, las incidencias y el contexto de los agentes de programación.',
       },
     ],
     carrydown: {
