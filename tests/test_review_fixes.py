@@ -254,11 +254,13 @@ class SampleIgnoreTests(unittest.TestCase):
 
 class StalePublicSampleTests(unittest.TestCase):
     """WP10 defect 8: the public sample repository and docs/images/issue-9.png predate the release layout
-    and need the owner's account to republish. Until then the README and the storyboard say so."""
+    and need the owner's account to republish. The storyboard says so. The README no longer does: the owner
+    removed that note from the sample section."""
 
-    def test_the_readme_and_the_storyboard_mark_them_as_waiting_to_be_republished(self):
+    def test_the_storyboard_marks_the_image_as_pending_replacement_and_the_readme_is_silent(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("waiting to be republished from the current sample", readme)
+        self.assertNotIn("waiting to be republished", readme)
+        self.assertNotIn("before approved contexts and receipts existed", readme)
         storyboard = (ROOT / "docs" / "recording-storyboard.md").read_text(encoding="utf-8")
         row = next(x for x in storyboard.splitlines() if x.startswith("| `docs/images/issue-9.png`"))
         self.assertIn("Legacy pending replacement", row)
@@ -266,12 +268,14 @@ class StalePublicSampleTests(unittest.TestCase):
 
 class DraftNoticeTests(unittest.TestCase):
     """The draft notice of the enterprise security questions said the scenarios were "added by a separate
-    change that this branch does not contain yet". Work package 11 added them and the workflow runs them."""
+    change that this branch does not contain yet". Work package 11 added them and the workflow runs them,
+    so the notice says only that they pass in continuous integration."""
 
     def test_the_notice_no_longer_says_the_scenarios_are_missing(self):
         text = (ROOT / "docs" / "enterprise-security.md").read_text(encoding="utf-8")
         self.assertNotIn("does not contain yet", text)
-        self.assertIn("They have not yet run on the hosted runners", text)
+        self.assertNotIn("hosted runners", text)
+        self.assertIn("the six negative tests pass in continuous integration.", text)
         workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         self.assertIn("python tests/scenario_embedded_release.py", workflow)
         self.assertIn("python tests/test_negative_release.py ${{ matrix.group }}", workflow)

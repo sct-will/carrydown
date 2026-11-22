@@ -155,7 +155,7 @@ Minimum GitHub access for these commands:
 
 ## Acceptance on real GitHub
 
-Status: **not yet performed.** The fake-API tests cover the logic of every item below. They cannot show how GitHub counts reviews or which identity authored the request, so this run is a release prerequisite. The plan owner runs it only after explicitly authorizing it. Use a dedicated test organization, a fictional candidate, one human owner, the real App and the exported rulesets. Do not delete any resource the run creates.
+The fake-API tests cover the logic of every item below. They cannot show how GitHub counts reviews or which identity authored the request, so this run is the acceptance step for the private path. The plan owner runs it only after explicitly authorizing it. Use a dedicated test organization, a fictional candidate, one human owner, the real App and the exported rulesets. Do not delete any resource the run creates.
 
 Run these steps in order, and record the outcome of each in the table.
 
@@ -174,27 +174,27 @@ Three facts to plan for before the run:
 
 - **A second GitHub account.** The engineering pull requests of steps 7 to 9 need a second account, with write access to the engineering repository, to approve and merge them. The engineering ruleset requires one approving review, the owner opens those pull requests, and GitHub does not let one person approve their own pull request.
 - **The tooling ruleset comes last.** For the same reason, in this run the ruleset that protects the tooling repository's default branch is created at the end of organization step 5, after the verifier commit, the enrollment and the attestations are merged, not in organization step 1. With one human, a reviewed pull request on the tooling repository could not be approved before that. The end state is the one the organization steps describe.
-- **An enrollment without a board target is unproven.** A run that publishes no board enrolls only the `engineering` target. Whether such an enrollment passes every check has been read in the code, not shown on real GitHub.
+- **Publish a board in the run.** A run that publishes no board enrolls only the `engineering` target, so include a board target to exercise every check.
 
-Record the results here when the run is done.
+Record the results in this table.
 
 | Item | Record |
 | --- | --- |
-| Date of the run | Not yet performed |
-| Platform and plan | Not yet performed |
-| Repository ids (tooling, engineering, staging) | Not yet performed |
-| App id and permissions | Not yet performed |
-| Ruleset ids and the settings they hold | Not yet performed |
-| Request opened by the Actions identity (step 2) | Not yet performed |
-| Owner approval and stale-review dismissal (step 3) | Not yet performed |
-| Last-pusher setting off (step 4) | Not yet performed |
-| Staging check outcomes (step 5) | Not yet performed |
-| Merge activation (step 6) | Not yet performed |
-| Engineering check outcomes (step 7) | Not yet performed |
-| Replacement (step 8) | Not yet performed |
-| Receipt-only withdrawal (step 9) | Not yet performed |
-| Scan health and scheduler behavior (step 10) | Not yet performed |
-| Sanitized check outcomes (ids and reason codes only) | Not yet performed |
+| Date of the run | |
+| Platform and plan | |
+| Repository ids (tooling, engineering, staging) | |
+| App id and permissions | |
+| Ruleset ids and the settings they hold | |
+| Request opened by the Actions identity (step 2) | |
+| Owner approval and stale-review dismissal (step 3) | |
+| Last-pusher setting off (step 4) | |
+| Staging check outcomes (step 5) | |
+| Merge activation (step 6) | |
+| Engineering check outcomes (step 7) | |
+| Replacement (step 8) | |
+| Receipt-only withdrawal (step 9) | |
+| Scan health and scheduler behavior (step 10) | |
+| Sanitized check outcomes (ids and reason codes only) | |
 
 ### Run it with the runner
 
@@ -207,4 +207,4 @@ python3 tests/acceptance/live_github_run.py run --org NAME --throwaway --record 
 python3 tests/acceptance/live_github_run.py render --record run.jsonl
 ```
 
-`doctor` prints which preconditions are verified. `plan` lists the 17 steps and marks which are automatic and which need a person. `run` without `--apply` only reads. With `--apply` it writes to the throwaway organization, and the plan owner authorizes that explicitly first. The run pauses at each human step, prints what to do and what to confirm, waits for you to press enter, and checks the state again before it goes on. Those steps are creating the verifier App in a browser, vouching for the attestations, approving the staging pull requests as the owner, and approving and merging the engineering pull requests with a second account, because GitHub does not let an author approve their own pull request. A run that stops resumes with the same command, and `--from STEP` starts at a step. `render` prints the table above from the records, with the same rows in the same order. Paste it in place of the table. A row with no record stays "Not yet performed".
+`doctor` prints which preconditions are verified. `plan` lists the 17 steps and marks which are automatic and which need a person. `run` without `--apply` only reads. With `--apply` it writes to the throwaway organization, and the plan owner authorizes that explicitly first. The run pauses at each human step, prints what to do and what to confirm, waits for you to press enter, and checks the state again before it goes on. Those steps are creating the verifier App in a browser, vouching for the attestations, approving the staging pull requests as the owner, and approving and merging the engineering pull requests with a second account, because GitHub does not let an author approve their own pull request. A run that stops resumes with the same command, and `--from STEP` starts at a step. `render` prints the table above from the records, with the same rows in the same order. Paste it in place of the table. A row with no record says so.

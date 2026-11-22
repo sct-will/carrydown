@@ -4,7 +4,7 @@ Start with the plain-language questions: [the enterprise security questions](ent
 
 ## Delivery modes and support labels
 
-The labels are the same as in the enterprise security questions: **supported** (implemented, documented and tested), **supported with prerequisites** (implemented and tested, but needs configuration your organization provides) and **planned** (the design exists, the feature does not). Those answers are drafts until the checklist in the notice at the top of that page is complete. In particular, the real GitHub acceptance run in [the organization setup guide](organization-setup.md#acceptance-on-real-github) has not been performed.
+The labels are the same as in the enterprise security questions: **supported** (implemented, documented and tested), **supported with prerequisites** (implemented and tested, but needs configuration your organization provides) and **planned** (the design exists, the feature does not). Those answers are drafts until the checklist in the notice at the top of that page is complete.
 
 | Capability | Label |
 | --- | --- |

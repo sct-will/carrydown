@@ -743,16 +743,16 @@ def _():
     return f"staging and engineering rulesets pass with App 77; {digests.stdout.strip().splitlines()[0][:80]}..."
 
 
-@claim("The real GitHub acceptance run is not performed here: docs/organization-setup.md holds the runbook and a record table marked not yet performed")
+@claim("The real GitHub acceptance run is not performed here: docs/organization-setup.md holds the runbook and an empty record table")
 def _():
     text = (ROOT / "docs" / "organization-setup.md").read_text(encoding="utf-8")
     section = text[text.index("## Acceptance on real GitHub"):]
-    check("Status: **not yet performed.**" in section and "explicitly authorizing" in section)
-    rows = [l for l in section.splitlines() if l.startswith("| ") and "Not yet performed" in l]
+    check("explicitly authorizing" in section and "not yet performed" not in section)
+    rows = [l for l in section.splitlines() if l.startswith("| ") and l.rstrip().endswith("| |")]
     check(len(rows) >= 14, str(len(rows)))
-    steps = re.findall(r"(?m)^(\d+)\. ", section.split("Record the results here")[0])
+    steps = re.findall(r"(?m)^(\d+)\. ", section.split("Record the results in this table")[0])
     check(len(steps) == 10)
-    return f"runbook of {len(steps)} steps and a record table with {len(rows)} rows, every row 'Not yet performed'; no token was used and nothing touched the network"
+    return f"runbook of {len(steps)} steps and an empty record table with {len(rows)} rows; no token was used and nothing touched the network"
 
 
 def main():
