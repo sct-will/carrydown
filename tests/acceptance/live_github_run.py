@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The runner for the acceptance run on real GitHub. Standard library only.
 
-docs/organization-setup.md ends with a runbook, "Acceptance on real GitHub", and a table that says "Not yet performed".
+docs/organization-setup.md ends with a runbook, "Acceptance on real GitHub", and an empty record table.
 This program turns that runbook, and the organization setup above it, into 17 steps that the plan owner runs
 once against a throwaway GitHub organization. It does the steps that a program can do, stops for the steps
 that need a person, checks the result of every step against GitHub, and appends one record per step to a
