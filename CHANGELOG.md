@@ -7,6 +7,7 @@ All notable changes to this project are written here. The format follows Keep a 
 ### Updates
 
 - **The update check reports a missing citation.** `reconcile.py check` now reports `citation-missing` when a specification patch is filed under a changed section that its item does not cite, because the approved context would then omit that section. A citation of a parent section or of the whole document counts, a removed section is skipped, and the blocks named with `--also-block` are checked too. The section in the item's `sections` in the working plan, or a References line of its specification, clears it. `apply` stops on the finding. A plan patch that cannot be read is now reported as `patch-plan-invalid`.
+- **The renderer records the document version.** `render_ground_truth.py --version 0.4` now writes `version: "0.4"` into the source entry of the plan in the same write as the digests, so the accepted checkpoint and the compiled approved context carry the version of the rendering. Without `--version` the header still says unversioned, the plan keeps its version and a note says so. A dry run and a released plan are not written, as before.
 - **The update check reports a plan patch that breaks the plan.** `reconcile.py check` now reports `patch-plan-invalid` when the patched working plan has a problem that the current working plan does not have, such as a duplicate item id, and names the first three. A problem the working plan already has is not blamed on the patch. `apply` stops on the finding.
 
 ### Source checkpoints
