@@ -1113,6 +1113,15 @@ class CheckTests(Base):
         self.assertIn("patch-plan-invalid", out)
         self.assertEqual((tree(self.ws), tree(self.root)), before)
 
+    def test_a_plan_patch_alone_that_duplicates_an_item_id_is_patch_plan_invalid(self):
+        change_id = self.logging_rule_changed()
+        plan = self.plan_patch("  - id: 9\n", "  - id: 8\n", "WI-08")
+        self.disposition_update(change_id, "architecture/4.2", [plan], item="WI-08")
+        invalid = self.plan_invalid(change_id)
+        self.assertEqual(len(invalid), 1, invalid)
+        self.assertIn("item 8: duplicate id", invalid[0]["message"])
+        self.assertTrue(invalid[0]["message"].endswith("Correct the plan patch so the working plan has no new problem"))
+
     def test_a_problem_the_working_plan_already_has_is_not_blamed_on_a_plan_patch(self):
         path = self.ws / "drafts" / "plan.yaml"
         text = path.read_text(encoding="utf-8")

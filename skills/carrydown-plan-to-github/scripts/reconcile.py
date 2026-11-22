@@ -1634,7 +1634,8 @@ def citation_findings(project, proposal, patches):
             if added:
                 shown = "; ".join(added[:3]) + (f"; and {len(added) - 3} more" if len(added) > 3 else "")
                 return [finding("patch-plan-invalid", p["block"], f"{p['block']}: the patched working plan has "
-                                f"{plural(len(added), 'new problem')}: {shown}", path=p["key"])]
+                                f"{plural(len(added), 'new problem')}: {shown}. Correct the plan patch so the working plan has no new "
+                                f"problem", path=p["key"])]
     sources = {s["id"]: s for s in L.ground_truth_sources(plan) if isinstance(s, dict) and s.get("id")}
     sections = {e["id"]: CB.parse_rendering(e["text"]) for e in read_sources(project) if e.get("text") is not None}
     spec_items = {}
