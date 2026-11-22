@@ -139,6 +139,7 @@ The counterpart items on the Experience track are WI-04, Approver inbox and deci
 
 - [Section 3.5, Routing](../../ground-truth/architecture.md#35-routing)
 - [Section 4.1, GOV-1](../../ground-truth/architecture.md#41-gov-1-approval-limits-and-separation-of-duties)
+- [Section 4.2, GOV-2](../../ground-truth/architecture.md#42-gov-2-audit-and-retention)
 - [Section 7.1, REST API](../../ground-truth/architecture.md#71-rest-api)
 - [Company governance policy, section 1.5, Sole approver](../../ground-truth/company-governance.md#15-sole-approver)
 - [Company governance policy, section 2.3, Approval limits](../../ground-truth/company-governance.md#23-approval-limits)
