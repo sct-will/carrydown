@@ -32,6 +32,10 @@ WATCH = "## Watch out for\n\n"
 GOV3 = ("- GOV-3, section 4.3, adds an event type. A decision made by a delegate writes one audit_event of type `delegate.decision` in the "
         "same transaction, with the delegate and the replaced approver as identifiers and no name or comment. A refused delegated "
         "decision is recorded with the number of the rule that refused it.\n")
+CITE43_HEADER = ("| Ground truth | Architecture document: Sections 3.3, 4.2 |", "| Ground truth | Architecture document: Sections 3.3, 4.2, 4.3 |")
+CITE43_REFERENCE = ("- architecture section 4.2, GOV-2 Audit and retention\n",
+                    "- architecture section 4.2, GOV-2 Audit and retention\n- architecture section 4.3, GOV-3 Audit of delegated decisions\n")
+CITE43_PLAN = ('        sections: "3.3, 4.2"', '        sections: "3.3, 4.2, 4.3"')
 
 
 def sha(text):
@@ -92,7 +96,13 @@ def build_dispositions(project, doc, manifest):
     both08 = edit(wi08, ("after 3 business days", "after 2 business days"), (DELEGATE_OLD, DELEGATE_NEW))
     p08 = patch("WI-08", rel(wi08), texts[wi08], both08)
     p06 = patch("WI-06", rel(wi06), texts[wi06], edit(wi06, (DELEGATE_OLD, DELEGATE_NEW)))
-    p07 = patch("WI-07", rel(wi07), texts[wi07], edit(wi07, (WATCH, WATCH + GOV3)))
+    # WI-07 takes the new section 4.3, so it cites it: the release compiler builds approved context from citations only
+    p07 = patch("WI-07", rel(wi07), texts[wi07], edit(wi07, (WATCH, WATCH + GOV3), CITE43_HEADER, CITE43_REFERENCE))
+    plan_file = (project.parent / manifest["workspace"] / "drafts" / "plan.yaml").resolve()
+    plan_text = plan_file.read_text(encoding="utf-8")
+    if plan_text.count(CITE43_PLAN[0]) != 1:
+        raise SystemExit("the text this run edits is not in the working plan: " + CITE43_PLAN[0])
+    p07_plan = patch("WI-07", "workspace/drafts/plan.yaml", plan_text, plan_text.replace(*CITE43_PLAN))
     out = []
     for rec in doc["dispositions"]:
         block = rec["block"]
@@ -106,7 +116,7 @@ def build_dispositions(project, doc, manifest):
             out.append({"block": block, "disposition": "update", "item": "WI-06", "patch": p06,
                         "note": "WI-06 states GOV-1.4 and its limits. WI-08 quotes GOV-1.4 and is patched with the 3.5 record."})
         elif block.startswith("architecture/none>4.3"):
-            out.append({"block": block, "disposition": "update", "item": "WI-07", "patch": p07,
+            out.append({"block": block, "disposition": "update", "item": "WI-07", "patch": [p07, p07_plan],
                         "note": "Nothing cites section 4.3. WI-07 owns the audit writer and its event types, so it names the new event type."})
         else:
             out.append({"block": block, "disposition": "no-impact",

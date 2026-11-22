@@ -989,6 +989,36 @@ class CheckTests(Base):
         self.r("check", "--proposal", change_id)
         self.assertEqual((tree(self.ws), tree(self.root)), before)
 
+    def test_a_patch_that_relies_on_a_section_its_item_does_not_cite_is_citation_missing_until_the_citation_is_added(self):
+        """WI-08 quotes GOV-2.6 but cites only 6.1, 6.2 and 7.2. A patch of WI-08 under architecture/4.2 without a citation of
+        4.2 would leave the revised rule out of its approved context, which the release compiler builds from citations only."""
+        wi08 = "docs/spec/m3-enforce-policy/wi-08-notifications-delegates.md"
+        old_rule = "Log lines carry report identifiers and event types."
+        new_rule = "Log lines carry report identifiers, event types and an identifier for the request or scheduled job run."
+        self.make_checkpoint()
+        self.write(RENDERING, self.read(RENDERING).replace("6. " + old_rule, "6. " + new_rule, 1))
+        change_id = self.prepare()["proposal"]
+        quote = self.patch_for(wi08, old_rule, new_rule, item="WI-08")
+        self.disposition_update(change_id, "architecture/4.2", [quote], item="WI-08")
+        code, report = self.findings(change_id)
+        self.assertEqual(code, 1)
+        missing = [f for f in report["findings"] if f["code"] == "citation-missing"]
+        self.assertEqual([(f["block"], f["item"]) for f in missing], [("architecture/4.2", "WI-08")], report["findings"])
+        self.assertIn("does not cite", missing[0]["message"])
+        # the plan's sections, the Ground truth row and the References carry 4.2 in the same proposal: the finding clears
+        spec = quote["after_text"].replace("| Ground truth | Architecture document: Sections 6.1, 6.2, 7.2 |",
+                                           "| Ground truth | Architecture document: Sections 4.2, 6.1, 6.2, 7.2 |")
+        spec = spec.replace("- architecture section 6.1, What people asked for\n",
+                            "- architecture section 4.2, GOV-2 Audit and retention\n- architecture section 6.1, What people asked for\n")
+        plan_file = self.ws / "drafts" / "plan.yaml"
+        plan = plan_file.read_text(encoding="utf-8")
+        self.assertEqual(plan.count('        sections: "6.1, 6.2, 7.2"'), 1)
+        patches = [dict(quote, after_text=spec),
+                   {"item": "WI-08", "path": "workspace/drafts/plan.yaml", "before_sha256": sha(plan.encode("utf-8")),
+                    "after_text": plan.replace('        sections: "6.1, 6.2, 7.2"', '        sections: "4.2, 6.1, 6.2, 7.2"')}]
+        self.disposition_update(change_id, "architecture/4.2", patches, item="WI-08")
+        self.assertEqual(self.codes(change_id), [])
+
 
 # ---------------------------------------------------------------------------
 # apply

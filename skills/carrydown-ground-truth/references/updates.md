@@ -115,6 +115,8 @@ It is a dry run until you add `--apply`. It reads the digest of `PATH` as it is 
 
 **Items you read and left unchanged.** Dispositions are per block. The reason each candidate item stays as it is goes in the review's "Reviewed and unchanged" table, one row per item, not in `dispositions.json`. Only the working plan and the specification Markdown files can be patched. Generated and approved files, the released plan, workspace history and links are refused.
 
+**Items that do not cite the changed section.** When you patch an item that does not cite the changed section, add the section to that item's `sections` in the working plan, its Ground truth row and its References in the same proposal, because the release compiler builds approved context only from those citations. Otherwise `check` reports a `citation-missing` finding.
+
 A patch that rewrites or removes a decision entry an engineer recorded is a `decision-conflict` finding. After the owner decides the conflict, record the decision in plain words as `conflict_resolution` on that disposition, and `check` accepts it. A patch that keeps every recorded entry and changes other text needs no `conflict_resolution`. After a release, the release gate lets such a patch replace a specification that holds an engineer's entry only because the proposal recorded that exact file. If the file changes again before `apply`, prepare again.
 
 ## Reading the impact index
