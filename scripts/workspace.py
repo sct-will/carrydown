@@ -883,6 +883,14 @@ def checkpoint_prepare(root, workspace, renderings, descriptor, apply=False):
         if f["path"].endswith(".md"):
             by_source[f["path"].split("/")[2]] = f["sha256"]
     created = _now()
+    existing = _read_regular(ws / f"{folder}/checkpoint.json")
+    if existing is not None:
+        try:
+            previous = json.loads(existing.decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            previous = None
+        if isinstance(previous, dict) and previous.get("id") == cid and isinstance(previous.get("created"), str):
+            created = previous["created"]      # a repeat of the same checkpoint keeps its first creation time
     meta = {"format": CHECKPOINT_FORMAT, "id": cid, "created": created, "plan_sha256": clean["plan_sha256"],
             "sources": [{"id": s["id"], "version": s["version"], "sha256": by_source[s["id"]]} for s in clean["sources"]],
             "files": [{"path": f["path"], "sha256": f["sha256"]} for f in files],

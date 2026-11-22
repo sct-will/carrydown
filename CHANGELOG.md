@@ -4,6 +4,10 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ## Unreleased
 
+### Source checkpoints
+
+- **A repeated checkpoint keeps its creation time.** `workspace.py checkpoint prepare --apply` run again with the same inputs leaves the record's `created` time as it was, so a repeat changes nothing, as documented.
+
 ### The plan page
 
 - **The plan owner reviews a page, not a YAML file.** `plan_page.py` writes the plan page into the private workspace from the plan, the people file, the specifications and the checker: the project overview, people and feasibility, the milestones, the work items with their acceptance criteria and sources, and the review findings. During an update it leads with what changed and what needs a decision. The planning skill writes it as soon as the draft exists and refreshes it after every change, and the owner asks for changes in the conversation. It is static HTML with no scripts and no external resources, and it never enters the repository.
