@@ -167,6 +167,7 @@ The counterpart on the other track is WI-02, Report form and receipt upload (Exp
 - architecture section 3.2, Components
 - architecture section 3.3, Data model
 - architecture section 3.6, Deployment
+- architecture section 4.2, GOV-2 Audit and retention
 - architecture section 5.1, DS-1 Delivery standard
 - architecture section 7.1, REST API
 - Unblocked items. [WI-02 Report form and receipt upload](wi-02-report-form.md), [WI-03 Approval routing engine](../m2-route-to-approvers/wi-03-routing-engine.md).

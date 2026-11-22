@@ -148,6 +148,7 @@ The counterpart items on the Workflow track are WI-03 Approval routing engine, w
 - architecture section 7.1, REST API
 - architecture section 4.1, GOV-1 Approval limits and separation of duties
 - architecture section 2.2, Quality requirements
+- architecture section 5.1, DS-1 Delivery standard
 - Depends on [WI-02 Report form and receipt upload](../m1-submit-report/wi-02-report-form.md) and [WI-03 Approval routing engine](wi-03-routing-engine.md). Unblocks [WI-08 Notifications and delegates](../m3-enforce-policy/wi-08-notifications-delegates.md). Related [WI-06 Approval limits and separation of duties](../m3-enforce-policy/wi-06-limits-and-duties.md)
 
 ## Decisions recorded

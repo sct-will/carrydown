@@ -494,9 +494,9 @@ class SampleBundleTests(unittest.TestCase):
         self.assertEqual(committed, fresh)
         self.assertEqual(len(committed), 18)
 
-    def test_the_sample_bundle_for_wi06_has_its_three_sections(self):
+    def test_the_sample_bundle_for_wi06_has_its_four_sections(self):
         side = json.loads((SAMPLE / "docs" / "context" / "wi-06.bundle.json").read_text(encoding="utf-8"))
-        self.assertEqual([o["section"] for o in side["obligations"]], ["3.5", "4.1", "7.1"])
+        self.assertEqual([o["section"] for o in side["obligations"]], ["3.5", "4.1", "4.2", "7.1"])
         self.assertIn("WI-03", side["shared_with"])
 
 

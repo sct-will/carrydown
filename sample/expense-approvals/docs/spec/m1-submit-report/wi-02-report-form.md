@@ -171,6 +171,8 @@ The counterpart on the other track is WI-01, Service scaffold, flag and API cont
 - architecture section 7.1, REST API
 - architecture section 2.2, Quality requirements
 - architecture section 6.1, What people asked for
+- architecture section 4.2, GOV-2 Audit and retention
+- architecture section 5.1, DS-1 Delivery standard
 - Dependency. [WI-01 Service scaffold, flag and API contract](wi-01-service-scaffold.md).
 - Unblocked item. [WI-04 Approver inbox and decisions](../m2-route-to-approvers/wi-04-approver-inbox.md).
 
