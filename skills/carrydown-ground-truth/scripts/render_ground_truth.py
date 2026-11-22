@@ -1441,8 +1441,11 @@ def _set_key_in_text(text, source_id, key, value):
         if ident != source_id:
             continue
         for i in range(first, last):
-            if key_line(i, key, column):
-                lines[i] = lines[i][:column] + f'{key}: "{value}"'
+            m = key_line(i, key, column)
+            if m:
+                # a comment after the old value stays; a # inside a quoted value is part of the value
+                kept = re.match(r"""^\s*(?:"[^"]*"|'[^']*'|[^"'#]*?)(\s+#.*)$""", m.group(3))
+                lines[i] = lines[i][:column] + f'{key}: "{value}"' + (kept.group(1) if kept else "")
                 break
         else:
             after = first

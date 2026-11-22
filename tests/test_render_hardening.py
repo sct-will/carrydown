@@ -663,6 +663,18 @@ class DigestTests(RenderCase):
         self.assertEqual(R.record_source_digests(path, {"alpha": {"rendering_sha256": "b" * 64, "version": "0.4"}}), (["alpha"], [], None))
         self.assertEqual(L.load_file(path)["sources"][0], {"id": "alpha", "name": "Alpha", "version": "0.4", "rendering_sha256": "b" * 64})
 
+    def test_record_keeps_a_trailing_comment_and_replaces_a_value_holding_a_hash(self):
+        for old in ('"0.3"', "0.3", "'0.3'"):
+            path = self.write_plan(f'sources:\n  - id: alpha\n    version: {old}   # bump on each issue\n    name: "Alpha"\n')
+            self.assertEqual(R.record_source_digests(path, {"alpha": {"version": "0.4"}}), (["alpha"], [], None), old)
+            self.assertIn('\n    version: "0.4"   # bump on each issue\n', path.read_text(encoding="utf-8"), old)
+            self.assertEqual(L.load_file(path)["sources"][0]["version"], "0.4", old)
+        for old, comment in (('"a #b"', ""), ('"a #b"  # note', "  # note")):
+            path = self.write_plan(f'sources:\n  - id: alpha\n    version: {old}\n    name: "Alpha"\n')
+            self.assertEqual(R.record_source_digests(path, {"alpha": {"version": "0.4"}}), (["alpha"], [], None), old)
+            self.assertIn(f'\n    version: "0.4"{comment}\n    name', path.read_text(encoding="utf-8"), old)
+            self.assertNotIn("#b", path.read_text(encoding="utf-8"), old)
+
     def write_plan(self, text):
         path = self.tmp / "plan.yaml"
         path.write_bytes(text.encode("utf-8"))
