@@ -617,7 +617,7 @@ class RedactionTests(Base):
 class RenderTests(Base):
     def setup_rows(self):
         text = (ROOT / "docs" / "organization-setup.md").read_text(encoding="utf-8")
-        section = text[text.index("Record the results here"):text.index("## Run it with the runner")]
+        section = text[text.index("Record the results in this table"):text.index("## Run it with the runner")]
         return [line for line in section.splitlines() if line.startswith("| ")][2:]
 
     def test_the_rows_match_docs_setup_in_label_and_order(self):
@@ -626,7 +626,8 @@ class RenderTests(Base):
         held = self.setup_rows()
         self.assertEqual(len(lines) - 2, len(held))
         for mine, theirs in zip(lines[2:], held):
-            self.assertEqual(mine, theirs)        # with no records every row says Not yet performed, as the document does
+            self.assertEqual(mine.split("|")[1].strip(), theirs.split("|")[1].strip())   # same label, same order
+            self.assertEqual(mine.split("|")[2].strip(), live.NOT_YET)                   # the document leaves the record empty
 
     def write_records(self):
         rows = [

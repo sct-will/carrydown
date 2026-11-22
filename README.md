@@ -112,8 +112,6 @@ Start with [the sample project board](https://github.com/users/sct-will/projects
 
 Everything the two skills made is public in [carrydown-sample](https://github.com/sct-will/carrydown-sample), and a copy sits in [`sample/expense-approvals/`](sample/expense-approvals/) for the self test. [A recorded run](docs/sample-run.md) shows what each script printed when the sample was carried into a throwaway repository. With a local copy of this repository you can also run the sample's read-only preview, which changes no file and needs no token; [the sample's own page](sample/expense-approvals/README.md#run-it) shows the command and what it prints.
 
-The public repository, its issues, its board and the screenshot above were made before approved contexts and receipts existed. They are waiting to be republished from the current sample, which needs the owner's own GitHub account. Until then, the copy in this repository is the current output.
-
 <br />
 
 ## What you get

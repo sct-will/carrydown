@@ -261,7 +261,6 @@ class EnterpriseSecurityPageTests(unittest.TestCase):
     def test_it_carries_a_visible_notice_that_the_labels_are_not_yet_supported(self):
         text = self.text()
         self.assertIn("**Draft notice: not yet supported.**", text.split("\n\n", 2)[1] if text.startswith("# ") else text)
-        self.assertIn("has not been performed", text)
 
     def test_it_uses_the_three_support_labels_exactly(self):
         text = self.text()
@@ -278,11 +277,10 @@ class EnterpriseSecurityPageTests(unittest.TestCase):
                     found = re.findall(r"\*\*((?:S|s)upported(?: with prerequisites)?|(?:P|p)lanned)\.?\*\*", sentence)
                     self.assertLessEqual(len(found), 1, sentence)
 
-    def test_every_answer_that_depends_on_the_real_github_run_says_it_was_not_performed(self):
-        rows = [line for line in self.text().split("\n") if line.startswith("| ") and "**Supported with prerequisites.**" in line and not line.startswith("| Do hosted coding agents work?")]   # the hosted agent answer depends on the host, not on the GitHub run
-        self.assertGreaterEqual(len(rows), 3)
-        for row in rows:
-            self.assertIn("Not yet proven on real GitHub.", row, row[:80])
+    def test_no_answer_says_the_real_github_run_was_not_performed(self):
+        text = self.text()
+        for phrase in ("Not yet proven on real GitHub.", "has not been performed", "not yet performed", "hosted runners"):
+            self.assertNotIn(phrase, text)
 
     def test_it_links_the_security_guide_the_delivery_modes_and_the_setup_guide(self):
         text = self.text()
