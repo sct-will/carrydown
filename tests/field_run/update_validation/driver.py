@@ -68,6 +68,18 @@ OLD_WORDING = ("When that rule changes, tell your agent. It finds the work the c
 NEW_WORDING = ("If the rule changes, tell the agent you plan with: “This changed: [describe the change].” It proposes updates "
                "to the work that may be affected and keeps engineer corrections that still fit. You review the changes before publication.")
 STAGES = ("build", "baseline", "update", "release", "engineer", "verdict")
+SCENARIO_TESTS = (   # tests/field_run/test_field_run_kit.py, class RequestTraceScenarioTests
+    "test_the_revision_changes_the_logging_rule_and_the_version_line_only",
+    "test_the_word_revision_is_one_modified_block_in_section_4_2",
+    "test_the_staged_decision_is_a_valid_overlay_committed_and_not_yet_released",
+    "test_the_reviewed_checkpoint_is_recorded_before_the_release",
+    "test_the_persona_and_the_sentence_carry_the_simulated_owner_answers",
+    "test_the_known_patches_still_apply_to_the_sample_and_keep_the_decisions",
+)
+AUTHORIZED_FIX = {   # the citation-missing fix (branch reconcile-citation-missing), authorized in round 2
+    "CHANGELOG.md", "scripts/reconcile.py", "skills/carrydown-ground-truth/scripts/reconcile.py",
+    "skills/carrydown-plan-to-github/scripts/reconcile.py", "skills/carrydown-ground-truth/references/updates.md", "tests/test_reconcile.py",
+}
 
 
 class StageFailure(Exception):
@@ -222,6 +234,8 @@ class Mock:
         self.stack.enter_context(mock.patch.object(time, "sleep", lambda s: None))
         self.stack.enter_context(mock.patch.object(RGH.GitHubEvidenceReader, "HOST_OVERRIDE", "github.com"))
         self.stack.enter_context(mock.patch.object(self.G.GitHub.__init__, "__defaults__", (url, 0.0, None)))
+        # a copy of the Net guard of tests/scenario_embedded_release.py: importing that module loads the repository's own scripts,
+        # which would shadow the installed skill's copies in this process
         real_connect, real_create = socket.socket.connect, socket.create_connection
         loop = ("127.0.0.1", "::1", "localhost")
 
@@ -585,18 +599,76 @@ def repo_git(*args):
     return out.returncode, out.stdout
 
 
-def codes_of(run, stage):
-    path = run.dir / "evidence" / stage / "exit-codes.json"
-    return read_json(path) if path.is_file() else []
-
-
-def stage_ok(run, stage):
-    codes = codes_of(run, stage)
-    return bool(codes) and all(c["exit"] in c["expected"] for c in codes)
-
-
 def test_names(text):
     return set(re.findall(r"^\s*def (test_\w+)", text, re.M))
+
+
+def outputs(run, stage):
+    """The saved command outputs of a stage, in order: [{"file", "exit", "expected", "stdout"}], read from the *.txt files."""
+    out = []
+    folder = run.dir / "evidence" / stage
+    for path in sorted(folder.glob("[0-9][0-9][0-9]-*.txt")) if folder.is_dir() else []:
+        text = path.read_text(encoding="utf-8")
+        m = re.search(r"^exit: (-?\d+)\nexpected: \[([^\]]*)\]\n--- stdout\n(.*?)--- stderr\n", text, re.M | re.S)
+        if m:
+            expected = [int(x) for x in m.group(2).split(",") if x.strip()]
+            out.append({"file": path.relative_to(run.dir).as_posix(), "exit": int(m.group(1)), "expected": expected, "stdout": m.group(3)})
+    return out
+
+
+def output(run, stage, slug):
+    """The last saved output of a stage whose file name ends with -<slug>.txt (the slug cut as record() cuts it), or None."""
+    slug = slug[:60]
+    hits = [o for o in outputs(run, stage) if o["file"].endswith(f"-{slug}.txt")]
+    return hits[-1] if hits else None
+
+
+def request_of(run, stage):
+    # the same parse as rid_of in tests/scenario_embedded_release.py, which cannot be imported here (see the Net copy above)
+    o = next((o for o in outputs(run, stage) if o["file"].endswith("-release-prepare.txt")), None)
+    m = re.search(r"^request id \(permission\): ([0-9a-f]{64})", o["stdout"], re.M) if o else None
+    return m.group(1) if m else None
+
+
+def commit_of(run, stage):
+    o = next((o for o in outputs(run, stage) if o["file"].endswith("-commit-id.txt")), None)
+    return o["stdout"].strip() if o and re.fullmatch(r"[0-9a-f]{40}", o["stdout"].strip()) else None
+
+
+def checkpoints(ws_yaml):
+    """[{"id", "created", "sha256"}] of the checkpoints in workspace.yaml, read with a pattern (the file has a fixed layout)."""
+    out = []
+    for chunk in re.split(r"(?m)^  - id: ", ws_yaml)[1:]:
+        cid = re.match(r'"?([0-9a-f]{64})"?', chunk)
+        created = re.search(r'(?m)^    created: "([^"]+)"', chunk)
+        digest = re.search(r'(?m)^        sha256: "([0-9a-f]{64})"', chunk)
+        version = re.search(r'(?m)^        version: "([^"]*)"', chunk)
+        if cid:
+            out.append({"id": cid.group(1), "created": created.group(1) if created else "", "sha256": digest.group(1) if digest else None,
+                        "version": version.group(1) if version else None})
+    return out
+
+
+def applied_proposal(run):
+    """(change id, blocks, dispositions) of the newest proposal whose applied.json says applied, or (None, [], [])."""
+    best = None
+    folder = run.workspace / "drafts" / "proposals" if run.workspace else None
+    for path in sorted(folder.glob("*/applied.json")) if folder and folder.is_dir() else []:
+        try:
+            data = read_json(path)
+        except ValueError:
+            continue
+        if data.get("state") == "applied" and (best is None or str(data.get("time")) > str(best[0].get("time"))):
+            best = (data, path.parent)
+    if best is None:
+        return None, [], []
+    blocks = read_json(best[1] / "blocks.json")
+    disp = read_json(best[1] / "dispositions.json")
+    return best[1].name, (blocks.get("blocks", []) if isinstance(blocks, dict) else blocks), disp.get("dispositions", [])
+
+
+def git_show(run, ref, path):
+    return subprocess.run(["git", "show", f"{ref}:{path}"], cwd=str(run.project), capture_output=True, text=True).stdout
 
 
 def stage_verdict(folder):
@@ -617,29 +689,33 @@ def stage_verdict(folder):
     row(1, "Isolation", "pass" if f1["before_equals_now"] and f1["now_equals_start_state"] and not net else "fail",
         ["fingerprints.json", ev("network-attempts.json")], f1)
 
-    # 2 actual source change
-    blocks_path = run.dir / "evidence" / "update" / "blocks.json"
-    f2 = {}
-    if blocks_path.is_file():
-        data = read_json(blocks_path)
-        blocks = data.get("blocks", data) if isinstance(data, dict) else data
-        substantive = [b.get("ref") for b in blocks if not b.get("formatting_only")]
-        rendering = (run.project / "docs" / "ground-truth" / "architecture.md").read_text(encoding="utf-8")
-        original = (ROOT / "sample" / "expense-approvals" / "docs" / "ground-truth" / "architecture.md").read_text(encoding="utf-8")
-        heads = lambda t: [ln for ln in t.splitlines() if ln.startswith("#")]  # noqa: E731
-        ws = (run.workspace / "workspace.yaml").read_text(encoding="utf-8") if run.workspace else ""
-        f2 = {"changed_blocks": [b.get("ref") for b in blocks], "substantive_blocks": substantive,
-              "one_obligation_block": substantive == ["architecture/4.2"],
-              "new_rule_rendered": KP.NEW_RULE in rendering, "prohibition_kept": "They never carry amounts, comments or receipt contents." in rendering,
-              "headings_unchanged": heads(rendering) == heads(original) or [h for h in heads(rendering) if h not in heads(original)] == [],
-              "version_0_4": 'version 0.4' in rendering.split("\n", 1)[0],
-              "accepted_checkpoint_recorded": bool(run.state.get("checkpoint")) and run.state.get("checkpoint", "x") in ws}
-        ok2 = f2["one_obligation_block"] and f2["new_rule_rendered"] and f2["prohibition_kept"] and f2["headings_unchanged"] and \
-            f2["version_0_4"] and f2["accepted_checkpoint_recorded"] and stage_ok(run, "update")
-    else:
-        ok2 = False
-        f2 = {"missing": "evidence/update/blocks.json"}
-    row(2, "Actual source change", "pass" if ok2 else "fail", [ev("update", "blocks.json"), ev("update", "exit-codes.json")], f2)
+    # 2 actual source change, in either mode: the applied proposal, the accepted checkpoint and the rendering decide.
+    # The transcript's command log is not read here: it may corroborate, it never decides
+    pid, blocks, dispositions = applied_proposal(run)
+    rendering_path = run.project / "docs" / "ground-truth" / "architecture.md"
+    rendering_bytes = rendering_path.read_bytes() if rendering_path.is_file() else b""
+    rendering = rendering_bytes.decode("utf-8", "replace")
+    original = (ROOT / "sample" / "expense-approvals" / "docs" / "ground-truth" / "architecture.md").read_text(encoding="utf-8")
+    heads = lambda t: [ln for ln in t.splitlines() if ln.startswith("#")]  # noqa: E731
+    ws_yaml = (run.workspace / "workspace.yaml").read_text(encoding="utf-8") if run.workspace and (run.workspace / "workspace.yaml").is_file() else ""
+    base_commit = commit_of(run, "baseline")
+    base_time = subprocess.run(["git", "show", "-s", "--format=%cI", base_commit], cwd=str(run.project), capture_output=True,
+                               text=True).stdout.strip() if base_commit else ""
+    base_utc = dt.datetime.fromisoformat(base_time).astimezone(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ") if base_time else ""
+    later = [c for c in checkpoints(ws_yaml) if base_utc and c["created"] >= base_utc]
+    newest = max(later, key=lambda c: c["created"]) if later else None
+    f2 = {"applied_proposal": pid, "blocks": [{"ref": b.get("ref"), "formatting_only": b.get("formatting_only")} for b in blocks],
+          "one_obligation_block": len(blocks) == 1 and blocks[0].get("ref") == "architecture/4.2" and blocks[0].get("formatting_only") is False,
+          "baseline_commit_time": base_utc, "accepted_checkpoint": newest,
+          "checkpoint_matches_rendering": bool(newest) and newest["sha256"] == sha(rendering_bytes),
+          "new_rule_rendered": KP.NEW_RULE in rendering, "prohibition_kept": "They never carry amounts, comments or receipt contents." in rendering,
+          "headings_unchanged": heads(rendering) == heads(original), "version_0_4": "version 0.4" in rendering.split("\n", 1)[0],
+          "known_deferred": "the checkpoint records architecture version " + str(newest["version"] if newest else None)
+                            + " beside the revised digest (render_ground_truth.py does not write the version into the plan)"}
+    ok2 = all(f2[k] for k in ("applied_proposal", "one_obligation_block", "checkpoint_matches_rendering", "new_rule_rendered",
+                              "prohibition_kept", "headings_unchanged", "version_0_4"))
+    row(2, "Actual source change", "pass" if ok2 else "fail",
+        [f"workspace drafts/proposals/{(pid or 'none')[:12]}/blocks.json", "workspace workspace.yaml", "project docs/ground-truth/architecture.md"], f2)
 
     # 3 agent assessment
     agent = run.dir / "evidence" / "agent-assessment.md"
@@ -649,38 +725,28 @@ def stage_verdict(folder):
         row(3, "Agent assessment", "not run", [], {"recorded": False, "note": "this run used the mechanical mode, a known-patch replay"})
 
     # 4 focused update
+    # the patched items come from the applied proposal's update dispositions; each must have the revised rule in the approved
+    # context the release compiler built, and the receipt must list that context with its digest
     f4, ok4 = {}, False
-    base, after = run.state.get("baseline_commit"), run.state.get("update_commit")
-    if base and after:
-        def at(ref, path):
-            return subprocess.run(["git", "show", f"{ref}:{path}"], cwd=str(run.project), capture_output=True, text=True).stdout
-
-        def section(text, title):
-            m = re.search(r"^## " + re.escape(title) + r"\n(.*?)(?=^## |\Z)", text, re.M | re.S)
-            return m.group(1) if m else None
+    base, after = commit_of(run, "baseline"), commit_of(run, "release")
+    rid_after = request_of(run, "release")
+    patched = sorted({str(p.get("item")) for d in dispositions if isinstance(d, dict) and d.get("disposition") == "update"
+                      for p in (d.get("patch") if isinstance(d.get("patch"), list) else [d.get("patch")]) if isinstance(p, dict)})
+    if base and after and rid_after and patched:
+        receipt_path = run.project / "docs" / "release" / f"{rid_after}.receipt.json"
+        receipt = read_json(receipt_path) if receipt_path.is_file() else {}
+        listed = {a.get("path"): a.get("sha256") for a in receipt.get("artifacts", []) if isinstance(a, dict)}
         items = {}
-        for item, path, _ in KP.PATCHES:
-            if not path.startswith("docs/spec/"):
-                continue
-            old, new = at(base, path), at(after, path)
-            items[item] = {"acceptance_criteria_changed": section(old, "Acceptance criteria") != section(new, "Acceptance criteria"),
-                           "instructions_changed": any(section(old, s) != section(new, s) for s in ("Implementation guide", "Outcome", "Context for the agent")),
-                           "context_holds_rule": KP.NEW_RULE in at(after, f"docs/context/wi-{item[3:]}.md")}
-        plan = at(after, "docs/spec/plan.yaml")
-        m = re.search(r'slug: "notifications-delegates".*?sections: "([^"]+)"', plan, re.S)
-        f4 = {"items": items, "wi08_source_refs": m.group(1) if m else None,
-              "contexts_listed_in_receipt": True}
-        receipt = read_json(run.project / "docs" / "release" / f"{run.state['update_request']}.receipt.json")
-        listed = {a.get("path"): a.get("sha256") for a in receipt.get("artifacts", receipt.get("files", [])) if isinstance(a, dict)}
-        for item in items:
-            rel = f"docs/context/wi-{item[3:]}.md"
-            digest = sha((run.project / rel).read_bytes()) if (run.project / rel).is_file() else None
-            if digest is None or listed.get(rel) != digest:
-                f4["contexts_listed_in_receipt"] = False
-        f4["receipt_lists"] = len(listed)
-        ok4 = all(all(v.values()) for v in items.values()) and bool(items) and "4.2" in (f4["wi08_source_refs"] or "") and \
-            f4["contexts_listed_in_receipt"] and stage_ok(run, "release")
-    row(4, "Focused update", "pass" if ok4 else "fail", [ev("update", "dispositions.json"), ev("release", "contexts.json")], f4)
+        for item in patched:
+            rel = f"docs/context/{item.lower()}.md"
+            released = git_show(run, after, rel)
+            items[item] = {"context_holds_rule": KP.NEW_RULE in released,
+                           "context_listed_in_receipt": bool(released) and listed.get(rel) == sha(released.encode("utf-8"))}
+        f4 = {"applied_proposal": pid, "patched_items": patched, "items": items, "receipt": receipt_path.relative_to(run.dir).as_posix(),
+              "release_commit": after}
+        ok4 = all(all(v.values()) for v in items.values())
+    row(4, "Focused update", "pass" if ok4 else "fail",
+        [f"workspace drafts/proposals/{(pid or 'none')[:12]}/dispositions.json", f4.get("receipt", "receipt missing")], f4)
 
     # 5 decision preservation
     f5 = {}
@@ -699,27 +765,83 @@ def stage_verdict(folder):
     row(5, "Decision preservation", "pass" if ok5 else "fail", [ev("baseline-commit.txt"), ev("engineer", "engineer-facts.json")], f5)
 
     # 6 approval and publication
-    f6 = {}
-    for label, key in (("baseline", "baseline_request"), ("release", "update_request")):
-        rid = run.state.get(key)
-        if not rid:
-            f6[label] = None
-            continue
-        path, states = journal_state(run, rid)
-        f6[label] = {"request": rid[:12], "receipt": (run.project / "docs" / "release" / f"{rid}.receipt.json").is_file(),
-                     "request_record": (run.workspace / "requests" / rid).exists(), "journal_complete": bool(states) and set(states.values()) == {"completed"},
-                     "targets": len(states), "stage_exit_codes_ok": stage_ok(run, label)}
-    ok6 = all(v and all(x for k, x in v.items() if k not in ("request", "targets")) for v in f6.values()) and \
-        all(run.state.get("release_facts", {}).values()) and bool(run.state.get("release_facts"))
-    f6["mock_identity"] = run.state.get("release_facts")
-    f6["label"] = "local service mock result, not a GitHub publication"
+    # 6: re-derived from the saved command outputs, the receipts and journals the product wrote and the mock's own state
+    f6 = {"label": "local service mock result, not a GitHub publication"}
+    ok6 = True
+    for label, prefix in (("baseline", "baseline"), ("release", "update-release")):
+        rid = request_of(run, label)
+        steps = {s: output(run, label, f"{prefix}-{s}") for s in ("local-test-approval", "export", "issues-apply-mock", "issues-verify-mock",
+                                                                     "board-apply-mock", "board-verify-mock", "push-to-the-local-origin")}
+        path, states = journal_state(run, rid) if rid else (None, {})
+        receipt_path = run.project / "docs" / "release" / f"{rid}.receipt.json" if rid else None
+        receipt = read_json(receipt_path) if receipt_path and receipt_path.is_file() else {}
+        facts6 = {"request": (rid or "none")[:12], "steps_exit_0": {s: bool(o) and o["exit"] == 0 for s, o in steps.items()},
+                  "receipt_written": bool(receipt), "receipt_request_matches": receipt.get("request_id") == rid,
+                  "approval_recorded": bool(receipt.get("approval")),
+                  "request_record": bool(rid) and (run.workspace / "requests" / rid).exists(),
+                  "journal": path.relative_to(run.dir).as_posix() if path else None,
+                  "journal_complete": bool(states) and set(states.values()) == {"completed"}, "journal_targets": len(states)}
+        f6[label] = facts6
+        ok6 = ok6 and bool(rid) and all(facts6["steps_exit_0"].values()) and all(facts6[k] for k in (
+            "receipt_written", "receipt_request_matches", "approval_recorded", "request_record", "journal_complete"))
+    rb_base = run.dir / "evidence" / "baseline" / "mock-readback.json"
+    rb_after = run.dir / "evidence" / "release" / "mock-readback.json"
+    pickle_file = run.dir / "mock" / "state.pickle"
+    if rb_base.is_file() and rb_after.is_file() and pickle_file.is_file():
+        before_issues, after_issues = read_json(rb_base)["issues"], read_json(rb_after)["issues"]
+        mstate = pickle.loads(pickle_file.read_bytes())
+        wi09 = next((i for i in mstate.get("issues", []) if "<!-- carrydown:WI-09 -->" in (i.get("body") or "")), None)
+        comments = [c.get("body") for c in (mstate.get("comments", {}).get(wi09["number"], []) if wi09 else [])]
+        identity = {"same_issue_numbers": {k: v["number"] for k, v in before_issues.items()} == {k: v["number"] for k, v in after_issues.items()},
+                    "no_new_issue": len(mstate.get("issues", [])) == len(before_issues),
+                    "wi09_body_updated": before_issues.get("WI-09", {}).get("body_sha256") != after_issues.get("WI-09", {}).get("body_sha256"),
+                    "human_text_kept": bool(wi09) and HUMAN_BODY.strip() in (wi09.get("body") or ""),
+                    "human_comment_kept": HUMAN_COMMENT in comments}
+    else:
+        identity = {"mock_readback": False}
+    f6["mock_identity"] = identity
+    ok6 = ok6 and all(identity.values())
     row(6, "Approval and publication", "pass" if ok6 else "fail",
-        [ev("baseline", "mock-readback.json"), ev("release", "mock-readback.json"), ev("release", "mock-identity.json")], f6)
+        [ev("baseline"), ev("release"), ev("baseline", "mock-readback.json"), ev("release", "mock-readback.json"), "mock/state.pickle"], f6)
 
-    # 7 engineer result
-    facts = run.state.get("engineer_facts") or {}
-    row(7, "Engineer result", "pass" if facts and all(facts.values()) and stage_ok(run, "engineer") else "fail",
-        [ev("engineer", "engineer-facts.json"), ev("engineer", "exit-codes.json")], {"facts": facts, "observed": run.state.get("engineer_observed")})
+    # 7: re-derived from the saved outputs of the engineers' checks and from the checkout itself
+    first = output(run, "baseline", "engineer-a-work-item-check-for-wi-09-before")
+    refusal = output(run, "engineer", "engineer-a-check-wi-09-before-obtaining-the-update-refusal-expected")
+    pulled = output(run, "engineer", "engineer-a-pull-the-approved-update")
+    changed = output(run, "engineer", "engineer-a-check-wi-09-after-the-update")
+    repeat = output(run, "engineer", "engineer-a-check-wi-09-again-with-no-change")
+    b_after = output(run, "engineer", "engineer-b-check-wi-04-after-the-update")
+    b_repeat = output(run, "engineer", "engineer-b-check-wi-04-again-with-no-change")
+    eng = run.dir / "engineer-a"
+    cache = eng / ".carrydown" / "cache"
+    cache_text = "".join(p.read_text(encoding="utf-8") for p in cache.rglob("*") if p.is_file()) if cache.is_dir() else ""
+    rid_base = request_of(run, "baseline")
+    headline = "carrydown: approved inputs changed since your last check for {}"
+    txt = lambda o: o["stdout"] if o else ""  # noqa: E731
+    f7 = {
+        "first_check_ready_with_baseline": bool(first) and first["exit"] == 0 and bool(rid_base) and f"baseline: request {rid_base}" in txt(first),
+        "refused_before_fetching": bool(refusal) and refusal["exit"] == 11 and "carrydown: the approved context for WI-09 is stale" in txt(refusal)
+                                   and "(superseded)" in txt(refusal),
+        "pulled_with_git": bool(pulled) and pulled["exit"] == 0,
+        "ready_after_update": bool(changed) and changed["exit"] == 0 and "carrydown: approved context for WI-09 is ready" in txt(changed),
+        "baseline_names_new_request": bool(rid_after) and f"baseline: request {rid_after}" in txt(changed),
+        "delta_headline": headline.format("WI-09") in txt(changed),
+        "spec_listed": f"changed: {WI09} (specification)" in txt(changed),
+        "context_listed": "changed: docs/context/wi-09.md (approved context)" in txt(changed),
+        "new_rule_in_delta": any(ln.startswith("+") and "request or scheduled job run" in ln for ln in txt(changed).splitlines()),
+        "reassess_line": "Reassess your implementation plan against the current approved inputs" in txt(changed),
+        "repeat_quiet": bool(repeat) and repeat["exit"] == 0 and "carrydown: approved inputs changed" not in txt(repeat),
+        "same_checkout_cache_names_new_request": bool(rid_after) and rid_after in cache_text,
+        "local_work_kept": (eng / "local-notes.txt").is_file() and (run.dir / "engineer-b" / "local-notes.txt").is_file(),
+        "new_rule_in_approved_context": (eng / "docs" / "context" / "wi-09.md").is_file()
+                                        and KP.NEW_RULE in (eng / "docs" / "context" / "wi-09.md").read_text(encoding="utf-8"),
+        "entry_survives": (eng / WI09).is_file() and (eng / WI09).read_text(encoding="utf-8").count(P.TRACE_ENTRY) == 1,
+        "unchanged_item_ready_after_update": bool(b_after) and b_after["exit"] == 0 and "carrydown: approved context for WI-04 is ready" in txt(b_after),
+        "unchanged_item_repeat_quiet": bool(b_repeat) and b_repeat["exit"] == 0 and "carrydown: approved inputs changed" not in txt(b_repeat),
+    }
+    observed7 = {"unchanged_item_changed_lines": [ln for ln in txt(b_after).splitlines() if ln.startswith("changed: ")]}
+    row(7, "Engineer result", "pass" if all(f7.values()) else "fail", [ev("baseline"), ev("engineer"), "engineer-a/.carrydown/cache"],
+        {"facts": f7, "observed": observed7})
 
     # 8 regression protection (repository state)
     code, start_files = repo_git("ls-tree", "-r", "--name-only", START_REVISION, "--", "tests")
@@ -732,14 +854,23 @@ def stage_verdict(folder):
             gone = test_names(old) - test_names((ROOT / path).read_text(encoding="utf-8"))
             lost += [f"{path}:{t}" for t in sorted(gone)]
     retained = (FIELD / "test_field_run_kit.py").read_text(encoding="utf-8")
-    f8 = {"removed_test_files": removed, "removed_test_methods": lost, "scenario_test_present": "request-trace" in retained}
-    row(8, "Regression protection", "pass" if not removed and not lost and f8["scenario_test_present"] else "fail", ["git ls-tree " + START_REVISION[:12]], f8)
+    m8 = re.search(r"^class RequestTraceScenarioTests\(.*?(?=^class |\Z)", retained, re.M | re.S)
+    present = sorted(test_names(m8.group(0))) if m8 else []
+    unit = subprocess.run([sys.executable, "-m", "unittest", "tests.field_run.test_field_run_kit"], cwd=str(ROOT), capture_output=True, text=True,
+                          env=dict(os.environ, PYTHONDONTWRITEBYTECODE="1"), timeout=900)
+    (run.evidence / "retained-tests.txt").write_bytes((f"$ python3 -m unittest tests.field_run.test_field_run_kit\nexit: {unit.returncode}\n"
+                                                       f"--- stdout\n{unit.stdout}--- stderr\n{unit.stderr}").encode("utf-8"))
+    f8 = {"removed_test_files": removed, "removed_test_methods": lost, "scenario_tests": present,
+          "scenario_tests_complete": set(SCENARIO_TESTS) <= set(present), "retained_suite_exit": unit.returncode,
+          "retained_suite_summary": [ln for ln in unit.stderr.splitlines() if ln.startswith(("Ran ", "OK", "FAILED"))]}
+    ok8 = not removed and not lost and f8["scenario_tests_complete"] and unit.returncode == 0
+    row(8, "Regression protection", "pass" if ok8 else "fail", ["git ls-tree " + START_REVISION[:12], ev("verdict", "retained-tests.txt")], f8)
 
     # 9 surgical scope (repository state)
     code, names = repo_git("diff", "--name-only", START_REVISION, "--")
     _, untracked = repo_git("ls-files", "--others", "--exclude-standard")
     changed = sorted(set(names.split()) | set(untracked.split()))
-    allowed = [p for p in changed if p.startswith("tests/field_run/") or p == "README.md"]
+    allowed = [p for p in changed if p.startswith("tests/field_run/") or p == "README.md" or p in AUTHORIZED_FIX]
     outside = sorted(set(changed) - set(allowed))
     row(9, "Surgical scope", "pass" if code == 0 and not outside else "fail", ["git diff --name-only " + START_REVISION[:12]],
         {"changed": changed, "outside_scope": outside})
@@ -777,28 +908,42 @@ def stage_verdict(folder):
         "The token is a fixed placeholder that only the mock accepts. No credential was read.",
         "The expense service is not implemented. The application tests the specifications name were not run.",
     ]
-    row(12, "Honest limits", "pass", ["results.md"], {"statements": limits})
-
-    applies = [r for r in rows if r["status"] not in ("not run", "pending")]
-    verdict = "pass" if all(r["status"] == "pass" for r in applies) else "fail"
+    # row 12 is decided on results.md as written: it must name every limit the instructions require
+    rows.append({"row": 12, "requirement": "Honest limits", "status": "pending", "evidence": ["results.md"], "facts": {}})
     elapsed = None
     starts = [c for s in STAGES[:-1] for c in [run.dir / "evidence" / s]]
     stamps = [p.stat().st_mtime for s in starts if s.is_dir() for p in s.iterdir()]
     if stamps:
         elapsed = round(max(stamps) - min(stamps), 1)
+
+    def write_results(verdict):
+        lines = ["# Update validation results", "", f"Run: `{run.dir.name}`. Mode: {mode}. Verdict: **{verdict}**. Elapsed: {elapsed} seconds.", "",
+                 "| # | Requirement | Result | Evidence |", "| --- | --- | --- | --- |"]
+        for r in rows:
+            lines.append(f"| {r['row']} | {r['requirement']} | {r['status']} | {', '.join(r['evidence']) or 'none'} |")
+        lines += ["", "## Limits", ""] + [f"- {s}" for s in limits] + [""]
+        gaps = [r for r in rows if r["status"] == "fail"]
+        if gaps:
+            lines += ["## Failed rows", ""] + [f"- Row {r['row']}, {r['requirement']}: see `verdict.json`." for r in gaps] + [""]
+        (run.dir / "results.md").write_bytes("\n".join(lines).encode("utf-8"))
+
+    write_results("pending")
+    written = (run.dir / "results.md").read_text(encoding="utf-8")
+    required = {"mode": f"Update stage mode: {mode}." in written and mode in ("mechanical", "agent"),
+                "mechanical_is_not_agent_evidence": mode != "mechanical" or "not evidence of an agent's discovery" in written,
+                "agent_assessment_state": ("Agent assessment: recorded" in written) if rows[2]["status"] == "pass" else ("Agent assessment: not run" in written),
+                "mock": "local service mock" in written and "not a GitHub publication" in written,
+                "no_live_run": "No live test was run." in written,
+                "no_credential": "No credential was read." in written,
+                "service_not_implemented": "The expense service is not implemented." in written}
+    rows[-1].update(status="pass" if all(required.values()) else "fail", facts={"required_statements": required})
+    applies = [r for r in rows if r["status"] not in ("not run", "pending")]
+    verdict = "pass" if all(r["status"] == "pass" for r in applies) else "fail"
     out = {"verdict": verdict, "created": now(), "run": str(run.dir), "mode": mode, "elapsed_seconds": elapsed,
            "execution_revision": (read_json(run.dir / "evidence" / "environment.json") if (run.dir / "evidence" / "environment.json").is_file() else {}).get("execution_revision"),
            "rows": rows}
     write_json(run.dir / "verdict.json", out)
-    lines = ["# Update validation results", "", f"Run: `{run.dir.name}`. Mode: {mode}. Verdict: **{verdict}**. Elapsed: {elapsed} seconds.", "",
-             "| # | Requirement | Result | Evidence |", "| --- | --- | --- | --- |"]
-    for r in rows:
-        lines.append(f"| {r['row']} | {r['requirement']} | {r['status']} | {', '.join(r['evidence']) or 'none'} |")
-    lines += ["", "## Limits", ""] + [f"- {s}" for s in limits] + [""]
-    gaps = [r for r in rows if r["status"] == "fail"]
-    if gaps:
-        lines += ["## Failed rows", ""] + [f"- Row {r['row']}, {r['requirement']}: see `verdict.json`." for r in gaps] + [""]
-    (run.dir / "results.md").write_bytes("\n".join(lines).encode("utf-8"))
+    write_results(verdict)
     for r in rows:
         print(f"  {r['row']:>2} {r['requirement']:<26} {r['status']}")
     print(f"verdict: {verdict} ({run.dir / 'verdict.json'})")
