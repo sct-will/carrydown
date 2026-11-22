@@ -183,6 +183,15 @@ class PrepareTests(CheckpointCase):
         again = self.prepare()
         self.assertTrue(all(f["action"] == "unchanged" for f in again["files"]))
 
+    def test_a_second_apply_keeps_the_creation_time_when_the_clock_moved(self):
+        # The record carries a creation time. A repeat of the same checkpoint a second later must not rewrite it.
+        with mock.patch.object(W, "_now", return_value="2027-01-01T00:00:00Z"):
+            first = self.prepare()
+        with mock.patch.object(W, "_now", return_value="2027-01-01T00:00:01Z"):
+            again = self.prepare()
+        self.assertEqual(again["created"], first["created"])
+        self.assertTrue(all(f["action"] == "unchanged" for f in again["files"]))
+
     def test_a_descriptor_key_outside_the_allowlist_is_refused_so_staffing_cannot_ride_along(self):
         for bad in (dict(self.descriptor, people=[{"id": "tamsin"}]), dict(self.descriptor, staffing="x")):
             e = self.problem(W.checkpoint_prepare, self.root, self.workspace, self.files, bad, apply=True)
