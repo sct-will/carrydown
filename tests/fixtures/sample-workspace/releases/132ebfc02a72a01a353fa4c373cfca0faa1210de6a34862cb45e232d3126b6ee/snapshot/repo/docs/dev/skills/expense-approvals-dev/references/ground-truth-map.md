@@ -12,7 +12,7 @@ The source sections inside the approved contexts of this project, by source id a
 
 | Section | Heading | In the approved context of |
 | --- | --- | --- |
-| 2.1 | Functional requirements | WI-02, WI-04 |
+| 2.1 | Functional requirements | WI-02, WI-04, WI-08 |
 | 2.2 | Quality requirements | WI-02, WI-04, WI-11 |
 | 3.1 | Overview | WI-01 |
 | 3.2 | Components | WI-01 |
@@ -40,6 +40,6 @@ The source sections inside the approved contexts of this project, by source id a
 | WI-04 | Approver inbox and decisions | `docs/context/wi-04.md` | architecture 2.1, 2.2, 3.4, 4.1, 5.1, 6.1, 7.1 |
 | WI-06 | Approval limits and separation of duties | `docs/context/wi-06.md` | architecture 3.5, 4.1, 4.2, 7.1 |
 | WI-07 | Audit log and retention | `docs/context/wi-07.md` | architecture 3.3, 4.2, 5.1, 7.1 |
-| WI-08 | Notifications and delegates | `docs/context/wi-08.md` | architecture 3.4, 3.5, 4.1, 4.2, 5.1, 6.1, 6.2, 7.2 |
+| WI-08 | Notifications and delegates | `docs/context/wi-08.md` | architecture 2.1, 3.4, 3.5, 4.1, 4.2, 5.1, 6.1, 6.2, 7.2 |
 | WI-09 | Ledger export job | `docs/context/wi-09.md` | architecture 3.4, 3.6, 4.2, 5.1, 6.1, 7.3, 8.1 |
 | WI-11 | Release readiness and runbook | `docs/context/wi-11.md` | architecture 2.2, 3.5, 3.6, 4.2, 5.1, 7.3, 8.1 |

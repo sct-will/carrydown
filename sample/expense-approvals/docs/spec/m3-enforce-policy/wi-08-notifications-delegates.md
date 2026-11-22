@@ -146,6 +146,7 @@ The counterpart items on the Workflow track are WI-07 Audit log and retention, w
 - architecture section 6.1, What people asked for
 - architecture section 6.2, Edge cases the interviews surfaced
 - architecture section 7.2, Notification event
+- architecture section 2.1, Functional requirements
 - architecture section 3.4, Report lifecycle
 - architecture section 3.5, Routing
 - architecture section 4.1, GOV-1 Approval limits and separation of duties
