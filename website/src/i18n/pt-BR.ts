@@ -346,18 +346,18 @@ export const ptBR: Strings = {
     values: [
       {
         eyebrow: 'Plano conectado',
-        title: 'Planejado como um todo conectado.',
-        body: 'Um único plano e todas as especificações vêm da mesma verdade de referência. Dependências, interfaces e critérios de aceitação são revisados em conjunto para achar lacunas e conflitos, e uma verificação valida cada citação.',
+        title: 'As decisões do projeto continuam conectadas entre as especificações.',
+        body: 'Seu agente monta o plano e as especificações a partir dos mesmos documentos e decisões acordados. Dependências, interfaces compartilhadas e critérios de aceitação são revisados em conjunto para achar lacunas e conflitos. Verificações validam as citações das fontes.',
       },
       {
         eyebrow: 'Passagem para a engenharia',
-        title: 'Uma passagem que chega ao agente de programação.',
-        body: 'Cada issue liga sua especificação e cita suas seções da verdade de referência. Um agent skill específico do projeto coloca a especificação aprovada, essas seções e as suas convenções diante do agente de programação antes que ele planeje o código.',
+        title: 'Decisões e fontes chegam a cada agente de programação.',
+        body: 'Um skill gerado para o seu projeto orienta o agente de programação de cada engenheiro a ler a especificação aprovada, os trechos citados das fontes e as convenções do projeto antes de planejar o código. Cada issue liga sua especificação, para que os engenheiros também possam inspecionar o contexto.',
       },
       {
         eyebrow: 'Contexto do projeto sempre em dia',
-        title: 'Mudanças levantadas pelo líder do projeto ou pelos engenheiros se propagam.',
-        body: 'Um líder de projeto informa uma fonte alterada, ou um engenheiro aponta uma especificação errada. O agente encontra o trabalho afetado, mantém as correções que ainda servem e traz os conflitos para você. As atualizações aprovadas seguem pelas especificações, issues e pela passagem.',
+        title: 'Mantenha a passagem alinhada conforme o projeto muda.',
+        body: 'Avise o agente com que você planeja quando uma fonte mudar ou uma especificação parecer errada. Ele identifica o trabalho que pode ser afetado e mantém as correções dos engenheiros que ainda servem. Você decide como os conflitos são resolvidos e aprova as atualizações das especificações, das issues e do contexto dos agentes de programação.',
       },
     ],
     carrydown: {

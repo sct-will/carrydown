@@ -355,18 +355,18 @@ export const en = {
     values: [
       {
         eyebrow: 'Connected plan',
-        title: 'Planned as one connected whole.',
-        body: 'One plan and every spec come from the same ground truth. Dependencies, interfaces and acceptance criteria are reviewed together for gaps and conflicts, and a check validates every citation.',
+        title: 'Project decisions stay connected across specifications.',
+        body: 'Your agent builds the plan and specifications from the same agreed documents and decisions. Dependencies, shared interfaces and acceptance criteria are reviewed together for gaps and conflicts. Checks validate the source citations.',
       },
       {
         eyebrow: 'Engineering handoff',
-        title: 'A handoff that reaches the coding agent.',
-        body: 'Each issue links its spec and cites its ground-truth sections. A project-specific agent skill puts the approved spec, those sections and your conventions in front of the coding agent before it plans code.',
+        title: 'Decisions and sources reach each coding agent.',
+        body: 'A skill generated for your project directs each engineer’s coding agent to read the approved specification, cited source excerpts and project conventions before planning code. Each issue links to its specification so engineers can inspect the context too.',
       },
       {
         eyebrow: 'Project context kept in sync',
-        title: 'Changes raised by the project lead or the engineers carry through.',
-        body: 'A project lead reports a changed source, or an engineer flags a wrong spec. The agent finds the affected work, keeps corrections that still fit and brings conflicts to you. Approved updates flow through the specs, issues and handoff.',
+        title: 'Keep the handoff aligned as the project changes.',
+        body: 'Tell the agent you plan with when a source changes or a specification seems wrong. It identifies work that may be affected and keeps engineer corrections that still fit. You decide how conflicts are resolved and approve updates to the specifications, issues and coding-agent context.',
       },
     ],
     carrydown: {

@@ -346,18 +346,18 @@ export const de: Strings = {
     values: [
       {
         eyebrow: 'Verbundener Plan',
-        title: 'Als verbundenes Ganzes geplant.',
-        body: 'Ein Plan und jede Spezifikation stammen aus derselben Faktengrundlage. Abhängigkeiten, Schnittstellen und Abnahmekriterien werden gemeinsam auf Lücken und Widersprüche geprüft, und eine Prüfung validiert jeden Beleg.',
+        title: 'Projektentscheidungen bleiben über alle Spezifikationen hinweg verbunden.',
+        body: 'Ihr Agent erstellt den Plan und die Spezifikationen aus denselben vereinbarten Dokumenten und Entscheidungen. Abhängigkeiten, gemeinsame Schnittstellen und Abnahmekriterien werden zusammen auf Lücken und Widersprüche geprüft. Prüfungen validieren die Quellenbelege.',
       },
       {
         eyebrow: 'Übergabe an die Entwicklung',
-        title: 'Eine Übergabe, die den Coding-Agenten erreicht.',
-        body: 'Jedes Issue verlinkt seine Spezifikation und belegt seine Abschnitte der Faktengrundlage. Ein projektspezifischer Agent Skill legt dem Coding-Agenten die freigegebene Spezifikation, diese Abschnitte und Ihre Konventionen vor, bevor er Code plant.',
+        title: 'Entscheidungen und Quellen erreichen jeden Coding-Agenten.',
+        body: 'Ein für Ihr Projekt generierter Skill weist den Coding-Agenten jedes Entwicklers an, die freigegebene Spezifikation, die zitierten Quellenauszüge und die Projektkonventionen zu lesen, bevor er Code plant. Jedes Issue verlinkt seine Spezifikation, sodass auch die Entwickler den Kontext prüfen können.',
       },
       {
         eyebrow: 'Projektkontext synchron gehalten',
-        title: 'Änderungen von Projektleitung oder Entwicklern werden durchgereicht.',
-        body: 'Die Projektleitung meldet eine geänderte Quelle, oder ein Entwickler markiert eine falsche Spezifikation. Der Agent findet die betroffene Arbeit, behält Korrekturen, die noch passen, und legt Ihnen Konflikte vor. Freigegebene Aktualisierungen fließen durch Spezifikationen, Issues und Übergabe.',
+        title: 'Halten Sie die Übergabe abgestimmt, wenn sich das Projekt ändert.',
+        body: 'Sagen Sie dem Agenten, mit dem Sie planen, Bescheid, wenn sich eine Quelle ändert oder eine Spezifikation falsch erscheint. Er ermittelt die Arbeit, die betroffen sein kann, und behält Korrekturen der Entwickler, die noch passen. Sie entscheiden, wie Konflikte gelöst werden, und geben Aktualisierungen der Spezifikationen, der Issues und des Kontexts der Coding-Agenten frei.',
       },
     ],
     carrydown: {
