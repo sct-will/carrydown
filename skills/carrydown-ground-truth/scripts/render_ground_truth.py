@@ -1258,6 +1258,7 @@ NAME_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*")
 CLASSIFICATIONS = ("public", "repo-readers", "restricted")
 MARKING_WORDS = ("confidential", "restricted", "internal", "do not distribute")
 DIGEST_KEYS = ("content_sha256", "rendering_sha256")
+RECORDED_KEYS = DIGEST_KEYS + ("version",)   # what record_source_digests writes into a source entry
 
 
 def valid_date(text):
@@ -1454,9 +1455,9 @@ def _set_key_in_text(text, source_id, key, value):
 
 
 def record_source_digests(plan_path, updates):
-    """Write content_sha256 and rendering_sha256 into the sources[] entries of the plan at plan_path.
-    updates maps a source id to {"content_sha256": ..., "rendering_sha256": ...}; a missing digest is
-    left as it was. The lines of the plan are edited in place, so comments and layout stay. When a
+    """Write content_sha256, rendering_sha256 and version into the sources[] entries of the plan at plan_path.
+    updates maps a source id to {"content_sha256": ..., "rendering_sha256": ..., "version": ...}; a missing
+    value is left as it was. The lines of the plan are edited in place, so comments and layout stay. When a
     source is written in a form that cannot be edited that way, the plan is rewritten with the
     repository's dumper (the one plan_repair.py uses). The result is read back and compared with what
     was meant before it replaces the file. Returns (ids recorded, ids not found, problem or None)."""
@@ -1483,7 +1484,7 @@ def record_source_digests(plan_path, updates):
             s.update(wanted[s["id"]])
     text = original
     for sid, vals in wanted.items():
-        for key in DIGEST_KEYS:
+        for key in RECORDED_KEYS:
             if key in vals and text is not None:
                 text = _set_key_in_text(text, sid, key, vals[key])
     verified = False
@@ -1634,7 +1635,9 @@ def main(argv=None):
     ap.add_argument("--name", help="output name without extension. Only valid with one input. Default: the input file name")
     ap.add_argument("--source-id", help="id of the source in plan.yaml, when the file name does not identify it. Only valid with one input")
     ap.add_argument("--source-label", help="original source path recorded in the header when the input is an agent-reviewed Markdown extraction. Only valid with one input")
-    ap.add_argument("--version", default="unversioned", help="document version to record in the header (default: unversioned)")
+    ap.add_argument("--version", default=None,
+                    help="document version to record in the header and in the source entry of the plan "
+                         "(default: unversioned in the header, and the plan keeps its version)")
     ap.add_argument("--date", default=dt.date.today().isoformat(), help="generation date, YYYY-MM-DD (default: today)")
     ap.add_argument("--show-review-items", action="store_true",
                     help="list the hidden text, tracked insertions and tracked deletions of a Word file for the owner, numbered, with the paragraph number and the text")
@@ -1662,8 +1665,11 @@ def main(argv=None):
         return fail(f"--name {a.name!r} must be a plain file name without a folder or an extension, such as architecture")
     if not valid_date(a.date):
         return fail(f"--date {a.date!r} is not a date. Write it as YYYY-MM-DD, such as 2027-02-01")
-    if not str(a.version).strip():
+    if a.version is not None and not str(a.version).strip():
         return fail("--version is empty. Give the document version, such as 0.3")
+    version_given = a.version is not None
+    if not version_given:
+        a.version = "unversioned"   # the header default; the plan's version is left as it is
     why = L.root_problem(a.root)
     if why:
         return fail(why)
@@ -1890,6 +1896,8 @@ def main(argv=None):
             print(f"note: {srcp.name}: {n}")
         if job["entry"] is not None:
             values = {"rendering_sha256": L.sha256_text(text)}
+            if version_given:
+                values["version"] = str(a.version).strip()
             origin = srcp
             if a.source_label:
                 label = Path(str(a.source_label))
@@ -1920,8 +1928,12 @@ def main(argv=None):
         else:
             target, where = None, None
         if target is not None:
+            if not version_given:
+                print(f"note: --version was not given, so the version of {', '.join(sorted(digests))} in {where} is left as it is")
             if a.dry_run:
                 print(f"would record content_sha256 and rendering_sha256 for {', '.join(sorted(digests))} in {where}")
+                if version_given:
+                    print(f"would record version {str(a.version).strip()} for {', '.join(sorted(digests))} in {where}")
             else:
                 if not gate(target, Path(target).read_bytes(), None):
                     return 2
@@ -1933,6 +1945,8 @@ def main(argv=None):
                     return fail(f"the digests could not be recorded in {where}: {problem}")
                 if done:
                     print(f"recorded content_sha256 and rendering_sha256 for {', '.join(done)} in {where}")
+                    if version_given:
+                        print(f"recorded version {str(a.version).strip()} for {', '.join(done)} in {where}")
                 for sid in missing:
                     print(f"note: source {sid} is not in {where}; its digests were not recorded")
     if a.dry_run:

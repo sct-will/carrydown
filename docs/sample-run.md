@@ -1075,6 +1075,7 @@ wrote docs/ground-truth/architecture.md: 345 lines, 31 headings, 0 figures
 wrote docs/ground-truth/architecture.index.txt
 1 document(s) rendered
 recorded content_sha256 and rendering_sha256 for architecture in the workspace plan
+recorded version 0.4 for architecture in the workspace plan
 [exit 0]
 ```
 
