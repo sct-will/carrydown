@@ -287,7 +287,7 @@ class LocalValidityTests(LocalProject):
         spec_path = self.root / SPEC_FILE
         text = spec_path.read_text(encoding="utf-8")
         cited = CC.spec_citations(self.root, "WI-06", {"architecture", "company-governance"})
-        self.assertEqual(cited, [("architecture", "3.5"), ("architecture", "4.1"), ("architecture", "7.1"),
+        self.assertEqual(cited, [("architecture", "3.5"), ("architecture", "4.1"), ("architecture", "4.2"), ("architecture", "7.1"),
                                  ("company-governance", "1.5"), ("company-governance", "2.3")])
         spec_path.write_bytes((text.replace("## References\n", "## References\n\n- company-governance section 2.3, Approval limits\n- architecture section 3.5\n", 1)).encode("utf-8"))
         self.assertIn(("company-governance", "2.3"), CC.spec_citations(self.root, "WI-06", set()))
