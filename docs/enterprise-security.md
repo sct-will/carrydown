@@ -1,12 +1,5 @@
 # Enterprise security questions
 
-> **Draft notice: not yet supported.** The labels on this page describe the intended version 1 release. They are not yet a promise about the software you can install today. Remove this notice only when all of these are true:
->
-> - The confidentiality work is merged to `main` through a reviewed pull request.
-> - The acceptance run in [the organization setup guide](organization-setup.md#acceptance-on-real-github) has been performed and recorded.
-> - The end-to-end "yes" and "no" scenarios and the six negative tests pass in continuous integration.
-> - A person has completed the documentation checklist and has checked each claim here against the tests, and the plan owner has signed off the wording.
-
 Plain-language answers about what carrydown does with your documents, your staffing notes and your engineers' coding agents, and what it cannot do. Each answer carries one of three labels: **supported** (implemented, documented and tested), **supported with prerequisites** (implemented and tested, but needs configuration your organization provides), or **planned** (the design exists, the feature does not).
 
 For the technical detail behind each answer, read [the security guide](security.md). For the delivery modes, read [delivery modes](delivery-modes.md). For the steps your administrator follows, read [the organization setup guide](organization-setup.md).
