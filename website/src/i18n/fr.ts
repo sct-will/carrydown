@@ -346,18 +346,18 @@ export const fr: Strings = {
     values: [
       {
         eyebrow: 'Plan connecté',
-        title: 'Planifié comme un tout connecté.',
-        body: 'Un seul plan et toutes les spécifications viennent de la même vérité de référence. Les dépendances, les interfaces et les critères d’acceptation sont revus ensemble pour repérer lacunes et conflits, et un contrôle valide chaque citation.',
+        title: 'Les décisions du projet restent liées d’une spécification à l’autre.',
+        body: 'Votre agent construit le plan et les spécifications à partir des mêmes documents et décisions convenus. Les dépendances, les interfaces partagées et les critères d’acceptation sont revus ensemble pour repérer lacunes et conflits. Des contrôles valident les citations des sources.',
       },
       {
         eyebrow: 'Passation à l’ingénierie',
-        title: 'Une passation qui atteint l’agent de codage.',
-        body: 'Chaque ticket lie sa spécification et cite ses sections de la vérité de référence. Un agent skill propre au projet place la spécification approuvée, ces sections et vos conventions sous les yeux de l’agent de codage avant qu’il planifie le code.',
+        title: 'Les décisions et les sources atteignent chaque agent de codage.',
+        body: 'Un skill généré pour votre projet indique à l’agent de codage de chaque ingénieur de lire la spécification approuvée, les extraits de sources cités et les conventions du projet avant de planifier le code. Chaque ticket renvoie à sa spécification, pour que les ingénieurs puissent eux aussi examiner le contexte.',
       },
       {
         eyebrow: 'Contexte du projet tenu à jour',
-        title: 'Les changements signalés par le chef de projet ou les ingénieurs se propagent.',
-        body: 'Un chef de projet signale une source modifiée, ou un ingénieur signale une spécification erronée. L’agent trouve le travail concerné, garde les corrections qui tiennent encore et vous soumet les conflits. Les mises à jour approuvées traversent les spécifications, les tickets et la passation.',
+        title: 'Gardez la passation alignée à mesure que le projet évolue.',
+        body: 'Prévenez l’agent avec lequel vous planifiez quand une source change ou qu’une spécification semble erronée. Il repère le travail susceptible d’être concerné et garde les corrections des ingénieurs qui tiennent encore. Vous décidez de la résolution des conflits et approuvez les mises à jour des spécifications, des tickets et du contexte des agents de codage.',
       },
     ],
     carrydown: {
