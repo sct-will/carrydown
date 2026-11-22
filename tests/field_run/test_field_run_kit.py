@@ -584,7 +584,7 @@ class MeasureStateTests(unittest.TestCase):
         self.assertTrue(r["preservation"]["survived"])
         self.assertTrue(r["candidate"]["named"])
         self.assertEqual(r["patches"]["applied_state"], "applied")
-        self.assertEqual(len(r["patches"]["patches"]), 4)
+        self.assertEqual(len(r["patches"]["patches"]), 5)   # WI-03, WI-06, WI-07, WI-08 and the plan, which gives WI-07 its citation of 4.3
         self.assertTrue(all(p["file_matches_patch"] and p["journal_matches"] and p["allowed_path"] and not p["large"] for p in r["patches"]["patches"]))
         self.assertTrue(all(p["ok"] for p in r["probes"]), r["probes"])
         targets = {name: v for name, v, _ in r["targets"]}
