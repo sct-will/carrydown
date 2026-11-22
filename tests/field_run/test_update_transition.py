@@ -333,6 +333,13 @@ class UpdateTransitionTests(unittest.TestCase):
         entries = [c for c in re.split(r"(?m)^  - id: ", ws_yaml)[1:] if c.startswith(f'"{self.cid}"')]
         self.assertEqual(len(entries), 1, "the accepted checkpoint is recorded in workspace.yaml")
         self.assertIn(f'sha256: "{sha(rendering)}"', entries[0])
+        # the version given to the renderer reaches the checkpoint and the compiled bundle beside the new digest
+        self.assertIn('version: "0.4"', entries[0])
+        self.assertNotIn('version: "0.3"', entries[0])
+        for item in ("wi-07", "wi-09"):
+            sidecar = json.loads(self.show(self.commit_after, f"docs/context/{item}.bundle.json"))
+            versions = {ob["version"] for ob in sidecar["obligations"] if ob["source"] == "architecture"}
+            self.assertEqual(versions, {"0.4"}, item)
 
     # row 4, focused update
     def test_every_patched_item_has_the_revised_rule_in_its_released_context_and_the_receipt_lists_it(self):
