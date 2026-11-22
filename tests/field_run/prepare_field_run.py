@@ -28,7 +28,7 @@ sample/expense-approvals/ground-truth/architecture.md saved as architecture.md a
 
 With --scenario request-trace the revision changes only the logging rule (section 4.2 item 6) and the version line,
 and the planted entry is a staged test decision in the WI-09 specification, committed and not yet released. The
-release and the publication are left to tests/field_run/update_validation/driver.py.
+release and the publication are left to the caller, tests/field_run/test_update_transition.py.
 
 Real project (the coordinator's own):
 
@@ -97,9 +97,9 @@ REVISION_EDITS = [
 ]
 
 
-# The request-trace scenario (specs/sample-before-and-after-demo.md, section 4): one changed logging rule and the
+# The request-trace scenario of the internal update validation: one changed logging rule and the
 # version line, nothing else. The staged decision goes into the ledger export specification (WI-09) and the
-# release, approval and publication are left to the caller (tests/field_run/update_validation/driver.py).
+# release, approval and publication are left to the caller (tests/field_run/test_update_transition.py).
 TRACE_EDITS = [
     ("*Fictional sample. Version 0.3.", "*Fictional sample. Version 0.4."),
     ("6. Log lines carry report identifiers and event types. They never carry amounts, comments or receipt contents.",

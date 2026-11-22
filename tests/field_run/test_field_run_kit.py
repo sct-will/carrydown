@@ -358,8 +358,7 @@ class RequestTraceScenarioTests(unittest.TestCase):
         self.assertTrue(self.manifest["owner_sentence"].startswith("This changed: the logging rule now requires"))
 
     def test_the_known_patches_still_apply_to_the_sample_and_keep_the_decisions(self):
-        sys.path.insert(0, str(HERE / "update_validation"))
-        import patches as KP
+        import test_update_transition as KP
         for item, path, edits in KP.PATCHES:
             source = ROOT / "tests" / "fixtures" / "sample-workspace" / path[len("workspace/"):] if path.startswith("workspace/") else P.SAMPLE / path
             text = source.read_text(encoding="utf-8")
