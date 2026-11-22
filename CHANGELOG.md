@@ -4,6 +4,10 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ## Unreleased
 
+### Updates
+
+- **The update check reports a missing citation.** `reconcile.py check` now reports `citation-missing` when a specification patch is filed under a changed section that its item does not cite, because the approved context would then omit that section. A citation of a parent section or of the whole document counts, a removed section is skipped, and the blocks named with `--also-block` are checked too. The section in the item's `sections` in the working plan, or a References line of its specification, clears it. `apply` stops on the finding. A plan patch that cannot be read is now reported as `patch-plan-invalid`.
+
 ### The plan page
 
 - **The plan owner reviews a page, not a YAML file.** `plan_page.py` writes the plan page into the private workspace from the plan, the people file, the specifications and the checker: the project overview, people and feasibility, the milestones, the work items with their acceptance criteria and sources, and the review findings. During an update it leads with what changed and what needs a decision. The planning skill writes it as soon as the draft exists and refreshes it after every change, and the owner asks for changes in the conversation. It is static HTML with no scripts and no external resources, and it never enters the repository.

@@ -761,7 +761,7 @@ def build(out, a, real):
              "must_not_contain": ["after 3 business days"]},
             {"name": "WI-06 states the revised delegated approval rule (4.1 item 4)", "path": wi06, "must_contain": [delegate]},
             {"name": "WI-08 quotes the revised delegated approval rule (4.1 item 4)", "path": wi08, "must_contain": [delegate]},
-            {"name": "WI-07 takes the new audit rule (4.3, cited by nothing)", "path": wi07, "must_contain": ["delegate.decision"]},
+            {"name": "WI-07 takes the new audit rule (4.3, cited by nothing)", "path": wi07, "must_contain": ["delegate.decision", "architecture section 4.3"]},
         ]
     manifest["owner_sentence"] = OWNER_SENTENCE.format(name=manifest["source_name"], file=manifest["revised_file"])
     manifest["workspace"] = os.path.relpath(str(workspace), str(out))
