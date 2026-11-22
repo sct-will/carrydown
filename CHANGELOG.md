@@ -6,7 +6,7 @@ All notable changes to this project are written here. The format follows Keep a 
 
 ### Updates
 
-- **The update check reports a missing citation.** `reconcile.py check` now reports `citation-missing` when a specification patch is filed under a changed section that its item does not cite, because the approved context would then omit that section. A citation of a parent section or of the whole document counts. The section in the item's `sections` in the working plan, or a References line of its specification, clears it. `apply` stops on the finding. A plan patch that cannot be read is now reported as `patch-plan-invalid`.
+- **The update check reports a missing citation.** `reconcile.py check` now reports `citation-missing` when a specification patch is filed under a changed section that its item does not cite, because the approved context would then omit that section. A citation of a parent section or of the whole document counts, a removed section is skipped, and the blocks named with `--also-block` are checked too. The section in the item's `sections` in the working plan, or a References line of its specification, clears it. `apply` stops on the finding. A plan patch that cannot be read is now reported as `patch-plan-invalid`.
 
 ### The plan page
 
