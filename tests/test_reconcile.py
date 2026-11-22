@@ -1398,6 +1398,40 @@ class PatchCommandTests(Base):
     def patch(self, change_id, block, item, rel, source, *more):
         return self.r("patch", "--proposal", change_id, "--block", block, "--item", item, "--path", rel, "--from", str(source), *more)
 
+    def test_a_block_named_with_also_block_is_checked_for_its_citation_too(self):
+        """WI-03 cites 3.4, 3.5 and 7.1. Its patch under 3.5 also carries 4.1 (--also-block), so 4.1 must be cited as well. The
+        patch command ends its context sentence with a full stop, which must not hide the last block it names."""
+        change_id = self.two_blocks()
+        source = self.new_text(WI03, REMINDER, "after 4 business days without a decision")
+        code, out, err = self.patch(change_id, "architecture/3.5", "WI-03", WI03, source, "--also-block", "architecture/4.1", "--apply")
+        self.assertEqual(code, 0, out + err)
+        doc = self.dispositions(change_id)
+        for rec in doc["dispositions"]:
+            if rec["block"] == "architecture/4.1":
+                rec.clear()
+                rec.update({"block": "architecture/4.1", "disposition": "no-impact",
+                            "reason": "its change is in the patch for the WI-03 specification filed under architecture/3.5", "context": "WI-03"})
+        self.save_dispositions(change_id, doc)
+        carried = next(d for d in doc["dispositions"] if d["block"] == "architecture/3.5")["context"]
+        self.assertTrue(carried.endswith("architecture/4.1."), carried)
+        code, out, err = self.r("check", "--proposal", change_id, "--json")
+        self.assertEqual(code, 1, out + err)
+        self.assertEqual([(f["code"], f["block"]) for f in json.loads(out)["findings"]], [("citation-missing", "architecture/4.1")])
+        plan_file = R.Project(self.root).plan_path          # the owner's working plan of this project
+        plan = plan_file.read_text(encoding="utf-8")
+        self.assertEqual(plan.count('        sections: "3.4, 3.5, 7.1"'), 1)
+        plan_source = self.base / "plan-after.yaml"
+        plan_source.write_bytes(plan.replace('        sections: "3.4, 3.5, 7.1"', '        sections: "3.4, 3.5, 4.1, 7.1"').encode("utf-8"))
+        plan_rel = Path(plan_file).resolve().relative_to(self.root.resolve()).as_posix()
+        code, out, err = self.patch(change_id, "architecture/3.5", "WI-03", plan_rel, plan_source, "--apply")
+        self.assertEqual(code, 0, out + err)
+        code, out, err = self.r("check", "--proposal", change_id, "--json")
+        self.assertEqual((code, json.loads(out)["findings"]), (0, []), out + err)
+
+    def test_a_block_reference_inside_a_longer_one_is_not_an_also_block(self):
+        self.assertEqual(R.also_blocks({"block": "architecture/3.5", "context": "This patch also carries the changes of architecture/4.1.2."},
+                                       ["architecture/3.5", "architecture/4.1", "architecture/4.1.2"]), ["architecture/4.1.2"])
+
     def test_the_dry_run_writes_nothing_and_apply_records_the_digest_of_the_file_as_it_is_now(self):
         change_id = self.prepared_update()
         source = self.new_text(WI03, REMINDER, "after 4 business days without a decision")

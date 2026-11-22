@@ -1598,7 +1598,7 @@ CITED_KINDS = ("added", "modified", "moved", "renumbered")
 def also_blocks(record, refs):
     """The other blocks a disposition says its patch also carries (reconcile.py patch --also-block writes them into its context)."""
     context = str(record.get("context") or "")
-    return [ref for ref in refs if ref != record.get("block") and re.search(r"(?<![\w./>-])" + re.escape(ref) + r"(?![\w./>-])", context)]
+    return [ref for ref in refs if ref != record.get("block") and re.search(r"(?<![\w./>-])" + re.escape(ref) + r"(?![\w/>-]|\.\w)", context)]
 
 
 def citation_findings(project, proposal, patches):
