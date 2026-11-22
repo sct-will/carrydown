@@ -32,6 +32,8 @@ WI02 = "docs/spec/m1-submit-report/wi-02-report-form.md"
 WI03 = "docs/spec/m2-route-to-approvers/wi-03-routing-engine.md"
 WI08 = "docs/spec/m3-enforce-policy/wi-08-notifications-delegates.md"
 CITE_42 = re.compile(r"(?m)^- architecture section 4\.2, .*\n")
+RELEASED = ("WI-08: the acceptance criteria name GOV-2.6, which is in section 4.2 of architecture, but the approved context "
+            "of the item does not hold 4.2. Cite it in the References section or in the plan, and release the item again.")
 MESSAGE = ("WI-08: the acceptance criteria name GOV-2.6, which is in section 4.2 of architecture, but the item does not "
            "cite 4.2. Add the citation to the References section or to the plan.")
 
@@ -50,6 +52,10 @@ def edit(path, change):
 
 def uncited(out):
     return [line.strip()[2:] for line in out.splitlines() if "but the item does not cite" in line]
+
+
+def released(out):
+    return [line.strip()[2:] for line in out.splitlines() if "approved context of the item does not hold" in line]
 
 
 def rebuild_receipt(root):
@@ -191,7 +197,7 @@ class ReleasedViewTests(WithTemp):
         proj = self.released_without_42(keep_reference=False)
         code, out = check(proj)
         self.assertEqual(code, 1, out)
-        self.assertIn(MESSAGE, uncited(out))
+        self.assertIn(RELEASED, released(out))
         self.assertNotIn("obligation not in the approved context", out)
 
     def test_with_the_reference_kept_both_findings_appear(self):
@@ -199,7 +205,8 @@ class ReleasedViewTests(WithTemp):
         code, out = check(proj)
         self.assertEqual(code, 1, out)
         self.assertIn("obligation not in the approved context: architecture 4.2", out)
-        self.assertIn(MESSAGE, uncited(out))
+        self.assertIn(RELEASED, released(out))
+        self.assertNotIn("does not cite", out)
 
     def test_the_released_rule_reads_only_the_bundles(self):
         known = [("architecture", "4.2", "GOV-2 Audit and retention"), ("architecture", "2.1", "Functional requirements")]
@@ -208,6 +215,14 @@ class ReleasedViewTests(WithTemp):
         found = CS.bundle_obligation_findings("WI-08", text, known[1:], known)
         self.assertEqual(found, ["WI-08: the contract names GOV-2.6, which is in section 4.2 of architecture, but the item does not "
                                  "cite 4.2. Add the citation to the References section or to the plan."])
+
+
+    def test_a_parent_or_whole_document_obligation_covers_the_rule(self):
+        known = [("architecture", "4.2", "GOV-2 Audit and retention")]
+        text = "## Acceptance criteria\n\n- [ ] GOV-2.6 holds.\n"
+        for own in ([("architecture", "4", "Governance rules")], [("architecture", "whole document", "Architecture document")]):
+            self.assertEqual(CS.bundle_obligation_findings("WI-08", text, own, known + own), [], own)
+        self.assertEqual(len(CS.bundle_obligation_findings("WI-08", text, [("architecture", "5", "Development standard")], known)), 1)
 
 
 class ReleasePreparationTests(WithTemp):
@@ -223,6 +238,13 @@ class ReleasePreparationTests(WithTemp):
         code, out, err = yp.prepare(apply=False)
         self.assertEqual(code, 1, out + err)
         self.assertIn(MESSAGE[:-1] + " (obligation-uncited)", out + err)
+
+    def test_a_parent_citation_prepares(self):
+        yp = F.YesProject(self.base)
+        edit(yp.root / WI08, lambda t: CITE_42.sub("- architecture section 4, Governance rules\n", t))
+        code, out, err = yp.prepare(apply=False)
+        self.assertEqual(code, 0, out + err)
+        self.assertNotIn("obligation-uncited", out + err)
 
 
 if __name__ == "__main__":

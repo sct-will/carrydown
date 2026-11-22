@@ -442,7 +442,7 @@ def released_item_findings(plan, root, it, text, release):
     wanted = list(needed) + [(sid, sec) for sid, sec, _ in cites if sid in known and (sid, sec) not in needed]
     tag = L.tag(plan, it["id"])
     if not wanted:
-        return issues + bundle_obligation_findings(tag, text, [], release.known_obligations()), {}
+        return issues + bundle_obligation_findings(tag, text, [], release.known_obligations(), released=True), {}
     covered, problems = bundle_coverage(plan, root, it, release)
     issues += problems
     if not any(p.startswith(BUNDLE_PROBLEM_LEADS) for p in problems):
@@ -450,7 +450,7 @@ def released_item_findings(plan, root, it, text, release):
             if (sid, sec) not in covered:
                 issues.append(f"obligation not in the approved context: {sid} {sec}")
         own = [(sid, sec, heading) for (sid, sec), heading in covered.items()]
-        issues += bundle_obligation_findings(tag, text, own, release.known_obligations())
+        issues += bundle_obligation_findings(tag, text, own, release.known_obligations(), released=True)
     return issues, covered
 
 
@@ -513,16 +513,20 @@ def section_is_cited(sid, number, cited):
     return (sid, WHOLE_DOCUMENT) in cited or any(s == sid and (n == number or number.startswith(n + ".")) for s, n in cited)
 
 
-def uncited_message(tag, phrase, ident, candidates):
-    """The obligation-uncited finding. candidates are the (source id, section) pairs the identifier resolves to."""
+def uncited_message(tag, phrase, ident, candidates, released=False):
+    """The obligation-uncited finding. candidates are the (source id, section) pairs the identifier resolves to. In the
+    released view the finding says that the approved context lacks the section, which is what the check can see."""
     where = " or ".join(f"section {n} of {s}" for s, n in candidates)
     sids = {s for s, _ in candidates}
     numbers = " or ".join(n if len(sids) == 1 else f"{n} of {s}" for s, n in candidates)
+    if released:
+        return (f"{tag}: {phrase} {ident}, which is in {where}, but the approved context of the item does not hold {numbers}. "
+                "Cite it in the References section or in the plan, and release the item again.")
     return (f"{tag}: {phrase} {ident}, which is in {where}, but the item does not cite {numbers}. "
             "Add the citation to the References section or to the plan.")
 
 
-def obligation_findings(tag, text, resolve, covered):
+def obligation_findings(tag, text, resolve, covered, released=False):
     """obligation-uncited findings for one specification. resolve(identifier) gives the (source id, section) pairs
     it names, empty when its base is in no heading (FR-1 in a table is not a rule heading), and covered(identifier,
     candidates) says whether the item's citations hold it. One finding per part
@@ -534,7 +538,7 @@ def obligation_findings(tag, text, resolve, covered):
         if not candidates or key in seen or covered(ident, candidates):
             continue
         seen.add(key)
-        out.append(uncited_message(tag, phrase, ident, candidates))
+        out.append(uncited_message(tag, phrase, ident, candidates, released))
     return out
 
 
@@ -589,11 +593,12 @@ def workspace_obligation_findings(plan, it, text, sections):
     return obligation_findings(L.tag(plan, it["id"]), text, resolve, covered)
 
 
-def bundle_obligation_findings(tag, text, own, known):
+def bundle_obligation_findings(tag, text, own, known, released=False):
     """The released rule, where there is no rendering: own are the (source id, section, heading) obligations of the
     item's approved context, known those of every bundle of the project. An identifier whose base is in no known
     heading produces nothing. Otherwise it must match, by the compiler's heading match, an obligation of the item's
-    own bundle."""
+    own bundle, or its own bundle must hold a candidate section, a parent of it or the whole document. released words
+    the finding for the released view."""
     bases = set()
     for _, _, heading in known:
         bases |= heading_bases(heading)
@@ -605,10 +610,12 @@ def bundle_obligation_findings(tag, text, own, known):
         named = named or [(s, n) for s, n, h in known if ident_base(ident) in heading_bases(h)]
         return list(dict.fromkeys(named))
 
-    def covered(ident, _):
-        return any(heading_names(h, ident) for _, _, h in own)
+    cited = [(s, n) for s, n, _ in own]
 
-    return obligation_findings(tag, text, resolve, covered)
+    def covered(ident, candidates):
+        return any(heading_names(h, ident) for _, _, h in own) or any(section_is_cited(s, n, cited) for s, n in candidates)
+
+    return obligation_findings(tag, text, resolve, covered, released)
 
 
 def bundle_obligations(data):
