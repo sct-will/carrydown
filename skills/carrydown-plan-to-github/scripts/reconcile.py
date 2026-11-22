@@ -1606,7 +1606,8 @@ def citation_findings(project, proposal, patches):
     whose item does not cite that block's current section after the proposal. The citations are the item's sections in the
     working plan, with the proposal's plan patch applied, and the References of the patched specification. A citation of a
     parent section or of the whole document counts, because the release compiler puts a subsection inside its parent. A
-    patch filed under several blocks is checked against each. A plan patch that cannot be read is patch-plan-invalid. The
+    patch filed under several blocks is checked against each. A plan patch that cannot be read, or that adds a
+    problem the working plan does not have, is patch-plan-invalid. The
     release compiler builds approved context only from citations, so the context would omit the changed section."""
     plan = project.plan
     if plan is None or not patches:
@@ -1623,11 +1624,17 @@ def citation_findings(project, proposal, patches):
                 raw = L.loads(p["after_bytes"].decode("utf-8"))
                 if not isinstance(raw, dict):
                     raise ValueError("the plan must be a mapping at the top level")
-                plan, _ = L.plan_from_data(raw, project.plan_path, project.root)
+                plan, problems = L.plan_from_data(raw, project.plan_path, project.root)
             except (L.PlanError, ValueError, UnicodeDecodeError, RecursionError, TypeError, AttributeError) as e:
                 why = first_line(getattr(e, "msg", None) or str(e) or type(e).__name__)
                 return [finding("patch-plan-invalid", p["block"], f"{p['block']}: the patched working plan cannot be read: {why}",
                                 path=p["key"])]
+            known = set(project.plan_problems)
+            added = [first_line(x) for x in problems if x not in known]
+            if added:
+                shown = "; ".join(added[:3]) + (f"; and {len(added) - 3} more" if len(added) > 3 else "")
+                return [finding("patch-plan-invalid", p["block"], f"{p['block']}: the patched working plan has "
+                                f"{plural(len(added), 'new problem')}: {shown}", path=p["key"])]
     sources = {s["id"]: s for s in L.ground_truth_sources(plan) if isinstance(s, dict) and s.get("id")}
     sections = {e["id"]: CB.parse_rendering(e["text"]) for e in read_sources(project) if e.get("text") is not None}
     spec_items = {}
