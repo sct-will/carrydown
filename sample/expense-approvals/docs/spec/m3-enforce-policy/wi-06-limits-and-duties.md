@@ -138,6 +138,7 @@ The counterpart items on the Experience track are WI-04, Approver inbox and deci
 
 - architecture section 3.5, Routing
 - architecture section 4.1, GOV-1 Approval limits and separation of duties
+- architecture section 4.2, GOV-2 Audit and retention
 - architecture section 7.1, REST API
 - [WI-03 Approval routing engine](../m2-route-to-approvers/wi-03-routing-engine.md)
 - [WI-04 Approver inbox and decisions](../m2-route-to-approvers/wi-04-approver-inbox.md)

@@ -134,6 +134,7 @@ The counterpart on the Experience track is WI-08, Notifications and delegates, w
 
 - architecture section 3.3, Data model
 - architecture section 4.2, GOV-2 Audit and retention
+- architecture section 5.1, DS-1 Delivery standard
 - architecture section 7.1, REST API
 - [WI-03 Approval routing engine](../m2-route-to-approvers/wi-03-routing-engine.md)
 - [WI-09 Ledger export job](../m4-pilot/wi-09-ledger-export.md)

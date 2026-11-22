@@ -136,6 +136,7 @@ The counterpart item on the Experience track is WI-11 Release readiness and runb
 - architecture section 4.2, GOV-2 Audit and retention
 - architecture section 7.3, Ledger export file
 - architecture section 3.4, Report lifecycle
+- architecture section 5.1, DS-1 Delivery standard
 - architecture section 6.1, What people asked for
 - architecture section 8.1, Risks
 - Depends on [WI-07 Audit log and retention](../m3-enforce-policy/wi-07-audit-log.md). Unblocks [WI-11 Release readiness and runbook](../m5-release/wi-11-release-readiness.md). Related [WI-03 Approval routing engine](../m2-route-to-approvers/wi-03-routing-engine.md)

@@ -149,6 +149,8 @@ The counterpart items on the Workflow track are WI-07 Audit log and retention, w
 - architecture section 3.4, Report lifecycle
 - architecture section 3.5, Routing
 - architecture section 4.1, GOV-1 Approval limits and separation of duties
+- architecture section 4.2, GOV-2 Audit and retention
+- architecture section 5.1, DS-1 Delivery standard
 
 ## Decisions recorded
 
