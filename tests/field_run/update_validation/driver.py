@@ -899,10 +899,20 @@ def stage_verdict(folder):
                                                          "blog": "specs/ is outside the repository: not checked by this harness"})
 
     # 12 honest limits: the results record states each kind of evidence for what it is
-    mode = run.state.get("update_mode", "not run")
+    # the mode comes from the run folder, not from state the update stage sets
+    if (run.dir / "evidence" / "update" / "exit-codes.json").is_file():
+        mode = "mechanical"
+        mode_line = (f"Update stage mode: {mode}. The mechanical mode is a deterministic replay of known patches through the real update "
+                     "commands. It is not evidence of an agent's discovery.")
+    elif agent.is_file():
+        mode = "agent"
+        mode_line = (f"Update stage mode: {mode}. The update stage was an agent-led run recorded in evidence/agent-assessment.md. "
+                     "The mechanical replay of known patches is separate evidence.")
+    else:
+        mode = "not run"
+        mode_line = f"Update stage mode: {mode}."
     limits = [
-        f"Update stage mode: {mode}. The mechanical mode is a deterministic replay of known patches through the real update commands. "
-        "It is not evidence of an agent's discovery.",
+        mode_line,
         "Agent assessment: " + ("recorded in evidence/agent-assessment.md." if rows[2]["status"] == "pass" else "not run in this run."),
         "Publication: local service mock on 127.0.0.1 (tests/mock/mockgh.py), not a GitHub publication. No live test was run.",
         "The token is a fixed placeholder that only the mock accepts. No credential was read.",
@@ -931,6 +941,8 @@ def stage_verdict(folder):
     written = (run.dir / "results.md").read_text(encoding="utf-8")
     required = {"mode": f"Update stage mode: {mode}." in written and mode in ("mechanical", "agent"),
                 "mechanical_is_not_agent_evidence": mode != "mechanical" or "not evidence of an agent's discovery" in written,
+                "agent_run_named": mode != "agent" or ("agent-led run recorded in evidence/agent-assessment.md" in written
+                                                       and "mechanical replay of known patches is separate evidence" in written),
                 "agent_assessment_state": ("Agent assessment: recorded" in written) if rows[2]["status"] == "pass" else ("Agent assessment: not run" in written),
                 "mock": "local service mock" in written and "not a GitHub publication" in written,
                 "no_live_run": "No live test was run." in written,
