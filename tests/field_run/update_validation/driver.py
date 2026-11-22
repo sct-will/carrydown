@@ -195,9 +195,12 @@ class Mock:
         self.attempts = []
 
     def __enter__(self):
+        # imported once per process from the installed skill, and patched in place for each session: the modules
+        # the publishing scripts import keep their references to these same module objects
         sys.path.insert(0, str(self.run.pub))
-        for name in ("github_client", "github_sync", "github_project", "release_github"):
-            sys.modules.pop(name, None)
+        loaded = sys.modules.get("github_client")
+        if loaded is not None and not str(getattr(loaded, "__file__", "")).startswith(str(self.run.pub)):
+            raise StageFailure("the publishing scripts of another folder are already loaded in this process")
         self.G = importlib.import_module("github_client")
         self.GS = importlib.import_module("github_sync")
         self.GP = importlib.import_module("github_project")
