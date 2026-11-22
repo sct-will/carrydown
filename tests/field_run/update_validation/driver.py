@@ -79,6 +79,9 @@ SCENARIO_TESTS = (   # tests/field_run/test_field_run_kit.py, class RequestTrace
 AUTHORIZED_FIX = {   # the citation-missing fix (branch reconcile-citation-missing), authorized in round 2
     "CHANGELOG.md", "scripts/reconcile.py", "skills/carrydown-ground-truth/scripts/reconcile.py",
     "skills/carrydown-plan-to-github/scripts/reconcile.py", "skills/carrydown-ground-truth/references/updates.md", "tests/test_reconcile.py",
+    # pull request 47, the checkpoint creation-time fix found during this work
+    "scripts/workspace.py", "skills/carrydown-ground-truth/scripts/workspace.py", "skills/carrydown-plan-to-github/scripts/workspace.py",
+    "tests/test_source_checkpoint.py",
 }
 
 
