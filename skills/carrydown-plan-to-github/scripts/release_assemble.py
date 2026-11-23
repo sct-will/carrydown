@@ -102,11 +102,30 @@ def spec_files(plan, spec_base):
     return out
 
 
-def obligation_problems(plan, spec_base, bundles):
-    """obligation-uncited problems over the compiled release: the rule of the released view of check_specs.py, read
-    from the bundles this release would publish. An identifier in the Contract or the Acceptance criteria of a
-    specification whose base is the identifier of an obligation heading in some bundle must match an obligation of
-    the item's own bundle. Problems name the item, the identifier and the sections, never the text."""
+def rendering_sections(plan, renderings_dir):
+    """{source id: {number: Section}} of every ground truth source whose rendering is in renderings_dir, the folder
+    compile_bundles.compile_report reads, with the whole document under "whole document"."""
+    out = {}
+    for source in L.ground_truth_sources(plan):
+        path = Path(renderings_dir) / Path(str(source.get("path") or f"{source['id']}.md")).name
+        if not L.exists(path):
+            continue
+        try:
+            text = L.read_text(path)
+        except L.TextError:
+            continue
+        found = CB.parse_rendering(text)
+        found[CB.WHOLE] = CB.whole_document(text, str(source.get("name") or source["id"]))
+        out[source["id"]] = found
+    return out
+
+
+def obligation_problems(plan, spec_base, sections, bundles):
+    """obligation-uncited problems over the release, under two rules. The rule of the workspace view of check_specs.py
+    resolves an identifier through the headings of the renderings the release compiles from (rendering_sections), so
+    a rule is found even when no item cites the section that defines it. The rule of the released view reads the
+    bundles this release would publish, so a rule whose named heading the item's own bundle lacks is found too. A case
+    both rules find is reported once. Problems name the item, the identifier and the sections, never the text."""
     known, own = [], {}
     for path, data in sorted(bundles.items()):
         if not path.endswith(".bundle.json"):
@@ -129,7 +148,9 @@ def obligation_problems(plan, spec_base, bundles):
             text = L.read_text(sp)
         except L.TextError:
             continue
-        for line in CS.bundle_obligation_findings(tag, text, own.get(f"{CB.CONTEXT_DIR}/{tag.lower()}.bundle.json", []), known):
+        lines = CS.workspace_obligation_findings(plan, it, text, sections)
+        lines += CS.bundle_obligation_findings(tag, text, own.get(f"{CB.CONTEXT_DIR}/{tag.lower()}.bundle.json", []), known)
+        for line in dict.fromkeys(lines):
             out.append(f"{line[:-1]} ({CS.OBLIGATION_UNCITED})")
     return out
 
@@ -283,7 +304,7 @@ def assemble(root, *, plan_path=None, with_github=True, with_board=True, excepti
         if not sp.is_file():
             problems.append(f"the specification of {L.tag(plan, it['id'])} does not exist yet. Run scaffold_spec.py --stubs and write it")
     if not result.problems:
-        problems += obligation_problems(plan, base, result.files)
+        problems += obligation_problems(plan, base, rendering_sections(plan, renderings), result.files)
     if not (Path(base) / plan["project"]["spec_dir"] / "README.md").is_file():
         problems.append(f"{plan['project']['spec_dir']}/README.md does not exist yet. Run scaffold_spec.py --apply")
     try:
