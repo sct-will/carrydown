@@ -1589,7 +1589,7 @@ def _():
     md = (clone / "docs/context/wi-06.md").read_text(encoding="utf-8")
     side = read_json(clone / "docs/context/wi-06.bundle.json")
     cited = {(o["source"], o["section"]) for o in side["obligations"]}
-    equal(cited, {("architecture", "3.5"), ("architecture", "4.1"), ("architecture", "7.1"), ("company-governance", "1.5"), ("company-governance", "2.3")}, "obligations")
+    equal(cited, {("architecture", "3.5"), ("architecture", "4.1"), ("architecture", "4.2"), ("architecture", "7.1"), ("company-governance", "1.5"), ("company-governance", "2.3")}, "obligations")
     for source, number in sorted(cited):
         text = L.normalize_section_text(section_text((n.ws / "renderings" / f"{source}.md").read_text(encoding="utf-8"), number))
         need(text and text in md, f"the text of {source} {number} is not in the bundle")
