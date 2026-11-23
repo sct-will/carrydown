@@ -24,7 +24,7 @@ text{font-family:'Inter',sans-serif}
 .gate{font-size:14px;font-weight:700;fill:#FFFFFF}
 </style>
 <defs><marker id="chev-ink" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="6" orient="auto" overflow="visible"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#1F2A44" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></marker><marker id="chev-amber" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="6" orient="auto" overflow="visible"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#E8A33D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></marker><marker id="chev-teal" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="6" orient="auto" overflow="visible"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#2A6F6F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></marker><marker id="chev-muted" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="6" orient="auto" overflow="visible"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#5B6472" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
-<rect width="1000" height="806" fill="#FBF7F0"/>
+<rect x="0.75" y="0.75" width="998.5" height="804.5" rx="12" fill="#FBF7F0" stroke="#BDB6A6" stroke-width="1.5"/>
 <text x="30" y="54" class="h1">How carrydown works</text>
 <text x="30" y="85" class="sub">Your agent drafts. You approve. Each coding agent starts from its approved handoff.</text>
 <path d="M848.0 210 V156 H384.0 V208" fill="none" stroke="#5B6472" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#chev-muted)" stroke-dasharray="6 5"/>
