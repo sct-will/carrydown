@@ -247,5 +247,45 @@ class ReleasePreparationTests(WithTemp):
         self.assertNotIn("obligation-uncited", out + err)
 
 
+    def gov_9_project(self):
+        """The sample with a section 4.3 that defines GOV-9, which no item cites, and a WI-08 Contract that names
+        GOV-9.1. No bundle holds 4.3, so only the rendering knows the rule."""
+        yp = F.YesProject(self.base)
+        edit(yp.root / "docs/ground-truth/architecture.md", lambda t: t.replace(
+            "\n## 5. Development standard", "\n### 4.3 GOV-9 Expense categories\n\nOwner: finance.\n\n"
+            "1. Every line item carries one category from the approved list.\n\n## 5. Development standard", 1))
+        edit(yp.root / WI08, lambda t: t.replace("## Contract\n\n", "## Contract\n\nGOV-9.1 applies to every line item.\n\n", 1))
+        return yp
+
+    def test_preparation_fails_on_a_rule_whose_section_no_item_cites(self):
+        yp = self.gov_9_project()
+        code, out, err = yp.prepare(apply=False)
+        self.assertEqual(code, 1, out + err)
+        self.assertIn("WI-08: the contract names GOV-9.1, which is in section 4.3 of architecture, but the item does not cite 4.3. "
+                      "Add the citation to the References section or to the plan (obligation-uncited)", out + err)
+
+    def test_a_rule_whose_section_the_item_cites_prepares(self):
+        yp = self.gov_9_project()
+        edit(yp.root / WI08, lambda t: CITE_42.sub(lambda m: m.group(0) + "- architecture section 4.3, GOV-9 Expense categories\n", t))
+        code, out, err = yp.prepare(apply=False)
+        self.assertEqual(code, 0, out + err)
+        self.assertNotIn("obligation-uncited", out + err)
+
+
+    def test_preparation_fails_on_a_rule_whose_named_heading_the_item_does_not_cite(self):
+        """A subsection 4.2.1 holds GOV-2.6, WI-08 cites only 4.2.1, and its Contract names GOV-2.3 from the body of
+        4.2. By base alone 4.2.1 is a cited candidate, but the bundle rule matches the named heading, 4.2, first."""
+        yp = F.YesProject(self.base)
+        edit(yp.root / "docs/ground-truth/architecture.md", lambda t: t.replace(
+            "\n## 5. Development standard", "\n#### 4.2.1 GOV-2.6 Log line content\n\nLog lines carry identifiers only.\n\n"
+            "## 5. Development standard", 1))
+        edit(yp.root / WI08, lambda t: CITE_42.sub("- architecture section 4.2.1, GOV-2.6 Log line content\n", t))
+        edit(yp.root / WI08, lambda t: t.replace("## Contract\n\n", "## Contract\n\nGOV-2.3 applies to every event.\n\n", 1))
+        code, out, err = yp.prepare(apply=False)
+        self.assertEqual(code, 1, out + err)
+        self.assertIn("WI-08: the contract names GOV-2.3, which is in section 4.2 of architecture, but the item does not cite 4.2. "
+                      "Add the citation to the References section or to the plan (obligation-uncited)", out + err)
+
+
 if __name__ == "__main__":
     unittest.main()
