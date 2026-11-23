@@ -43,6 +43,23 @@ try {
 
   // The listed pages are published.
   const slugs = manifest.pages.map((p) => p.slug);
+  const approved = [
+    'docs',
+    'docs/setup',
+    'docs/plan-owner-guide',
+    'docs/delivery-modes',
+    'docs/derive-the-date',
+    'docs/enterprise-security',
+    'docs/inputs',
+    'docs/install-options',
+    'docs/method',
+    'docs/organization-setup',
+    'docs/recovery',
+    'docs/security',
+    'docs/troubleshooting',
+    'docs/sample',
+  ];
+  if (JSON.stringify(slugs) !== JSON.stringify(approved)) fail(`the published pages are not the approved list:\n  ${slugs.join('\n  ')}`);
   for (const slug of ['docs/setup', 'docs/method', 'docs/sample']) {
     if (!slugs.includes(slug)) fail(`the manifest has no page ${slug}`);
     if (!files.includes(`src/content/docs/${slug}.md`)) fail(`no generated content for ${slug}`);
@@ -65,7 +82,9 @@ try {
     threw = e;
   }
   if (!threw) fail('the generator did not stop when docs/setup.md, a listed page, was missing');
-  else if (!/docs\/setup\.md/.test(threw.message)) fail(`the error does not name the missing page: ${threw.message}`);
+  else if (!/docs\/setup\.md/.test(threw.message) || !/listed as a public page but missing/.test(threw.message)) {
+    fail(`the error is not the missing listed page check for docs/setup.md: ${threw.message}`);
+  }
 } finally {
   rmSync(tmp, { recursive: true, force: true });
 }

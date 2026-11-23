@@ -90,7 +90,7 @@ Every docs page has a Copy page control beside its title, from `src/components/C
 - `llms.txt`: the definition, what the site and carrydown are, the plan owner and engineer phrases from the README's "What to tell your agent, and when" section, then the pages. A docs page links to its Markdown file. A site page has no Markdown file, so it links to its HTML page. Redirect pages are left out.
 - `llms-full.txt`: the whole Markdown of the documentation and the site pages, in the same order, each headed by its title and its address. A docs page is its Markdown file as served. A site page is the main content of the built page, converted to Markdown.
 
-The reading order is a short list of paths at the top of the script. A new docs page that is not on it is added at the end of the Documentation section. Worked examples, the recorded run, the maintainer notes and the accessibility statement are listed under Optional, the section a reader may skip, and are left out of `llms-full.txt`.
+The reading order is a short list of paths at the top of the script. A new docs page that is not on it is added at the end of the Documentation section. A worked example and the accessibility statement are listed under Optional, the section a reader may skip, and are left out of `llms-full.txt`.
 
 ## Search engines and sharing metadata
 

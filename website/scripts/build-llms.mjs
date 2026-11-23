@@ -42,7 +42,8 @@ const DOCS_ORDER = [
   'docs/delivery-modes',
 ];
 const PAGES_ORDER = ['', 'definition', 'faq'];
-// Pages a reader may skip: a worked example and the site's accessibility statement. They are listed in llms.txt under Optional and left out of llms-full.txt.
+// Pages a reader may skip: a worked example and the site's accessibility statement. They are listed in
+// llms.txt under Optional and left out of llms-full.txt.
 const OPTIONAL_ORDER = ['docs/derive-the-date', 'accessibility'];
 
 const unescape = (s) =>

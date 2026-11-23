@@ -2,9 +2,10 @@
 // Builds the docs section of the site from the repository's Markdown. It runs before `astro build`.
 //
 // Reads the approved public pages from the repository root (PUBLIC_PAGES below: README.md, the listed
-// docs/*.md files and sample/expense-approvals/README.md) and writes them into Starlight's content collection with front matter (title from the first heading, or
-// the title the page list below names; description from the first paragraph). Relative links between
-// those files become links between site routes. A link to any other repository file becomes its GitHub
+// docs/*.md files and sample/expense-approvals/README.md) and writes them into Starlight's content
+// collection with front matter (title from the first heading, or the title the page list below names;
+// description from the first paragraph). Relative links between those files become links between site
+// routes. A link to any other repository file becomes its GitHub
 // URL. Referenced images are copied into the site. A line at the top of each page says where it came
 // from.
 //
@@ -336,7 +337,7 @@ export function generate({ repo = repoRootDefault, out = websiteDir } = {}) {
     for (const n of readdirSync(folder).filter((x) => x.endsWith('.md') && x !== 'README.md').sort()) {
       const english = pagesByPath.get(`docs/${n}`);
       if (!english) {
-        console.warn(`build-docs: docs/i18n/${locale}/${n} has no English page docs/${n}. Skipped.`);
+        console.warn(`build-docs: docs/i18n/${locale}/${n} translates docs/${n}, which is not a public page in PUBLIC_PAGES. Skipped.`);
         continue;
       }
       translations.set(`${locale}/${english.slug}`, `docs/i18n/${locale}/${n}`);
