@@ -1102,6 +1102,47 @@ class CheckTests(Base):
         self.assertIn("patch-plan-invalid", out)
         self.assertEqual((tree(self.ws), tree(self.root)), before)
 
+    def plan_invalid(self, change_id):
+        return [f for f in self.findings(change_id)[1]["findings"] if f["code"] == "patch-plan-invalid"]
+
+    def test_a_plan_patch_that_duplicates_an_item_id_is_patch_plan_invalid_and_apply_writes_nothing(self):
+        change_id = self.logging_rule_changed()
+        quote = self.patch_for(self.WI08, self.OLD_RULE, self.NEW_RULE, item="WI-08")
+        plan = self.plan_patch("  - id: 9\n", "  - id: 8\n", "WI-08")
+        self.disposition_update(change_id, "architecture/4.2", [quote, plan], item="WI-08")
+        invalid = self.plan_invalid(change_id)
+        self.assertEqual(len(invalid), 1, invalid)
+        self.assertEqual(invalid[0]["block"], "architecture/4.2")
+        self.assertIn("item 8: duplicate id", invalid[0]["message"])
+        self.assertEqual(len(invalid[0]["message"].splitlines()), 1)
+        before = (tree(self.ws), tree(self.root))
+        code, out, err = self.r("apply", "--proposal", change_id, "--apply")
+        self.assertNotEqual(code, 0)
+        self.assertIn("patch-plan-invalid", out)
+        self.assertEqual((tree(self.ws), tree(self.root)), before)
+
+    def test_a_plan_patch_alone_that_duplicates_an_item_id_is_patch_plan_invalid(self):
+        change_id = self.logging_rule_changed()
+        plan = self.plan_patch("  - id: 9\n", "  - id: 8\n", "WI-08")
+        self.disposition_update(change_id, "architecture/4.2", [plan], item="WI-08")
+        invalid = self.plan_invalid(change_id)
+        self.assertEqual(len(invalid), 1, invalid)
+        self.assertIn("item 8: duplicate id", invalid[0]["message"])
+        self.assertTrue(invalid[0]["message"].endswith("Correct the plan patch so the working plan has no new problem"))
+
+    def test_a_problem_the_working_plan_already_has_is_not_blamed_on_a_plan_patch(self):
+        path = self.ws / "drafts" / "plan.yaml"
+        text = path.read_text(encoding="utf-8")
+        weekend = '  - date: 2027-02-06\n    name: "Weekend check"\n    joint_check: "The draft opens."\n'
+        path.write_bytes(text.replace("checkpoints:\n", "checkpoints:\n" + weekend, 1).encode("utf-8"))
+        self.assertIn("checkpoint 2027-02-06 is a weekend", R.Project(self.root).plan_problems)
+        change_id = self.logging_rule_changed()
+        quote = self.patch_for(self.WI08, self.OLD_RULE, self.NEW_RULE, item="WI-08")
+        plan = self.plan_patch('        sections: "6.1, 6.2, 7.2"', '        sections: "4, 6.1, 6.2, 7.2"', "WI-08")
+        self.disposition_update(change_id, "architecture/4.2", [quote, plan], item="WI-08")
+        self.assertEqual(self.plan_invalid(change_id), [])
+        self.assertEqual(self.citation_codes(change_id), [])
+
 
 # ---------------------------------------------------------------------------
 # apply
