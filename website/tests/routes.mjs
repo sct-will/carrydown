@@ -5,8 +5,16 @@ import { join } from 'node:path';
 import { dist, basePath, listRoutes, startPreview } from './lib.mjs';
 
 const routes = listRoutes();
-const { origin, stop } = await startPreview();
 let failures = 0;
+
+// Maintainer notes and historical records in docs/ are not published, in any locale.
+const unpublished = /\/docs\/(sample-run|recording-storyboard|repository-metadata)\//;
+for (const route of routes.filter((r) => unpublished.test(r))) {
+  failures++;
+  console.error(`FAIL ${route} is built, but its source is not a public page`);
+}
+
+const { origin, stop } = await startPreview();
 const checked = new Set();
 
 async function check(path, from) {

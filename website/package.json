@@ -13,7 +13,7 @@
     "build": "node scripts/build-docs.mjs && astro build && node scripts/build-og-image.mjs && node scripts/build-llms.mjs && node scripts/build-robots.mjs",
     "preview": "astro preview",
     "check": "astro check",
-    "test": "node scripts/check-docs-sync.mjs && node tests/routes.mjs && node tests/llms.mjs && node tests/reflow.mjs && node tests/a11y.mjs"
+    "test": "node scripts/check-docs-sync.mjs && node tests/docs-publication.mjs && node tests/routes.mjs && node tests/llms.mjs && node tests/reflow.mjs && node tests/a11y.mjs"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.42.11",

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Builds the docs section of the site from the repository's Markdown. It runs before `astro build`.
 //
-// Reads README.md, every docs/*.md and sample/expense-approvals/README.md from the repository root and
-// writes them into Starlight's content collection with front matter (title from the first heading, or
+// Reads the approved public pages from the repository root (PUBLIC_PAGES below: README.md, the listed
+// docs/*.md files and sample/expense-approvals/README.md) and writes them into Starlight's content collection with front matter (title from the first heading, or
 // the title the page list below names; description from the first paragraph). Relative links between
 // those files become links between site routes. A link to any other repository file becomes its GitHub
 // URL. Referenced images are copied into the site. A line at the top of each page says where it came
@@ -55,27 +55,42 @@ const IMAGE_EXT = /\.(png|jpe?g|gif|svg|webp|avif)$/i;
 const SAMPLE_README = 'sample/expense-approvals/README.md';
 
 /**
- * The English pages: repository path, slug, group. The order here is the Start here order. A page with a
- * title here is titled so on the site instead of by its first heading: the README's heading is the
- * product name, right on GitHub, while on the site the page is what the Docs link promises.
+ * The English pages: repository path, slug, group. Only the pages listed here are published. A Markdown
+ * file in docs/ that is not listed, such as a maintainer note or a historical record, stays in the
+ * repository and never becomes a page. The order here is the Start here order; Reference is sorted by
+ * title for the sidebar. A page with a title here is titled so on the site instead of by its first
+ * heading: the README's heading is the product name, right on GitHub, while on the site the page is what
+ * the Docs link promises.
  */
+export const PUBLIC_PAGES = [
+  { source: 'README.md', slug: 'docs', group: 'start', title: 'Documentation' },
+  { source: 'docs/setup.md', slug: 'docs/setup', group: 'start' },
+  { source: 'docs/plan-owner-guide.md', slug: 'docs/plan-owner-guide', group: 'start' },
+  ...[
+    'delivery-modes',
+    'derive-the-date',
+    'enterprise-security',
+    'inputs',
+    'install-options',
+    'method',
+    'organization-setup',
+    'recovery',
+    'security',
+    'troubleshooting',
+  ].map((n) => ({ source: `docs/${n}.md`, slug: `docs/${n}`, group: 'reference' })),
+  { source: SAMPLE_README, slug: 'docs/sample', group: 'sample' },
+];
+
+/** The approved pages. A listed page that is missing from the repository stops the build. */
 function listEnglishPages(repo) {
-  const pages = [
-    { source: 'README.md', slug: 'docs', group: 'start', title: 'Documentation' },
-    { source: 'docs/setup.md', slug: 'docs/setup', group: 'start' },
-    { source: 'docs/plan-owner-guide.md', slug: 'docs/plan-owner-guide', group: 'start' },
-  ];
-  const startSources = new Set(pages.map((p) => p.source));
-  const names = readdirSync(join(repo, 'docs'))
-    .filter((n) => n.endsWith('.md'))
-    .sort();
-  for (const n of names) {
-    const source = `docs/${n}`;
-    if (startSources.has(source)) continue;
-    pages.push({ source, slug: `docs/${n.slice(0, -3)}`, group: 'reference' });
+  const missing = PUBLIC_PAGES.filter((p) => !existsSync(join(repo, p.source)) || !statSync(join(repo, p.source)).isFile());
+  if (missing.length) {
+    const names = missing.map((p) => p.source).join(', ');
+    throw new Error(
+      `build-docs: ${names} ${missing.length === 1 ? 'is' : 'are'} listed as a public page but missing from ${repo}. Restore the file or remove it from PUBLIC_PAGES in scripts/build-docs.mjs.`,
+    );
   }
-  if (existsSync(join(repo, SAMPLE_README))) pages.push({ source: SAMPLE_README, slug: 'docs/sample', group: 'sample' });
-  return pages;
+  return PUBLIC_PAGES.map((p) => ({ ...p }));
 }
 
 const read = (p) => readFileSync(p, 'utf8').replace(/\r\n?/g, '\n');
@@ -312,7 +327,8 @@ export function generate({ repo = repoRootDefault, out = websiteDir } = {}) {
   const pagesByPath = new Map(pages.map((p) => [p.source, p]));
   clean(out);
 
-  // Translations: docs/i18n/<locale>/<name>.md for any docs/<name>.md page. README.md is the folder note.
+  // Translations: docs/i18n/<locale>/<name>.md for any listed docs/<name>.md page. README.md is the folder
+  // note. A translation of a page that is not listed is skipped with a warning.
   const translations = new Map();
   for (const locale of LOCALES) {
     const folder = join(repo, 'docs', 'i18n', locale);
@@ -349,7 +365,7 @@ export function generate({ repo = repoRootDefault, out = websiteDir } = {}) {
       translated: source.startsWith('docs/i18n/'),
     });
     let body = rewriter(doc.body).replace(/\s+$/, '');
-    const note = `<p class="synced">From the repository, ${source}. Generated at build time and checked against the source.</p>`;
+    const note = `<p class="synced">From the repository, ${source}.</p>`;
     let top = note;
     if (fallbackOf) {
       top = `<p class="synced-locale" lang="${locale}">${FALLBACK_NOTES[locale]}</p>\n\n${note}`;

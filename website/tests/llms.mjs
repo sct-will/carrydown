@@ -40,6 +40,10 @@ for (const l of lines.slice(firstH2)) {
 for (const s of ['Documentation', 'Pages', 'Optional']) if (!sections.has(s)) fail(`llms.txt has no ${s} section`);
 if ([...sections.keys()].pop() !== 'Optional') fail('the Optional section of llms.txt is not the last one');
 if (/Redirecting/i.test(llms)) fail('llms.txt lists a redirect page');
+// Maintainer notes and historical records in docs/ are not published, so no export lists them.
+for (const slug of ['docs/sample-run', 'docs/recording-storyboard', 'docs/repository-metadata']) {
+  for (const [name, text] of [['llms.txt', llms], ['llms-full.txt', full]]) if (text.includes(`${origin}/${slug}`)) fail(`${name} lists ${slug}, which is not a public page`);
+}
 
 // Every English page that is not a redirect is listed once, by its Markdown form where there is one.
 const localeCode = /^[a-z]{2}(-[a-z]{2})?$/;
