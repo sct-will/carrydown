@@ -167,6 +167,7 @@ The counterpart on the other track is WI-01, Service scaffold, flag and API cont
 
 - architecture section 2.1, Functional requirements
 - architecture section 3.3, Data model
+- architecture section 3.4, Report lifecycle
 - architecture section 6.2, Edge cases the interviews surfaced
 - architecture section 7.1, REST API
 - architecture section 2.2, Quality requirements

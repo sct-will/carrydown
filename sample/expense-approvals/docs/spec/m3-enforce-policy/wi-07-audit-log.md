@@ -133,6 +133,7 @@ The counterpart on the Experience track is WI-08, Notifications and delegates, w
 ## References
 
 - architecture section 3.3, Data model
+- architecture section 3.4, Report lifecycle
 - architecture section 4.2, GOV-2 Audit and retention
 - architecture section 5.1, DS-1 Delivery standard
 - architecture section 7.1, REST API
