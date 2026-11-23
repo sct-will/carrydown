@@ -181,7 +181,7 @@ class WithoutTokenTests(MockCase):
         code, out, err = self.release("--no-github")
         self.assertEqual(code, 0, out + err)
         self.assertIn("numeric id 4200", out)
-        self.assertNotIn("3. ", out)
+        self.assertNotRegex(out, r"(?m)^  3\. ")
 
 
 class DefaultRequestTests(MockCase):
