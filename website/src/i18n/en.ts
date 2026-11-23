@@ -169,7 +169,7 @@ export const en = {
         id: 'what-is-carried-context-development',
         group: 'method',
         q: 'What is carried-context development?',
-        a: 'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent, so it helps keep specifications and coding agents aligned as the project changes. It carries a team’s agreed ground truth down into the plan, every specification, every issue and every coding agent’s instructions, cited by section, and carries it down again when the ground truth changes. Citations and human checkpoints keep every handoff traceable. Team constraints such as dates, capacity, skills and preferences shape the plan. People still decide the owners, scope and order.',
+        a: 'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent and helps keep specifications and coding agents aligned as the project changes. It carries a team’s agreed ground truth down into the plan, every specification, every issue and every coding agent’s instructions, cited by section, and carries it down again when the ground truth changes. Citations and human checkpoints keep every handoff traceable. Team constraints such as dates, capacity, skills and preferences shape the plan. People still decide the owners, scope and order.',
         more: { label: 'Read the definition and the rules on the definition page.', href: '/definition/' },
       },
       {
@@ -209,7 +209,7 @@ export const en = {
         id: 'reconciled',
         group: 'carrydown',
         q: 'How does carrydown keep the project board, the issues, the specs and the engineers’ skill reconciled with the ground truth?',
-        a: 'You tell your agent what changed. Say “This changed: …” and describe the change or hand over the revised documents. The agent compares the change with the sources you last reviewed and with the current work, finds the specs and issues the change touches, keeps the engineers’ corrections that still fit, and shows you one review of the proposed updates and any conflicts. Nothing moves until you approve. The approved update then goes through the same release as the plan: it updates the board and the issues you choose, never deletes any of them, and regenerates the engineers’ skill. Once an engineer has updated their project files, the next work item check reports any changes to the approved inputs and directs the coding agent to reassess its plan. An ongoing coding conversation does not refresh automatically.',
+        a: 'You tell your agent what changed. Say “This changed: …” and describe the change or hand over the revised documents. The agent compares the change with the sources you last reviewed and with the current work, finds the specs and issues the change touches, keeps the engineers’ corrections that still fit, and shows you one review of the proposed updates and any conflicts. Nothing moves until you approve. The approved update then goes through the same release as the plan: it updates the board and the issues you choose, never deletes any of them, and regenerates the engineers’ skill. Once an engineer has updated their project files, the next check of that work item reports any changes to the approved inputs and directs the coding agent to reassess its plan. An ongoing coding conversation does not refresh automatically.',
         more: { label: 'Follow the steps in the plan owner guide.', href: '/docs/plan-owner-guide/#when-the-project-changes' },
       },
       {
@@ -309,25 +309,25 @@ export const en = {
       'Text and interface colors are checked for contrast in both the light and the dark theme, and you can choose either theme or follow your system.',
       'Every page works with a keyboard alone, with a visible focus indicator and a skip link to the main content.',
       'The diagram is drawn as text and vector shapes, so it scales, respects your theme, and carries a written description for screen readers.',
-      'The site uses brief animations and transitions. When your system is set to reduce motion, the animations, the page transitions and the theme crossfade are turned off. Short color and underline changes on links and buttons remain, and the arrow of a documentation sidebar group still turns briefly when the group opens.',
+      'Animations, page transitions and the theme crossfade turn off when your system is set to reduce motion. Brief color and underline changes on links and buttons remain, and so does the turn of a documentation sidebar arrow.',
       'Headings, landmarks and link text are written to be read in order and out of context.',
       'The site is checked with automated tools before each release and reviewed by hand with a screen reader.',
     ],
     notFinishedHeading: 'What is not finished',
     notFinished:
-      'Translations of the site are being reviewed by native speakers and go live one language at a time. The documentation pages are not translated yet. Each language shows the English page with a note. They are built from the repository’s Markdown, so their diagrams and screenshots are raster images with written descriptions, and they do not follow the dark theme.',
+      'Translations of the site are being reviewed by native speakers and go live one language at a time. The documentation pages are not translated yet. Each language shows the English page with a note. They are built from the repository’s Markdown, so their diagrams and screenshots are raster images with written descriptions. These images do not follow the dark theme.',
     contactHeading: 'Tell us about a problem',
     contactBefore:
       'If something on this site is hard to use with assistive technology, or you need the content in another form, write to ',
     contactAfter: '. Say which page and what happened. You should hear back within ten working days.',
     review:
-      'This statement describes the site’s intent and its current state. It is reviewed when the site changes. Last reviewed 16 November 2026.',
+      'This statement describes the site’s intent and its current state. It is reviewed when the site changes. Last reviewed 22 November 2026.',
   },
 
   home: {
     title: 'Carried context, one ground truth for every coding agent',
     description:
-      'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent, so it helps keep specifications and coding agents aligned as the project changes.',
+      'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent and helps keep specifications and coding agents aligned as the project changes.',
     h1: [
       'Carried-context development goes beyond spec-driven development.',
       'The context travels with the work.',

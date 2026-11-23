@@ -1,12 +1,12 @@
 # A recorded run of the sample
 
-This page is a historical technical record. It records a run made with the scripts of that time against a throwaway private repository, and it is kept as evidence. Sections 2, 6 and 7 show the earlier publication flow, from before releases existed. A project now publishes from an approved release, and its dry runs begin with a destination preflight. Section 0 was run later, with the release scripts, against the test mock of GitHub. For the current steps, read [the setup guide](setup.md) and [the plan owner guide](plan-owner-guide.md).
+This page is a historical technical record, kept as evidence. It records a run of the scripts against a throwaway private repository that was used only for this test. Its GitHub blocks, in sections 2, 6, 7 and 8, were recorded before releases existed, so they show the earlier publication flow. A project now publishes from an approved release, and its dry runs begin with a destination preflight. Sections 0 and 10 were run later, and the blocks that need no GitHub account were run again, with the current scripts. The list below says how. For the current steps, read [the setup guide](setup.md) and [the plan owner guide](plan-owner-guide.md).
 
 The first stage you can run alone, with no agent and no token, is [section 3, render the ground truth](#3-render-the-ground-truth).
 
-The repository was used only for this test. Names and project links below are placeholders.
+Names and project links below are placeholders.
 
-This page records a real run of the carrydown skills on the sample project `sample/expense-approvals/`, against a throwaway private repository, from the renderer to the project board. It shows what each script prints so you know what to expect before you run it on your own material.
+This page records a real run of the carrydown skills on the sample project `sample/expense-approvals/`, from the renderer to the project board. It shows what each script prints so you know what to expect before you run it on your own material.
 
 How it was made.
 

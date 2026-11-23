@@ -24,7 +24,7 @@ const englishDefaults: Record<PageKey, PageMeta> = {
   home: {
     title: 'Carried-context development, home',
     description:
-      'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent, so it helps keep specifications and coding agents aligned as the project changes.',
+      'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent and helps keep specifications and coding agents aligned as the project changes.',
   },
   definition: {
     title: 'Carried-context development, definition',

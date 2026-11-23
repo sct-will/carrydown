@@ -41,6 +41,7 @@ gh api repos/sct-will/carrydown/pages
 dig +short carriedcontext.dev
 dig +short www.carriedcontext.dev CNAME
 curl -sI https://carriedcontext.dev/
+curl -sI http://carriedcontext.dev/
 curl -sI https://www.carriedcontext.dev/
 curl -sI https://sct-will.github.io/carrydown/
 cat website/dist/CNAME
@@ -65,4 +66,8 @@ The search engine steps are in `TODO.md`.
 - GitHub Actions is enabled, restricted to actions written by GitHub and by verified creators. The website workflow uses GitHub's own actions only, pinned by commit.
 - GitHub Pages is enabled with the build type set to the workflow, so every deploy comes from the website workflow and nothing is served from a branch.
 - A placeholder branch named gh-pages exists with one README. GitHub required a branch to exist before Pages could be turned on, and turning the branch off turns Pages off with it. Leave the branch alone.
-- The github-pages environment allows deploys from main and from the website branch. Remove the website branch from that list after the merge. On 2026-11-22 the list still named main, website and gh-pages.
+- The github-pages environment allows deploys from main and from the website branch.
+
+## Open maintenance step
+
+The website branch has merged. Remove it from the github-pages environment's list of branches allowed to deploy, and remove gh-pages from that list too if nothing deploys from it. On 2026-11-22 the list named main, website and gh-pages.

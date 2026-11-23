@@ -161,7 +161,7 @@ export const es: Strings = {
         id: 'what-is-carried-context-development',
         group: 'method',
         q: '¿Qué es carried-context development?',
-        a: 'Carried-context development es un enfoque de desarrollo con agentes que lleva las decisiones y el contexto del proyecto hasta el agente de programación de cada ingeniero, para ayudar a mantener alineados las especificaciones y los agentes de programación a medida que cambia el proyecto. Carried-context development lleva la verdad de referencia acordada por un equipo hasta el plan, cada especificación, cada incidencia y las instrucciones de cada agente de programación, citada por sección, y la lleva de nuevo cuando cambia.',
+        a: 'Carried-context development es un enfoque de desarrollo con agentes que lleva las decisiones y el contexto del proyecto hasta el agente de programación de cada ingeniero y ayuda a mantener alineados las especificaciones y los agentes de programación a medida que cambia el proyecto. Carried-context development lleva la verdad de referencia acordada por un equipo hasta el plan, cada especificación, cada incidencia y las instrucciones de cada agente de programación, citada por sección, y la lleva de nuevo cuando cambia.',
         more: { label: 'Leer la definición y las reglas en la página de definición.', href: '/definition/' },
       },
       {
@@ -201,7 +201,7 @@ export const es: Strings = {
         id: 'reconciled',
         group: 'carrydown',
         q: '¿Cómo mantiene carrydown el tablero del proyecto, las incidencias, las especificaciones y el skill de los ingenieros conciliados con la verdad de referencia?',
-        a: 'Usted le dice a su agente qué cambió. Diga «This changed: …» y describa el cambio o entregue los documentos revisados. El agente compara el cambio con las fuentes que revisó por última vez y con el trabajo actual, encuentra las especificaciones y las incidencias que el cambio afecta, conserva las correcciones de los ingenieros que siguen encajando y le muestra una sola revisión de las actualizaciones propuestas y de cualquier conflicto. Nada se mueve hasta que usted aprueba. La actualización aprobada pasa después por la misma publicación que el plan: actualiza el tablero y las incidencias que usted elija, no elimina ninguna y regenera el skill de los ingenieros. Cuando un ingeniero ha actualizado los archivos de su proyecto, la siguiente comprobación de un elemento de trabajo informa de cualquier cambio en las entradas aprobadas e indica al agente de programación que reevalúe su plan. Una conversación de programación en curso no se actualiza automáticamente.',
+        a: 'Usted le dice a su agente qué cambió. Diga «This changed: …» y describa el cambio o entregue los documentos revisados. El agente compara el cambio con las fuentes que revisó por última vez y con el trabajo actual, encuentra las especificaciones y las incidencias que el cambio afecta, conserva las correcciones de los ingenieros que siguen encajando y le muestra una sola revisión de las actualizaciones propuestas y de cualquier conflicto. Nada se mueve hasta que usted aprueba. La actualización aprobada pasa después por la misma publicación que el plan: actualiza el tablero y las incidencias que usted elija, no elimina ninguna y regenera el skill de los ingenieros. Cuando un ingeniero ha actualizado los archivos de su proyecto, la siguiente comprobación de ese elemento de trabajo informa de cualquier cambio en las entradas aprobadas e indica al agente de programación que reevalúe su plan. Una conversación de programación en curso no se actualiza automáticamente.',
         more: { label: 'Seguir los pasos de la guía del responsable del plan.', href: '/docs/plan-owner-guide/#when-the-project-changes' },
       },
       {
@@ -301,7 +301,7 @@ export const es: Strings = {
       'Los colores del texto y de la interfaz se comprueban en cuanto a contraste en los temas claro y oscuro, y puede elegir cualquiera de los dos o seguir su sistema.',
       'Cada página funciona solo con el teclado, con un indicador de foco visible y un enlace para saltar al contenido principal.',
       'El diagrama está dibujado con texto y formas vectoriales, así que se escala, respeta su tema y lleva una descripción escrita para lectores de pantalla.',
-      'El sitio usa animaciones y transiciones breves. Cuando su sistema está configurado para reducir el movimiento, las animaciones, las transiciones entre páginas y el fundido al cambiar de tema se desactivan. Se mantienen breves cambios de color y de subrayado en enlaces y botones, y la flecha de un grupo de la barra lateral de la documentación todavía gira brevemente al abrirse.',
+      'Las animaciones, las transiciones entre páginas y el fundido al cambiar de tema se desactivan cuando su sistema está configurado para reducir el movimiento. Se mantienen breves cambios de color y de subrayado en enlaces y botones, y también el giro de una flecha de la barra lateral de la documentación.',
       'Los encabezados, los puntos de referencia y los textos de los enlaces están escritos para leerse en orden y fuera de contexto.',
       'El sitio se comprueba con herramientas automáticas antes de cada versión y se revisa a mano con un lector de pantalla.',
     ],
@@ -313,13 +313,13 @@ export const es: Strings = {
       'Si algo en este sitio es difícil de usar con tecnología de apoyo, o necesita el contenido en otra forma, escriba a ',
     contactAfter: '. Indique qué página y qué ocurrió. Debería recibir respuesta en diez días laborables.',
     review:
-      'Esta declaración describe la intención del sitio y su estado actual. Se revisa cuando el sitio cambia. Última revisión el 16 de noviembre de 2026.',
+      'Esta declaración describe la intención del sitio y su estado actual. Se revisa cuando el sitio cambia. Última revisión el 22 de noviembre de 2026.',
   },
 
   home: {
     title: 'Carried context, una verdad de referencia para cada agente de programación',
     description:
-      'Carried-context development es un enfoque de desarrollo con agentes que lleva las decisiones y el contexto del proyecto hasta el agente de programación de cada ingeniero, para ayudar a mantener alineados las especificaciones y los agentes de programación a medida que cambia el proyecto.',
+      'Carried-context development es un enfoque de desarrollo con agentes que lleva las decisiones y el contexto del proyecto hasta el agente de programación de cada ingeniero y ayuda a mantener alineados las especificaciones y los agentes de programación a medida que cambia el proyecto.',
     h1: [
       'Carried-context development va más allá del desarrollo guiado por especificaciones.',
       'El contexto viaja con el trabajo.',
