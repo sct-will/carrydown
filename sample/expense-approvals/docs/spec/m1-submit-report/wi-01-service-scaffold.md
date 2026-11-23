@@ -166,6 +166,7 @@ The counterpart on the other track is WI-02, Report form and receipt upload (Exp
 - architecture section 3.1, Overview
 - architecture section 3.2, Components
 - architecture section 3.3, Data model
+- architecture section 3.4, Report lifecycle
 - architecture section 3.6, Deployment
 - architecture section 4.2, GOV-2 Audit and retention
 - architecture section 5.1, DS-1 Delivery standard
