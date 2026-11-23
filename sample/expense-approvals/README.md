@@ -103,7 +103,7 @@ python3 scripts/render_ground_truth.py sample/expense-approvals/ground-truth/arc
 
 ## On GitHub
 
-The issues and the public board for this plan are in the sample repository: [its issues](https://github.com/sct-will/carrydown-sample/issues) and [the public board](https://github.com/users/sct-will/projects/2). Start with the board's Board view. The Roadmap view shows bars only after its date fields are chosen by hand once (Complete by, and Checkpoint for markers), because the script does not set them yet. That click is in the list `github_project.py` prints at the end of every run. The sample repository was published before the release layout existed, so its issues and files predate the approved contexts and the receipt until it is published again from this folder.
+The issues and the public board for this plan are in the sample repository: [its issues](https://github.com/sct-will/carrydown-sample/issues) and [the public board](https://github.com/users/sct-will/projects/2). Start with the board's Board view. The Roadmap view shows bars only after its date fields are chosen by hand once (Complete by, and Checkpoint for markers), because the script does not set them yet. That click is in the list `github_project.py` prints at the end of every run.
 
 ## Make it yours
 

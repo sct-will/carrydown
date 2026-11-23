@@ -47,12 +47,12 @@ The sample is fictional: the company, the people and the dates are invented, and
 
 ## Images and captions already in the repository
 
-The pictures below show the fictional sample. None shows a path or a staffing record. One shows the plan owner's own public account name, noted in the table. The README diagram was redrawn after the confidentiality controls. The other pictures were made before them, and each is kept until it is redrawn or retaken.
+The pictures below show the fictional sample. None shows a path, a staffing record or a real account name. The README diagram was redrawn and the issue screenshot retaken after the confidentiality controls. The other pictures were made before them and are kept until they are redrawn or retaken.
 
 | Image | Where it appears | Status |
 | --- | --- | --- |
 | `docs/images/handoff.png` and `handoff.svg` | The README "How it works" section | Current. Redrawn on 2026-11-22. It shows four stages: your documents and team constraints, the agent's draft, your review and approval, and each coding agent's approved handoff. The approved source excerpts pass through your approval, and a return arrow shows the reviewed update path. It shows no path or staffing record. |
 | `docs/images/second-pass-review.png` and `.svg` | `docs/method.md` | Current. It shows the review of the plan and does not mention where sources live. |
-| `docs/images/issue-9.png` | The README sample section | Legacy pending replacement. It is a screenshot of the public sample repository from before the release layout. It shows the plan owner's own GitHub account name and picture as the issue author, which is the real account that published the sample and not a fictional person. Its text says the skill makes the agent read "the ground truth sections it cites", where the current text says the approved context. Retake it after the sample repository is republished from the current sample. |
+| `docs/images/issue-9.png` | The README sample section | Current. Retaken on 2026-11-23 from the live issue after the sample repository was published again from the current release. The author's avatar and login are replaced by a generic avatar and an invented plan owner login in the rendered page before the capture; the issue content is unchanged, and the README caption says so. It shows no path or staffing record. |
 | `docs/images/board.png` | Nowhere since November 2026, when the README sample section was shortened to one picture; kept for the recording | Current. It shows tracks, dates and checkpoints, and no name or login. |
 | `docs/images/social-preview.png` | The repository social preview | Current. It carries the tagline only. |
