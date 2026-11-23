@@ -107,4 +107,4 @@ The issues and the public board for this plan are in the sample repository: [its
 
 ## Make it yours
 
-Replace `ground-truth/architecture.md` with your document and say to your agent: "Set up a project plan from this document." Put "Use the carrydown-ground-truth skill." in front if it does not pick the skill up. The agent first asks who may see your documents. Answer for your own documents, not the sample's, and read [who may see your documents](https://github.com/sct-will/carrydown/blob/main/docs/setup.md#before-you-add-documents-who-may-see-them) before you copy anything into a project.
+In your own project folder, give your agent the paths to your project documents and say "Set up a project plan from these documents." Put "Use the carrydown-ground-truth skill." in front if it does not pick the skill up. The documents can stay where they are. The agent first asks who may see them. Read [who may see your documents](https://github.com/sct-will/carrydown/blob/main/docs/setup.md#before-you-add-documents-who-may-see-them) before you answer.

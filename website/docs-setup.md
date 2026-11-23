@@ -1,10 +1,12 @@
-# Custom domain setup
+# Custom domain reference
 
-The site is served at `https://sct-will.github.io/carrydown/` until the custom domain is on. Then it is served at `https://carriedcontext.dev/`. These are the steps for later. Nothing here is needed to build or deploy the site today.
+The site is served at `https://carriedcontext.dev/`. GitHub Pages serves it from the website workflow. This page records what is configured and how to check it. Every check below is read only.
 
-## 1. DNS records at Squarespace
+## What is configured
 
-Open the DNS settings for `carriedcontext.dev` at Squarespace and add these records.
+### DNS records
+
+The domain's DNS is hosted at Squarespace. It has these records.
 
 | Host | Type | Value |
 | --- | --- | --- |
@@ -14,35 +16,53 @@ Open the DNS settings for `carriedcontext.dev` at Squarespace and add these reco
 | `@` (the apex) | A | 185.199.111.153 |
 | `www` | CNAME | sct-will.github.io |
 
-Remove any other A or CNAME records for the apex and for `www`, such as the default Squarespace ones. Do not add a trailing path to the CNAME value.
+Keep no other A or CNAME records for the apex or for `www`. The CNAME value has no trailing path. A Search Console verification record, when it is added, is a TXT record and does not affect these. See `TODO.md`.
 
-DNS changes can take from a few minutes to a day to spread.
+### GitHub Pages
 
-## 2. Pages settings on GitHub
+In the repository settings, under Pages:
 
-In the repository, open Settings, then Pages.
+- Source is GitHub Actions. Every deploy comes from the website workflow, and nothing is served from a branch.
+- The custom domain is `carriedcontext.dev`, and the domain is verified.
+- Enforce HTTPS is on. The certificate covers `carriedcontext.dev` and `www.carriedcontext.dev`. GitHub renews it.
 
-1. Under Build and deployment, set Source to GitHub Actions.
-2. Under Custom domain, enter `carriedcontext.dev` and save. GitHub checks the DNS records.
-3. When the check passes, tick Enforce HTTPS. GitHub issues the certificate, which can take up to an hour.
+### Build settings
 
-## 3. Switch the build to the domain
+In `website/site.config.mjs`, `customDomain` is `'carriedcontext.dev'`. The build then uses `https://carriedcontext.dev` as the site address and `/` as the base path. Emptying it would build for `https://sct-will.github.io/carrydown/` instead. Do not do that while the domain is on.
 
-In `website/site.config.mjs`, set `customDomain` to `"carriedcontext.dev"`. The build then uses `https://carriedcontext.dev` as the site address and `/` as the base path, and writes a `CNAME` file into the output. Commit and let the workflow deploy.
+### The CNAME file
 
-## 4. Check
+The build writes a `CNAME` file into `website/dist/` with the line `carriedcontext.dev`. The integration in `website/astro.config.mjs` writes it whenever `customDomain` is set. It is not committed.
 
-- `https://carriedcontext.dev/` loads over HTTPS.
-- `https://www.carriedcontext.dev/` redirects to the apex.
-- The old address `https://sct-will.github.io/carrydown/` redirects to the new one.
+## How to check it
 
-## 5. Launch steps
+```bash
+gh api repos/sct-will/carrydown/pages
+dig +short carriedcontext.dev
+dig +short www.carriedcontext.dev CNAME
+curl -sI https://carriedcontext.dev/
+curl -sI https://www.carriedcontext.dev/
+curl -sI https://sct-will.github.io/carrydown/
+cat website/dist/CNAME
+```
+
+Expect:
+
+- The Pages API shows `"cname":"carriedcontext.dev"`, `"build_type":"workflow"`, `"protected_domain_state":"verified"`, `"https_enforced":true` and a certificate in the `approved` state with its expiry date.
+- The apex resolves to the four addresses in the table, and `www` is a CNAME for `sct-will.github.io`.
+- `https://carriedcontext.dev/` answers `200`.
+- `https://www.carriedcontext.dev/`, `http://carriedcontext.dev/` and the old address `https://sct-will.github.io/carrydown/` answer `301` to `https://carriedcontext.dev/`. A path is kept, for example `/definition/`.
+- After a build, `website/dist/CNAME` holds `carriedcontext.dev`.
+
+Last checked 2026-11-22. All of the above held. The certificate expires 2027-02-14 and is renewed by GitHub.
+
+## Launch steps
 
 The search engine steps are in `TODO.md`.
 
-## What was set on the repository, 16 November 2026
+## What was set on the repository, 2026-11-16
 
 - GitHub Actions is enabled, restricted to actions written by GitHub and by verified creators. The website workflow uses GitHub's own actions only, pinned by commit.
 - GitHub Pages is enabled with the build type set to the workflow, so every deploy comes from the website workflow and nothing is served from a branch.
 - A placeholder branch named gh-pages exists with one README. GitHub required a branch to exist before Pages could be turned on, and turning the branch off turns Pages off with it. Leave the branch alone.
-- The github-pages environment allows deploys from main and from the website branch. Remove the website branch from that list after the merge.
+- The github-pages environment allows deploys from main and from the website branch. Remove the website branch from that list after the merge. On 2026-11-22 the list still named main, website and gh-pages.

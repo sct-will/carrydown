@@ -63,7 +63,7 @@ All settings are in `site.config.mjs`.
 
 | Setting | What it does |
 | --- | --- |
-| `customDomain` | Empty until the domain is connected. Empty means the site is built for `https://sct-will.github.io/carrydown/`. Set it to `"carriedcontext.dev"` to build for the root of that domain and write a `CNAME` file. See `docs-setup.md` for the DNS and Pages steps. |
+| `customDomain` | Set to `"carriedcontext.dev"`. The site is built for the root of that domain, and the build writes a `CNAME` file. Empty would build for `https://sct-will.github.io/carrydown/`. See `docs-setup.md` for the DNS and Pages configuration and how to check it. |
 | `goatcounterCode` | Empty means no analytics. Set it to your GoatCounter site code, for example `"carried-context"`, and every page loads the GoatCounter script with `data-goatcounter` set to `https://<code>.goatcounter.com/count`. GoatCounter is cookie free. Nothing else is tracked. |
 | `INDEXING_ENABLED` | False until launch. While false, every page has `<meta name="robots" content="noindex, nofollow">` and `robots.txt` says `Disallow: /`. See `TODO.md`. |
 

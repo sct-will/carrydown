@@ -104,7 +104,7 @@ Start with [the sample project board](https://github.com/users/sct-will/projects
 
 *Issue 9 as GitHub renders it, and [the specification it links to](https://github.com/sct-will/carrydown-sample/blob/main/docs/spec/m2-route-to-approvers/wi-03-routing-engine.md).*
 
-Everything the two skills made is public in [carrydown-sample](https://github.com/sct-will/carrydown-sample), and a copy sits in [`sample/expense-approvals/`](sample/expense-approvals/) for the self test. [A recorded run](docs/sample-run.md) shows what each script printed when the sample was carried into a throwaway repository. With a local copy of this repository you can also run the sample's read-only preview, which changes no file and needs no token; [the sample's own page](sample/expense-approvals/README.md#run-it) shows the command and what it prints.
+Everything the two skills made is public in [carrydown-sample](https://github.com/sct-will/carrydown-sample), and a copy sits in [`sample/expense-approvals/`](sample/expense-approvals/) for the self test. With a local copy of this repository you can also run the sample's read-only preview, which changes no file and needs no token; [the sample's own page](sample/expense-approvals/README.md#run-it) shows the command and what it prints.
 
 <br />
 

@@ -161,7 +161,7 @@ export const ptBR: Strings = {
         id: 'what-is-carried-context-development',
         group: 'method',
         q: 'O que é carried-context development?',
-        a: 'Carried-context development é uma abordagem de desenvolvimento com agentes que leva as decisões e o contexto do projeto até o agente de programação de cada engenheiro, para que o projeto fique alinhado e nada se afaste. Carried-context development leva a verdade de referência acordada por uma equipe até o plano, cada especificação, cada issue e as instruções de cada agente de programação, citada por seção, e a leva de novo quando ela muda.',
+        a: 'Carried-context development é uma abordagem de desenvolvimento com agentes que leva as decisões e o contexto do projeto até o agente de programação de cada engenheiro, para ajudar a manter especificações e agentes de programação alinhados à medida que o projeto muda. Carried-context development leva a verdade de referência acordada por uma equipe até o plano, cada especificação, cada issue e as instruções de cada agente de programação, citada por seção, e a leva de novo quando ela muda.',
         more: { label: 'Ler a definição e as regras na página de definição.', href: '/definition/' },
       },
       {
@@ -201,7 +201,7 @@ export const ptBR: Strings = {
         id: 'reconciled',
         group: 'carrydown',
         q: 'Como o carrydown mantém o quadro do projeto, as issues, as especificações e o skill dos engenheiros reconciliados com a verdade de referência?',
-        a: 'Você diz ao seu agente o que mudou. Diga “This changed: …” e descreva a mudança ou entregue os documentos revisados. O agente compara a mudança com as fontes que você revisou por último e com o trabalho atual, encontra as especificações e as issues que a mudança atinge, mantém as correções dos engenheiros que ainda se encaixam e mostra a você uma única revisão das atualizações propostas e de qualquer conflito. Nada se move até você aprovar. A atualização aprovada passa então pela mesma publicação que o plano: atualiza o quadro e as issues que você escolher, não exclui nenhuma delas e regenera o skill dos engenheiros, de modo que cada agente de programação lê a nova especificação na próxima vez que um engenheiro citar um item de trabalho.',
+        a: 'Você diz ao seu agente o que mudou. Diga “This changed: …” e descreva a mudança ou entregue os documentos revisados. O agente compara a mudança com as fontes que você revisou por último e com o trabalho atual, encontra as especificações e as issues que a mudança atinge, mantém as correções dos engenheiros que ainda se encaixam e mostra a você uma única revisão das atualizações propostas e de qualquer conflito. Nada se move até você aprovar. A atualização aprovada passa então pela mesma publicação que o plano: atualiza o quadro e as issues que você escolher, não exclui nenhuma delas e regenera o skill dos engenheiros. Depois que um engenheiro atualiza os arquivos do projeto, a próxima verificação de um item de trabalho informa qualquer mudança nas entradas aprovadas e orienta o agente de programação a reavaliar seu plano. Uma conversa de programação em andamento não se atualiza automaticamente.',
         more: { label: 'Seguir os passos do guia do responsável pelo plano.', href: '/docs/plan-owner-guide/#when-the-project-changes' },
       },
       {
@@ -240,7 +240,7 @@ export const ptBR: Strings = {
         id: 'watch',
         group: 'carrydown',
         q: 'O carrydown vigia meus documentos?',
-        a: 'Não. O carrydown não tem observador de arquivos e nunca lê seu sistema de documentos por conta própria. Uma atualização começa quando você diz o que mudou e fornece o material revisado, e termina quando você aprova a revisão. A revisão de marco do guia do responsável pelo plano também pergunta se alguma fonte, requisito ou restrição mudou desde o último plano, então uma mudança é percebida ali no mais tardar.',
+        a: 'Não. O carrydown não tem observador de arquivos e nunca lê seu sistema de documentos por conta própria. Uma atualização começa quando você diz o que mudou e fornece o material revisado, e termina quando você aprova a revisão. As revisões de marco também levam o responsável pelo plano a informar mudanças em fontes, requisitos ou restrições.',
       },
       {
         id: 'agents',
@@ -301,13 +301,13 @@ export const ptBR: Strings = {
       'As cores do texto e da interface são verificadas quanto ao contraste nos temas claro e escuro, e você pode escolher um deles ou seguir o seu sistema.',
       'Todas as páginas funcionam apenas com o teclado, com indicador de foco visível e um link para pular ao conteúdo principal.',
       'O diagrama é desenhado com texto e formas vetoriais, então ele escala, respeita o seu tema e traz uma descrição escrita para leitores de tela.',
-      'Nada no site se move sozinho. Qualquer animação futura respeitará a configuração de movimento reduzido e oferecerá uma imagem estática.',
+      'O site usa animações e transições breves. Quando o seu sistema está configurado para reduzir o movimento, as animações, as transições entre páginas e o esmaecimento na troca de tema ficam desativados. Continuam breves mudanças de cor e de sublinhado em links e botões, e a seta de um grupo da barra lateral da documentação ainda gira brevemente ao abrir.',
       'Títulos, regiões e textos de links são escritos para serem lidos em ordem e fora de contexto.',
       'O site é verificado com ferramentas automáticas antes de cada versão e revisado à mão com um leitor de tela.',
     ],
     notFinishedHeading: 'O que não está concluído',
     notFinished:
-      'As traduções do site estão sendo revisadas por falantes nativos e entram no ar um idioma por vez. A seção de documentação é gerada a partir do repositório e pode ficar atrás do restante do site nesses pontos até que cada versão seja verificada.',
+      'As traduções do site estão sendo revisadas por falantes nativos e entram no ar um idioma por vez. As páginas de documentação ainda não estão traduzidas. Cada idioma mostra a página em inglês com uma nota. Elas são geradas a partir do Markdown do repositório, então seus diagramas e capturas de tela são imagens rasterizadas com descrição escrita e não seguem o tema escuro.',
     contactHeading: 'Conte-nos sobre um problema',
     contactBefore:
       'Se algo neste site for difícil de usar com tecnologia assistiva, ou se você precisar do conteúdo em outra forma, escreva para ',
@@ -319,7 +319,7 @@ export const ptBR: Strings = {
   home: {
     title: 'Carried context, uma verdade de referência para cada agente de programação',
     description:
-      'Carried-context development é uma abordagem de desenvolvimento com agentes que leva as decisões e o contexto do projeto até o agente de programação de cada engenheiro, para que o projeto fique alinhado e nada se afaste.',
+      'Carried-context development é uma abordagem de desenvolvimento com agentes que leva as decisões e o contexto do projeto até o agente de programação de cada engenheiro, para ajudar a manter especificações e agentes de programação alinhados à medida que o projeto muda.',
     h1: [
       'Carried-context development vai além do desenvolvimento orientado por especificações.',
       'O contexto viaja com o trabalho.',
