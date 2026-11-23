@@ -167,6 +167,7 @@ The counterpart on the other track is WI-01, Service scaffold, flag and API cont
 
 - Ground truth. [2.1 Functional requirements](../../ground-truth/architecture.md#21-functional-requirements), [3.3 Data model](../../ground-truth/architecture.md#33-data-model), [6.2 Edge cases the interviews surfaced](../../ground-truth/architecture.md#62-edge-cases-the-interviews-surfaced), [7.1 REST API](../../ground-truth/architecture.md#71-rest-api).
 - Ground truth. [2.2 Quality requirements](../../ground-truth/architecture.md#22-quality-requirements) for NFR-3, and [6.1 What people asked for](../../ground-truth/architecture.md#61-what-people-asked-for) for BA-1.
+- Ground truth. [4.2 GOV-2 Audit and retention](../../ground-truth/architecture.md#42-gov-2-audit-and-retention), [5.1 DS-1 Delivery standard](../../ground-truth/architecture.md#51-ds-1-delivery-standard).
 - Dependency. [WI-01 Service scaffold, flag and API contract](wi-01-service-scaffold.md).
 - Unblocked item. [WI-04 Approver inbox and decisions](../m2-route-to-approvers/wi-04-approver-inbox.md).
 

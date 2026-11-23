@@ -134,6 +134,7 @@ The counterpart on the Experience track is WI-08, Notifications and delegates, w
 
 - [Section 3.3, Data model](../../ground-truth/architecture.md#33-data-model)
 - [Section 4.2, GOV-2](../../ground-truth/architecture.md#42-gov-2-audit-and-retention)
+- [Section 5.1, DS-1](../../ground-truth/architecture.md#51-ds-1-delivery-standard)
 - [Section 7.1, REST API](../../ground-truth/architecture.md#71-rest-api)
 - [WI-03 Approval routing engine](../m2-route-to-approvers/wi-03-routing-engine.md)
 - [WI-09 Ledger export job](../m4-pilot/wi-09-ledger-export.md)

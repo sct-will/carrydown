@@ -133,6 +133,7 @@ The counterpart item on the Experience track is WI-11 Release readiness and runb
 ## References
 
 - Ground truth sections [3.6](../../ground-truth/architecture.md#36-deployment), [4.2](../../ground-truth/architecture.md#42-gov-2-audit-and-retention) and [7.3](../../ground-truth/architecture.md#73-ledger-export-file). Also [3.4](../../ground-truth/architecture.md#34-report-lifecycle), [6.1](../../ground-truth/architecture.md#61-what-people-asked-for) and [8.1](../../ground-truth/architecture.md#81-risks)
+- Ground truth section [5.1](../../ground-truth/architecture.md#51-ds-1-delivery-standard)
 - Depends on [WI-07 Audit log and retention](../m3-enforce-policy/wi-07-audit-log.md). Unblocks [WI-11 Release readiness and runbook](../m5-release/wi-11-release-readiness.md). Related [WI-03 Approval routing engine](../m2-route-to-approvers/wi-03-routing-engine.md)
 
 ## Decisions recorded

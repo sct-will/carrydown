@@ -630,13 +630,13 @@ def bundles(tmp):
     step("the sample's committed bundles are what the compiler writes", [PY, "-c", same, str(out / "docs/context"), str(ROOT / SAMPLE / "docs/context")],
          contains=["files 18 18 differ []"])
     step("the fixture, with a restricted source, compiles", comp + ["--root", str(fixture), "--renderings", str(fixture / "docs/ground-truth")],
-         contains=["WI-06  obligations present: 5 of 5", "Whether each bundle is enough to do the work is your review."])
+         contains=["WI-06  obligations present: 6 of 6", "Whether each bundle is enough to do the work is your review."])
     broken = tmp / "bundles-broken"
     shutil.copytree(fixture, broken)
     arch = broken / "docs/ground-truth/architecture.md"
     write_lf(arch, arch.read_text(encoding="utf-8").replace("### 3.5 Routing", "### Routing"))
     step("a cited section that is not in the rendering stops the compile", comp + ["--root", str(broken), "--renderings", str(arch.parent), "--out", str(tmp / "bundles-none"), "--apply"],
-         expect=1, contains=["obligation not found: architecture 3.5 (cited by WI-06)", "WI-06  obligations present: 4 of 5", "No bundle was compiled."])
+         expect=1, contains=["obligation not found: architecture 3.5 (cited by WI-06)", "WI-06  obligations present: 5 of 6", "No bundle was compiled."])
     nothing = not (tmp / "bundles-none").exists()
     results.append((nothing, "nothing was written when an obligation was missing"))
     print(("PASS " if nothing else "FAIL ") + "nothing was written when an obligation was missing")

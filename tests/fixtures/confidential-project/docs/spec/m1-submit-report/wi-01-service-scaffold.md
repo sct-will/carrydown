@@ -165,6 +165,7 @@ The counterpart on the other track is WI-02, Report form and receipt upload (Exp
 
 - Ground truth. [3.1 Overview](../../ground-truth/architecture.md#31-overview), [3.2 Components](../../ground-truth/architecture.md#32-components), [3.3 Data model](../../ground-truth/architecture.md#33-data-model), [3.6 Deployment](../../ground-truth/architecture.md#36-deployment).
 - Ground truth. [5.1 DS-1 Delivery standard](../../ground-truth/architecture.md#51-ds-1-delivery-standard), [7.1 REST API](../../ground-truth/architecture.md#71-rest-api).
+- Ground truth. [4.2 GOV-2 Audit and retention](../../ground-truth/architecture.md#42-gov-2-audit-and-retention).
 - Unblocked items. [WI-02 Report form and receipt upload](wi-02-report-form.md), [WI-03 Approval routing engine](../m2-route-to-approvers/wi-03-routing-engine.md).
 
 ## Decisions recorded

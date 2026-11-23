@@ -144,6 +144,7 @@ The counterpart items on the Workflow track are WI-07 Audit log and retention, w
 ## References
 
 - Ground truth sections [6.1](../../ground-truth/architecture.md#61-what-people-asked-for), [6.2](../../ground-truth/architecture.md#62-edge-cases-the-interviews-surfaced) and [7.2](../../ground-truth/architecture.md#72-notification-event). Also [3.4](../../ground-truth/architecture.md#34-report-lifecycle), [3.5](../../ground-truth/architecture.md#35-routing) and [4.1](../../ground-truth/architecture.md#41-gov-1-approval-limits-and-separation-of-duties). Depends on [WI-04 Approver inbox and decisions](../m2-route-to-approvers/wi-04-approver-inbox.md) and [WI-06 Approval limits and separation of duties](wi-06-limits-and-duties.md). Unblocks [WI-11 Release readiness and runbook](../m5-release/wi-11-release-readiness.md). Related [WI-03](../m2-route-to-approvers/wi-03-routing-engine.md) and [WI-07](wi-07-audit-log.md)
+- Ground truth sections [4.2](../../ground-truth/architecture.md#42-gov-2-audit-and-retention) and [5.1](../../ground-truth/architecture.md#51-ds-1-delivery-standard)
 
 ## Decisions recorded
 

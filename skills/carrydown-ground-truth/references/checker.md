@@ -48,6 +48,7 @@ Show the review to the plan owner. Each advisory line is a question for them, no
 - No reference to the id of an external item, or to an id that does not exist.
 - No broken relative link.
 - If the ground truth headings are numbered, every section number in the Ground truth row exists.
+- Every rule the Contract or the Acceptance criteria name is cited. An identifier such as GOV-2.6, outside code blocks, resolves to the section whose heading holds GOV-2, and that section, a parent of it or the whole document must be in the item's `source_refs` or its References section. An identifier that no source heading holds, such as FR-1 in a table, is not checked. Mentions in other sections explain and do not count.
 
 ## Milestone and folder checks
 

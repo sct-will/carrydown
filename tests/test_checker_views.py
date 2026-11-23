@@ -369,7 +369,7 @@ class WorkspaceViewTests(WithTemp):
         text = spec.read_text(encoding="utf-8")
         spec.write_bytes((text.replace("## Decisions recorded", "## Decisions recorded", 1)).encode("utf-8"))
         refs = text.split("## References\n", 1)[1].split("\n## ", 1)[0]
-        good = text.replace(refs, "\n- architecture section 3.1, Overview\n- architecture section 3.2\n\n")
+        good = text.replace(refs, "\n- architecture section 3.1, Overview\n- architecture section 3.2\n- architecture section 4.2, GOV-2 Audit and retention\n\n")
         spec.write_bytes((good).encode("utf-8"))
         code, out = check("--root", proj)
         self.assertEqual(code, 0, out)

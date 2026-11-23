@@ -215,9 +215,9 @@ class CompletenessTests(unittest.TestCase):
         self.assertIn("obligation not found: architecture 3.5 (cited by WI-03)", result.problems)
         self.assertIn("obligation not found: architecture 3.5 (cited by WI-06)", result.problems)
         rows = {r[0]: r[2:] for r in result.rows}
-        self.assertEqual(rows["WI-06"], (4, 5))
+        self.assertEqual(rows["WI-06"], (5, 6))
         self.assertEqual(rows["WI-03"], (3, 4))       # its specification also links a section its header does not cite
-        self.assertEqual(rows["WI-01"], (6, 6))
+        self.assertEqual(rows["WI-01"], (7, 7))
         error = None
         try:
             CB.compile_bundles(self.plan, self.renderings, SPEC_DIR)
@@ -381,8 +381,8 @@ class CommandLineTests(unittest.TestCase):
         ws = self.make_workspace()
         code, out, err = run_cli(["--root", str(self.root)])
         self.assertEqual(code, 0, out + err)
-        self.assertIn("WI-06  obligations present: 5 of 5   Approval limits and separation of duties", out)
-        self.assertIn("WI-01  obligations present: 6 of 6", out)
+        self.assertIn("WI-06  obligations present: 6 of 6   Approval limits and separation of duties", out)
+        self.assertIn("WI-01  obligations present: 7 of 7", out)
         self.assertIn("renderings from the private workspace", out)
         self.assertIn("18 file(s) would be written under docs/context/", out)
         self.assertIn("Dry run. Add --apply to write.", out)
@@ -425,7 +425,7 @@ class CommandLineTests(unittest.TestCase):
         code, out, err = run_cli(["--root", str(self.root), "--renderings", str(arch.parent), "--out", str(target), "--apply"])
         self.assertEqual(code, 1, out + err)
         self.assertIn("obligation not found: architecture 7.1 (cited by WI-06)", out)
-        self.assertIn("WI-06  obligations present: 4 of 5", out)
+        self.assertIn("WI-06  obligations present: 5 of 6", out)
         self.assertIn("No bundle was compiled.", out)
         self.assertFalse(target.exists())
 

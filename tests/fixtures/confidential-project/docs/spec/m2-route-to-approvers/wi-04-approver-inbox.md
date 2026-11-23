@@ -143,6 +143,7 @@ The counterpart items on the Workflow track are WI-03 Approval routing engine, w
 ## References
 
 - Ground truth sections [2.1](../../ground-truth/architecture.md#21-functional-requirements), [3.4](../../ground-truth/architecture.md#34-report-lifecycle), [6.1](../../ground-truth/architecture.md#61-what-people-asked-for) and [7.1](../../ground-truth/architecture.md#71-rest-api). Also [4.1, GOV-1](../../ground-truth/architecture.md#41-gov-1-approval-limits-and-separation-of-duties) and [2.2, quality requirements](../../ground-truth/architecture.md#22-quality-requirements)
+- Ground truth section [5.1, DS-1](../../ground-truth/architecture.md#51-ds-1-delivery-standard)
 - Depends on [WI-02 Report form and receipt upload](../m1-submit-report/wi-02-report-form.md) and [WI-03 Approval routing engine](wi-03-routing-engine.md). Unblocks [WI-08 Notifications and delegates](../m3-enforce-policy/wi-08-notifications-delegates.md). Related [WI-06 Approval limits and separation of duties](../m3-enforce-policy/wi-06-limits-and-duties.md)
 
 ## Decisions recorded

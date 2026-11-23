@@ -19,6 +19,11 @@ Checks, per work item
   no reference to the id of an external item, no reference to an unknown id
   no broken relative link
   ground truth sections cited in the header exist in the named rendered sources
+  every named rule that the Contract or the Acceptance criteria require (an identifier such as GOV-2.6, outside
+  code blocks) is cited: the section whose heading holds its base (GOV-2), a parent of it or the whole document
+  is in the plan's source_refs or the References section. An identifier that no source heading holds, such as
+  FR-1, is not checked. In the released view the item's approved context must hold an obligation whose heading
+  names it, when a heading in some bundle of the project does (obligation-uncited)
 Per milestone: milestone.md exists with the required parts and lists every item.
 Per project: README.md in the spec folder lists every item.
 
@@ -107,6 +112,7 @@ def _script_hint(name, what):
 
 
 OVERLAY_NOTE = "people overlay not loaded: capacity, dates and names not checked"
+OBLIGATION_NOTE = "named rules not checked against the citations: compile_bundles.py is not next to the checker"
 
 MILESTONE_PARTS = ["Purpose", "Expected outcomes", "Acceptance criteria", "Demonstration expectations", "Work items"]
 
@@ -329,6 +335,22 @@ class Release:
             return True
         return when <= self.now
 
+    def known_obligations(self):
+        """[(source id, section, heading)] of the obligations of every bundle in docs/context/, read once. A bundle
+        that cannot be read adds nothing here; its own work item reports it."""
+        if getattr(self, "_known", None) is None:
+            self._known = []
+            folder = self.root / "docs" / "context"
+            for path in sorted(folder.glob("*.bundle.json")) if folder.is_dir() else []:
+                if L.regular_file_problem(path):
+                    continue
+                try:
+                    found = bundle_obligations(RS.loads_strict(path.read_bytes()))
+                except (RS.SchemaError, OSError):
+                    continue
+                self._known += [o for o in found if o not in self._known]
+        return self._known
+
     def covers(self, rel, data):
         """True when an active receipt lists the project file rel with the digest and length of data."""
         digest, size = RS.sha256_bytes(data), len(data)
@@ -418,14 +440,17 @@ def released_item_findings(plan, root, it, text, release):
         if sid not in known:
             issues.append(f"References cites unknown source {sid} at line {ln}")
     wanted = list(needed) + [(sid, sec) for sid, sec, _ in cites if sid in known and (sid, sec) not in needed]
+    tag = L.tag(plan, it["id"])
     if not wanted:
-        return issues, {}
+        return issues + bundle_obligation_findings(tag, text, [], release.known_obligations(), released=True), {}
     covered, problems = bundle_coverage(plan, root, it, release)
     issues += problems
     if not any(p.startswith(BUNDLE_PROBLEM_LEADS) for p in problems):
         for sid, sec in wanted:
             if (sid, sec) not in covered:
                 issues.append(f"obligation not in the approved context: {sid} {sec}")
+        own = [(sid, sec, heading) for (sid, sec), heading in covered.items()]
+        issues += bundle_obligation_findings(tag, text, own, release.known_obligations(), released=True)
     return issues, covered
 
 
@@ -442,6 +467,164 @@ def reference_findings(plan, text, gt_heads):
         if heads and cited_missing(heads, sec):
             out.append(f"References cites {sid} section {sec} at line {ln}, which is not a heading in the rendered source")
     return out
+
+
+# ---------------------------------------------------------------------------
+# Named rules: a rule the Contract or the Acceptance criteria require must be cited
+# ---------------------------------------------------------------------------
+
+OBLIGATION_IDENT = re.compile(r"(?<![\w-])[A-Z][A-Z0-9]*-\d+(?:\.\d+)*(?![\w-])")
+BINDING_PARTS = (("Contract", "the contract names"), ("Acceptance criteria", "the acceptance criteria name"))
+OBLIGATION_UNCITED = "obligation-uncited"
+_FENCED = re.compile(r"(?ms)^[ \t]{0,3}(`{3,}|~{3,}).*?^[ \t]{0,3}\1[ \t]*$")
+
+
+def ident_base(ident):
+    """The prefix and first number of an identifier: GOV-2 for GOV-2.6, DS-1 for DS-1.4."""
+    return re.match(r"[A-Z][A-Z0-9]*-\d+", ident).group(0)
+
+
+def heading_bases(heading):
+    """The bases of the identifiers a heading holds as whole tokens: {GOV-2} for "GOV-2 Audit and retention"."""
+    return {ident_base(i) for i in OBLIGATION_IDENT.findall(heading or "")}
+
+
+def heading_names(heading, ident):
+    """The compiler's heading match (named_obligations): ident is an identifier of the heading, or a
+    numbered part of one (GOV-2.6 for a heading that holds GOV-2)."""
+    return any(ident == h or ident.startswith(h + ".") for h in OBLIGATION_IDENT.findall(heading or ""))
+
+
+def binding_mentions(text):
+    """[(phrase, identifier)] for each identifier in the Contract and the Acceptance criteria of a specification,
+    in order, with fenced code blocks removed. Mentions in every other section explain and do not bind."""
+    prose = _FENCED.sub(lambda m: "\n" * m.group(0).count("\n"), text.replace("\r\n", "\n"))
+    out = []
+    for name, phrase in BINDING_PARTS:
+        m = re.search(r"(?ms)^## " + re.escape(name) + r"[ \t]*\n(.*?)(?=^## |\Z)", prose)
+        if m:
+            out += [(phrase, ident) for ident in OBLIGATION_IDENT.findall(m.group(1))]
+    return out
+
+
+def section_is_cited(sid, number, cited):
+    """True when (sid, number) is cited, or a parent section of it, or the whole document. The release compiler
+    puts a subsection inside its parent, so a parent citation carries it."""
+    return (sid, WHOLE_DOCUMENT) in cited or any(s == sid and (n == number or number.startswith(n + ".")) for s, n in cited)
+
+
+def uncited_message(tag, phrase, ident, candidates, released=False):
+    """The obligation-uncited finding. candidates are the (source id, section) pairs the identifier resolves to. In the
+    released view the finding says that the approved context lacks the section, which is what the check can see."""
+    where = " or ".join(f"section {n} of {s}" for s, n in candidates)
+    sids = {s for s, _ in candidates}
+    numbers = " or ".join(n if len(sids) == 1 else f"{n} of {s}" for s, n in candidates)
+    if released:
+        return (f"{tag}: {phrase} {ident}, which is in {where}, but the approved context of the item does not hold {numbers}. "
+                "Cite it in the References section or in the plan, and release the item again.")
+    return (f"{tag}: {phrase} {ident}, which is in {where}, but the item does not cite {numbers}. "
+            "Add the citation to the References section or to the plan.")
+
+
+def obligation_findings(tag, text, resolve, covered, released=False):
+    """obligation-uncited findings for one specification. resolve(identifier) gives the (source id, section) pairs
+    it names, empty when its base is in no heading (FR-1 in a table is not a rule heading), and covered(identifier,
+    candidates) says whether the item's citations hold it. One finding per part
+    of the specification and set of candidates, naming the first identifier that needs it."""
+    out, seen = [], set()
+    for phrase, ident in binding_mentions(text):
+        candidates = resolve(ident)
+        key = (phrase, tuple(candidates))
+        if not candidates or key in seen or covered(ident, candidates):
+            continue
+        seen.add(key)
+        out.append(uncited_message(tag, phrase, ident, candidates, released))
+    return out
+
+
+def _compiler():
+    """compile_bundles, or None where the checker runs alone (the copy in tools/carrydown/ of a project)."""
+    try:
+        import compile_bundles as CB
+    except ImportError:
+        return None
+    return CB
+
+
+def rendered_sections(plan, root, workspace=None):
+    """{source id: {number: Section}} of every ground truth source whose rendering the checker can read, with the
+    whole document under "whole document". None when compile_bundles is not next to the checker."""
+    CB = _compiler()
+    if CB is None:
+        return None
+    out = {}
+    for source in L.ground_truth_sources(plan):
+        p = rendering_file(source, root, workspace)
+        if p is None or not L.exists(p):
+            continue
+        try:
+            text = L.read_text(p)
+        except L.TextError:
+            continue
+        found = CB.parse_rendering(text)
+        found[CB.WHOLE] = CB.whole_document(text, str(source.get("name") or source["id"]))
+        out[source["id"]] = found
+    return out
+
+
+def workspace_obligation_findings(plan, it, text, sections):
+    """Workspace and legacy views: an identifier resolves to every section, of every source, whose heading holds
+    its base. The item's citations are what the release compiler reads: its source_refs, its References lines and
+    its links into a rendering."""
+    CB = _compiler()
+    if CB is None or sections is None:
+        return []
+    order = [s["id"] for s in L.ground_truth_sources(plan) if s.get("id") in sections]
+    sources = {s["id"]: s for s in L.ground_truth_sources(plan) if s.get("id")}
+    cited = CB.item_obligation_keys(plan, it, CB.spec_cited_keys(text, sources, sections.get))
+
+    def resolve(ident):
+        base = ident_base(ident)
+        return [(sid, n) for sid in order for n, sec in sections[sid].items() if n != CB.WHOLE and base in heading_bases(sec.heading)]
+
+    def covered(_, candidates):
+        return any(section_is_cited(sid, n, cited) for sid, n in candidates)   # one cited candidate suffices
+
+    return obligation_findings(L.tag(plan, it["id"]), text, resolve, covered)
+
+
+def bundle_obligation_findings(tag, text, own, known, released=False):
+    """The released rule, where there is no rendering: own are the (source id, section, heading) obligations of the
+    item's approved context, known those of every bundle of the project. An identifier whose base is in no known
+    heading produces nothing. Otherwise it must match, by the compiler's heading match, an obligation of the item's
+    own bundle, or its own bundle must hold a candidate section, a parent of it or the whole document. released words
+    the finding for the released view."""
+    bases = set()
+    for _, _, heading in known:
+        bases |= heading_bases(heading)
+
+    def resolve(ident):
+        if ident_base(ident) not in bases:
+            return []
+        named = [(s, n) for s, n, h in known if heading_names(h, ident)]
+        named = named or [(s, n) for s, n, h in known if ident_base(ident) in heading_bases(h)]
+        return list(dict.fromkeys(named))
+
+    cited = [(s, n) for s, n, _ in own]
+
+    def covered(ident, candidates):
+        return any(heading_names(h, ident) for _, _, h in own) or any(section_is_cited(s, n, cited) for s, n in candidates)
+
+    return obligation_findings(tag, text, resolve, covered, released)
+
+
+def bundle_obligations(data):
+    """[(source id, section, heading)] of a parsed bundle sidecar, or [] when it is not one."""
+    obligations = data.get("obligations") if isinstance(data, dict) else None
+    if not isinstance(obligations, list):
+        return []
+    return [(o["source"], o["section"], o["heading"]) for o in obligations
+            if isinstance(o, dict) and all(isinstance(o.get(k), str) for k in ("source", "section", "heading"))]
 
 
 def link_is_satisfied(plan, root, target, anchor, covered, gt_heads, view):
@@ -523,10 +706,11 @@ def tracked_source_findings(workspace_plan, root):
     return findings
 
 
-def check_item(plan, root, it, banned, gt_heads, release=None):
+def check_item(plan, root, it, banned, gt_heads, release=None, sections=None):
     """Findings for one work item, as (issues, relative path). A finding names the row, the line or the
     id and never quotes the file, so a log of the check holds no text of the specification. release is
-    the Release of the project, needed in the released view."""
+    the Release of the project, needed in the released view. sections are the rendered sections of the
+    workspace and legacy views (rendered_sections), read here when they are not given."""
     issues = []
     path = L.spec_path(plan, root, it)
     tg = L.tag(plan, it["id"])
@@ -634,6 +818,9 @@ def check_item(plan, root, it, banned, gt_heads, release=None):
         issues += extra
     else:
         issues += reference_findings(plan, text, gt_heads)
+        if sections is None:
+            sections = rendered_sections(plan, root, L.workspace_root(root)[0])
+        issues += workspace_obligation_findings(plan, it, text, sections)
     prose = strip_code(text)
     for m in re.finditer(r"\[([^\]]*)\]\(((?!https?://|mailto:|#)[^)\s]+)(?:\s+\"[^\"]*\")?\)", prose):
         target, _, anchor = m.group(2).partition("#")
@@ -1140,9 +1327,12 @@ def run_checks(plan, root, a):
         tracked = [t for t in tracked if not t.startswith(NOT_PERFORMED)]
         if tracked:
             results["restricted sources"] = tracked
+    sections = None if view == "released" else rendered_sections(plan, root, workspace)
+    if view != "released" and sections is None and plan["items"]:
+        notes.append(OBLIGATION_NOTE)
     items = [it for it in plan["items"] if not a.item or it["id"] in a.item]
     for it in items:
-        issues, rel = check_item(plan, root, it, banned, gt_heads, release)
+        issues, rel = check_item(plan, root, it, banned, gt_heads, release, sections or {})
         issues, todo = collapse_unfinished(issues)
         unfinished += todo
         if issues:
