@@ -21,7 +21,7 @@ npm run build
 
 The build runs these steps in order:
 
-1. `scripts/build-docs.mjs` generates the docs pages from `README.md`, `docs/*.md` and `sample/expense-approvals/README.md`.
+1. `scripts/build-docs.mjs` generates the docs pages from the pages listed in its `PUBLIC_PAGES`: `README.md`, the approved `docs/*.md` files and `sample/expense-approvals/README.md`. An unlisted file in `docs/` is not published.
 2. `astro build` writes the site to `dist/`.
 3. `scripts/build-og-image.mjs` renders the 1200 by 630 social image to `dist/og-image.png`.
 4. `scripts/build-llms.mjs` writes `dist/llms.txt` and `dist/llms-full.txt` from the built pages. See "The llms.txt files" below.
@@ -40,6 +40,7 @@ npm test
 This runs, in order:
 
 - `scripts/check-docs-sync.mjs` regenerates the docs into a temporary folder and fails with a diff if the generated pages differ from the repository's Markdown.
+- `tests/docs-publication.mjs` runs the generator on a small temporary repository and proves that only listed pages are published: an unlisted file in `docs/` appears in no generated file or locale, and a listed page missing on disk stops the build. It needs no built site.
 - `tests/routes.mjs` starts `astro preview` and expects 200 for every page, in every locale, and for every internal link and asset.
 - `tests/llms.mjs` checks `llms.txt` and `llms-full.txt`: the format, that every English page is listed once and no redirect is, the reading order, the "What to tell your agent, and when" phrases against the README, that a second run writes the same bytes, and that every listed address answers 200.
 - `tests/reflow.mjs` takes screenshots of a bounded set of pages (the four site pages at six widths, plus Japanese, docs and fallback samples) in both themes into `tests/screenshots/` and fails on horizontal overflow, text under 12 px and tap targets under 44 px.
@@ -68,7 +69,7 @@ All settings are in `site.config.mjs`.
 
 ## How the docs are generated
 
-`scripts/build-docs.mjs` reads `README.md`, every `docs/*.md` and `sample/expense-approvals/README.md` from the repository root. It writes them into Starlight's content collection with front matter, rewrites links between those files to site routes and links to other repository files to their GitHub addresses, copies the images they use, and builds the sidebar from the page titles. A page's title is its first heading, except the README's: on GitHub that heading is the product name, so on the site the page is titled "Documentation", from the page list in the script. The generated files are not committed. Every generated page starts with a line saying which repository file it came from.
+`scripts/build-docs.mjs` reads the pages listed in `PUBLIC_PAGES` in the script from the repository root: `README.md`, the approved `docs/*.md` files and `sample/expense-approvals/README.md`. An unlisted file in `docs/` is not published, and a listed page missing on disk stops the build. It writes them into Starlight's content collection with front matter, rewrites links between those files to site routes and links to other repository files to their GitHub addresses, copies the images they use, and builds the sidebar from the page titles. A page's title is its first heading, except the README's: on GitHub that heading is the product name, so on the site the page is titled "Documentation", from the page list in the script. The generated files are not committed. Every generated page starts with a line saying which repository file it came from.
 
 To translate a docs page, put a translated copy under `docs/i18n/<locale>/` with the same file name. It is served at `/<locale>/docs/<file>/`. Until then the site shows the English page with a note.
 
