@@ -135,6 +135,7 @@ The counterpart item on the Experience track is WI-11 Release readiness and runb
 - architecture section 3.6, Deployment
 - architecture section 4.2, GOV-2 Audit and retention
 - architecture section 7.3, Ledger export file
+- architecture section 3.3, Data model
 - architecture section 3.4, Report lifecycle
 - architecture section 5.1, DS-1 Delivery standard
 - architecture section 6.1, What people asked for

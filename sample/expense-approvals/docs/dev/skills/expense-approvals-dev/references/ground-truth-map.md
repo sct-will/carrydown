@@ -16,8 +16,8 @@ The source sections inside the approved contexts of this project, by source id a
 | 2.2 | Quality requirements | WI-02, WI-04, WI-11 |
 | 3.1 | Overview | WI-01 |
 | 3.2 | Components | WI-01 |
-| 3.3 | Data model | WI-01, WI-02, WI-07 |
-| 3.4 | Report lifecycle | WI-03, WI-04, WI-07, WI-08, WI-09 |
+| 3.3 | Data model | WI-01, WI-02, WI-07, WI-08, WI-09 |
+| 3.4 | Report lifecycle | WI-01, WI-02, WI-03, WI-04, WI-07, WI-08, WI-09 |
 | 3.5 | Routing | WI-03, WI-06, WI-08, WI-11 |
 | 3.6 | Deployment | WI-01, WI-09, WI-11 |
 | 4.1 | GOV-1 Approval limits and separation of duties | WI-04, WI-06, WI-08 |
@@ -25,7 +25,7 @@ The source sections inside the approved contexts of this project, by source id a
 | 5.1 | DS-1 Delivery standard | WI-01, WI-02, WI-04, WI-07, WI-08, WI-09, WI-11 |
 | 6.1 | What people asked for | WI-02, WI-04, WI-08, WI-09 |
 | 6.2 | Edge cases the interviews surfaced | WI-02, WI-03, WI-08 |
-| 7.1 | REST API | WI-01, WI-02, WI-03, WI-04, WI-06, WI-07 |
+| 7.1 | REST API | WI-01, WI-02, WI-03, WI-04, WI-06, WI-07, WI-08 |
 | 7.2 | Notification event | WI-08 |
 | 7.3 | Ledger export file | WI-09, WI-11 |
 | 8.1 | Risks | WI-09, WI-11 |
@@ -34,12 +34,12 @@ The source sections inside the approved contexts of this project, by source id a
 
 | Id | Work item | Approved context | Sections |
 | --- | --- | --- | --- |
-| WI-01 | Service scaffold, flag and API contract | `docs/context/wi-01.md` | architecture 3.1, 3.2, 3.3, 3.6, 4.2, 5.1, 7.1 |
-| WI-02 | Report form and receipt upload | `docs/context/wi-02.md` | architecture 2.1, 2.2, 3.3, 4.2, 5.1, 6.1, 6.2, 7.1 |
+| WI-01 | Service scaffold, flag and API contract | `docs/context/wi-01.md` | architecture 3.1, 3.2, 3.3, 3.4, 3.6, 4.2, 5.1, 7.1 |
+| WI-02 | Report form and receipt upload | `docs/context/wi-02.md` | architecture 2.1, 2.2, 3.3, 3.4, 4.2, 5.1, 6.1, 6.2, 7.1 |
 | WI-03 | Approval routing engine | `docs/context/wi-03.md` | architecture 3.4, 3.5, 6.2, 7.1 |
 | WI-04 | Approver inbox and decisions | `docs/context/wi-04.md` | architecture 2.1, 2.2, 3.4, 4.1, 5.1, 6.1, 7.1 |
 | WI-06 | Approval limits and separation of duties | `docs/context/wi-06.md` | architecture 3.5, 4.1, 4.2, 7.1 |
 | WI-07 | Audit log and retention | `docs/context/wi-07.md` | architecture 3.3, 3.4, 4.2, 5.1, 7.1 |
-| WI-08 | Notifications and delegates | `docs/context/wi-08.md` | architecture 2.1, 3.4, 3.5, 4.1, 4.2, 5.1, 6.1, 6.2, 7.2 |
-| WI-09 | Ledger export job | `docs/context/wi-09.md` | architecture 3.4, 3.6, 4.2, 5.1, 6.1, 7.3, 8.1 |
+| WI-08 | Notifications and delegates | `docs/context/wi-08.md` | architecture 2.1, 3.3, 3.4, 3.5, 4.1, 4.2, 5.1, 6.1, 6.2, 7.1, 7.2 |
+| WI-09 | Ledger export job | `docs/context/wi-09.md` | architecture 3.3, 3.4, 3.6, 4.2, 5.1, 6.1, 7.3, 8.1 |
 | WI-11 | Release readiness and runbook | `docs/context/wi-11.md` | architecture 2.2, 3.5, 3.6, 4.2, 5.1, 7.3, 8.1 |
