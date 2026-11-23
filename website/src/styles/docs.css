@@ -222,3 +222,12 @@ starlight-toc a {
     animation: tick 0.35s var(--ease-out) forwards;
   }
 }
+
+/* The copy notice on a code block fades and slides in. Expressive Code has no reduced-motion rule, so
+ * this one turns its transitions off. It is outside any layer, so it wins over Starlight's layer. */
+@media (prefers-reduced-motion: reduce) {
+  .expressive-code .copy .feedback,
+  .expressive-code .copy button {
+    transition: none;
+  }
+}

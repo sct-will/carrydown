@@ -161,7 +161,7 @@ export const fr: Strings = {
         id: 'what-is-carried-context-development',
         group: 'method',
         q: 'Qu’est-ce que carried-context development ?',
-        a: 'Carried-context development est une approche du développement agentique qui fait descendre les décisions et le contexte du projet jusqu’à l’agent de codage de chaque ingénieur, pour que le projet reste aligné et que rien ne dérive. Carried-context development fait descendre la vérité de référence convenue par une équipe jusque dans le plan, chaque spécification, chaque ticket et les instructions de chaque agent de codage, avec citation par section, et la fait descendre à nouveau quand elle change.',
+        a: 'Carried-context development est une approche du développement agentique qui fait descendre les décisions et le contexte du projet jusqu’à l’agent de codage de chaque ingénieur et aide à garder les spécifications et les agents de codage alignés à mesure que le projet évolue. Carried-context development fait descendre la vérité de référence convenue par une équipe jusque dans le plan, chaque spécification, chaque ticket et les instructions de chaque agent de codage, avec citation par section, et la fait descendre à nouveau quand elle change.',
         more: { label: 'Lire la définition et les règles sur la page de définition.', href: '/definition/' },
       },
       {
@@ -201,7 +201,7 @@ export const fr: Strings = {
         id: 'reconciled',
         group: 'carrydown',
         q: 'Comment carrydown garde-t-il le tableau de projet, les tickets, les spécifications et le skill des ingénieurs alignés sur la vérité de référence ?',
-        a: 'Vous dites à votre agent ce qui a changé. Dites « This changed: … » et décrivez le changement ou remettez les documents révisés. L’agent compare le changement avec les sources que vous avez relues en dernier et avec le travail en cours, trouve les spécifications et les tickets que le changement touche, garde les corrections des ingénieurs qui tiennent encore, et vous montre une seule revue des mises à jour proposées et des conflits éventuels. Rien ne bouge avant votre approbation. La mise à jour approuvée passe ensuite par la même publication que le plan : elle met à jour le tableau et les tickets que vous choisissez, n’en supprime aucun et régénère le skill des ingénieurs, si bien que chaque agent de codage lit la nouvelle spécification la prochaine fois qu’un ingénieur nomme un élément de travail.',
+        a: 'Vous dites à votre agent ce qui a changé. Dites « This changed: … » et décrivez le changement ou remettez les documents révisés. L’agent compare le changement avec les sources que vous avez relues en dernier et avec le travail en cours, trouve les spécifications et les tickets que le changement touche, garde les corrections des ingénieurs qui tiennent encore, et vous montre une seule revue des mises à jour proposées et des conflits éventuels. Rien ne bouge avant votre approbation. La mise à jour approuvée passe ensuite par la même publication que le plan : elle met à jour le tableau et les tickets que vous choisissez, n’en supprime aucun et régénère le skill des ingénieurs. Une fois qu’un ingénieur a mis à jour ses fichiers de projet, la vérification suivante de cet élément de travail signale tout changement des entrées approuvées et demande à l’agent de codage de réévaluer son plan. Une conversation de codage en cours ne se met pas à jour automatiquement.',
         more: { label: 'Suivre les étapes du guide du responsable du plan.', href: '/docs/plan-owner-guide/#when-the-project-changes' },
       },
       {
@@ -240,7 +240,7 @@ export const fr: Strings = {
         id: 'watch',
         group: 'carrydown',
         q: 'carrydown surveille-t-il mes documents ?',
-        a: 'Non. carrydown n’a aucun observateur de fichiers et ne lit jamais votre système documentaire de lui-même. Une mise à jour commence quand vous dites ce qui a changé et fournissez le matériel révisé, et elle se termine quand vous approuvez la revue. La revue de jalon du guide du responsable du plan demande aussi si une source, une exigence ou une contrainte a changé depuis le dernier plan, si bien qu’un changement est repéré là au plus tard.',
+        a: 'Non. carrydown n’a aucun observateur de fichiers et ne lit jamais votre système documentaire de lui-même. Une mise à jour commence quand vous dites ce qui a changé et fournissez le matériel révisé, et elle se termine quand vous approuvez la revue. Les revues de jalon invitent aussi le responsable du plan à signaler les changements de sources, d’exigences ou de contraintes.',
       },
       {
         id: 'agents',
@@ -301,25 +301,25 @@ export const fr: Strings = {
       'Les couleurs du texte et de l’interface sont vérifiées pour le contraste dans les thèmes clair et sombre, et vous pouvez choisir l’un ou l’autre ou suivre votre système.',
       'Chaque page fonctionne au clavier seul, avec un indicateur de focus visible et un lien d’évitement vers le contenu principal.',
       'Le schéma est dessiné avec du texte et des formes vectorielles. Il s’adapte à la taille, respecte votre thème et porte une description écrite pour les lecteurs d’écran.',
-      'Rien sur le site ne bouge de lui-même. Toute animation future respectera le réglage de réduction des animations et proposera une image fixe.',
+      'Les animations, les transitions entre pages et le fondu au changement de thème se désactivent quand votre système est réglé pour réduire les mouvements. De brefs changements de couleur et de soulignement sur les liens et les boutons subsistent, ainsi que la rotation d’une flèche de la barre latérale de la documentation.',
       'Les titres, les repères et les textes de liens sont écrits pour être lus dans l’ordre et hors contexte.',
       'Le site est vérifié avec des outils automatiques avant chaque version et relu à la main avec un lecteur d’écran.',
     ],
     notFinishedHeading: 'Ce qui n’est pas terminé',
     notFinished:
-      'Les traductions du site sont relues par des locuteurs natifs et sont mises en ligne une langue à la fois. La section de documentation est générée à partir du dépôt et peut avoir du retard sur le reste du site sur ces points, jusqu’à la vérification de chaque version.',
+      'Les traductions du site sont relues par des locuteurs natifs et sont mises en ligne une langue à la fois. Les pages de documentation ne sont pas encore traduites. Chaque langue affiche la page anglaise avec une note. Elles sont générées à partir du Markdown du dépôt, si bien que leurs schémas et captures d’écran sont des images matricielles accompagnées d’une description écrite, qui ne suivent pas le thème sombre.',
     contactHeading: 'Signalez-nous un problème',
     contactBefore:
       'Si quelque chose sur ce site est difficile à utiliser avec une technologie d’assistance, ou si vous avez besoin du contenu sous une autre forme, écrivez à ',
     contactAfter: '. Indiquez la page et ce qui s’est passé. Vous devriez recevoir une réponse sous dix jours ouvrés.',
     review:
-      'Cette déclaration décrit l’intention du site et son état actuel. Elle est revue quand le site change. Dernière revue le 16 novembre 2026.',
+      'Cette déclaration décrit l’intention du site et son état actuel. Elle est revue quand le site change. Dernière revue le 22 novembre 2026.',
   },
 
   home: {
     title: 'Carried context, une vérité de référence pour chaque agent de codage',
     description:
-      'Carried-context development est une approche du développement agentique qui fait descendre les décisions et le contexte du projet jusqu’à l’agent de codage de chaque ingénieur, pour que le projet reste aligné et que rien ne dérive.',
+      'Carried-context development est une approche du développement agentique qui fait descendre les décisions et le contexte du projet jusqu’à l’agent de codage de chaque ingénieur et aide à garder les spécifications et les agents de codage alignés à mesure que le projet évolue.',
     h1: [
       'Carried-context development va plus loin que le développement piloté par les spécifications.',
       'Le contexte voyage avec le travail.',

@@ -21,7 +21,7 @@ npm run build
 
 The build runs these steps in order:
 
-1. `scripts/build-docs.mjs` generates the docs pages from `README.md`, `docs/*.md` and `sample/expense-approvals/README.md`.
+1. `scripts/build-docs.mjs` generates the docs pages from the pages listed in its `PUBLIC_PAGES`: `README.md`, the approved `docs/*.md` files and `sample/expense-approvals/README.md`. An unlisted file in `docs/` is not published.
 2. `astro build` writes the site to `dist/`.
 3. `scripts/build-og-image.mjs` renders the 1200 by 630 social image to `dist/og-image.png`.
 4. `scripts/build-llms.mjs` writes `dist/llms.txt` and `dist/llms-full.txt` from the built pages. See "The llms.txt files" below.
@@ -40,6 +40,7 @@ npm test
 This runs, in order:
 
 - `scripts/check-docs-sync.mjs` regenerates the docs into a temporary folder and fails with a diff if the generated pages differ from the repository's Markdown.
+- `tests/docs-publication.mjs` runs the generator on a small temporary repository and proves that only listed pages are published: an unlisted file in `docs/` appears in no generated file or locale, and a listed page missing on disk stops the build. It needs no built site.
 - `tests/routes.mjs` starts `astro preview` and expects 200 for every page, in every locale, and for every internal link and asset.
 - `tests/llms.mjs` checks `llms.txt` and `llms-full.txt`: the format, that every English page is listed once and no redirect is, the reading order, the "What to tell your agent, and when" phrases against the README, that a second run writes the same bytes, and that every listed address answers 200.
 - `tests/reflow.mjs` takes screenshots of a bounded set of pages (the four site pages at six widths, plus Japanese, docs and fallback samples) in both themes into `tests/screenshots/` and fails on horizontal overflow, text under 12 px and tap targets under 44 px.
@@ -62,13 +63,13 @@ All settings are in `site.config.mjs`.
 
 | Setting | What it does |
 | --- | --- |
-| `customDomain` | Empty until the domain is connected. Empty means the site is built for `https://sct-will.github.io/carrydown/`. Set it to `"carriedcontext.dev"` to build for the root of that domain and write a `CNAME` file. See `docs-setup.md` for the DNS and Pages steps. |
+| `customDomain` | Set to `"carriedcontext.dev"`. The site is built for the root of that domain, and the build writes a `CNAME` file. Empty would build for `https://sct-will.github.io/carrydown/`. See `docs-setup.md` for the DNS and Pages configuration and how to check it. |
 | `goatcounterCode` | Empty means no analytics. Set it to your GoatCounter site code, for example `"carried-context"`, and every page loads the GoatCounter script with `data-goatcounter` set to `https://<code>.goatcounter.com/count`. GoatCounter is cookie free. Nothing else is tracked. |
 | `INDEXING_ENABLED` | False until launch. While false, every page has `<meta name="robots" content="noindex, nofollow">` and `robots.txt` says `Disallow: /`. See `TODO.md`. |
 
 ## How the docs are generated
 
-`scripts/build-docs.mjs` reads `README.md`, every `docs/*.md` and `sample/expense-approvals/README.md` from the repository root. It writes them into Starlight's content collection with front matter, rewrites links between those files to site routes and links to other repository files to their GitHub addresses, copies the images they use, and builds the sidebar from the page titles. A page's title is its first heading, except the README's: on GitHub that heading is the product name, so on the site the page is titled "Documentation", from the page list in the script. The generated files are not committed. Every generated page starts with a line saying which repository file it came from.
+`scripts/build-docs.mjs` reads the pages listed in `PUBLIC_PAGES` in the script from the repository root: `README.md`, the approved `docs/*.md` files and `sample/expense-approvals/README.md`. An unlisted file in `docs/` is not published, and a listed page missing on disk stops the build. It writes them into Starlight's content collection with front matter, rewrites links between those files to site routes and links to other repository files to their GitHub addresses, copies the images they use, and builds the sidebar from the page titles. A page's title is its first heading, except the README's: on GitHub that heading is the product name, so on the site the page is titled "Documentation", from the page list in the script. The generated files are not committed. Every generated page starts with a line saying which repository file it came from.
 
 To translate a docs page, put a translated copy under `docs/i18n/<locale>/` with the same file name. It is served at `/<locale>/docs/<file>/`. Until then the site shows the English page with a note.
 
@@ -89,7 +90,7 @@ Every docs page has a Copy page control beside its title, from `src/components/C
 - `llms.txt`: the definition, what the site and carrydown are, the plan owner and engineer phrases from the README's "What to tell your agent, and when" section, then the pages. A docs page links to its Markdown file. A site page has no Markdown file, so it links to its HTML page. Redirect pages are left out.
 - `llms-full.txt`: the whole Markdown of the documentation and the site pages, in the same order, each headed by its title and its address. A docs page is its Markdown file as served. A site page is the main content of the built page, converted to Markdown.
 
-The reading order is a short list of paths at the top of the script. A new docs page that is not on it is added at the end of the Documentation section. Worked examples, the recorded run, the maintainer notes and the accessibility statement are listed under Optional, the section a reader may skip, and are left out of `llms-full.txt`.
+The reading order is a short list of paths at the top of the script. A new docs page that is not on it is added at the end of the Documentation section. A worked example and the accessibility statement are listed under Optional, the section a reader may skip, and are left out of `llms-full.txt`.
 
 ## Search engines and sharing metadata
 

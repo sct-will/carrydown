@@ -1,4 +1,4 @@
-# Builds, tests and deploys the carried-context.dev website to GitHub Pages.
+# Builds, tests and deploys the carriedcontext.dev website to GitHub Pages.
 #
 # The only credential is the built-in GITHUB_TOKEN. No secret is read.
 name: Website

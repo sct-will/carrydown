@@ -1,10 +1,12 @@
 # A recorded run of the sample
 
+This page is a historical technical record, kept as evidence. It records a run of the scripts against a throwaway private repository that was used only for this test. Its GitHub blocks, in sections 2, 6, 7 and 8, were recorded before releases existed, so they show the earlier publication flow. A project now publishes from an approved release, and its dry runs begin with a destination preflight. Sections 0 and 10 were run later, and the blocks that need no GitHub account were run again, with the current scripts. The list below says how. For the current steps, read [the setup guide](setup.md) and [the plan owner guide](plan-owner-guide.md).
+
 The first stage you can run alone, with no agent and no token, is [section 3, render the ground truth](#3-render-the-ground-truth).
 
-The run was made against a private throwaway repository that was used only for this test. Names and project links below are placeholders.
+Names and project links below are placeholders.
 
-This page records a real run of the carrydown skills on the sample project `sample/expense-approvals/`, against a throwaway private repository, from the renderer to the project board. It shows what each script prints so you know what to expect before you run it on your own material.
+This page records a real run of the carrydown skills on the sample project `sample/expense-approvals/`, from the renderer to the project board. It shows what each script prints so you know what to expect before you run it on your own material.
 
 How it was made.
 
@@ -13,7 +15,6 @@ How it was made.
 - The scripts have since gained a Constraints block in the Epic comment (the target delivery and the allocation by track) and a target delivery line in every sub-epic. The write blocks below predate it. The dry runs print the block before anything is written. The project is fictional. The numbers are the real issue numbers the run created: Epic #1, sub-epics #2 to #6, work items #7 to #15.
 - The sample dates have since moved so that every item has slack before its checkpoint, and the plan gained its rationale. The write blocks below show the earlier dates. The blocks that need no GitHub account show the current ones.
 - The blocks that need no GitHub account were run again with the current scripts: the help text, the token walkthrough, the renderer, the scaffold, the checker, the dry runs (with `--offline`, so they read nothing from GitHub) and the engineers' skill. The blocks that talk to GitHub are as recorded in the original run: the token check, the writes, the second runs, the verifications and the independent count.
-- Section 0 below is new and was run with the current scripts. The GitHub blocks in sections 2, 6 and 7 were recorded before releases existed, so they show the legacy project flow. A project with a release policy publishes from the approved release instead: the dry runs begin with the destination preflight, which prints one visibility line for each target, and then list the payloads and the request id. Those blocks have not been recorded again, because that needs a real repository and a token.
 - Section 10 is new and was run with the current scripts in a throwaway copy of the sample. It records an update after planning: a changed source, the review of its effects, an engineer's correction and a drafted request that is labeled not sent. It makes no GitHub call.
 - The scripts took about three and a half minutes in total, most of it pauses that keep GitHub from rate limiting the writes. Reading the dry runs takes longer than running the scripts.
 

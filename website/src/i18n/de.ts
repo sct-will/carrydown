@@ -161,7 +161,7 @@ export const de: Strings = {
         id: 'what-is-carried-context-development',
         group: 'method',
         q: 'Was ist carried-context development?',
-        a: 'Carried-context development ist ein Ansatz für agentische Entwicklung, der Projektentscheidungen und Kontext bis zum Coding-Agenten jedes Entwicklers trägt, damit das Projekt ausgerichtet bleibt und nichts auseinanderdriftet. Carried-context development trägt die vereinbarte Faktengrundlage eines Teams hinunter in den Plan, in jede Spezifikation, jedes Issue und die Anweisungen jedes Coding-Agenten, mit Abschnittsangabe, und trägt sie erneut hinunter, wenn sich die Faktengrundlage ändert.',
+        a: 'Carried-context development ist ein Ansatz für agentische Entwicklung, der Projektentscheidungen und Kontext bis zum Coding-Agenten jedes Entwicklers trägt und so hilft, Spezifikationen und Coding-Agenten aufeinander abgestimmt zu halten, während sich das Projekt ändert. Carried-context development trägt die vereinbarte Faktengrundlage eines Teams hinunter in den Plan, in jede Spezifikation, jedes Issue und die Anweisungen jedes Coding-Agenten, mit Abschnittsangabe, und trägt sie erneut hinunter, wenn sich die Faktengrundlage ändert.',
         more: { label: 'Die Definition und die Regeln auf der Definitionsseite lesen.', href: '/definition/' },
       },
       {
@@ -201,7 +201,7 @@ export const de: Strings = {
         id: 'reconciled',
         group: 'carrydown',
         q: 'Wie hält carrydown Projektboard, Issues, Spezifikationen und den Skill der Entwickler mit der Faktengrundlage abgeglichen?',
-        a: 'Sie sagen Ihrem Agenten, was sich geändert hat. Sagen Sie „This changed: …“ und beschreiben Sie die Änderung oder übergeben Sie die überarbeiteten Dokumente. Der Agent vergleicht die Änderung mit den Quellen, die Sie zuletzt geprüft haben, und mit der laufenden Arbeit, findet die betroffenen Spezifikationen und Issues, behält die Korrekturen der Entwickler, die noch passen, und zeigt Ihnen eine einzige Durchsicht der vorgeschlagenen Aktualisierungen und aller Konflikte. Nichts bewegt sich, bevor Sie freigeben. Die freigegebene Aktualisierung durchläuft dann dieselbe Veröffentlichung wie der Plan: Sie aktualisiert das Board und die Issues, die Sie auswählen, löscht keines davon und generiert den Skill der Entwickler neu, sodass jeder Coding-Agent die neue Spezifikation liest, wenn ein Entwickler das nächste Mal ein Arbeitspaket nennt.',
+        a: 'Sie sagen Ihrem Agenten, was sich geändert hat. Sagen Sie „This changed: …“ und beschreiben Sie die Änderung oder übergeben Sie die überarbeiteten Dokumente. Der Agent vergleicht die Änderung mit den Quellen, die Sie zuletzt geprüft haben, und mit der laufenden Arbeit, findet die betroffenen Spezifikationen und Issues, behält die Korrekturen der Entwickler, die noch passen, und zeigt Ihnen eine einzige Durchsicht der vorgeschlagenen Aktualisierungen und aller Konflikte. Nichts bewegt sich, bevor Sie freigeben. Die freigegebene Aktualisierung durchläuft dann dieselbe Veröffentlichung wie der Plan: Sie aktualisiert das Board und die Issues, die Sie auswählen, löscht keines davon und generiert den Skill der Entwickler neu. Sobald ein Entwickler seine Projektdateien aktualisiert hat, meldet die nächste Prüfung dieses Arbeitspakets jede Änderung an den freigegebenen Eingaben und weist den Coding-Agenten an, seinen Plan neu zu bewerten. Eine laufende Coding-Unterhaltung wird nicht automatisch aktualisiert.',
         more: { label: 'Den Schritten im Leitfaden für Plan-Verantwortliche folgen.', href: '/docs/plan-owner-guide/#when-the-project-changes' },
       },
       {
@@ -240,7 +240,7 @@ export const de: Strings = {
         id: 'watch',
         group: 'carrydown',
         q: 'Beobachtet carrydown meine Dokumente?',
-        a: 'Nein. carrydown hat keine Dateiüberwachung und liest Ihr Dokumentensystem nie von sich aus. Eine Aktualisierung beginnt, wenn Sie sagen, was sich geändert hat, und das überarbeitete Material bereitstellen, und sie endet, wenn Sie die Durchsicht freigeben. Die Meilensteinprüfung im Leitfaden für Plan-Verantwortliche fragt außerdem, ob sich seit dem letzten Plan eine Quelle, eine Anforderung oder eine Randbedingung geändert hat, sodass eine Änderung spätestens dort auffällt.',
+        a: 'Nein. carrydown hat keine Dateiüberwachung und liest Ihr Dokumentensystem nie von sich aus. Eine Aktualisierung beginnt, wenn Sie sagen, was sich geändert hat, und das überarbeitete Material bereitstellen, und sie endet, wenn Sie die Durchsicht freigeben. Die Meilensteinprüfungen fordern die Plan-Verantwortlichen außerdem auf, Änderungen an Quellen, Anforderungen oder Randbedingungen zu melden.',
       },
       {
         id: 'agents',
@@ -301,25 +301,25 @@ export const de: Strings = {
       'Text- und Oberflächenfarben werden im hellen und im dunklen Thema auf Kontrast geprüft, und Sie können ein Thema wählen oder Ihrem System folgen.',
       'Jede Seite funktioniert allein mit der Tastatur, mit sichtbarem Fokusindikator und einem Link zum Überspringen zum Hauptinhalt.',
       'Das Diagramm ist aus Text und Vektorformen gezeichnet. Es skaliert, folgt Ihrem Thema und trägt eine schriftliche Beschreibung für Screenreader.',
-      'Nichts auf der Website bewegt sich von selbst. Jede künftige Animation beachtet die Einstellung für reduzierte Bewegung und bietet ein Standbild an.',
+      'Animationen, Seitenübergänge und die Überblendung beim Themenwechsel schalten sich ab, wenn Ihr System auf reduzierte Bewegung eingestellt ist. Kurze Farb- und Unterstreichungswechsel an Links und Schaltflächen bleiben, ebenso die Drehung eines Pfeils in der Seitenleiste der Dokumentation.',
       'Überschriften, Landmarken und Linktexte sind so geschrieben, dass man sie der Reihe nach und aus dem Zusammenhang gelöst lesen kann.',
       'Die Website wird vor jeder Veröffentlichung mit automatisierten Werkzeugen geprüft und von Hand mit einem Screenreader begutachtet.',
     ],
     notFinishedHeading: 'Was noch nicht fertig ist',
     notFinished:
-      'Die Übersetzungen der Website werden von Muttersprachlern geprüft und gehen Sprache für Sprache online. Der Dokumentationsbereich wird aus dem Repository erzeugt und kann in diesen Punkten hinter dem Rest der Website zurückliegen, bis jede Version geprüft ist.',
+      'Die Übersetzungen der Website werden von Muttersprachlern geprüft und gehen Sprache für Sprache online. Die Dokumentationsseiten sind noch nicht übersetzt. Jede Sprache zeigt die englische Seite mit einem Hinweis. Diese Seiten werden aus dem Markdown des Repositorys erzeugt, daher sind ihre Diagramme und Screenshots Rasterbilder mit schriftlicher Beschreibung und folgen nicht dem dunklen Thema.',
     contactHeading: 'Melden Sie uns ein Problem',
     contactBefore:
       'Wenn etwas auf dieser Website mit assistiven Technologien schwer zu bedienen ist oder Sie die Inhalte in einer anderen Form brauchen, schreiben Sie an ',
     contactAfter: '. Nennen Sie die Seite und was passiert ist. Sie sollten innerhalb von zehn Arbeitstagen eine Antwort erhalten.',
     review:
-      'Diese Erklärung beschreibt die Absicht der Website und ihren aktuellen Stand. Sie wird überprüft, wenn sich die Website ändert. Zuletzt geprüft am 16. November 2026.',
+      'Diese Erklärung beschreibt die Absicht der Website und ihren aktuellen Stand. Sie wird überprüft, wenn sich die Website ändert. Zuletzt geprüft am 22. November 2026.',
   },
 
   home: {
     title: 'Carried context, eine Faktengrundlage für jeden Coding-Agenten',
     description:
-      'Carried-context development ist ein Ansatz für agentische Entwicklung, der Projektentscheidungen und Kontext bis zum Coding-Agenten jedes Entwicklers trägt, damit das Projekt ausgerichtet bleibt und nichts auseinanderdriftet.',
+      'Carried-context development ist ein Ansatz für agentische Entwicklung, der Projektentscheidungen und Kontext bis zum Coding-Agenten jedes Entwicklers trägt und so hilft, Spezifikationen und Coding-Agenten aufeinander abgestimmt zu halten, während sich das Projekt ändert.',
     h1: [
       'Carried-context development geht über spezifikationsgetriebene Entwicklung hinaus.',
       'Der Kontext reist mit der Arbeit.',

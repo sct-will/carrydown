@@ -252,18 +252,24 @@ class SampleIgnoreTests(unittest.TestCase):
             self.assertIn(words, comment)
 
 
-class StalePublicSampleTests(unittest.TestCase):
-    """WP10 defect 8: the public sample repository and docs/images/issue-9.png predate the release layout
-    and need the owner's account to republish. The storyboard says so. The README no longer does: the owner
-    removed that note from the sample section."""
+class RepublishedSampleTests(unittest.TestCase):
+    """WP10 defect 8, closed on 2026-11-23: the public sample repository was published again from the current
+    release and docs/images/issue-9.png was retaken from the live issue with the author anonymized. The
+    storyboard row says it is current and names the substitution, the README caption discloses it, and the
+    sample README no longer says the public sample predates the release layout."""
 
-    def test_the_storyboard_marks_the_image_as_pending_replacement_and_the_readme_is_silent(self):
+    def test_the_storyboard_row_is_current_and_the_caption_discloses_the_anonymization(self):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertNotIn("waiting to be republished", readme)
         self.assertNotIn("before approved contexts and receipts existed", readme)
+        self.assertIn("Author details anonymized; issue content unchanged", readme)
         storyboard = (ROOT / "docs" / "recording-storyboard.md").read_text(encoding="utf-8")
         row = next(x for x in storyboard.splitlines() if x.startswith("| `docs/images/issue-9.png`"))
-        self.assertIn("Legacy pending replacement", row)
+        self.assertIn("Current.", row)
+        self.assertIn("invented plan owner login", row)
+        self.assertNotIn("Legacy pending", row)
+        sample_readme = (ROOT / "sample" / "expense-approvals" / "README.md").read_text(encoding="utf-8")
+        self.assertNotIn("published before the release layout", sample_readme)
 
 
 class DraftNoticeTests(unittest.TestCase):
