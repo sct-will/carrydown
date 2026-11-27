@@ -663,3 +663,12 @@ header.header .site-header__bar {
 .controls > :nth-child(1) {
   --n: 4;
 }
+
+/* Content images, the screenshots and diagrams that come from the repository Markdown on the docs pages
+ * and any image in a site page's content, sit in a 1 px hairline frame with no shadow. The mark, the
+ * icons and the inline SVG figures are not img elements, so this leaves them alone. */
+.sl-markdown-content img,
+body.site main img {
+  border: 1px solid var(--hairline);
+  box-shadow: none;
+}
