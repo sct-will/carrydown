@@ -61,6 +61,12 @@ export async function startPreview(offset = 1) {
   });
   for (let i = 0; i < 100; i++) {
     if (child.exitCode !== null) throw new Error(`astro preview exited early:\n${log}`);
+    // A busy port makes the preview move to the next free one, while the test would keep fetching this
+    // one and reach whatever answers there. Stop instead.
+    if (/is in use|EADDRINUSE/.test(log)) {
+      await stop();
+      throw new Error(`port ${port} is in use. Set SITE_TEST_PORT to a free base.\n${log}`);
+    }
     try {
       const r = await fetch(`${origin}${basePath}/`);
       if (r.ok) return { origin, stop };
