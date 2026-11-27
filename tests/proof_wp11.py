@@ -184,10 +184,9 @@ def _():
     text = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
     check("pull_request:" in text and "branches: [main]" in text)
     check("python tests/scenario_embedded_release.py" in text)
-    check("python tests/test_negative_release.py ${{ matrix.group }}" in text)
     for group in GROUPS:
-        check(f'"{group}"' in text, group)
-    return "triggers: push to main and pull_request; jobs: scenarios (Python 3.9 and 3.x) and negative (G1 to G6, one job each)"
+        check(f"python tests/test_negative_release.py {group}\n" in text, group)
+    return "triggers: push to main, nightly and pull_request; jobs: scenarios (Python 3.9 and 3.x) and negative (G1 to G6, one step each in one job)"
 
 
 @claim("The group's own tests keep it honest: every group has tests, the workflow names every group, and every step of the specification has an assertion")

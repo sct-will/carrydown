@@ -1,0 +1,57 @@
+# Builds and tests the carriedcontext.dev website. It is called, not triggered. website.yml calls it on a push to
+# main and deploys the result. ci.yml calls it on a pull request that changes the site or a page it is built from,
+# and does not deploy. The steps live here once, so a pull request proves the build that main deploys.
+name: Website build and tests
+
+on:
+  workflow_call:
+    inputs:
+      upload_pages:
+        description: Upload the built site as the artifact the Pages deploy job publishes.
+        type: boolean
+        default: false
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Install the browser for the tests and the social image
+        run: npx playwright install --with-deps chromium
+      - name: Generate the docs from the repository Markdown
+        run: node scripts/build-docs.mjs
+      - name: Check that the docs match the repository Markdown
+        run: node scripts/check-docs-sync.mjs
+      - name: Type check
+        run: npx astro check
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npm test
+      - name: Upload the reflow screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: reflow-screenshots
+          path: website/tests/screenshots
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload the site for Pages
+        if: inputs.upload_pages
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        with:
+          path: website/dist

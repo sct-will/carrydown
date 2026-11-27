@@ -1,32 +1,99 @@
-# Runs the self test of the carrydown skills on every push to main and every pull request. No token and no network
-# access to GitHub are needed. The self test checks the sample against its plan, runs
-# every script's --help, and runs every dry run against the sample.
+# The repository's checks. No token and no network access to GitHub are needed.
 #
-# Two more kinds of job run on the same events, all with fake time and a fake GitHub (work package 11):
-#   scenarios   Scenario A (the "yes" path), Scenario B (the "no" path) and the shared lifecycle and adversarial
-#               continuation, one line per numbered step of the specification, about a minute and a half.
-#   negative    the six negative tests of Part G, one job each, so the checks list G1 to G6 separately.
-# The real GitHub acceptance run of work package 7 is not here: it needs a test organization and the owner's say-so.
+# What runs depends on the event. The first job decides, and every other job reads its answer:
+#   pull_request        the self test on Ubuntu 24.04 with Python 3.9, the oldest version the scripts support, and on
+#                       Windows with the current Python; the two acceptance scenario runs; the six negative tests of
+#                       Part G in one job. A pull request that changes a page the website is built from also runs the
+#                       website build and tests, and one that changes only the website runs nothing else but the prose
+#                       lint. About six minutes.
+#   push to main,       the full self test matrix, every operating system on both Pythons, macOS included, with the
+#   schedule, dispatch  scenarios and the negative tests. The macOS runners queue for twenty minutes or more, so they
+#                       run after the merge and every night instead of on every pull request.
+#
+# Every job's steps are the same on every event, so a pass on a pull request means what the same cell means on main.
+# The self test checks the sample against its plan, runs every script's --help, and runs every dry run against the
+# sample. The scenarios run Scenario A (the "yes" path), Scenario B (the "no" path) and the shared lifecycle and
+# adversarial continuation with fake time and a fake GitHub (work package 11), one line per numbered step of the
+# specification. The real GitHub acceptance run of work package 7 is not here: it needs a test organization and the
+# owner's say-so.
+#
+# The path filter is a job, not an "on: paths:" filter. A check that a workflow-level path filter skips never
+# reports, and a required check that never reports blocks the merge. A job skipped by its "if:" reports skipped,
+# which branch protection counts as a pass.
 name: Self test
 
 on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    # 03:17 UTC every day, a quiet hour on the hosted runners. A scheduled run uses the workflow on main, and GitHub
+    # stops scheduling after sixty days without a commit; the next push to main starts it again.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  scope:
+    name: Decide what runs
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      python: ${{ steps.decide.outputs.python }}
+      website: ${{ steps.decide.outputs.website }}
+      selftest_matrix: ${{ steps.decide.outputs.selftest_matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        if: github.event_name == 'pull_request'
+      - name: Read the changed paths and pick the self test matrix
+        id: decide
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -eu
+          # Every event but a pull request runs the Python jobs on the full matrix. The website is deployed by
+          # website.yml on a push to main and is not built here.
+          python=true
+          website=false
+          selftest_matrix='{"os": ["ubuntu-24.04", "macos-latest", "windows-latest"], "python": ["3.9", "3.x"]}'
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            # The checkout is the merge of the pull request into its base, so this diff is what merging would change.
+            git fetch --no-tags --depth=1 origin "$BASE_SHA"
+            changed=$(git diff --name-only "$BASE_SHA" HEAD)
+            echo "Changed paths:"
+            printf '%s\n' "$changed" | sed 's/^/  /'
+            # The Python jobs run when anything outside website/ changed. Two cells: the Python floor on Ubuntu, and
+            # Windows on the current Python, which found a Windows-only bug in the mock server on 2026-11-27.
+            python=false
+            if printf '%s\n' "$changed" | grep -q -v -E '^website/'; then
+              python=true
+            fi
+            selftest_matrix='{"include": [{"os": "ubuntu-24.04", "python": "3.9"}, {"os": "windows-latest", "python": "3.x"}]}'
+            # The website job runs when a page the site is built from changed: the paths website.yml deploys from,
+            # plus the workflows, so a change to the checks proves itself.
+            if printf '%s\n' "$changed" | grep -q -E '^(website/|docs/|README\.md$|sample/expense-approvals/README\.md$|sample/expense-approvals/images/|\.github/workflows/)'; then
+              website=true
+            fi
+          fi
+          echo "Python jobs: $python. Website job: $website."
+          {
+            echo "python=$python"
+            echo "website=$website"
+            echo "selftest_matrix=$selftest_matrix"
+          } >> "$GITHUB_OUTPUT"
+
   selftest:
+    needs: scope
+    if: needs.scope.outputs.python == 'true'
     runs-on: ${{ matrix.os }}
     strategy:
-      # Every leg reports on its own; one failing operating system does not cancel the others.
+      # Every cell reports on its own; one failing operating system does not cancel the others.
       fail-fast: false
-      matrix:
-        # ubuntu-latest is Ubuntu 26.04, which has no Python 3.9 build, so the Ubuntu leg stays on 24.04.
-        os: [ubuntu-24.04, macos-latest, windows-latest]
-        python: ["3.9", "3.x"]
+      # Two cells on a pull request, six on main, nightly and on request. The first job picks them.
+      # ubuntu-latest is Ubuntu 26.04, which has no Python 3.9 build, so the Ubuntu cells stay on 24.04.
+      matrix: ${{ fromJSON(needs.scope.outputs.selftest_matrix) }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
@@ -48,6 +115,8 @@ jobs:
 
   scenarios:
     name: Acceptance scenarios (Python ${{ matrix.python }})
+    needs: scope
+    if: needs.scope.outputs.python == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     strategy:
@@ -63,17 +132,40 @@ jobs:
         run: python tests/scenario_embedded_release.py
 
   negative:
-    name: Negative test ${{ matrix.group }}
+    name: Negative tests G1 to G6
+    needs: scope
+    if: needs.scope.outputs.python == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 8
-    strategy:
-      fail-fast: false
-      matrix:
-        group: ["G1", "G2", "G3", "G4", "G5", "G6"]
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: "3.x"
-      - name: ${{ matrix.group }}
-        run: python tests/test_negative_release.py ${{ matrix.group }}
+      # One step per group, each about ten seconds. A step still runs after an earlier one fails, though not after a
+      # cancellation, so the step list and the log show each group's own pass or fail. The job fails when any does.
+      - name: Negative test G1
+        run: python tests/test_negative_release.py G1
+      - name: Negative test G2
+        if: ${{ success() || failure() }}
+        run: python tests/test_negative_release.py G2
+      - name: Negative test G3
+        if: ${{ success() || failure() }}
+        run: python tests/test_negative_release.py G3
+      - name: Negative test G4
+        if: ${{ success() || failure() }}
+        run: python tests/test_negative_release.py G4
+      - name: Negative test G5
+        if: ${{ success() || failure() }}
+        run: python tests/test_negative_release.py G5
+      - name: Negative test G6
+        if: ${{ success() || failure() }}
+        run: python tests/test_negative_release.py G6
+
+  website:
+    name: Website
+    needs: scope
+    if: needs.scope.outputs.website == 'true'
+    uses: ./.github/workflows/website-build.yml
+    with:
+      upload_pages: false

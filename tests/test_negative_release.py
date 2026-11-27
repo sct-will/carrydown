@@ -177,7 +177,7 @@ class GroupTests(unittest.TestCase):
         self.assertIn("tests/scenario_embedded_release.py", text)
         self.assertIn("tests/test_negative_release.py", text)
         for group in GROUPS:
-            self.assertIn(f'"{group}"', text, group)
+            self.assertIn(f"python tests/test_negative_release.py {group}\n", text, group)
 
     def test_the_scenarios_name_every_step_of_the_specification(self):
         import scenario_embedded_release as SC
