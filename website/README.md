@@ -50,7 +50,7 @@ Type checks: `npx astro check`.
 
 ## Design
 
-The design is the Hartwell direction of the round 3 and round 4 mockups, carried into the site in November 2026. The reference renders and their notes are in `specs/carried-context-site/mockups-v3/` (tokens, contrast, type, the figure) and `specs/carried-context-site/mockups-v4/` (the decisions, the mark, the title). The grammar: type-led, one accent for action and one for emphasis, numbered sections with a rule above each heading, mono labels, the figure on a bone panel, the Try it out section as a pine band, hairline rows instead of cards. Nothing at rest carries a shadow.
+The design is the Hartwell direction of the round 3 and round 4 mockups, carried into the site in November 2026. The reference renders and their notes are in `specs/carried-context-site/mockups-v3/` (tokens, contrast, type, the figure) and `specs/carried-context-site/mockups-v4/` (the decisions, the mark, the title). The grammar: type-led, one accent for action and one for emphasis, a rule above each section heading, mono labels, the figure on a bone panel, the Try it out section as a pine band, hairline rows instead of cards. Nothing at rest carries a shadow. In place of a section number, each home page section head carries a small clay chevron, the figure's prompt chevron without its underscore.
 
 - Tokens, in `src/styles/tokens.css`. Each text pair meets WCAG 2.2 AA.
 

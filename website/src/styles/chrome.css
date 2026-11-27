@@ -665,10 +665,11 @@ header.header .site-header__bar {
 }
 
 /* Content images, the screenshots and diagrams that come from the repository Markdown on the docs pages
- * and any image in a site page's content, sit in a 1 px hairline frame with no shadow. The mark, the
+ * and any image in a site page's content, sit in a 1 px hairline frame with no shadow. The status badges
+ * at the top of the documentation page (the continuous integration badge and the shields.io badges)
+ * stay unframed; they are matched by their source, so a regenerated page keeps the rule. The mark, the
  * icons and the inline SVG figures are not img elements, so this leaves them alone. */
-.sl-markdown-content img,
-body.site main img {
+:is(.sl-markdown-content, body.site main) img:not([src*='shields.io']):not([src$='/badge.svg']) {
   border: 1px solid var(--hairline);
   box-shadow: none;
 }
