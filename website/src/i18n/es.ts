@@ -26,10 +26,6 @@ export const es: Strings = {
   },
 
   controls: {
-    themeLabel: 'Tema',
-    themeAuto: 'Auto',
-    themeDark: 'Oscuro',
-    themeLight: 'Claro',
     languageLabel: 'Idioma',
   },
 
@@ -298,16 +294,16 @@ export const es: Strings = {
       'Este sitio está pensado para que lo pueda usar todo el mundo, incluidas las personas que usan un lector de pantalla, solo el teclado, ampliación o movimiento reducido. Aspira a cumplir las Web Content Accessibility Guidelines (WCAG) 2.2 en el nivel AA.',
     doneHeading: 'Lo que se ha hecho',
     done: [
-      'Los colores del texto y de la interfaz se comprueban en cuanto a contraste en los temas claro y oscuro, y puede elegir cualquiera de los dos o seguir su sistema.',
+      'Los colores del texto y de la interfaz se comprueban en cuanto a contraste.',
       'Cada página funciona solo con el teclado, con un indicador de foco visible y un enlace para saltar al contenido principal.',
-      'El diagrama está dibujado con texto y formas vectoriales, así que se escala, respeta su tema y lleva una descripción escrita para lectores de pantalla.',
-      'Las animaciones, las transiciones entre páginas y el fundido al cambiar de tema se desactivan cuando su sistema está configurado para reducir el movimiento. Se mantienen breves cambios de color y de subrayado en enlaces y botones, y también el giro de una flecha de la barra lateral de la documentación.',
+      'El diagrama está dibujado con texto y formas vectoriales, así que se escala y lleva una descripción escrita para lectores de pantalla.',
+      'Las animaciones y las transiciones entre páginas se desactivan cuando su sistema está configurado para reducir el movimiento. Se mantienen breves cambios de color y de subrayado en enlaces y botones, y también el giro de una flecha de la barra lateral de la documentación.',
       'Los encabezados, los puntos de referencia y los textos de los enlaces están escritos para leerse en orden y fuera de contexto.',
       'El sitio se comprueba con herramientas automáticas antes de cada versión y se revisa a mano con un lector de pantalla.',
     ],
     notFinishedHeading: 'Lo que no está terminado',
     notFinished:
-      'Las traducciones del sitio las están revisando hablantes nativos y se publican un idioma cada vez. Las páginas de documentación aún no están traducidas. Cada idioma muestra la página en inglés con una nota. Se generan a partir del Markdown del repositorio, así que sus diagramas y capturas de pantalla son imágenes rasterizadas con una descripción escrita y no siguen el tema oscuro.',
+      'Las traducciones del sitio las están revisando hablantes nativos y se publican un idioma cada vez. Las páginas de documentación aún no están traducidas. Cada idioma muestra la página en inglés con una nota. Se generan a partir del Markdown del repositorio, así que sus diagramas y capturas de pantalla son imágenes rasterizadas con una descripción escrita.',
     contactHeading: 'Cuéntenos un problema',
     contactBefore:
       'Si algo en este sitio es difícil de usar con tecnología de apoyo, o necesita el contenido en otra forma, escriba a ',

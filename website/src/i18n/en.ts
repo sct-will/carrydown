@@ -27,10 +27,6 @@ export const en = {
   },
 
   controls: {
-    themeLabel: 'Theme',
-    themeAuto: 'Auto',
-    themeDark: 'Dark',
-    themeLight: 'Light',
     languageLabel: 'Language',
   },
 
@@ -306,16 +302,16 @@ export const en = {
       'This site is meant to be usable by everyone, including people who use a screen reader, a keyboard alone, magnification, or reduced motion. It aims to meet the Web Content Accessibility Guidelines (WCAG) 2.2 at level AA.',
     doneHeading: 'What has been done',
     done: [
-      'Text and interface colors are checked for contrast in both the light and the dark theme, and you can choose either theme or follow your system.',
+      'Text and interface colors are checked for contrast.',
       'Every page works with a keyboard alone, with a visible focus indicator and a skip link to the main content.',
-      'The diagram is drawn as text and vector shapes, so it scales, respects your theme, and carries a written description for screen readers.',
-      'Animations, page transitions and the theme crossfade turn off when your system is set to reduce motion. Brief color and underline changes on links and buttons remain, and so does the turn of a documentation sidebar arrow.',
+      'The diagram is drawn as text and vector shapes, so it scales and carries a written description for screen readers.',
+      'Animations and page transitions turn off when your system is set to reduce motion. Brief color and underline changes on links and buttons remain, and so does the turn of a documentation sidebar arrow.',
       'Headings, landmarks and link text are written to be read in order and out of context.',
       'The site is checked with automated tools before each release and reviewed by hand with a screen reader.',
     ],
     notFinishedHeading: 'What is not finished',
     notFinished:
-      'Translations of the site are being reviewed by native speakers and go live one language at a time. The documentation pages are not translated yet. Each language shows the English page with a note. They are built from the repository’s Markdown, so their diagrams and screenshots are raster images with written descriptions. These images do not follow the dark theme.',
+      'Translations of the site are being reviewed by native speakers and go live one language at a time. The documentation pages are not translated yet. Each language shows the English page with a note. They are built from the repository’s Markdown, so their diagrams and screenshots are raster images with written descriptions.',
     contactHeading: 'Tell us about a problem',
     contactBefore:
       'If something on this site is hard to use with assistive technology, or you need the content in another form, write to ',

@@ -26,10 +26,6 @@ export const ptBR: Strings = {
   },
 
   controls: {
-    themeLabel: 'Tema',
-    themeAuto: 'Auto',
-    themeDark: 'Escuro',
-    themeLight: 'Claro',
     languageLabel: 'Idioma',
   },
 
@@ -298,16 +294,16 @@ export const ptBR: Strings = {
       'Este site foi feito para ser utilizável por todos, inclusive por pessoas que usam leitor de tela, apenas o teclado, ampliação ou movimento reduzido. Ele busca atender às Web Content Accessibility Guidelines (WCAG) 2.2 no nível AA.',
     doneHeading: 'O que foi feito',
     done: [
-      'As cores do texto e da interface são verificadas quanto ao contraste nos temas claro e escuro, e você pode escolher um deles ou seguir o seu sistema.',
+      'As cores do texto e da interface são verificadas quanto ao contraste.',
       'Todas as páginas funcionam apenas com o teclado, com indicador de foco visível e um link para pular ao conteúdo principal.',
-      'O diagrama é desenhado com texto e formas vetoriais, então ele escala, respeita o seu tema e traz uma descrição escrita para leitores de tela.',
-      'As animações, as transições entre páginas e o esmaecimento na troca de tema se desativam quando o seu sistema está configurado para reduzir o movimento. Continuam breves mudanças de cor e de sublinhado em links e botões, e também o giro de uma seta da barra lateral da documentação.',
+      'O diagrama é desenhado com texto e formas vetoriais, então ele escala e traz uma descrição escrita para leitores de tela.',
+      'As animações e as transições entre páginas se desativam quando o seu sistema está configurado para reduzir o movimento. Continuam breves mudanças de cor e de sublinhado em links e botões, e também o giro de uma seta da barra lateral da documentação.',
       'Títulos, regiões e textos de links são escritos para serem lidos em ordem e fora de contexto.',
       'O site é verificado com ferramentas automáticas antes de cada versão e revisado à mão com um leitor de tela.',
     ],
     notFinishedHeading: 'O que não está concluído',
     notFinished:
-      'As traduções do site estão sendo revisadas por falantes nativos e entram no ar um idioma por vez. As páginas de documentação ainda não estão traduzidas. Cada idioma mostra a página em inglês com uma nota. Elas são geradas a partir do Markdown do repositório, então seus diagramas e capturas de tela são imagens rasterizadas com descrição escrita e não seguem o tema escuro.',
+      'As traduções do site estão sendo revisadas por falantes nativos e entram no ar um idioma por vez. As páginas de documentação ainda não estão traduzidas. Cada idioma mostra a página em inglês com uma nota. Elas são geradas a partir do Markdown do repositório, então seus diagramas e capturas de tela são imagens rasterizadas com descrição escrita.',
     contactHeading: 'Conte-nos sobre um problema',
     contactBefore:
       'Se algo neste site for difícil de usar com tecnologia assistiva, ou se você precisar do conteúdo em outra forma, escreva para ',

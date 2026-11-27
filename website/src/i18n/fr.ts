@@ -26,10 +26,6 @@ export const fr: Strings = {
   },
 
   controls: {
-    themeLabel: 'Thème',
-    themeAuto: 'Auto',
-    themeDark: 'Sombre',
-    themeLight: 'Clair',
     languageLabel: 'Langue',
   },
 
@@ -298,16 +294,16 @@ export const fr: Strings = {
       'Ce site est conçu pour être utilisable par tous, y compris par les personnes qui utilisent un lecteur d’écran, le clavier seul, l’agrandissement ou la réduction des animations. Il vise la conformité aux Web Content Accessibility Guidelines (WCAG) 2.2 au niveau AA.',
     doneHeading: 'Ce qui a été fait',
     done: [
-      'Les couleurs du texte et de l’interface sont vérifiées pour le contraste dans les thèmes clair et sombre, et vous pouvez choisir l’un ou l’autre ou suivre votre système.',
+      'Les couleurs du texte et de l’interface sont vérifiées pour le contraste.',
       'Chaque page fonctionne au clavier seul, avec un indicateur de focus visible et un lien d’évitement vers le contenu principal.',
-      'Le schéma est dessiné avec du texte et des formes vectorielles. Il s’adapte à la taille, respecte votre thème et porte une description écrite pour les lecteurs d’écran.',
-      'Les animations, les transitions entre pages et le fondu au changement de thème se désactivent quand votre système est réglé pour réduire les mouvements. De brefs changements de couleur et de soulignement sur les liens et les boutons subsistent, ainsi que la rotation d’une flèche de la barre latérale de la documentation.',
+      'Le schéma est dessiné avec du texte et des formes vectorielles. Il s’adapte à la taille et porte une description écrite pour les lecteurs d’écran.',
+      'Les animations et les transitions entre pages se désactivent quand votre système est réglé pour réduire les mouvements. De brefs changements de couleur et de soulignement sur les liens et les boutons subsistent, ainsi que la rotation d’une flèche de la barre latérale de la documentation.',
       'Les titres, les repères et les textes de liens sont écrits pour être lus dans l’ordre et hors contexte.',
       'Le site est vérifié avec des outils automatiques avant chaque version et relu à la main avec un lecteur d’écran.',
     ],
     notFinishedHeading: 'Ce qui n’est pas terminé',
     notFinished:
-      'Les traductions du site sont relues par des locuteurs natifs et sont mises en ligne une langue à la fois. Les pages de documentation ne sont pas encore traduites. Chaque langue affiche la page anglaise avec une note. Elles sont générées à partir du Markdown du dépôt, si bien que leurs schémas et captures d’écran sont des images matricielles accompagnées d’une description écrite, qui ne suivent pas le thème sombre.',
+      'Les traductions du site sont relues par des locuteurs natifs et sont mises en ligne une langue à la fois. Les pages de documentation ne sont pas encore traduites. Chaque langue affiche la page anglaise avec une note. Elles sont générées à partir du Markdown du dépôt, si bien que leurs schémas et captures d’écran sont des images matricielles accompagnées d’une description écrite.',
     contactHeading: 'Signalez-nous un problème',
     contactBefore:
       'Si quelque chose sur ce site est difficile à utiliser avec une technologie d’assistance, ou si vous avez besoin du contenu sous une autre forme, écrivez à ',

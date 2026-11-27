@@ -26,10 +26,6 @@ export const de: Strings = {
   },
 
   controls: {
-    themeLabel: 'Darstellung',
-    themeAuto: 'Auto',
-    themeDark: 'Dunkel',
-    themeLight: 'Hell',
     languageLabel: 'Sprache',
   },
 
@@ -298,16 +294,16 @@ export const de: Strings = {
       'Diese Website soll für alle nutzbar sein, auch für Menschen, die einen Screenreader, nur die Tastatur, Vergrößerung oder reduzierte Bewegung nutzen. Sie strebt die Web Content Accessibility Guidelines (WCAG) 2.2 auf Stufe AA an.',
     doneHeading: 'Was getan wurde',
     done: [
-      'Text- und Oberflächenfarben werden im hellen und im dunklen Thema auf Kontrast geprüft, und Sie können ein Thema wählen oder Ihrem System folgen.',
+      'Text- und Oberflächenfarben werden auf Kontrast geprüft.',
       'Jede Seite funktioniert allein mit der Tastatur, mit sichtbarem Fokusindikator und einem Link zum Überspringen zum Hauptinhalt.',
-      'Das Diagramm ist aus Text und Vektorformen gezeichnet. Es skaliert, folgt Ihrem Thema und trägt eine schriftliche Beschreibung für Screenreader.',
-      'Animationen, Seitenübergänge und die Überblendung beim Themenwechsel schalten sich ab, wenn Ihr System auf reduzierte Bewegung eingestellt ist. Kurze Farb- und Unterstreichungswechsel an Links und Schaltflächen bleiben, ebenso die Drehung eines Pfeils in der Seitenleiste der Dokumentation.',
+      'Das Diagramm ist aus Text und Vektorformen gezeichnet. Es skaliert und trägt eine schriftliche Beschreibung für Screenreader.',
+      'Animationen und Seitenübergänge schalten sich ab, wenn Ihr System auf reduzierte Bewegung eingestellt ist. Kurze Farb- und Unterstreichungswechsel an Links und Schaltflächen bleiben, ebenso die Drehung eines Pfeils in der Seitenleiste der Dokumentation.',
       'Überschriften, Landmarken und Linktexte sind so geschrieben, dass man sie der Reihe nach und aus dem Zusammenhang gelöst lesen kann.',
       'Die Website wird vor jeder Veröffentlichung mit automatisierten Werkzeugen geprüft und von Hand mit einem Screenreader begutachtet.',
     ],
     notFinishedHeading: 'Was noch nicht fertig ist',
     notFinished:
-      'Die Übersetzungen der Website werden von Muttersprachlern geprüft und gehen Sprache für Sprache online. Die Dokumentationsseiten sind noch nicht übersetzt. Jede Sprache zeigt die englische Seite mit einem Hinweis. Diese Seiten werden aus dem Markdown des Repositorys erzeugt, daher sind ihre Diagramme und Screenshots Rasterbilder mit schriftlicher Beschreibung und folgen nicht dem dunklen Thema.',
+      'Die Übersetzungen der Website werden von Muttersprachlern geprüft und gehen Sprache für Sprache online. Die Dokumentationsseiten sind noch nicht übersetzt. Jede Sprache zeigt die englische Seite mit einem Hinweis. Diese Seiten werden aus dem Markdown des Repositorys erzeugt, daher sind ihre Diagramme und Screenshots Rasterbilder mit schriftlicher Beschreibung.',
     contactHeading: 'Melden Sie uns ein Problem',
     contactBefore:
       'Wenn etwas auf dieser Website mit assistiven Technologien schwer zu bedienen ist oder Sie die Inhalte in einer anderen Form brauchen, schreiben Sie an ',
