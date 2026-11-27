@@ -3,6 +3,7 @@
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import HowItWorks from '../HowItWorks.astro';
 import TranslationNote from '../TranslationNote.astro';
+import Mark from '../Mark.astro';
 import { getStrings } from '../../i18n';
 import { localePath } from '../../lib/paths';
 import { sampleBoardUrl } from '../../../site.config.mjs';
@@ -51,8 +52,9 @@ const w = h.whatYouGet;
           <p class="license rise" style="--i: 3">{h.license}</p>
         </div>
         <div class="hero-side">
-          <p class="defn rise" style="--i: 1">{h.definition}</p>
+          <p class="side-text rise" style="--i: 1">{h.definition}</p>
           {h.sideParagraphs.map((text, i) => <p class="sub rise" style={`--i: ${i + 2}`}>{text}</p>)}
+          <div class="side-mark rise" style={`--i: ${h.sideParagraphs.length + 2}`}><Mark size={80} /></div>
         </div>
       </div>
 

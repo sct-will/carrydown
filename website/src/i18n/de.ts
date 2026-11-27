@@ -316,11 +316,11 @@ export const de: Strings = {
     title: 'Carried context, eine Faktengrundlage für jeden Coding-Agenten',
     description:
       'Carried-context development ist ein Ansatz für agentische Entwicklung, der Projektentscheidungen und Kontext bis zum Coding-Agenten jedes Entwicklers trägt und so hilft, Spezifikationen und Coding-Agenten aufeinander abgestimmt zu halten, während sich das Projekt ändert.',
-    h1: 'Carried-context development sorgt dafür, dass der Agentenkontext mit der Arbeit reist.',
+    h1: 'Carried-context development gibt jedem Coding-Agenten die Entscheidungen und Quellen hinter der Arbeit.',
     /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
-    h1Emphasis: 'mit der Arbeit reist.',
+    h1Emphasis: 'Entscheidungen und Quellen',
     definition:
-      'Halten Sie das Projekt ausgerichtet, indem Sie dem Coding-Agenten jedes Entwicklers dieselben Projektentscheidungen und denselben Kontext geben.',
+      'Ihr KI-Agent erstellt aus Ihren vereinbarten Projektdokumenten einen verbundenen Plan und die Spezifikationen. Ein projektspezifischer Skill weist jeden Coding-Agenten an, seine freigegebene Spezifikation und die zitierten Quellenabschnitte zu lesen, bevor er Code plant.',
     paragraph:
       'Ihr Team liefert die Projektdokumente, die Anforderungen und die Entscheidungen zu Personen und Terminen. Ihr KI-Agent nutzt diese Faktengrundlage, um einen verbundenen Plan, eine Spezifikation für jedes Arbeitspaket und GitHub-Issues zu erstellen, die jede Spezifikation verlinken und die dahinterstehenden Dokumentabschnitte belegen. Ihr KI-Agent generiert außerdem einen projektspezifischen Agent Skill, der die Spezifikation, die Entscheidungen dahinter und die belegten Abschnitte zum Coding-Agenten jedes Entwicklers trägt. Wenn sich ein Dokument ändert, prüfen Sie eine einzige Aktualisierung.',
     buttons: {
@@ -333,8 +333,7 @@ export const de: Strings = {
     /** The last sentence under How it works; the middle word is the link to the README section. */
     learnMore: { before: 'Mehr dazu ', link: 'hier', after: '.' },
     sideParagraphs: [
-      'Wenn Entwickler Spezifikationen unabhängig voneinander schreiben, schwankt die Qualität, und die Spezifikationen driften auseinander, während sich das Projekt ändert.',
-      'Carried-context development bindet jede Spezifikation an dieselbe Faktengrundlage, belegt die Quellen und trägt jede freigegebene Änderung zu jedem Coding-Agenten.',
+      'Wenn sich das Projekt ändert, legt Ihr Agent Aktualisierungen der betroffenen Arbeit zur Freigabe vor.',
     ],
     values: [
       {

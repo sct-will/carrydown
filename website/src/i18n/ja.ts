@@ -308,11 +308,11 @@ export const ja: Strings = {
     title: 'Carried context、すべてのコーディングエージェントにひとつのグラウンドトゥルースを',
     description:
       'Carried-context development は、プロジェクトの決定とコンテキストを各エンジニアのコーディングエージェントまで伝え、プロジェクトが変わっても仕様とコーディングエージェントの整合を保つのを助ける、エージェント開発のアプローチです。',
-    h1: 'Carried-context development では、エージェントのコンテキストが作業と一緒に旅をする。',
+    h1: 'Carried-context development は、作業の背後にある決定と出典を各コーディングエージェントに渡す。',
     /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
-    h1Emphasis: '作業と一緒に旅をする。',
+    h1Emphasis: '決定と出典',
     definition:
-      '各エンジニアのコーディングエージェントに同じプロジェクトの決定とコンテキストを渡して、プロジェクトのずれを防ぎます。',
+      'AIエージェントは、合意済みのプロジェクト文書から、つながった計画と仕様を作成します。プロジェクト専用のスキルが、各コーディングエージェントに、コードを計画する前にそれぞれの承認済みの仕様と引用された出典セクションを読むよう指示します。',
     paragraph:
       'チームは、プロジェクトの文書、要件、人や期限についての決定を用意します。AIエージェントはこのグラウンドトゥルースを使って、つながった計画、作業項目ごとの仕様、各仕様へのリンクと根拠となる文書セクションの引用を持つ GitHub イシューを作ります。AIエージェントはさらに、仕様、その背後にある決定、引用されたセクションを各エンジニアのコーディングエージェントへ届ける、プロジェクト専用のエージェントスキルも生成します。文書が変わったときは、ひとつの更新をレビューするだけです。',
     buttons: {
@@ -325,8 +325,7 @@ export const ja: Strings = {
     /** The last sentence under How it works; the middle word is the link to the README section. */
     learnMore: { before: '詳しくは', link: 'こちら', after: '。' },
     sideParagraphs: [
-      'エンジニアが仕様をそれぞれ別々に書くと、品質はばらつき、プロジェクトの変化とともに仕様は離れていきます。',
-      'Carried-context development は、すべての仕様を同じグラウンドトゥルースに結びつけ、出典を引用し、承認されたすべての変更をすべてのコーディングエージェントに届けます。',
+      'プロジェクトが変わると、エージェントは影響を受ける作業の更新を提案し、あなたの承認を求めます。',
     ],
     values: [
       {

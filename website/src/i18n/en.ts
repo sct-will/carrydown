@@ -324,12 +324,12 @@ export const en = {
     title: 'Carried context, one ground truth for every coding agent',
     description:
       'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent and helps keep specifications and coding agents aligned as the project changes.',
-    h1: 'With carried-context development, agent context travels with the work.',
+    h1: 'Carried-context development gives each coding agent decisions and sources behind the work.',
     /** The part of the title set in amber. The title stays one string; this names which part of it is
      * emphasized. Empty leaves the title plain. */
-    h1Emphasis: 'travels with the work.',
+    h1Emphasis: 'decisions and sources',
     definition:
-      'Keep the project aligned by giving each engineer’s coding agent the same project decisions and context.',
+      'Your AI agent creates a connected plan and specifications from your agreed project documents. A project-specific skill directs each coding agent to read its approved spec and cited source sections before planning code.',
     paragraph:
       'Your team provides the project documents, the requirements and the decisions about people and deadlines. Your AI agent uses this ground truth to create a connected plan, a spec for every work item, and GitHub issues that link each spec and cite the document sections behind it. Your AI agent also generates a project-specific agent skill that carries the spec, the decisions behind the work and the cited sections to each engineer’s coding agent. When a document changes, you review one update.',
     buttons: {
@@ -342,8 +342,7 @@ export const en = {
     /** The last sentence under How it works; the middle word is the link to the README section. */
     learnMore: { before: 'Learn more ', link: 'here', after: '.' },
     sideParagraphs: [
-      'When engineers write specs independently, quality varies and the specs drift apart as the project changes.',
-      'Carried-context development ties every spec to the same ground truth, cites the sources, and delivers every approved change to every coding agent.',
+      'When the project changes, your agent proposes updates to the affected work for your approval.',
     ],
     values: [
       {

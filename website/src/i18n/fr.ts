@@ -316,11 +316,11 @@ export const fr: Strings = {
     title: 'Carried context, une vérité de référence pour chaque agent de codage',
     description:
       'Carried-context development est une approche du développement agentique qui fait descendre les décisions et le contexte du projet jusqu’à l’agent de codage de chaque ingénieur et aide à garder les spécifications et les agents de codage alignés à mesure que le projet évolue.',
-    h1: 'Avec carried-context development, le contexte de l’agent voyage avec le travail.',
+    h1: 'Carried-context development donne à chaque agent de codage les décisions et les sources qui sous-tendent le travail.',
     /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
-    h1Emphasis: 'voyage avec le travail.',
+    h1Emphasis: 'les décisions et les sources',
     definition:
-      'Gardez le projet aligné en donnant à l’agent de codage de chaque ingénieur les mêmes décisions et le même contexte de projet.',
+      'Votre agent d’IA crée un plan connecté et les spécifications à partir de vos documents de projet convenus. Un skill propre au projet indique à chaque agent de codage de lire sa spécification approuvée et les sections de sources citées avant de planifier le code.',
     paragraph:
       'Votre équipe fournit les documents du projet, les exigences et les décisions sur les personnes et les échéances. Votre agent d’IA s’appuie sur cette vérité de référence pour créer un plan connecté, une spécification pour chaque élément de travail et des tickets GitHub qui lient chaque spécification et citent les sections de documents sur lesquelles elle repose. Votre agent d’IA génère aussi un agent skill propre au projet, qui porte la spécification, les décisions qui la fondent et les sections citées jusqu’à l’agent de codage de chaque ingénieur. Quand un document change, vous relisez une seule mise à jour.',
     buttons: {
@@ -333,8 +333,7 @@ export const fr: Strings = {
     /** The last sentence under How it works; the middle word is the link to the README section. */
     learnMore: { before: 'En savoir plus ', link: 'ici', after: '.' },
     sideParagraphs: [
-      'Quand les ingénieurs écrivent leurs spécifications chacun de leur côté, la qualité varie et les spécifications dérivent à mesure que le projet change.',
-      'Carried-context development rattache chaque spécification à la même vérité de référence, cite les sources et fait descendre chaque changement approuvé jusqu’à chaque agent de codage.',
+      'Quand le projet change, votre agent propose des mises à jour du travail concerné et les soumet à votre approbation.',
     ],
     values: [
       {

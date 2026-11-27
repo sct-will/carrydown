@@ -316,11 +316,11 @@ export const ptBR: Strings = {
     title: 'Carried context, uma verdade de referência para cada agente de programação',
     description:
       'Carried-context development é uma abordagem de desenvolvimento com agentes que leva as decisões e o contexto do projeto até o agente de programação de cada engenheiro e ajuda a manter especificações e agentes de programação alinhados à medida que o projeto muda.',
-    h1: 'Com carried-context development, o contexto do agente viaja com o trabalho.',
+    h1: 'Carried-context development dá a cada agente de programação as decisões e fontes por trás do trabalho.',
     /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
-    h1Emphasis: 'viaja com o trabalho.',
+    h1Emphasis: 'decisões e fontes',
     definition:
-      'Mantenha o projeto alinhado dando ao agente de programação de cada engenheiro as mesmas decisões e o mesmo contexto do projeto.',
+      'Seu agente de IA cria um plano conectado e as especificações a partir dos seus documentos de projeto acordados. Um skill específico do projeto orienta cada agente de programação a ler sua especificação aprovada e as seções citadas das fontes antes de planejar o código.',
     paragraph:
       'Sua equipe fornece os documentos do projeto, os requisitos e as decisões sobre pessoas e prazos. Seu agente de IA usa essa verdade de referência para criar um plano conectado, uma especificação para cada item de trabalho e issues do GitHub que ligam cada especificação e citam as seções de documentos por trás dela. Seu agente de IA também gera um agent skill específico do projeto que leva a especificação, as decisões por trás do trabalho e as seções citadas até o agente de programação de cada engenheiro. Quando um documento muda, você revisa uma única atualização.',
     buttons: {
@@ -333,8 +333,7 @@ export const ptBR: Strings = {
     /** The last sentence under How it works; the middle word is the link to the README section. */
     learnMore: { before: 'Saiba mais ', link: 'aqui', after: '.' },
     sideParagraphs: [
-      'Quando os engenheiros escrevem as especificações por conta própria, a qualidade varia e as especificações se afastam à medida que o projeto muda.',
-      'Carried-context development liga cada especificação à mesma verdade de referência, cita as fontes e entrega cada mudança aprovada a cada agente de programação.',
+      'Quando o projeto muda, seu agente propõe atualizações do trabalho afetado para a sua aprovação.',
     ],
     values: [
       {

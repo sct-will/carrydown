@@ -316,11 +316,11 @@ export const es: Strings = {
     title: 'Carried context, una verdad de referencia para cada agente de programación',
     description:
       'Carried-context development es un enfoque de desarrollo con agentes que lleva las decisiones y el contexto del proyecto hasta el agente de programación de cada ingeniero y ayuda a mantener alineados las especificaciones y los agentes de programación a medida que cambia el proyecto.',
-    h1: 'Con carried-context development, el contexto del agente viaja con el trabajo.',
+    h1: 'Carried-context development da a cada agente de programación las decisiones y fuentes detrás del trabajo.',
     /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
-    h1Emphasis: 'viaja con el trabajo.',
+    h1Emphasis: 'decisiones y fuentes',
     definition:
-      'Mantenga el proyecto alineado dando al agente de programación de cada ingeniero las mismas decisiones y el mismo contexto del proyecto.',
+      'Su agente de IA crea un plan conectado y las especificaciones a partir de sus documentos de proyecto acordados. Un skill específico del proyecto indica a cada agente de programación que lea su especificación aprobada y las secciones citadas de las fuentes antes de planificar código.',
     paragraph:
       'Su equipo aporta los documentos del proyecto, los requisitos y las decisiones sobre personas y plazos. Su agente de IA usa esta verdad de referencia para crear un plan conectado, una especificación por cada elemento de trabajo e incidencias de GitHub que enlazan cada especificación y citan las secciones de los documentos en que se basa. Su agente de IA también genera un agent skill específico del proyecto que lleva la especificación, las decisiones que la sustentan y las secciones citadas hasta el agente de programación de cada ingeniero. Cuando cambia un documento, usted revisa una sola actualización.',
     buttons: {
@@ -333,8 +333,7 @@ export const es: Strings = {
     /** The last sentence under How it works; the middle word is the link to the README section. */
     learnMore: { before: 'Más información ', link: 'aquí', after: '.' },
     sideParagraphs: [
-      'Cuando los ingenieros escriben las especificaciones por separado, la calidad varía y las especificaciones se desvían a medida que el proyecto cambia.',
-      'Carried-context development vincula cada especificación a la misma verdad de referencia, cita las fuentes y entrega cada cambio aprobado a cada agente de programación.',
+      'Cuando el proyecto cambia, su agente propone actualizaciones del trabajo afectado para que usted las apruebe.',
     ],
     values: [
       {
