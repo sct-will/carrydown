@@ -325,8 +325,8 @@ export const fr: Strings = {
       'Carried-context development est une approche du développement agentique. Votre équipe fournit les documents du projet, les exigences et les décisions sur les personnes et les échéances. Votre agent d’IA s’appuie sur cette vérité de référence pour créer un plan connecté, une spécification pour chaque élément de travail et des tickets GitHub qui lient chaque spécification et citent les sections de documents sur lesquelles elle repose. Votre agent d’IA génère aussi un agent skill propre au projet, qui porte la spécification, les décisions qui la fondent et les sections citées jusqu’à l’agent de codage de chaque ingénieur. Quand un document change, vous relisez une seule mise à jour.',
     buttons: {
       try: 'Commencer ici',
-      sample: 'Voir les productions de l’agent d’IA d’un projet exemple',
     },
+    sampleLink: 'Voyez ce qu’un agent a créé pour un projet exemple',
     /** A small line under the buttons. */
     license: 'Open source sous licence Apache 2.0.',
     howHeading: 'Comment ça marche',
@@ -362,7 +362,7 @@ export const fr: Strings = {
           title: 'Regarder un exemple de plan terminé.',
           body: 'Le tableau exemple et ses tickets, sur GitHub.',
           command: '',
-          button: 'Ouvrir l’exemple',
+          button: 'Voyez ce qu’un agent a créé pour un projet exemple',
         },
         {
           step: 'Étape 2',

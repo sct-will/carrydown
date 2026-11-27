@@ -334,9 +334,10 @@ export const en = {
       'Carried-context development is an approach to agentic development. Your team provides the project documents, the requirements and the decisions about people and deadlines. Your AI agent uses this ground truth to create a connected plan, a spec for every work item, and GitHub issues that link each spec and cite the document sections behind it. Your AI agent also generates a project-specific agent skill that carries the spec, the decisions behind the work and the cited sections to each engineer’s coding agent. When a document changes, you review one update.',
     buttons: {
       try: 'Start here',
-      sample: 'See a sample project’s AI agent outputs',
     },
-    /** A small line under the buttons. */
+    /** The text link under the Start here button. It opens the sample board, as step 1 of Try it out does. */
+    sampleLink: 'See what an agent created for a sample project',
+    /** A small line under the Start here button and the sample link. */
     license: 'Open source under Apache 2.0.',
     howHeading: 'How it works',
     /** The last sentence under How it works; the middle word is the link to the README section. */
@@ -371,7 +372,7 @@ export const en = {
           title: 'Look at a sample finished plan.',
           body: 'The sample board and its issues, on GitHub.',
           command: '',
-          button: 'Open the sample',
+          button: 'See what an agent created for a sample project',
         },
         {
           step: 'Step 2',

@@ -227,6 +227,18 @@ body.site {
   gap: 12px;
   align-items: center;
 }
+/* The sample link under the button: a plain text link, 18 px below it. The padding and the matching
+ * negative margin give it a 44 px tap target without moving the line. */
+.site .sample-link {
+  margin: 18px 0 0;
+  font-size: 17px;
+  line-height: 1.55;
+}
+.site .sample-link a {
+  display: inline-block;
+  padding: 9px 0;
+  margin: -9px 0;
+}
 .site .license {
   margin: 22px 0 0;
   color: var(--ink-soft);

@@ -325,8 +325,8 @@ export const de: Strings = {
       'Carried-context development ist ein Ansatz für agentische Entwicklung. Ihr Team liefert die Projektdokumente, die Anforderungen und die Entscheidungen zu Personen und Terminen. Ihr KI-Agent nutzt diese Faktengrundlage, um einen verbundenen Plan, eine Spezifikation für jedes Arbeitspaket und GitHub-Issues zu erstellen, die jede Spezifikation verlinken und die dahinterstehenden Dokumentabschnitte belegen. Ihr KI-Agent generiert außerdem einen projektspezifischen Agent Skill, der die Spezifikation, die Entscheidungen dahinter und die belegten Abschnitte zum Coding-Agenten jedes Entwicklers trägt. Wenn sich ein Dokument ändert, prüfen Sie eine einzige Aktualisierung.',
     buttons: {
       try: 'Hier starten',
-      sample: 'KI-Agent-Ergebnisse eines Beispielprojekts ansehen',
     },
+    sampleLink: 'Sehen Sie, was ein Agent für ein Beispielprojekt erstellt hat',
     /** A small line under the buttons. */
     license: 'Open Source unter Apache 2.0.',
     howHeading: 'So funktioniert es',
@@ -362,7 +362,7 @@ export const de: Strings = {
           title: 'Einen fertigen Beispielplan ansehen.',
           body: 'Das Beispielboard und seine Issues auf GitHub.',
           command: '',
-          button: 'Beispiel öffnen',
+          button: 'Sehen Sie, was ein Agent für ein Beispielprojekt erstellt hat',
         },
         {
           step: 'Schritt 2',
