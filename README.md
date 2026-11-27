@@ -6,7 +6,7 @@ carrydown is the open source reference implementation of [carried-context develo
 - **Decisions and sources reach each coding agent.** The generated project skill directs each engineer’s coding agent to read the approved specification, cited source excerpts and project conventions before planning code.
 - **Keep the handoff aligned as the project changes.** Report a changed source or a specification problem. Your agent proposes updates to potentially affected work and keeps engineer corrections that still fit. You resolve conflicts and approve updates before publication.
 
-[![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-teal)](https://agentskills.io)
+[![Continuous integration status](https://github.com/sct-will/carrydown/actions/workflows/ci.yml/badge.svg)](https://github.com/sct-will/carrydown/actions/workflows/ci.yml) [![License](https://img.shields.io/github/license/sct-will/carrydown?v=2)](LICENSE) [![Agent Skills](https://img.shields.io/badge/Agent%20Skills-2%20skills-BC5A2E)](https://agentskills.io)
 
 [Start here](#start-here) | [What to tell your agent, and when](#what-to-tell-your-agent-and-when) | [FAQ](https://carriedcontext.dev/faq/) | [How it works](#how-it-works) | [Explore the sample](#explore-the-sample) | [What you get](#what-you-get) | [AI governance](#how-does-carrydown-support-ai-governance) | [Contributing and license](#contributing-and-license)
 
