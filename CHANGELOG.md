@@ -23,6 +23,10 @@ All notable changes to this project are written here. The format follows Keep a 
 
 - **The plan owner reviews a page, not a YAML file.** `plan_page.py` writes the plan page into the private workspace from the plan, the people file, the specifications and the checker: the project overview, people and feasibility, the milestones, the work items with their acceptance criteria and sources, and the review findings. During an update it leads with what changed and what needs a decision. The planning skill writes it as soon as the draft exists and refreshes it after every change, and the owner asks for changes in the conversation. It is static HTML with no scripts and no external resources, and it never enters the repository.
 
+### Continuous integration
+
+- **A pull request checks in about six minutes.** A pull request runs the self test on Ubuntu 24.04 with Python 3.9 and on Windows with the current Python, the two acceptance scenario runs and the six negative tests in one job, one step each. The full matrix, every operating system on both Pythons, macOS included, runs on every push to `main` and every night. A pull request that changes a page the website is built from runs the website build and tests without deploying, and one that changes only the website skips the Python jobs. Before, every pull request waited for six self test legs, and the macOS runners queued for twenty minutes.
+
 ### Windows
 
 - **The self test passes on Windows, and the Windows legs gate continuous integration.** A `.gitattributes` file checks out every text file with LF line endings, so the sample's bundles match their recorded digests on a Windows checkout. Every text file the scripts write is UTF-8 with LF line endings on every platform. The specification scaffold prints project paths with forward slashes, and output to a reader that stops early ends quietly on Windows too. The unit test suite still runs on Ubuntu and macOS only; its port to Windows is a separate change.

@@ -8,13 +8,15 @@ A short description of the change and why it is needed. Link the issue it closes
 - [ ] A template in `templates/`
 - [ ] A skill (`skills/<name>/`):
 - [ ] The sample
+- [ ] The website (`website/`)
 - [ ] Documentation only
 
 ## Checks
 
-- [ ] `python3 scripts/selftest.py` passes. This runs the checker and the dry runs on the sample.
+- [ ] If I changed a script or template, `python3 scripts/selftest.py` passes. It runs the checker and the dry runs on the sample.
 - [ ] `python3 scripts/lint_prose.py` passes.
 - [ ] If I changed a script or template, I ran `python3 scripts/sync_skill_assets.py --apply` so the skill copies are current.
+- [ ] If I changed the website, `npm run build` and then `npm test` pass in `website/`.
 - [ ] If the change talks to GitHub, I tested it on a throwaway private repository and describe it below.
 
 Checker result on the sample (paste the summary line):

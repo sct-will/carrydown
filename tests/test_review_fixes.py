@@ -284,7 +284,7 @@ class DraftNoticeTests(unittest.TestCase):
         self.assertNotIn("Draft notice", text)
         workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         self.assertIn("python tests/scenario_embedded_release.py", workflow)
-        self.assertIn("python tests/test_negative_release.py ${{ matrix.group }}", workflow)
+        self.assertIn("python tests/test_negative_release.py G1", workflow)
         self.assertTrue((ROOT / "tests" / "scenario_embedded_release.py").is_file())
 
 
