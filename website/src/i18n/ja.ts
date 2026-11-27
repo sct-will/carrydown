@@ -312,11 +312,8 @@ export const ja: Strings = {
     title: 'Carried context、すべてのコーディングエージェントにひとつのグラウンドトゥルースを',
     description:
       'Carried-context development は、プロジェクトの決定とコンテキストを各エンジニアのコーディングエージェントまで伝え、プロジェクトが変わっても仕様とコーディングエージェントの整合を保つのを助ける、エージェント開発のアプローチです。',
-    h1: [
-      'Carried-context development は、仕様駆動開発のその先へ。',
-      'コンテキストは、作業と一緒に旅をする。',
-    ],
-    /** The part of the second title line set in the amber, a styling choice a native reviewer may move or empty. */
+    h1: 'Carried-context development では、エージェントのコンテキストが作業と一緒に旅をする。',
+    /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
     h1Emphasis: '作業と一緒に旅をする。',
     definition:
       '各エンジニアのコーディングエージェントに同じプロジェクトの決定とコンテキストを渡して、プロジェクトのずれを防ぎます。',
@@ -406,13 +403,13 @@ export const ja: Strings = {
       inWord: '',
       items: [
         { title: 'Web ブラウザーでページとして確認する計画', path: '', body: 'マイルストーン、トラック、担当者、期日を、あなたの人と時間に合わせて決め、負荷表とクリティカルパスを添え、各マイルストーンに理由を添えます。コミットされる計画 docs/spec/plan.yaml には、ID とトラックだけが入ります。' },
+        { title: 'エンジニアのAIエージェントスキル', path: '', body: 'あなたの仕様から生成され、リポジトリにコミットされます。エンジニアは作業項目を名指しして始めます。たとえば「Work on [work item ID]」と言えば、コーディングエージェントはまずその項目の仕様と承認済みコンテキストを読みます。' },
         { title: '作業項目ごとの仕様', path: '', body: 'エンジニアが完了して見せられる最小の作業単位です。根拠のセクションを引用し、プルリクエストごとに計画と照合されます。' },
         { title: '作業項目ごとの承認済みコンテキスト', path: 'docs/context/', body: '項目が引用する出典の正確な本文と、その背後の決定を、あなたが承認したものです。エンジニアのエージェントに届く、文書の唯一の部分です。' },
         { title: 'リリースの受領記録', path: 'docs/release/', body: '承認されたリリース、その状態と有効期限を記した小さな公開ファイルです。' },
         { title: '二次レビューの報告書', path: '', body: 'カバレッジ、根拠、理由、リスクに、あなたの決定と、受け入れた修正のチェックを添えたものです。' },
         { title: 'GitHub イシュー', path: '', body: 'マイルストーンごとのサブエピックの下に作業項目ごとに一つ。それぞれがエンジニアのエージェントに何を読むべきかを伝えます。' },
         { title: 'GitHub プロジェクトボード', path: '', body: '作業単位、トラック、期日、チェックポイントが入力済みです。' },
-        { title: 'エンジニアのAIエージェントスキル', path: '', body: 'あなたの仕様から生成され、リポジトリにコミットされます。エンジニアは作業項目を名指しして始めます。たとえば「Work on [work item ID]」と言えば、コーディングエージェントはまずその項目の仕様と承認済みコンテキストを読みます。' },
       ],
     },
   },

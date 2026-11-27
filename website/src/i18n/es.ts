@@ -320,11 +320,8 @@ export const es: Strings = {
     title: 'Carried context, una verdad de referencia para cada agente de programación',
     description:
       'Carried-context development es un enfoque de desarrollo con agentes que lleva las decisiones y el contexto del proyecto hasta el agente de programación de cada ingeniero y ayuda a mantener alineados las especificaciones y los agentes de programación a medida que cambia el proyecto.',
-    h1: [
-      'Carried-context development va más allá del desarrollo guiado por especificaciones.',
-      'El contexto viaja con el trabajo.',
-    ],
-    /** The part of the second title line set in the amber, a styling choice a native reviewer may move or empty. */
+    h1: 'Con carried-context development, el contexto del agente viaja con el trabajo.',
+    /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
     h1Emphasis: 'viaja con el trabajo.',
     definition:
       'Mantenga el proyecto alineado dando al agente de programación de cada ingeniero las mismas decisiones y el mismo contexto del proyecto.',
@@ -414,13 +411,13 @@ export const es: Strings = {
       inWord: 'en',
       items: [
         { title: 'Un plan que usted revisa como una página en su navegador web', path: '', body: 'Hitos, líneas de trabajo, responsables y fechas ajustados a sus personas y su tiempo, con una tabla de carga y una ruta crítica, y una razón escrita para cada hito. El plan confirmado en el repositorio, docs/spec/plan.yaml, contiene solo identificadores y líneas de trabajo.' },
+        { title: 'El skill de agente de IA del ingeniero', path: '', body: 'Generado a partir de sus especificaciones y confirmado en su repositorio. Un ingeniero empieza un elemento de trabajo nombrándolo, por ejemplo «Work on [work item ID]», y el agente de programación lee primero la especificación y el contexto aprobado de ese elemento.' },
         { title: 'Una especificación por elemento de trabajo', path: '', body: 'La pieza de trabajo más pequeña que un ingeniero puede terminar y mostrar, que cita sus secciones y se comprueba contra el plan en cada pull request.' },
         { title: 'Un contexto aprobado por elemento de trabajo', path: 'docs/context/', body: 'El texto exacto de las secciones que cita el elemento y las decisiones que lo sustentan, aprobados por usted. La única parte de sus documentos que llega a los agentes de los ingenieros.' },
         { title: 'Un recibo de publicación', path: 'docs/release/', body: 'Un pequeño archivo público que nombra la publicación aprobada, su estado y su caducidad.' },
         { title: 'Un informe de segunda revisión', path: '', body: 'Cobertura, evidencia, razonamiento y riesgo, con sus decisiones y las comprobaciones de las correcciones aceptadas.' },
         { title: 'Incidencias de GitHub', path: '', body: 'Una por elemento de trabajo bajo una subépica por hito, cada una indicando al agente del ingeniero qué leer.' },
         { title: 'Un tablero de GitHub Projects', path: '', body: 'Unidades de trabajo, líneas, fechas y puntos de control rellenados.' },
-        { title: 'El skill de agente de IA del ingeniero', path: '', body: 'Generado a partir de sus especificaciones y confirmado en su repositorio. Un ingeniero empieza un elemento de trabajo nombrándolo, por ejemplo «Work on [work item ID]», y el agente de programación lee primero la especificación y el contexto aprobado de ese elemento.' },
       ],
     },
   },

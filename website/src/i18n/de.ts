@@ -320,12 +320,9 @@ export const de: Strings = {
     title: 'Carried context, eine Faktengrundlage für jeden Coding-Agenten',
     description:
       'Carried-context development ist ein Ansatz für agentische Entwicklung, der Projektentscheidungen und Kontext bis zum Coding-Agenten jedes Entwicklers trägt und so hilft, Spezifikationen und Coding-Agenten aufeinander abgestimmt zu halten, während sich das Projekt ändert.',
-    h1: [
-      'Carried-context development geht über spezifikationsgetriebene Entwicklung hinaus.',
-      'Der Kontext reist mit der Arbeit.',
-    ],
-    /** The part of the second title line set in the amber, a styling choice a native reviewer may move or empty. */
-    h1Emphasis: 'reist mit der Arbeit.',
+    h1: 'Carried-context development sorgt dafür, dass der Agentenkontext mit der Arbeit reist.',
+    /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
+    h1Emphasis: 'mit der Arbeit reist.',
     definition:
       'Halten Sie das Projekt ausgerichtet, indem Sie dem Coding-Agenten jedes Entwicklers dieselben Projektentscheidungen und denselben Kontext geben.',
     paragraph:
@@ -414,13 +411,13 @@ export const de: Strings = {
       inWord: 'in',
       items: [
         { title: 'Ein Plan, den Sie als Seite in Ihrem Webbrowser prüfen', path: '', body: 'Meilensteine, Tracks, Verantwortliche und Termine, an Ihre Leute und Ihre Zeit angepasst, mit einer Lasttabelle und einem kritischen Pfad und einer Begründung für jeden Meilenstein. Der eingecheckte Plan, docs/spec/plan.yaml, enthält nur Ids und Tracks.' },
+        { title: 'Der KI-Agent-Skill des Entwicklers', path: '', body: 'Aus Ihren Spezifikationen generiert und in Ihrem Repository committet. Ein Entwickler startet ein Arbeitspaket, indem er es nennt, zum Beispiel „Work on [work item ID]“, und der Coding-Agent liest zuerst die Spezifikation und den freigegebenen Kontext dieses Pakets.' },
         { title: 'Eine Spezifikation pro Arbeitspaket', path: '', body: 'Das kleinste Stück Arbeit, das ein Entwickler abschließen und vorführen kann, mit Belegen auf seine Abschnitte und bei jedem Pull Request gegen den Plan geprüft.' },
         { title: 'Ein freigegebener Kontext pro Arbeitspaket', path: 'docs/context/', body: 'Der genaue Quelltext der belegten Abschnitte und die Entscheidungen dahinter, von Ihnen freigegeben. Der einzige Teil Ihrer Dokumente, der die Agenten der Entwickler erreicht.' },
         { title: 'Eine Release-Quittung', path: 'docs/release/', body: 'Eine kleine öffentliche Datei, die das freigegebene Release, seinen Zustand und sein Ablaufdatum nennt.' },
         { title: 'Ein Bericht der zweiten Prüfung', path: '', body: 'Abdeckung, Belege, Begründung und Risiko, mit Ihren Entscheidungen und den Prüfungen der angenommenen Korrekturen.' },
         { title: 'GitHub-Issues', path: '', body: 'Eines pro Arbeitspaket unter einem Sub-Epic pro Meilenstein, und jedes sagt dem Agenten des Entwicklers, was er lesen soll.' },
         { title: 'Ein GitHub-Projektboard', path: '', body: 'Arbeitseinheiten, Tracks, Termine und Checkpoints ausgefüllt.' },
-        { title: 'Der KI-Agent-Skill des Entwicklers', path: '', body: 'Aus Ihren Spezifikationen generiert und in Ihrem Repository committet. Ein Entwickler startet ein Arbeitspaket, indem er es nennt, zum Beispiel „Work on [work item ID]“, und der Coding-Agent liest zuerst die Spezifikation und den freigegebenen Kontext dieses Pakets.' },
       ],
     },
   },

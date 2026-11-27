@@ -320,11 +320,8 @@ export const fr: Strings = {
     title: 'Carried context, une vérité de référence pour chaque agent de codage',
     description:
       'Carried-context development est une approche du développement agentique qui fait descendre les décisions et le contexte du projet jusqu’à l’agent de codage de chaque ingénieur et aide à garder les spécifications et les agents de codage alignés à mesure que le projet évolue.',
-    h1: [
-      'Carried-context development va plus loin que le développement piloté par les spécifications.',
-      'Le contexte voyage avec le travail.',
-    ],
-    /** The part of the second title line set in the amber, a styling choice a native reviewer may move or empty. */
+    h1: 'Avec carried-context development, le contexte de l’agent voyage avec le travail.',
+    /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
     h1Emphasis: 'voyage avec le travail.',
     definition:
       'Gardez le projet aligné en donnant à l’agent de codage de chaque ingénieur les mêmes décisions et le même contexte de projet.',
@@ -414,13 +411,13 @@ export const fr: Strings = {
       inWord: 'dans',
       items: [
         { title: 'Un plan que vous relisez comme une page dans votre navigateur web', path: '', body: 'Jalons, pistes, responsables et dates ajustés à vos personnes et à votre temps, avec un tableau de charge et un chemin critique, et une raison écrite pour chaque jalon. Le plan validé dans le dépôt, docs/spec/plan.yaml, ne contient que les identifiants et les pistes.' },
+        { title: 'Le skill d’agent d’IA de l’ingénieur', path: '', body: 'Généré à partir de vos spécifications et commité dans votre dépôt. Un ingénieur démarre un élément de travail en le nommant, par exemple « Work on [work item ID] », et l’agent de codage lit d’abord la spécification et le contexte approuvé de cet élément.' },
         { title: 'Une spécification par élément de travail', path: '', body: 'La plus petite unité de travail qu’un ingénieur peut terminer et montrer, citant ses sections et vérifiée par rapport au plan à chaque pull request.' },
         { title: 'Un contexte approuvé par élément de travail', path: 'docs/context/', body: 'Le texte exact des sections citées et les décisions qui le fondent, approuvés par vous. La seule partie de vos documents qui atteint les agents des ingénieurs.' },
         { title: 'Un reçu de publication', path: 'docs/release/', body: 'Un petit fichier public qui nomme la publication approuvée, son état et son expiration.' },
         { title: 'Un rapport de seconde revue', path: '', body: 'Couverture, preuves, raisonnement et risque, avec vos décisions et les contrôles des corrections acceptées.' },
         { title: 'Des tickets GitHub', path: '', body: 'Un par élément de travail sous une sous-épopée par jalon, chacun disant à l’agent de l’ingénieur quoi lire.' },
         { title: 'Un tableau GitHub Projects', path: '', body: 'Unités de travail, pistes, dates et points de contrôle remplis.' },
-        { title: 'Le skill d’agent d’IA de l’ingénieur', path: '', body: 'Généré à partir de vos spécifications et commité dans votre dépôt. Un ingénieur démarre un élément de travail en le nommant, par exemple « Work on [work item ID] », et l’agent de codage lit d’abord la spécification et le contexte approuvé de cet élément.' },
       ],
     },
   },

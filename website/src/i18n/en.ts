@@ -328,12 +328,9 @@ export const en = {
     title: 'Carried context, one ground truth for every coding agent',
     description:
       'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent and helps keep specifications and coding agents aligned as the project changes.',
-    h1: [
-      'Carried-context development goes beyond spec-driven development.',
-      'The context travels with the work.',
-    ],
-    /** The part of the second title line set in the amber. The line itself stays whole; this names which
-     * part of it is emphasized. Empty leaves the line plain. */
+    h1: 'With carried-context development, agent context travels with the work.',
+    /** The part of the title set in amber. The title stays one string; this names which part of it is
+     * emphasized. Empty leaves the title plain. */
     h1Emphasis: 'travels with the work.',
     definition:
       'Keep the project aligned by giving each engineer’s coding agent the same project decisions and context.',
@@ -423,13 +420,13 @@ export const en = {
       inWord: 'in',
       items: [
         { title: 'A plan you review as a page in your web browser', path: '', body: 'Milestones, tracks, owners and dates fitted to your people and time, with a load table and a critical path, and a reason for every milestone. The committed plan, docs/spec/plan.yaml, holds ids and tracks only.' },
+        { title: 'The engineer’s AI agent skill', path: '', body: 'Generated from your specifications and committed in your repository. An engineer starts a work item by naming it, for example “Work on [work item ID]”, and the coding agent reads that item’s specification and approved context before it touches code.' },
         { title: 'One specification per work item', path: '', body: 'The smallest piece of work an engineer can finish and show, citing its sections and checked against the plan on every pull request.' },
         { title: 'One approved context per work item', path: 'docs/context/', body: 'The exact source text the item cites and the decisions behind it, approved by you. The only part of your documents that reaches the engineers’ agents.' },
         { title: 'A release receipt', path: 'docs/release/', body: 'A small public file naming the approved release, its state and its expiry.' },
         { title: 'A second-pass review report', path: '', body: 'Coverage, evidence, reasoning and risk, with your decisions and the checks on accepted repairs.' },
         { title: 'GitHub issues', path: '', body: 'One per work item under a sub-epic per milestone, each telling the engineer’s agent what to read.' },
         { title: 'A GitHub Project board', path: '', body: 'Work units, tracks, dates and checkpoints filled in.' },
-        { title: 'The engineer’s AI agent skill', path: '', body: 'Generated from your specifications and committed in your repository. An engineer starts a work item by naming it, for example “Work on [work item ID]”, and the coding agent reads that item’s specification and approved context before it touches code.' },
       ],
     },
   },

@@ -298,11 +298,8 @@ export const zhCN: Strings = {
     title: 'Carried context，为每个编码代理提供同一个基准事实',
     description:
       'Carried-context development 是一种智能体开发方法，把项目决策和上下文一直传递到每位工程师的编码代理，并帮助规格和编码代理在项目变化时保持一致。',
-    h1: [
-      'Carried-context development 超越规格驱动开发。',
-      '上下文与工作同行。',
-    ],
-    /** The part of the second title line set in the amber, a styling choice a native reviewer may move or empty. */
+    h1: '借助 Carried-context development，代理上下文与工作同行。',
+    /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
     h1Emphasis: '与工作同行。',
     definition:
       '把同样的项目决策和上下文交给每位工程师的编码代理，让项目保持一致。',
@@ -392,13 +389,13 @@ export const zhCN: Strings = {
       inWord: '位于',
       items: [
         { title: '一份你在网页浏览器中以页面形式审阅的计划', path: '', body: '里程碑、工作线、负责人和日期按你的人员和时间来安排，附带负荷表和关键路径，每个里程碑都写明理由。提交到仓库的计划 docs/spec/plan.yaml 只包含 ID 和工作线。' },
+        { title: '工程师的 AI 代理 skill', path: '', body: '由你的规格生成并提交到你的仓库。工程师通过点名来开始一个工作项，例如“Work on [work item ID]”，编码代理会先读取该工作项的规格和已批准的上下文。' },
         { title: '每个工作项一份规格', path: '', body: '工程师能够完成并展示的最小工作单元，引用其依据的章节，并在每次拉取请求时对照计划检查。' },
         { title: '每个工作项一份已批准的上下文', path: 'docs/context/', body: '工作项所引用章节的原文和背后的决策，由你批准。这是你的文档中唯一会到达工程师代理的部分。' },
         { title: '一份发布回执', path: 'docs/release/', body: '一个小的公开文件，写明已批准的发布、其状态和有效期。' },
         { title: '一份二次审阅报告', path: '', body: '覆盖范围、证据、推理和风险，加上你的决定以及对已接受修复的检查。' },
         { title: 'GitHub issue', path: '', body: '每个工作项一个，归在每个里程碑的子史诗之下，每个都告诉工程师的代理该读什么。' },
         { title: '一个 GitHub 项目看板', path: '', body: '工作单元、工作线、日期和检查点均已填好。' },
-        { title: '工程师的 AI 代理 skill', path: '', body: '由你的规格生成并提交到你的仓库。工程师通过点名来开始一个工作项，例如“Work on [work item ID]”，编码代理会先读取该工作项的规格和已批准的上下文。' },
       ],
     },
   },
