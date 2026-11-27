@@ -129,7 +129,7 @@ export const zhCN: Strings = {
     description:
       '关于 carried-context development 和 carrydown 的解答：它与规格驱动开发的区别、为什么它不是瀑布式、GitHub 上的工作如何与基准事实保持一致，以及 carrydown 不做什么。',
     h1: '常见问题',
-    intro: '最常见问题的解答，并在有更多内容处链接到文档。每个问题都有自己的链接。',
+    intro: '最常见问题的解答，并在有更多内容处链接到文档。',
     methodHeading: '关于 carried-context development',
     toolHeading: '关于 carrydown',
     anchorLabel: '此问题的链接',
@@ -294,25 +294,24 @@ export const zhCN: Strings = {
     title: 'Carried context，为每个编码代理提供同一个基准事实',
     description:
       'Carried-context development 是一种智能体开发方法，把项目决策和上下文一直传递到每位工程师的编码代理，并帮助规格和编码代理在项目变化时保持一致。',
-    h1: '借助 Carried-context development，代理上下文与工作同行。',
+    h1: 'Carried-context development 为每个编码代理提供工作背后的决策和来源。',
     /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
-    h1Emphasis: '与工作同行。',
+    h1Emphasis: '决策和来源',
     definition:
-      '把同样的项目决策和上下文交给每位工程师的编码代理，让项目保持一致。',
+      '你的 AI 代理根据你们商定的项目文档，创建一份相互关联的计划和各项规格。项目专用的 skill 会指示每个编码代理在规划代码之前，先读取它获批的规格和所引用的来源章节。',
     paragraph:
-      '你的团队提供项目文档、需求，以及关于人员和截止日期的决策。你的 AI 代理以这些基准事实为依据，创建一份相互关联的计划、每个工作项的规格，以及链接各自规格并引用其背后文档章节的 GitHub issue。你的 AI 代理还会生成一个项目专用的 agent skill，把规格、工作背后的决策和所引用的章节传递给每位工程师的编码代理。文档发生变化时，你只需审阅一次更新。',
+      'Carried-context development 是一种智能体开发方法。你的团队提供项目文档、需求，以及关于人员和截止日期的决策。你的 AI 代理以这些基准事实为依据，创建一份相互关联的计划、每个工作项的规格，以及链接各自规格并引用其背后文档章节的 GitHub issue。你的 AI 代理还会生成一个项目专用的 agent skill，把规格、工作背后的决策和所引用的章节传递给每位工程师的编码代理。文档发生变化时，你只需审阅一次更新。',
     buttons: {
       try: '从这里开始',
-      sample: '查看示例项目的 AI 代理产出',
     },
+    sampleLink: '查看代理为示例项目创建的内容',
     /** A small line under the buttons. */
     license: '以 Apache 2.0 开源。',
     howHeading: '工作原理',
     /** The last sentence under How it works; the middle word is the link to the README section. */
     learnMore: { before: '更多信息请看', link: '这里', after: '。' },
     sideParagraphs: [
-      '工程师各自独立撰写规格时，质量参差不齐，规格也会随着项目的变化而彼此偏离。',
-      'Carried-context development 把每份规格绑定到同一个基准事实，引用来源，并把每一项获批的变更交付给每个编码代理。',
+      '项目发生变化时，你的代理会对受影响的工作提出更新，交由你批准。',
     ],
     values: [
       {
@@ -334,14 +333,14 @@ export const zhCN: Strings = {
     carrydown: {
       heading: '试一试',
       intro:
-        'Carried-context development 是一种智能体开发方法，实现它的方式不止一种。carrydown 是参考实现：你安装的两个 Agent Skills，它为你的工程师生成的第三个，以及验证每一处引用的检查。它以 Apache 2.0 开源，可与你的团队已经在用的编码代理配合使用。',
+        '实现 Carried-context development 的方式不止一种。carrydown 是参考实现：你安装的两个 Agent Skills，它为你的工程师生成的第三个，以及验证每一处引用的检查。它以 Apache 2.0 开源，可与你的团队已经在用的编码代理配合使用。',
       tiles: [
         {
           step: '第 1 步',
           title: '看一份完成的示例计划。',
           body: 'GitHub 上的示例看板及其 issue。',
           command: '',
-          button: '打开示例',
+          button: '查看代理为示例项目创建的内容',
         },
         {
           step: '第 2 步',

@@ -148,7 +148,7 @@ export const es: Strings = {
     description:
       'Respuestas sobre carried-context development y carrydown: en qué se diferencia del desarrollo guiado por especificaciones, por qué no es cascada, cómo el trabajo en GitHub se mantiene conciliado con la verdad de referencia y qué no hace carrydown.',
     h1: 'Preguntas',
-    intro: 'Respuestas a las preguntas más frecuentes, con enlaces a la documentación donde hay más. Cada pregunta tiene su propio enlace.',
+    intro: 'Respuestas a las preguntas más frecuentes, con enlaces a la documentación donde hay más.',
     methodHeading: 'Sobre carried-context development',
     toolHeading: 'Sobre carrydown',
     anchorLabel: 'Enlace a esta pregunta',
@@ -316,25 +316,24 @@ export const es: Strings = {
     title: 'Carried context, una verdad de referencia para cada agente de programación',
     description:
       'Carried-context development es un enfoque de desarrollo con agentes que lleva las decisiones y el contexto del proyecto hasta el agente de programación de cada ingeniero y ayuda a mantener alineados las especificaciones y los agentes de programación a medida que cambia el proyecto.',
-    h1: 'Con carried-context development, el contexto del agente viaja con el trabajo.',
+    h1: 'Carried-context development da a cada agente de programación las decisiones y fuentes detrás del trabajo.',
     /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
-    h1Emphasis: 'viaja con el trabajo.',
+    h1Emphasis: 'decisiones y fuentes',
     definition:
-      'Mantenga el proyecto alineado dando al agente de programación de cada ingeniero las mismas decisiones y el mismo contexto del proyecto.',
+      'Su agente de IA crea un plan conectado y las especificaciones a partir de sus documentos de proyecto acordados. Un skill específico del proyecto indica a cada agente de programación que lea su especificación aprobada y las secciones citadas de las fuentes antes de planificar código.',
     paragraph:
-      'Su equipo aporta los documentos del proyecto, los requisitos y las decisiones sobre personas y plazos. Su agente de IA usa esta verdad de referencia para crear un plan conectado, una especificación por cada elemento de trabajo e incidencias de GitHub que enlazan cada especificación y citan las secciones de los documentos en que se basa. Su agente de IA también genera un agent skill específico del proyecto que lleva la especificación, las decisiones que la sustentan y las secciones citadas hasta el agente de programación de cada ingeniero. Cuando cambia un documento, usted revisa una sola actualización.',
+      'Carried-context development es un enfoque de desarrollo con agentes. Su equipo aporta los documentos del proyecto, los requisitos y las decisiones sobre personas y plazos. Su agente de IA usa esta verdad de referencia para crear un plan conectado, una especificación por cada elemento de trabajo e incidencias de GitHub que enlazan cada especificación y citan las secciones de los documentos en que se basa. Su agente de IA también genera un agent skill específico del proyecto que lleva la especificación, las decisiones que la sustentan y las secciones citadas hasta el agente de programación de cada ingeniero. Cuando cambia un documento, usted revisa una sola actualización.',
     buttons: {
       try: 'Empiece aquí',
-      sample: 'Ver los resultados del agente de IA de un proyecto de ejemplo',
     },
+    sampleLink: 'Vea lo que un agente creó para un proyecto de ejemplo',
     /** A small line under the buttons. */
     license: 'Código abierto bajo Apache 2.0.',
     howHeading: 'Cómo funciona',
     /** The last sentence under How it works; the middle word is the link to the README section. */
     learnMore: { before: 'Más información ', link: 'aquí', after: '.' },
     sideParagraphs: [
-      'Cuando los ingenieros escriben las especificaciones por separado, la calidad varía y las especificaciones se desvían a medida que el proyecto cambia.',
-      'Carried-context development vincula cada especificación a la misma verdad de referencia, cita las fuentes y entrega cada cambio aprobado a cada agente de programación.',
+      'Cuando el proyecto cambia, su agente propone actualizaciones del trabajo afectado para que usted las apruebe.',
     ],
     values: [
       {
@@ -356,14 +355,14 @@ export const es: Strings = {
     carrydown: {
       heading: 'Pruébelo',
       intro:
-        'Carried-context development es un enfoque de desarrollo con agentes, y hay más de una forma de implementarlo. carrydown es la implementación de referencia: dos Agent Skills que usted instala, un tercero que genera para sus ingenieros y las comprobaciones que validan cada cita. Es de código abierto bajo Apache 2.0 y funciona con el agente de programación que su equipo ya usa.',
+        'Hay más de una forma de implementar carried-context development. carrydown es la implementación de referencia: dos Agent Skills que usted instala, un tercero que genera para sus ingenieros y las comprobaciones que validan cada cita. Es de código abierto bajo Apache 2.0 y funciona con el agente de programación que su equipo ya usa.',
       tiles: [
         {
           step: 'Paso 1',
           title: 'Mire un ejemplo de plan terminado.',
           body: 'El tablero de ejemplo y sus incidencias, en GitHub.',
           command: '',
-          button: 'Abrir el ejemplo',
+          button: 'Vea lo que un agente creó para un proyecto de ejemplo',
         },
         {
           step: 'Paso 2',

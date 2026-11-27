@@ -42,15 +42,15 @@ const parts = (text: string) => text.split('--apply');
               {section.items.map((item) => (
                 <div class="faq-item" id={item.id}>
                   <h3 class="faq-q">
+                    <a class="faq-anchor-link" href={`#${item.id}`} aria-label={f.anchorLabel}>
+                      <svg class="faq-anchor" viewBox="0 0 24 24" aria-hidden="true" focusable="false" set:html={anchorIcon}></svg>
+                    </a>
                     <button type="button" class="faq-toggle" aria-expanded="true" aria-controls={`${item.id}-answer`}>
                       <span class="faq-q-text">{item.q}</span>
                       <svg class="faq-chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
                         <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"></path>
                       </svg>
                     </button>
-                    <a class="faq-anchor-link" href={`#${item.id}`} aria-label={f.anchorLabel}>
-                      <svg class="faq-anchor" viewBox="0 0 24 24" aria-hidden="true" focusable="false" set:html={anchorIcon}></svg>
-                    </a>
                   </h3>
                   <div class="faq-panel" id={`${item.id}-answer`}>
                     <p class="faq-a">{item.a}</p>

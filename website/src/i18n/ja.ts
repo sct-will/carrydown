@@ -140,7 +140,7 @@ export const ja: Strings = {
     description:
       'carried-context development と carrydown についての回答。仕様駆動開発との違い、ウォーターフォールではない理由、GitHub 上の作業がグラウンドトゥルースと整合し続ける仕組み、そして carrydown がしないこと。',
     h1: 'よくある質問',
-    intro: 'よくある質問への回答です。詳しい説明があるところにはドキュメントへのリンクがあります。各質問には固有のリンクがあります。',
+    intro: 'よくある質問への回答です。詳しい説明があるところにはドキュメントへのリンクがあります。',
     methodHeading: 'carried-context development について',
     toolHeading: 'carrydown について',
     anchorLabel: 'この質問へのリンク',
@@ -308,25 +308,24 @@ export const ja: Strings = {
     title: 'Carried context、すべてのコーディングエージェントにひとつのグラウンドトゥルースを',
     description:
       'Carried-context development は、プロジェクトの決定とコンテキストを各エンジニアのコーディングエージェントまで伝え、プロジェクトが変わっても仕様とコーディングエージェントの整合を保つのを助ける、エージェント開発のアプローチです。',
-    h1: 'Carried-context development では、エージェントのコンテキストが作業と一緒に旅をする。',
+    h1: 'Carried-context development は、作業の背後にある決定と出典を各コーディングエージェントに渡す。',
     /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
-    h1Emphasis: '作業と一緒に旅をする。',
+    h1Emphasis: '決定と出典',
     definition:
-      '各エンジニアのコーディングエージェントに同じプロジェクトの決定とコンテキストを渡して、プロジェクトのずれを防ぎます。',
+      'AIエージェントは、合意済みのプロジェクト文書から、つながった計画と仕様を作成します。プロジェクト専用のスキルが、各コーディングエージェントに、コードを計画する前にそれぞれの承認済みの仕様と引用された出典セクションを読むよう指示します。',
     paragraph:
-      'チームは、プロジェクトの文書、要件、人や期限についての決定を用意します。AIエージェントはこのグラウンドトゥルースを使って、つながった計画、作業項目ごとの仕様、各仕様へのリンクと根拠となる文書セクションの引用を持つ GitHub イシューを作ります。AIエージェントはさらに、仕様、その背後にある決定、引用されたセクションを各エンジニアのコーディングエージェントへ届ける、プロジェクト専用のエージェントスキルも生成します。文書が変わったときは、ひとつの更新をレビューするだけです。',
+      'Carried-context development は、エージェント開発のアプローチです。チームは、プロジェクトの文書、要件、人や期限についての決定を用意します。AIエージェントはこのグラウンドトゥルースを使って、つながった計画、作業項目ごとの仕様、各仕様へのリンクと根拠となる文書セクションの引用を持つ GitHub イシューを作ります。AIエージェントはさらに、仕様、その背後にある決定、引用されたセクションを各エンジニアのコーディングエージェントへ届ける、プロジェクト専用のエージェントスキルも生成します。文書が変わったときは、ひとつの更新をレビューするだけです。',
     buttons: {
       try: 'ここから始める',
-      sample: 'サンプルプロジェクトのAIエージェントの成果物を見る',
     },
+    sampleLink: 'エージェントがサンプルプロジェクト向けに作成したものを見る',
     /** A small line under the buttons. */
     license: 'Apache 2.0 のオープンソースです。',
     howHeading: '仕組み',
     /** The last sentence under How it works; the middle word is the link to the README section. */
     learnMore: { before: '詳しくは', link: 'こちら', after: '。' },
     sideParagraphs: [
-      'エンジニアが仕様をそれぞれ別々に書くと、品質はばらつき、プロジェクトの変化とともに仕様は離れていきます。',
-      'Carried-context development は、すべての仕様を同じグラウンドトゥルースに結びつけ、出典を引用し、承認されたすべての変更をすべてのコーディングエージェントに届けます。',
+      'プロジェクトが変わると、エージェントは影響を受ける作業の更新を提案し、あなたの承認を求めます。',
     ],
     values: [
       {
@@ -348,14 +347,14 @@ export const ja: Strings = {
     carrydown: {
       heading: '試してみる',
       intro:
-        'Carried-context development はエージェント開発のアプローチであり、実装方法はひとつではありません。carrydown はそのリファレンス実装です。インストールする二つの Agent Skills、エンジニア向けに生成される三つ目、そしてすべての引用を検証するチェックで構成されます。Apache 2.0 のオープンソースで、チームがすでに使っているコーディングエージェントで動きます。',
+        'Carried-context development の実装方法はひとつではありません。carrydown はそのリファレンス実装です。インストールする二つの Agent Skills、エンジニア向けに生成される三つ目、そしてすべての引用を検証するチェックで構成されます。Apache 2.0 のオープンソースで、チームがすでに使っているコーディングエージェントで動きます。',
       tiles: [
         {
           step: 'ステップ 1',
           title: '完成したサンプル計画を見る。',
           body: 'GitHub 上のサンプルボードとそのイシュー。',
           command: '',
-          button: 'サンプルを開く',
+          button: 'エージェントがサンプルプロジェクト向けに作成したものを見る',
         },
         {
           step: 'ステップ 2',

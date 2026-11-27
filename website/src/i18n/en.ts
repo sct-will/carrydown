@@ -152,7 +152,7 @@ export const en = {
     description:
       'Answers about carried-context development and carrydown: how it differs from spec-driven development, why it is not waterfall, how the GitHub work stays reconciled with the ground truth, and what carrydown does not do.',
     h1: 'Questions',
-    intro: 'Answers to the questions that come up most, with links into the docs where there is more. Each question has a link of its own.',
+    intro: 'Answers to the questions that come up most, with links into the docs where there is more.',
     methodHeading: 'About carried-context development',
     toolHeading: 'About carrydown',
     /** The accessible name of the link beside each question; the icon is its only visible sign. */
@@ -324,26 +324,26 @@ export const en = {
     title: 'Carried context, one ground truth for every coding agent',
     description:
       'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent and helps keep specifications and coding agents aligned as the project changes.',
-    h1: 'With carried-context development, agent context travels with the work.',
+    h1: 'Carried-context development gives each coding agent decisions and sources behind the work.',
     /** The part of the title set in amber. The title stays one string; this names which part of it is
      * emphasized. Empty leaves the title plain. */
-    h1Emphasis: 'travels with the work.',
+    h1Emphasis: 'decisions and sources',
     definition:
-      'Keep the project aligned by giving each engineer’s coding agent the same project decisions and context.',
+      'Your AI agent creates a connected plan and specifications from your agreed project documents. A project-specific skill directs each coding agent to read its approved spec and cited source sections before planning code.',
     paragraph:
-      'Your team provides the project documents, the requirements and the decisions about people and deadlines. Your AI agent uses this ground truth to create a connected plan, a spec for every work item, and GitHub issues that link each spec and cite the document sections behind it. Your AI agent also generates a project-specific agent skill that carries the spec, the decisions behind the work and the cited sections to each engineer’s coding agent. When a document changes, you review one update.',
+      'Carried-context development is an approach to agentic development. Your team provides the project documents, the requirements and the decisions about people and deadlines. Your AI agent uses this ground truth to create a connected plan, a spec for every work item, and GitHub issues that link each spec and cite the document sections behind it. Your AI agent also generates a project-specific agent skill that carries the spec, the decisions behind the work and the cited sections to each engineer’s coding agent. When a document changes, you review one update.',
     buttons: {
       try: 'Start here',
-      sample: 'See a sample project’s AI agent outputs',
     },
-    /** A small line under the buttons. */
+    /** The text link under the Start here button. It opens the sample board, as step 1 of Try it out does. */
+    sampleLink: 'See what an agent created for a sample project',
+    /** A small line under the Start here button and the sample link. */
     license: 'Open source under Apache 2.0.',
     howHeading: 'How it works',
     /** The last sentence under How it works; the middle word is the link to the README section. */
     learnMore: { before: 'Learn more ', link: 'here', after: '.' },
     sideParagraphs: [
-      'When engineers write specs independently, quality varies and the specs drift apart as the project changes.',
-      'Carried-context development ties every spec to the same ground truth, cites the sources, and delivers every approved change to every coding agent.',
+      'When the project changes, your agent proposes updates to the affected work for your approval.',
     ],
     values: [
       {
@@ -365,14 +365,14 @@ export const en = {
     carrydown: {
       heading: 'Try it out',
       intro:
-        'Carried-context development is an approach to agentic development, and there is more than one way to implement it. carrydown is a reference implementation: two Agent Skills you install, a third it generates for your engineers, and the checks that validate every citation. It is open source under Apache 2.0 and works with the coding agent your team already uses.',
+        'There is more than one way to implement carried-context development. carrydown is a reference implementation: two Agent Skills you install, a third it generates for your engineers, and the checks that validate every citation. It is open source under Apache 2.0 and works with the coding agent your team already uses.',
       tiles: [
         {
           step: 'Step 1',
           title: 'Look at a sample finished plan.',
           body: 'The sample board and its issues, on GitHub.',
           command: '',
-          button: 'Open the sample',
+          button: 'See what an agent created for a sample project',
         },
         {
           step: 'Step 2',

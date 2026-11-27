@@ -3,6 +3,7 @@
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import HowItWorks from '../HowItWorks.astro';
 import TranslationNote from '../TranslationNote.astro';
+import Mark from '../Mark.astro';
 import { getStrings } from '../../i18n';
 import { localePath } from '../../lib/paths';
 import { sampleBoardUrl } from '../../../site.config.mjs';
@@ -27,7 +28,8 @@ const two = (n: number) => String(n).padStart(2, '0');
 // stays in the docs for the installation.
 const startHereUrl = `${localePath(locale, '/docs/')}#start-here`;
 const howItWorksUrl = `${localePath(locale, '/docs/')}#how-it-works`;
-// Step 1 opens the sample board; step 2 opens Start here, like the hero button.
+// Step 1 opens the sample board, like the link under the hero button; step 2 opens Start here, like
+// the hero button.
 const tileLinks = [sampleBoardUrl, startHereUrl];
 const w = h.whatYouGet;
 ---
@@ -46,13 +48,14 @@ const w = h.whatYouGet;
               {h.buttons.try}
               <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M7 17L17 7M9 7h8v8"></path></svg></span>
             </a>
-            <a class="btn secondary" href={sampleBoardUrl}>{h.buttons.sample}</a>
           </div>
+          <p class="sample-link rise" style="--i: 2"><a href={sampleBoardUrl}>{h.sampleLink}</a></p>
           <p class="license rise" style="--i: 3">{h.license}</p>
         </div>
         <div class="hero-side">
-          <p class="defn rise" style="--i: 1">{h.definition}</p>
+          <p class="side-text rise" style="--i: 1">{h.definition}</p>
           {h.sideParagraphs.map((text, i) => <p class="sub rise" style={`--i: ${i + 2}`}>{text}</p>)}
+          <div class="side-mark rise" style={`--i: ${h.sideParagraphs.length + 2}`}><Mark size={80} /></div>
         </div>
       </div>
 
