@@ -117,10 +117,16 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def body(self):
-        n = int(self.headers.get("Content-Length") or 0)
-        return json.loads(self.rfile.read(n) or b"null")
+        return json.loads(self._raw or b"null")
 
     def handle_any(self, method):
+        # Read the whole request before answering, as GitHub does. An answer sent while part of the
+        # request is still unread makes Windows reset the connection when it closes and discard the
+        # answer the client has not read yet, so the client sees a reset instead of the status an
+        # injected failure sent. Which happens depends on whether the body arrived before the first
+        # read, so the self test failed now and then on Windows only.
+        n = int(self.headers.get("Content-Length") or 0)
+        self._raw = self.rfile.read(n) if n else b""
         u = urlparse(self.path)
         p, q = u.path, parse_qs(u.query)
         S.log.append((method, p))
