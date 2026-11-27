@@ -4,7 +4,7 @@ import starlight from '@astrojs/starlight';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { customDomain, site, base, siteName } from './site.config.mjs';
+import { customDomain, site, base, siteName, iconVersion } from './site.config.mjs';
 import { sidebar } from './src/sidebar.mjs';
 import { localeList, defaultLocale } from './src/i18n/locales.mjs';
 
@@ -72,6 +72,7 @@ export default defineConfig({
   redirects,
   integrations: [
     starlight({
+      favicon: `/favicon.svg?v=${iconVersion}`,
       title: siteName,
       description:
         'Carried-context development carries project decisions and context all the way down to each engineer’s coding agent.',

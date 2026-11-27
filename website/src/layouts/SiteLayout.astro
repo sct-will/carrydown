@@ -13,6 +13,7 @@ import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { getStrings } from '../i18n';
 import { withBase } from '../lib/paths';
+import { iconVersion } from '../../site.config.mjs';
 
 interface Props {
   title: string;
@@ -32,9 +33,9 @@ const t = getStrings(locale);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
-    <link rel="icon" type="image/png" sizes="32x32" href={withBase('/favicon-32.png')} />
-    <link rel="apple-touch-icon" href={withBase('/apple-touch-icon.png')} />
+    <link rel="icon" type="image/svg+xml" href={`${withBase('/favicon.svg')}?v=${iconVersion}`} />
+    <link rel="icon" type="image/png" sizes="32x32" href={`${withBase('/favicon-32.png')}?v=${iconVersion}`} />
+    <link rel="apple-touch-icon" href={`${withBase('/apple-touch-icon.png')}?v=${iconVersion}`} />
     <Hreflang />
     <ThemeScript />
     <Seo title={title} description={description} locale={locale} kind={kind} />

@@ -31,3 +31,7 @@ export const sourceBranch = 'main';
 
 export const sampleBoardUrl = 'https://github.com/users/sct-will/projects/2';
 export const accessibilityEmail = 'accessibility@carriedcontext.dev';
+
+/** A version stamp on the icon links. Browsers cache a favicon far longer than a page, so bump it when
+ * the icon files in public/ are regenerated; every browser then fetches the new one. */
+export const iconVersion = '2026-11-27';
