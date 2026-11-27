@@ -322,7 +322,7 @@ export const es: Strings = {
     definition:
       'Su agente de IA crea un plan conectado y las especificaciones a partir de sus documentos de proyecto acordados. Un skill específico del proyecto indica a cada agente de programación que lea su especificación aprobada y las secciones citadas de las fuentes antes de planificar código.',
     paragraph:
-      'Su equipo aporta los documentos del proyecto, los requisitos y las decisiones sobre personas y plazos. Su agente de IA usa esta verdad de referencia para crear un plan conectado, una especificación por cada elemento de trabajo e incidencias de GitHub que enlazan cada especificación y citan las secciones de los documentos en que se basa. Su agente de IA también genera un agent skill específico del proyecto que lleva la especificación, las decisiones que la sustentan y las secciones citadas hasta el agente de programación de cada ingeniero. Cuando cambia un documento, usted revisa una sola actualización.',
+      'Carried-context development es un enfoque de desarrollo con agentes. Su equipo aporta los documentos del proyecto, los requisitos y las decisiones sobre personas y plazos. Su agente de IA usa esta verdad de referencia para crear un plan conectado, una especificación por cada elemento de trabajo e incidencias de GitHub que enlazan cada especificación y citan las secciones de los documentos en que se basa. Su agente de IA también genera un agent skill específico del proyecto que lleva la especificación, las decisiones que la sustentan y las secciones citadas hasta el agente de programación de cada ingeniero. Cuando cambia un documento, usted revisa una sola actualización.',
     buttons: {
       try: 'Empiece aquí',
       sample: 'Ver los resultados del agente de IA de un proyecto de ejemplo',
@@ -355,7 +355,7 @@ export const es: Strings = {
     carrydown: {
       heading: 'Pruébelo',
       intro:
-        'Carried-context development es un enfoque de desarrollo con agentes, y hay más de una forma de implementarlo. carrydown es la implementación de referencia: dos Agent Skills que usted instala, un tercero que genera para sus ingenieros y las comprobaciones que validan cada cita. Es de código abierto bajo Apache 2.0 y funciona con el agente de programación que su equipo ya usa.',
+        'Hay más de una forma de implementar carried-context development. carrydown es la implementación de referencia: dos Agent Skills que usted instala, un tercero que genera para sus ingenieros y las comprobaciones que validan cada cita. Es de código abierto bajo Apache 2.0 y funciona con el agente de programación que su equipo ya usa.',
       tiles: [
         {
           step: 'Paso 1',

@@ -331,7 +331,7 @@ export const en = {
     definition:
       'Your AI agent creates a connected plan and specifications from your agreed project documents. A project-specific skill directs each coding agent to read its approved spec and cited source sections before planning code.',
     paragraph:
-      'Your team provides the project documents, the requirements and the decisions about people and deadlines. Your AI agent uses this ground truth to create a connected plan, a spec for every work item, and GitHub issues that link each spec and cite the document sections behind it. Your AI agent also generates a project-specific agent skill that carries the spec, the decisions behind the work and the cited sections to each engineer’s coding agent. When a document changes, you review one update.',
+      'Carried-context development is an approach to agentic development. Your team provides the project documents, the requirements and the decisions about people and deadlines. Your AI agent uses this ground truth to create a connected plan, a spec for every work item, and GitHub issues that link each spec and cite the document sections behind it. Your AI agent also generates a project-specific agent skill that carries the spec, the decisions behind the work and the cited sections to each engineer’s coding agent. When a document changes, you review one update.',
     buttons: {
       try: 'Start here',
       sample: 'See a sample project’s AI agent outputs',
@@ -364,7 +364,7 @@ export const en = {
     carrydown: {
       heading: 'Try it out',
       intro:
-        'Carried-context development is an approach to agentic development, and there is more than one way to implement it. carrydown is a reference implementation: two Agent Skills you install, a third it generates for your engineers, and the checks that validate every citation. It is open source under Apache 2.0 and works with the coding agent your team already uses.',
+        'There is more than one way to implement carried-context development. carrydown is a reference implementation: two Agent Skills you install, a third it generates for your engineers, and the checks that validate every citation. It is open source under Apache 2.0 and works with the coding agent your team already uses.',
       tiles: [
         {
           step: 'Step 1',
