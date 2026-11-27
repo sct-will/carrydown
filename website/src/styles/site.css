@@ -1,16 +1,17 @@
 /* The pages outside the docs. Everything is scoped under body.site so it never reaches Starlight.
- * The design is the round 2 mock-up in specs/carried-context-site/mockups-v2/home-a2.html: paper and
- * thread. Fraunces for display with its optical size set per size, Atkinson Hyperlegible Next for text,
- * the amber of the mark's channel as the one accent, cards as an outer shell with an inner core. */
+ * The design is the Hartwell direction of the round 3 and round 4 mockups in
+ * specs/carried-context-site/mockups-v3/ and mockups-v4/: paper, ink and one clay accent for action,
+ * amber for the title's emphasis, numbered sections with a rule above each heading, mono labels, the
+ * figure on a bone panel, the Try it out section as a pine band, hairline rows instead of cards. */
 
 body.site {
   margin: 0;
-  background: var(--cream);
+  background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 18px;
+  font-size: 17.5px;
   line-height: 1.55;
-  font-variant-numeric: oldstyle-nums proportional-nums;
+  font-variant-numeric: lining-nums proportional-nums;
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
@@ -23,39 +24,56 @@ body.site {
 .site main:focus {
   outline: none;
 }
-/* The thread system: every link is underlined in the amber of the mark's channel, and the underline
- * thickens on hover. It never disappears. */
+/* Every link is underlined in its own color, and the underline thickens on hover. It never disappears. */
 .site a {
-  color: var(--teal);
+  color: var(--clay-ink);
   text-decoration: underline;
-  text-decoration-color: var(--amber-ink);
   text-decoration-thickness: 1.5px;
-  text-underline-offset: 0.22em;
-  transition:
-    text-decoration-thickness var(--dur) var(--ease),
-    text-decoration-color var(--dur) var(--ease);
+  text-underline-offset: 0.2em;
+  transition: text-decoration-thickness var(--dur) var(--ease);
 }
 .site a:hover {
   text-decoration-thickness: 3px;
-  text-decoration-color: var(--amber);
 }
 .site a.btn,
 .site .brand {
   text-decoration: none;
 }
+/* A link styled as a button keeps the button's own colors. */
+.site a.btn.secondary {
+  color: var(--ink);
+}
+.site a.btn.primary {
+  color: #FFFFFF;
+}
+.site .on-pine a.btn.secondary {
+  color: var(--paper);
+}
 .site .brand {
   color: var(--ink);
 }
-/* The island's links and the footer's carry the thread only when current or hovered; the rule above
- * would give it to them at rest, since this sheet loads after chrome.css. */
+/* The bar's links are ink and the footer's paper, and they carry the underline only when current or
+ * hovered; the rule above would give them the link color and the underline at rest, since this sheet
+ * loads after chrome.css. */
+.site .nav-links a {
+  color: var(--ink);
+}
+.site .site-footer a {
+  color: var(--paper);
+}
 .site .nav-links a,
 .site .site-footer__links a {
   text-decoration-color: transparent;
 }
 .site .nav-links a:hover,
-.site .nav-links a[aria-current='page'],
+.site .nav-links a[aria-current='page'] {
+  text-decoration-color: var(--clay);
+}
 .site .site-footer__links a:hover {
-  text-decoration-color: var(--amber-ink);
+  text-decoration-color: var(--ochre);
+}
+.site .site-footer__copyright a {
+  text-decoration-color: var(--ochre);
 }
 .site .wrap {
   max-width: var(--measure);
@@ -64,16 +82,15 @@ body.site {
 }
 .site .mono {
   font-family: var(--font-mono);
-  font-size: 0.9em;
-  font-variant-numeric: lining-nums tabular-nums;
+  font-size: 0.86em;
+  font-variant-numeric: tabular-nums;
 }
 .site h1,
 .site h2,
 .site h3 {
-  font-family: var(--font-display);
-  font-weight: 500;
+  font-family: var(--font-body);
+  font-weight: 700;
   letter-spacing: -0.015em;
-  font-variant-numeric: lining-nums;
   text-wrap: balance;
 }
 .site h1 {
@@ -81,62 +98,74 @@ body.site {
   font-size: 3rem;
   line-height: 1.08;
   letter-spacing: -0.022em;
-  font-variation-settings: 'opsz' 144, 'SOFT' 40;
 }
 .site h2 {
   margin: 0 0 14px;
-  font-size: clamp(2.1rem, 3.6vw, 3rem);
-  line-height: 1.08;
-  text-align: left;
-  font-variation-settings: 'opsz' 96, 'SOFT' 30;
+  font-size: 2.15rem;
+  line-height: 1.15;
+  letter-spacing: -0.018em;
 }
 .site h3 {
   margin: 0 0 8px;
-  font-size: 1.5rem;
-  line-height: 1.2;
-  font-variation-settings: 'opsz' 48, 'SOFT' 20;
+  font-size: 1.4rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 .site p {
   text-wrap: pretty;
 }
-/* Eyebrow labels: true small capitals in the amber that carries text. */
-.site .eb {
-  display: inline-block;
-  color: var(--amber-ink);
-  font-size: 0.83rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  line-height: 1.2;
-  font-variant-caps: all-small-caps;
-  font-variant-numeric: lining-nums;
+/* Eyebrow labels and step labels: mono capitals in clay ink. */
+.site .eb,
+.site .tile .n {
+  display: block;
+  color: var(--clay-ink);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1.3;
+  text-transform: uppercase;
 }
 .site section {
-  padding: 112px 0;
+  padding: 96px 0;
 }
 .site section.first {
-  padding: 92px 0 64px;
-}
-.site .center {
-  text-align: center;
+  padding: 84px 0 72px;
 }
 .site .page {
   padding-block: 64px;
 }
-/* Section headings carry a short amber tie above them, the length of the diagram's connectors. */
-.site h2.tied::before {
+
+/* Section heads: the number in mono clay ink, the heading beside it, a 1.5 px ink rule above both. */
+.site .sec-head {
+  position: relative;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  align-items: baseline;
+  padding-top: 22px;
+}
+.site .sec-head::before {
   content: '';
-  display: block;
-  width: 48px;
-  height: 2px;
-  margin-bottom: 20px;
-  border-radius: 1px;
-  background: var(--amber-ink);
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1.5px;
+  background: var(--ink);
   transform-origin: left center;
 }
+.site .sec-head h2 {
+  margin: 0;
+}
+.site .num {
+  color: var(--clay-ink);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
 
-/* Home: hero. Two columns: the title and the buttons, then the definition and two short paragraphs
- * behind a vertical rule. The side column starts level with the title's first line, and the buttons
- * stay inside the first column, so nothing crosses the rule. */
+/* Home: hero. Two columns, about 7 to 5: the title, the buttons and the license line; then the
+ * definition and two short paragraphs under a 1.5 px ink rule. */
 .site .hero {
   display: grid;
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
@@ -144,188 +173,155 @@ body.site {
   align-items: start;
 }
 .site .hero-side {
-  padding-top: 10px;
-  padding-inline-start: 40px;
-  border-inline-start: 1px solid var(--border-strong);
+  margin-top: 10px;
+  padding-top: 22px;
+  border-top: 1.5px solid var(--ink);
 }
-.site h1.r25 {
-  margin: 0 0 40px;
-  font-size: clamp(2.6rem, 5.2vw, 4.5rem);
-  line-height: 1.02;
-  font-weight: 450;
+.site .hero h1 {
+  margin: 0 0 36px;
+  font-size: clamp(2.5rem, 4.5vw, 4rem);
+  line-height: 1.06;
+  letter-spacing: -0.022em;
+  font-weight: 700;
 }
-.site h1.r25 .h1-line {
+.site .h1-line {
   display: block;
 }
-.site h1.r25 .h1-line + .h1-line {
-  margin-top: 0.4em;
-}
-/* The emphasized part of the second line: the same face, upright, in the amber. */
+/* The emphasized part of the title: the same face and weight, upright, in amber ink. */
 .site .h1-line em {
   color: var(--amber-ink);
   font-style: normal;
+  font-weight: 700;
 }
 .site .defn {
-  margin: 0 0 24px;
-  font-family: var(--font-display);
-  font-size: 1.5rem;
+  margin: 0;
+  font-size: 1.3rem;
   font-weight: 500;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
-  font-variation-settings: 'opsz' 60, 'SOFT' 30;
+  line-height: 1.4;
 }
 .site .sub {
-  margin: 0 0 14px;
-  color: var(--ink-muted);
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-.site .sub:last-child {
-  margin-bottom: 0;
+  margin: 16px 0 0;
+  color: var(--ink-soft);
+  font-size: 1.03rem;
+  line-height: 1.55;
 }
 .site .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
   align-items: center;
 }
 .site .license {
   margin: 22px 0 0;
-  color: var(--ink-muted);
-  font-size: 0.8rem;
-}
-.site h2.how {
-  margin: 96px 0 18px;
-}
-/* The paragraph under the How it works heading runs the full width of the measure, flush left. */
-.site .how-intro {
-  max-width: 820px;
-  margin: 0 0 48px;
-  font-size: 1.03rem;
-  line-height: 1.6;
-  text-align: left;
-}
-/* The diagram sits on a panel: an outer shell with a hairline, an inner core on the page's ground, so
- * the drawing's raised boxes keep their contrast. The side padding is small so the wide drawing keeps
- * its scale. */
-.site .flow-frame {
-  padding: 8px;
-  border: 1px solid var(--shell-line);
-  border-radius: 30px;
-  background: var(--shell);
-}
-.site .flow-frame__in {
-  padding: 40px 32px 36px;
-  border: 1px solid var(--border-strong);
-  border-radius: 23px;
-  background: var(--cream);
-  box-shadow: var(--inner-highlight);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
 }
 
-/* Home: value lines */
+/* Home: How it works. */
+.site .how {
+  margin-top: 96px;
+}
+.site .how-intro {
+  max-width: 820px;
+  margin-block: 22px 36px;
+  font-size: 1.03rem;
+  line-height: 1.6;
+}
+/* The figure sits on a bone panel with a hairline border. The side padding is small so the wide
+ * drawing keeps its scale. */
+.site .flow-frame {
+  margin: 0 0 56px;
+  padding: 36px 28px;
+  border: 1px solid var(--hairline);
+  background: var(--bone);
+}
+
+/* Home: the three values, each under a hairline, with a mono eyebrow. */
 .site .vals {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 48px;
-  margin: 56px auto 0;
-  text-align: left;
+  gap: 44px;
 }
 .site .vals > div {
-  padding-top: 22px;
-  border-top: 2px solid var(--amber);
-}
-.site .vals .eb {
-  display: block;
-  margin-bottom: 14px;
+  padding-top: 20px;
+  border-top: 1px solid var(--hairline);
 }
 .site .vals h3 {
-  margin: 0 0 12px;
-  font-size: 1.45rem;
+  margin: 12px 0 10px;
+  font-size: 1.32rem;
+  line-height: 1.28;
 }
 .site .vals p {
   margin: 0;
-  color: var(--ink-muted);
-  font-size: 0.9rem;
-  line-height: 1.6;
+  color: var(--ink-soft);
+  font-size: 1rem;
+  line-height: 1.55;
 }
 
-/* Home: Try it out, on a deeper ground. */
+/* Home: Try it out, a pine band. Paper headings, cream body text, ochre numbers and links. */
 .site #carrydown {
-  background: var(--cream-deep);
+  padding: 84px 0;
 }
-.site .cd-h {
-  margin: 0 0 18px;
+.site .on-pine {
+  --thread: var(--ochre);
+  background: var(--pine-deep);
+  color: var(--paper);
 }
-/* The intro runs the full measure. The product name in it is set in the amber that carries text. */
+.site .on-pine .sec-head::before {
+  background: var(--cream-soft);
+}
+.site .on-pine .num,
+.site .on-pine .tile .n {
+  color: var(--ochre);
+}
+.site .on-pine a:not(.btn) {
+  color: var(--ochre);
+}
 .site .cd-intro {
-  max-width: 900px;
-  margin: 0 0 44px;
-  font-size: 1.05rem;
+  max-width: 820px;
+  margin-block: 22px 40px;
+  color: var(--cream-soft);
+  font-size: 1.03rem;
   line-height: 1.6;
 }
-.site .cd-intro a.accent {
-  color: var(--amber-ink);
-  font-weight: 600;
-}
-/* Cards: an outer shell with a hairline and a large radius, an inner core with its own surface, a
- * highlight and a smaller concentric radius. */
+/* The two steps: tiles separated by hairlines, no cards. */
 .site .tiles {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: stretch;
-  gap: 24px;
-}
-.site .tile-arrow {
-  align-self: center;
-  width: 56px;
-  height: 28px;
-  color: var(--amber);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border-top: 1px solid var(--hairline-dark);
+  border-bottom: 1px solid var(--hairline-dark);
 }
 .site .tile {
-  padding: 6px;
-  border: 1px solid var(--shell-line);
-  border-radius: 22px;
-  background: var(--shell);
-}
-.site .tile__in {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  height: 100%;
-  padding: 28px 28px 26px;
-  border: 1px solid var(--border-strong);
-  border-radius: 16px;
-  background: var(--cream-raised);
-  box-shadow: var(--inner-highlight);
+  align-items: flex-start;
+  padding: 34px 44px 36px 0;
 }
-.site .tile .n {
-  display: inline-block;
-  color: var(--amber-ink);
-  font-size: 0.83rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  line-height: 1.2;
-  font-variant-caps: all-small-caps;
-  font-variant-numeric: lining-nums;
+.site .tile + .tile {
+  padding-inline: 44px 0;
+  border-inline-start: 1px solid var(--hairline-dark);
 }
 .site .tile h3 {
-  margin: 4px 0 0;
-  font-size: 1.55rem;
+  margin: 12px 0 8px;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.012em;
 }
 .site .tile p {
   flex: 1;
-  margin: 0 0 6px;
-  color: var(--ink-muted);
-  font-size: 0.92rem;
+  margin: 0 0 24px;
+  color: var(--cream-soft);
+  font-size: 1.03rem;
 }
-.site .tile .btn {
-  align-self: flex-start;
-  margin-top: 10px;
+.site .tile .mono {
+  color: var(--paper);
 }
-/* The list of who says what is a part of the section, a step below its heading in size. */
 .site .cd-sub {
-  margin: 72px 0 22px;
-  font-size: 1.35rem;
+  margin: 56px 0 10px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: -0.005em;
 }
 .site .runsteps {
   margin: 0;
@@ -334,127 +330,107 @@ body.site {
 }
 .site .rs {
   display: grid;
-  grid-template-columns: 48px 170px 1fr;
-  gap: 24px;
+  grid-template-columns: 48px 170px minmax(0, 1fr);
+  gap: 16px;
   align-items: baseline;
-  padding: 20px 0;
-  border-top: 1px solid var(--border-strong);
-  font-size: 1rem;
+  padding: 18px 0;
+  border-top: 1px solid var(--hairline-dark);
   line-height: 1.5;
 }
 .site .rs:last-child {
-  border-bottom: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--hairline-dark);
 }
-.site .rs-body {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 24px;
-  align-items: baseline;
-}
-/* The numerals are set in the display face, in the amber. */
 .site .rs-n {
-  color: var(--amber-ink);
-  font-family: var(--font-display);
-  font-size: 1.45rem;
-  line-height: 1;
-  font-variation-settings: 'opsz' 48;
-  font-variant-numeric: lining-nums;
+  color: var(--ochre);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
 }
 .site .rs-who {
+  color: var(--paper);
   font-weight: 600;
+}
+.site .rs-what {
+  color: var(--cream-soft);
+  font-size: 1.03rem;
 }
 /* The quoted commands hang their opening quotation mark into the margin. */
 .site .rs-say {
   display: block;
-  color: var(--teal);
+  margin-top: 4px;
+  color: var(--paper);
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  font-variant-numeric: lining-nums tabular-nums;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
   hanging-punctuation: first;
 }
 @supports not (hanging-punctuation: first) {
   .site .rs-say {
-    text-indent: -0.45em;
+    text-indent: -0.6em;
   }
 }
-/* The statement under the list: who decides, in the running text color, full measure. */
 .site .cd-note {
-  max-width: 900px;
+  max-width: 760px;
   margin: 28px 0 0;
-  font-size: 0.95rem;
+  color: var(--cream-soft);
+  font-size: 0.97rem;
   line-height: 1.6;
 }
 
-/* Home: What you get. One panel with two columns of rows, an amber check on each. The intro runs the
- * full measure, like the Try it out section. */
+/* Home: What you get. Two columns of numbered hairline rows. */
+.site #what-you-get {
+  padding: 84px 0 96px;
+}
 .site .wyg-intro {
   max-width: 820px;
-  margin: 0 0 40px;
+  margin-block: 22px 36px;
   font-size: 1.03rem;
   line-height: 1.6;
 }
-.site .wyg-panel {
-  padding: 8px;
-  border: 1px solid var(--shell-line);
-  border-radius: 30px;
-  background: var(--shell);
-}
-.site .wyg-panel__in {
-  padding: 40px 44px;
-  border: 1px solid var(--border-strong);
-  border-radius: 23px;
-  background: var(--cream-raised);
-  box-shadow: var(--inner-highlight);
-}
 .site .wyg-list {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px 48px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 56px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .site .wyg-list li {
   display: grid;
-  grid-template-columns: 26px 1fr;
-  gap: 14px;
-  align-items: start;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+  padding: 20px 0 22px;
+  border-top: 1px solid var(--hairline);
 }
-.site .wyg-check {
-  width: 22px;
-  height: 22px;
-  margin-top: 3px;
-  fill: none;
-  stroke: var(--amber-ink);
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.site .wn {
+  color: var(--clay-ink);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
 }
 .site .wyg-list h3 {
   margin: 0 0 6px;
-  font-family: var(--font-body);
-  font-size: 1.1rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.35;
+  font-size: 1.12rem;
+  line-height: 1.3;
+  letter-spacing: -0.008em;
   text-wrap: pretty;
 }
 .site .wyg-path {
-  color: var(--teal);
+  color: var(--clay-ink);
   font-family: var(--font-mono);
-  font-size: 0.78em;
+  font-size: 0.9em;
   font-weight: 500;
-  font-variant-numeric: lining-nums;
 }
 .site .wyg-list p {
   margin: 0;
-  color: var(--ink-muted);
-  font-size: 0.86rem;
+  color: var(--ink-soft);
+  font-size: 0.97rem;
   line-height: 1.55;
 }
 
-/* Motion, under the rule in chrome.css. The hero rises on load. A heading's tie draws out from its edge
- * when it enters; the heading itself never hides. The diagram draws itself as the reader scrolls it
+/* Motion, under the rule in chrome.css. The hero rises on load. The rule above a section heading draws
+ * out from its edge when the heading enters; the heading itself never hides. The diagram draws itself as the reader scrolls it
  * into view: inputs to the agent, the agent's ring, the agent to the outputs, the outputs to the
  * engineers, the dashed Later path last. The drawing follows the diagram's position in the viewport,
  * beginning once it is visibly in view and complete by the time it sits near the top, so the reader
@@ -474,10 +450,10 @@ body.site {
     animation: rise var(--dur-slow) var(--ease-out) forwards;
     animation-delay: calc(var(--i, 0) * 70ms + 120ms);
   }
-  html.js .site h2.tied:not(.in)::before {
+  html.js .site .sec-head:not(.in)::before {
     transform: scaleX(0);
   }
-  html.js .site h2.tied.in::before {
+  html.js .site .sec-head.in::before {
     transition: transform 0.45s var(--ease-out);
   }
   @keyframes ln-h {
@@ -604,93 +580,80 @@ body.site {
 
 /* Reflow */
 @media (max-width: 1099.98px) {
-  .site .flow-frame__in {
+  .site .flow-frame {
     padding: 32px 24px;
   }
 }
 @media (max-width: 899.98px) {
   .site .hero {
     grid-template-columns: minmax(0, 1fr);
-    row-gap: 36px;
+    row-gap: 40px;
   }
   .site .hero-side {
-    padding-top: 28px;
-    padding-inline-start: 0;
-    border-inline-start: 0;
-    border-top: 1px solid var(--border-strong);
+    margin-top: 0;
   }
   .site .vals {
-    grid-template-columns: 1fr;
-    gap: 36px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
   }
   .site .tiles {
     grid-template-columns: minmax(0, 1fr);
-    gap: 16px;
   }
-  .site .tile-arrow {
-    justify-self: center;
-    transform: rotate(90deg);
+  .site .tile {
+    padding: 28px 0;
+  }
+  .site .tile + .tile {
+    padding-inline: 0;
+    border-inline-start: 0;
+    border-top: 1px solid var(--hairline-dark);
   }
   /* One row for the number and the role, one for what happens and what to say. */
   .site .rs {
-    grid-template-columns: 40px 1fr;
+    grid-template-columns: 40px minmax(0, 1fr);
     gap: 6px 12px;
-  }
-  .site .rs-n {
-    grid-column: 1;
-  }
-  .site .rs-who {
-    grid-column: 2;
   }
   .site .rs-body {
     grid-column: 2;
-    grid-template-columns: 1fr;
-    gap: 8px;
   }
   .site .wyg-list {
     grid-template-columns: minmax(0, 1fr);
-    gap: 24px;
-  }
-  .site .wyg-panel__in {
-    padding: 28px 24px;
   }
 }
 @media (max-width: 767.98px) {
   .site section {
-    padding: 64px 0;
+    padding: 56px 0;
   }
   .site section.first {
-    padding: 56px 0 40px;
+    padding: 56px 0 48px;
   }
-  .site h1.r25 {
-    margin-bottom: 30px;
-    font-size: clamp(2.1rem, 9.5vw, 2.5rem);
+  .site #what-you-get {
+    padding: 56px 0 64px;
   }
-  .site .defn {
-    font-size: 1.3rem;
+  .site #carrydown {
+    padding: 56px 0;
   }
-  .site h2.how {
+  .site .how {
     margin-top: 64px;
   }
-  .site .how-intro {
-    font-size: 1rem;
+  .site .sec-head {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .site .hero h1 {
+    margin-bottom: 30px;
+    font-size: clamp(2.1rem, 9.4vw, 2.6rem);
+  }
+  .site h2 {
+    font-size: 1.8rem;
+  }
+  .site .defn {
+    font-size: 1.2rem;
   }
   .site .flow-frame {
-    margin-inline: -8px;
+    padding: 22px 16px;
   }
-  .site .flow-frame__in {
-    padding: 24px 16px;
-    border-radius: 20px;
-  }
-  .site .cd-sub {
-    margin-top: 48px;
-  }
-  .site .wyg-panel__in {
-    padding: 24px 18px;
-  }
-  .site .btn {
+  .site .actions .btn {
     width: 100%;
-    justify-content: space-between;
   }
 }
 @media (max-width: 559.98px) {
@@ -707,10 +670,9 @@ body.site {
 .site .translation-note {
   margin: 0;
   padding: 12px 16px;
-  border: 1px solid var(--border-strong);
-  border-inline-start: 4px solid var(--amber);
-  border-radius: 6px;
-  background: var(--cream-raised);
+  border: 1px solid var(--hairline);
+  border-inline-start: 3px solid var(--clay);
+  background: var(--bone);
   color: var(--ink);
   font-size: 0.95rem;
   line-height: 1.5;
