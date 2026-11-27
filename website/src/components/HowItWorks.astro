@@ -2,6 +2,11 @@
 // The How it works diagram. Two variants of the same content, both built from the strings of the
 // page's locale (src/i18n/<locale>.ts) so they translate: a wide drawing (an inline SVG, from
 // final/diagram-c8.svg) and, under 1100 px, a stacked variant in HTML and CSS with the same colors.
+// The styling is V1 of the round 3 mockups (specs/carried-context-site/mockups-v3/): boxes on paper with
+// 3 unit corners and an ink-soft outline, clay connectors, mono eyebrows, and the agent as a prompt
+// chevron in an ink ring; each engineer's coding agent is the same glyph, small, in clay. The geometry,
+// the connectors' coordinates and dash patterns and the agent's ring are those the drawing script in
+// HomePage.astro reads, so a change there needs a look at the script.
 // The wide drawing's boxes are fixed width, so keep translated labels close to the English length. At
 // 1100 px and above the drawing scales to no less than 0.94, so its smallest text (13 units) renders
 // at 12 px or more. The stacked variant joins its three groups with bars, as the drawing's connectors
@@ -16,7 +21,7 @@ const d = getStrings(Astro.props.locale).diagram;
 ---
 
 <div class="flow">
-  <svg class='flow-wide' viewBox='0 0 1100 400' xmlns='http://www.w3.org/2000/svg' role='img' aria-label={d.ariaLabel}><text class='up' x='0' y='16' text-anchor='start' font-size='13' font-weight='600' fill='var(--ink-muted)'>{d.provideHeading}</text><text class='up' x='600' y='16' text-anchor='start' font-size='13' font-weight='600' fill='var(--ink-muted)'>{d.generatesHeading}</text><rect x='0' y='40' width='282' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4'/><text x='16' y='73.0' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.documents}</text><text x='16' y='94.0' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.documentsNote}</text><line class='ln' x1='282' y1='76' x2='330' y2='76' stroke-width='1.6'/><rect x='0' y='136' width='282' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4'/><text x='16' y='169.0' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.decisions}</text><text x='16' y='190.0' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.decisionsNote}</text><line class='ln' x1='282' y1='172' x2='330' y2='172' stroke-width='1.6'/><rect x='0' y='300' width='282' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4' stroke-dasharray="5 5"/><text x='16' y='320' text-anchor='start' font-size='13' font-weight='600' class='eb up'>{d.later}</text><text x='16' y='342' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.changed}</text><text x='16' y='361' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.changedNote}</text><line class='ln' x1='282' y1='336' x2='330' y2='336' stroke-width='1.6' stroke-dasharray="5 5"/><line class='ln' x1='330' y1='76' x2='330' y2='200' stroke-width='1.6'/><line class='ln' x1='330' y1='200' x2='330' y2='336' stroke-width='1.6' stroke-dasharray="5 5"/><line class='ln' x1='330' y1='200' x2='392' y2='200' stroke-width='1.6'/><text x='450' y='128' text-anchor='middle' font-size='15' font-weight='700' class='tl'>{d.agent}</text><circle cx='450' cy='200' r='58' fill='var(--cream-raised)' class='tk' stroke-width='2'/><path class='tl' d='M446.4 178.4 C 446.4 195.68, 453.12 202.4, 470.4 202.4 C 453.12 202.4, 446.4 209.12, 446.4 226.4 C 446.4 209.12, 439.67999999999995 202.4, 422.4 202.4 C 439.67999999999995 202.4, 446.4 195.68, 446.4 178.4 Z'/><path class='tl' d='M464.88 175.04 C 464.88 182.29760000000002, 467.7024 185.12, 474.96 185.12 C 467.7024 185.12, 464.88 187.9424, 464.88 195.20000000000002 C 464.88 187.9424, 462.0576 185.12, 454.8 185.12 C 462.0576 185.12, 464.88 182.29760000000002, 464.88 175.04 Z'/><text x='450' y='290' text-anchor='middle' font-size='13' font-weight='400' fill='var(--ink)'>{d.agentVerbs[0]}</text><text x='450' y='308' text-anchor='middle' font-size='13' font-weight='400' fill='var(--ink)'>{d.agentVerbs[1]}</text><line class='ln' x1='508' y1='200' x2='580' y2='200' stroke-width='1.6'/><line class='ln' x1='580' y1='70' x2='580' y2='334' stroke-width='1.6'/><line class='ln' x1='580' y1='70' x2='600' y2='70' stroke-width='1.6'/><rect x='600' y='34' width='330' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4'/><text x='616' y='54' text-anchor='start' font-size='13' font-weight='600' class='eb up'>{d.plans}</text><text x='616' y='76' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.plansTitle}</text><text x='616' y='95' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.plansNote}</text><line class='ln' x1='580' y1='158' x2='600' y2='158' stroke-width='1.6'/><rect x='600' y='122' width='330' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4'/><text x='616' y='142' text-anchor='start' font-size='13' font-weight='600' class='eb up'>{d.writes}</text><text x='616' y='164' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.writesTitle}</text><text x='616' y='183' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.writesNote}</text><line class='ln' x1='580' y1='246' x2='600' y2='246' stroke-width='1.6'/><rect x='600' y='210' width='330' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4'/><text x='616' y='230' text-anchor='start' font-size='13' font-weight='600' class='eb up'>{d.opens}</text><text x='616' y='252' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.opensTitle}</text><text x='616' y='271' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.opensNote}</text><line class='ln' x1='580' y1='334' x2='600' y2='334' stroke-width='1.6'/><rect x='600' y='298' width='330' height='72' rx='8' fill='var(--cream-raised)' stroke='var(--border-strong)' stroke-width='1.4'/><text x='616' y='318' text-anchor='start' font-size='13' font-weight='600' class='eb up'>{d.generates}</text><text x='616' y='340' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.generatesTitle}</text><text x='616' y='359' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink)'>{d.generatesNote}</text><text class='up' x='1016' y='254' text-anchor='middle' font-size='13' font-weight='600' fill='var(--ink-muted)'>{d.engineers[0]}</text><text class='up' x='1016' y='270' text-anchor='middle' font-size='13' font-weight='600' fill='var(--ink-muted)'>{d.engineers[1]}</text><line class='ln' x1='930' y1='334' x2='966' y2='334' stroke-width='1.6'/><line class='ln' x1='966' y1='296' x2='966' y2='372' stroke-width='1.6'/><line class='ln' x1='966' y1='296' x2='992' y2='296' stroke-width='1.6'/><circle cx='1006' cy='296' r='14' fill='var(--cream-raised)' stroke='var(--ink)' stroke-width='1.5'/><circle cx='1006' cy='292' r='4.5' fill='var(--ink)'/><path d='M998 306 a8 7 0 0 1 16 0 z' fill='var(--ink)'/><circle cx='1038' cy='296' r='11' fill='var(--cream-raised)' class='tk' stroke-width='1.5'/><path class='tl' d='M1037.1 290.6 C 1037.1 294.92, 1038.78 296.6, 1043.1 296.6 C 1038.78 296.6, 1037.1 298.28000000000003, 1037.1 302.6 C 1037.1 298.28000000000003, 1035.42 296.6, 1031.1 296.6 C 1035.42 296.6, 1037.1 294.92, 1037.1 290.6 Z'/><path class='tl' d='M1041.72 289.76 C 1041.72 291.57439999999997, 1042.43 292.28, 1044.24 292.28 C 1042.43 292.28, 1041.72 292.9856, 1041.72 294.79999999999995 C 1041.72 292.9856, 1041.01 292.28, 1039.2 292.28 C 1041.01 292.28, 1041.72 291.57439999999997, 1041.72 289.76 Z'/><line class='ln' x1='966' y1='334' x2='992' y2='334' stroke-width='1.6'/><circle cx='1006' cy='334' r='14' fill='var(--cream-raised)' stroke='var(--ink)' stroke-width='1.5'/><circle cx='1006' cy='330' r='4.5' fill='var(--ink)'/><path d='M998 344 a8 7 0 0 1 16 0 z' fill='var(--ink)'/><circle cx='1038' cy='334' r='11' fill='var(--cream-raised)' class='tk' stroke-width='1.5'/><path class='tl' d='M1037.1 328.6 C 1037.1 332.92, 1038.78 334.6, 1043.1 334.6 C 1038.78 334.6, 1037.1 336.28000000000003, 1037.1 340.6 C 1037.1 336.28000000000003, 1035.42 334.6, 1031.1 334.6 C 1035.42 334.6, 1037.1 332.92, 1037.1 328.6 Z'/><path class='tl' d='M1041.72 327.76 C 1041.72 329.57439999999997, 1042.43 330.28, 1044.24 330.28 C 1042.43 330.28, 1041.72 330.9856, 1041.72 332.79999999999995 C 1041.72 330.9856, 1041.01 330.28, 1039.2 330.28 C 1041.01 330.28, 1041.72 329.57439999999997, 1041.72 327.76 Z'/><line class='ln' x1='966' y1='372' x2='992' y2='372' stroke-width='1.6'/><circle cx='1006' cy='372' r='14' fill='var(--cream-raised)' stroke='var(--ink)' stroke-width='1.5'/><circle cx='1006' cy='368' r='4.5' fill='var(--ink)'/><path d='M998 382 a8 7 0 0 1 16 0 z' fill='var(--ink)'/><circle cx='1038' cy='372' r='11' fill='var(--cream-raised)' class='tk' stroke-width='1.5'/><path class='tl' d='M1037.1 366.6 C 1037.1 370.92, 1038.78 372.6, 1043.1 372.6 C 1038.78 372.6, 1037.1 374.28000000000003, 1037.1 378.6 C 1037.1 374.28000000000003, 1035.42 372.6, 1031.1 372.6 C 1035.42 372.6, 1037.1 370.92, 1037.1 366.6 Z'/><path class='tl' d='M1041.72 365.76 C 1041.72 367.57439999999997, 1042.43 368.28, 1044.24 368.28 C 1042.43 368.28, 1041.72 368.9856, 1041.72 370.79999999999995 C 1041.72 368.9856, 1041.01 368.28, 1039.2 368.28 C 1041.01 368.28, 1041.72 367.57439999999997, 1041.72 365.76 Z'/></svg>
+  <svg class='flow-wide' viewBox='0 0 1100 400' xmlns='http://www.w3.org/2000/svg' role='img' aria-label={d.ariaLabel}><text class='up' x='0' y='16' text-anchor='start' font-size='13' font-weight='600' fill='var(--ink-soft)'>{d.provideHeading}</text><text class='up' x='600' y='16' text-anchor='start' font-size='13' font-weight='600' fill='var(--ink-soft)'>{d.generatesHeading}</text><rect x='0' y='40' width='282' height='72' rx='3' fill='var(--paper)' stroke='var(--ink-soft)' stroke-width='1.2'/><text x='16' y='73.0' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.documents}</text><text x='16' y='94.0' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink-soft)'>{d.documentsNote}</text><line class='ln' x1='282' y1='76' x2='330' y2='76' stroke-width='1.6'/><rect x='0' y='136' width='282' height='72' rx='3' fill='var(--paper)' stroke='var(--ink-soft)' stroke-width='1.2'/><text x='16' y='169.0' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.decisions}</text><text x='16' y='190.0' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink-soft)'>{d.decisionsNote}</text><line class='ln' x1='282' y1='172' x2='330' y2='172' stroke-width='1.6'/><rect x='0' y='300' width='282' height='72' rx='3' fill='var(--paper)' stroke='var(--ink-soft)' stroke-width='1.2' stroke-dasharray="5 5"/><text x='16' y='320' text-anchor='start' font-size='13' font-weight='600' class='eb up'>{d.later}</text><text x='16' y='342' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.changed}</text><text x='16' y='361' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink-soft)'>{d.changedNote}</text><line class='ln' x1='282' y1='336' x2='330' y2='336' stroke-width='1.6' stroke-dasharray="5 5"/><line class='ln' x1='330' y1='76' x2='330' y2='200' stroke-width='1.6'/><line class='ln' x1='330' y1='200' x2='330' y2='336' stroke-width='1.6' stroke-dasharray="5 5"/><line class='ln' x1='330' y1='200' x2='392' y2='200' stroke-width='1.6'/><text x='450' y='128' text-anchor='middle' font-size='15' font-weight='700' fill='var(--ink)'>{d.agent}</text><circle cx='450' cy='200' r='58' fill='var(--paper)' class='tk' stroke-width='1.6'/><path class='pr' d='M430.2 184.6 L447.8 200 L430.2 215.4' fill='none' stroke='var(--ink)' stroke-width='4.84' stroke-linecap='round' stroke-linejoin='round'/><path class='pr' d='M454.4 217.6 H474.2' fill='none' stroke='var(--ink)' stroke-width='4.84' stroke-linecap='round'/><text x='450' y='290' text-anchor='middle' font-size='13' font-weight='400' fill='var(--ink)'>{d.agentVerbs[0]}</text><text x='450' y='308' text-anchor='middle' font-size='13' font-weight='400' fill='var(--ink)'>{d.agentVerbs[1]}</text><line class='ln' x1='508' y1='200' x2='580' y2='200' stroke-width='1.6'/><line class='ln' x1='580' y1='70' x2='580' y2='334' stroke-width='1.6'/><line class='ln' x1='580' y1='70' x2='600' y2='70' stroke-width='1.6'/><rect x='600' y='34' width='330' height='72' rx='3' fill='var(--paper)' stroke='var(--ink-soft)' stroke-width='1.2'/><text x='616' y='54' text-anchor='start' font-size='13' font-weight='600' class='eb up'>{d.plans}</text><text x='616' y='76' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.plansTitle}</text><text x='616' y='95' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink-soft)'>{d.plansNote}</text><line class='ln' x1='580' y1='158' x2='600' y2='158' stroke-width='1.6'/><rect x='600' y='122' width='330' height='72' rx='3' fill='var(--paper)' stroke='var(--ink-soft)' stroke-width='1.2'/><text x='616' y='142' text-anchor='start' font-size='13' font-weight='600' class='eb up'>{d.writes}</text><text x='616' y='164' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.writesTitle}</text><text x='616' y='183' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink-soft)'>{d.writesNote}</text><line class='ln' x1='580' y1='246' x2='600' y2='246' stroke-width='1.6'/><rect x='600' y='210' width='330' height='72' rx='3' fill='var(--paper)' stroke='var(--ink-soft)' stroke-width='1.2'/><text x='616' y='230' text-anchor='start' font-size='13' font-weight='600' class='eb up'>{d.opens}</text><text x='616' y='252' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.opensTitle}</text><text x='616' y='271' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink-soft)'>{d.opensNote}</text><line class='ln' x1='580' y1='334' x2='600' y2='334' stroke-width='1.6'/><rect x='600' y='298' width='330' height='72' rx='3' fill='var(--paper)' stroke='var(--ink-soft)' stroke-width='1.2'/><text x='616' y='318' text-anchor='start' font-size='13' font-weight='600' class='eb up'>{d.generates}</text><text x='616' y='340' text-anchor='start' font-size='15' font-weight='600' fill='var(--ink)'>{d.generatesTitle}</text><text x='616' y='359' text-anchor='start' font-size='13' font-weight='400' fill='var(--ink-soft)'>{d.generatesNote}</text><text class='up' x='1016' y='254' text-anchor='middle' font-size='13' font-weight='600' fill='var(--ink-soft)'>{d.engineers[0]}</text><text class='up' x='1016' y='270' text-anchor='middle' font-size='13' font-weight='600' fill='var(--ink-soft)'>{d.engineers[1]}</text><line class='ln' x1='930' y1='334' x2='966' y2='334' stroke-width='1.6'/><line class='ln' x1='966' y1='296' x2='966' y2='372' stroke-width='1.6'/><line class='ln' x1='966' y1='296' x2='992' y2='296' stroke-width='1.6'/><circle cx='1006' cy='296' r='14' fill='var(--paper)' stroke='var(--ink)' stroke-width='1.4'/><circle cx='1006' cy='292' r='4.5' fill='var(--ink)'/><path d='M998 306 a8 7 0 0 1 16 0 z' fill='var(--ink)'/><circle cx='1038' cy='296' r='11' fill='var(--paper)' class='tk tk-s' stroke-width='1.4'/><path class='pr' d='M1032.6 291.8 L1037.4 296 L1032.6 300.2' fill='none' stroke='var(--clay)' stroke-width='1.32' stroke-linecap='round' stroke-linejoin='round'/><path class='pr' d='M1039.2 300.8 H1044.6' fill='none' stroke='var(--clay)' stroke-width='1.32' stroke-linecap='round'/><line class='ln' x1='966' y1='334' x2='992' y2='334' stroke-width='1.6'/><circle cx='1006' cy='334' r='14' fill='var(--paper)' stroke='var(--ink)' stroke-width='1.4'/><circle cx='1006' cy='330' r='4.5' fill='var(--ink)'/><path d='M998 344 a8 7 0 0 1 16 0 z' fill='var(--ink)'/><circle cx='1038' cy='334' r='11' fill='var(--paper)' class='tk tk-s' stroke-width='1.4'/><path class='pr' d='M1032.6 329.8 L1037.4 334 L1032.6 338.2' fill='none' stroke='var(--clay)' stroke-width='1.32' stroke-linecap='round' stroke-linejoin='round'/><path class='pr' d='M1039.2 338.8 H1044.6' fill='none' stroke='var(--clay)' stroke-width='1.32' stroke-linecap='round'/><line class='ln' x1='966' y1='372' x2='992' y2='372' stroke-width='1.6'/><circle cx='1006' cy='372' r='14' fill='var(--paper)' stroke='var(--ink)' stroke-width='1.4'/><circle cx='1006' cy='368' r='4.5' fill='var(--ink)'/><path d='M998 382 a8 7 0 0 1 16 0 z' fill='var(--ink)'/><circle cx='1038' cy='372' r='11' fill='var(--paper)' class='tk tk-s' stroke-width='1.4'/><path class='pr' d='M1032.6 367.8 L1037.4 372 L1032.6 376.2' fill='none' stroke='var(--clay)' stroke-width='1.32' stroke-linecap='round' stroke-linejoin='round'/><path class='pr' d='M1039.2 376.8 H1044.6' fill='none' stroke='var(--clay)' stroke-width='1.32' stroke-linecap='round'/></svg>
   <div class="flow-stack" role="img" aria-label={d.ariaLabel}>
     <div class="fs-group">
       <p class="fs-heading">{d.provideHeading}</p>
@@ -27,7 +32,7 @@ const d = getStrings(Astro.props.locale).diagram;
     <div class="fs-link" aria-hidden="true"></div>
     <div class="fs-group fs-agent">
       <svg viewBox="392 142 116 116" width="96" height="96" aria-hidden="true" focusable="false">
-        <circle cx='450' cy='200' r='58' fill='var(--cream-raised)' class='tk' stroke-width='2'/><path class='tl' d='M446.4 178.4 C 446.4 195.68, 453.12 202.4, 470.4 202.4 C 453.12 202.4, 446.4 209.12, 446.4 226.4 C 446.4 209.12, 439.67999999999995 202.4, 422.4 202.4 C 439.67999999999995 202.4, 446.4 195.68, 446.4 178.4 Z'/><path class='tl' d='M464.88 175.04 C 464.88 182.29760000000002, 467.7024 185.12, 474.96 185.12 C 467.7024 185.12, 464.88 187.9424, 464.88 195.20000000000002 C 464.88 187.9424, 462.0576 185.12, 454.8 185.12 C 462.0576 185.12, 464.88 182.29760000000002, 464.88 175.04 Z'/>
+        <circle cx='450' cy='200' r='58' fill='var(--paper)' class='tk' stroke-width='1.6'/><path class='pr' d='M430.2 184.6 L447.8 200 L430.2 215.4' fill='none' stroke='var(--ink)' stroke-width='4.84' stroke-linecap='round' stroke-linejoin='round'/><path class='pr' d='M454.4 217.6 H474.2' fill='none' stroke='var(--ink)' stroke-width='4.84' stroke-linecap='round'/>
       </svg>
       <p class="fs-agent-name">{d.agent}</p>
       <p class="fs-verbs">{d.agentVerbs[0]} {d.agentVerbs[1]}</p>
@@ -44,7 +49,7 @@ const d = getStrings(Astro.props.locale).diagram;
       <div class="fs-people">
         {[0, 1, 2].map(() => (
           <svg viewBox="992 281 60 30" width="60" height="30" aria-hidden="true" focusable="false">
-            <circle cx='1006' cy='296' r='14' fill='var(--cream-raised)' stroke='var(--ink)' stroke-width='1.5'/><circle cx='1006' cy='292' r='4.5' fill='var(--ink)'/><path d='M998 306 a8 7 0 0 1 16 0 z' fill='var(--ink)'/><circle cx='1038' cy='296' r='11' fill='var(--cream-raised)' class='tk' stroke-width='1.5'/><path class='tl' d='M1037.1 290.6 C 1037.1 294.92, 1038.78 296.6, 1043.1 296.6 C 1038.78 296.6, 1037.1 298.28000000000003, 1037.1 302.6 C 1037.1 298.28000000000003, 1035.42 296.6, 1031.1 296.6 C 1035.42 296.6, 1037.1 294.92, 1037.1 290.6 Z'/><path class='tl' d='M1041.72 289.76 C 1041.72 291.57439999999997, 1042.43 292.28, 1044.24 292.28 C 1042.43 292.28, 1041.72 292.9856, 1041.72 294.79999999999995 C 1041.72 292.9856, 1041.01 292.28, 1039.2 292.28 C 1041.01 292.28, 1041.72 291.57439999999997, 1041.72 289.76 Z'/>
+            <circle cx='1006' cy='296' r='14' fill='var(--paper)' stroke='var(--ink)' stroke-width='1.4'/><circle cx='1006' cy='292' r='4.5' fill='var(--ink)'/><path d='M998 306 a8 7 0 0 1 16 0 z' fill='var(--ink)'/><circle cx='1038' cy='296' r='11' fill='var(--paper)' class='tk tk-s' stroke-width='1.4'/><path class='pr' d='M1032.6 291.8 L1037.4 296 L1032.6 300.2' fill='none' stroke='var(--clay)' stroke-width='1.32' stroke-linecap='round' stroke-linejoin='round'/><path class='pr' d='M1039.2 300.8 H1044.6' fill='none' stroke='var(--clay)' stroke-width='1.32' stroke-linecap='round'/>
           </svg>
         ))}
       </div>
@@ -66,23 +71,27 @@ const d = getStrings(Astro.props.locale).diagram;
   .flow-stack {
     display: none;
   }
+  /* Headings and eyebrows: mono capitals. The headings in ink soft, the eyebrows in clay ink. */
   .flow-wide .up,
-  .fs-heading {
+  .fs-heading,
+  .fs-card em {
+    font-family: var(--font-mono);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.06em;
   }
   .flow-wide .eb {
-    fill: var(--amber-ink);
+    fill: var(--clay-ink);
   }
+  /* The connectors in clay; the agent's ring in ink; the engineers' agents ringed in clay. */
   .flow-wide .ln {
-    stroke: var(--amber-ink);
+    stroke: var(--clay);
     fill: none;
   }
-  .tl {
-    fill: var(--teal);
-  }
   .tk {
-    stroke: var(--teal);
+    stroke: var(--ink);
+  }
+  .tk.tk-s {
+    stroke: var(--clay);
   }
   /* Letter spacing and capitals mean nothing in Chinese and Japanese. */
   :global(html:lang(ja)) .flow-wide .up,
@@ -113,7 +122,7 @@ const d = getStrings(Astro.props.locale).diagram;
     }
     .fs-heading {
       margin: 0;
-      color: var(--ink-muted);
+      color: var(--ink-soft);
       font-size: 0.75rem;
       font-weight: 600;
     }
@@ -122,9 +131,9 @@ const d = getStrings(Astro.props.locale).diagram;
       flex-direction: column;
       gap: 2px;
       padding: 12px 16px;
-      border: 1.4px solid var(--border-strong);
-      border-radius: 8px;
-      background: var(--cream-raised);
+      border: 1.2px solid var(--ink-soft);
+      border-radius: 3px;
+      background: var(--paper);
       color: var(--ink);
       text-align: start;
     }
@@ -134,16 +143,15 @@ const d = getStrings(Astro.props.locale).diagram;
       line-height: 1.3;
     }
     .fs-card span {
+      color: var(--ink-soft);
       font-size: 0.875rem;
       line-height: 1.4;
     }
     .fs-card em {
+      color: var(--clay-ink);
       font-size: 0.75rem;
       font-style: normal;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--amber-ink);
+      font-weight: 500;
     }
     .fs-later {
       border-style: dashed;
@@ -153,7 +161,7 @@ const d = getStrings(Astro.props.locale).diagram;
       width: 2px;
       height: 32px;
       margin: 8px 0;
-      background: var(--amber-ink);
+      background: var(--clay);
     }
     .fs-agent {
       align-items: center;
@@ -165,8 +173,8 @@ const d = getStrings(Astro.props.locale).diagram;
     }
     .fs-agent-name {
       margin: 4px 0 0;
-      color: var(--teal);
-      font-size: 0.9rem;
+      color: var(--ink);
+      font-size: 0.95rem;
       font-weight: 700;
     }
     .fs-verbs {
