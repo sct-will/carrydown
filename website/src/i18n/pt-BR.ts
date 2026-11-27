@@ -309,7 +309,7 @@ export const ptBR: Strings = {
       'Se algo neste site for difícil de usar com tecnologia assistiva, ou se você precisar do conteúdo em outra forma, escreva para ',
     contactAfter: '. Diga qual página e o que aconteceu. Você deve receber uma resposta em até dez dias úteis.',
     review:
-      'Esta declaração descreve a intenção do site e seu estado atual. Ela é revisada quando o site muda. Última revisão em 22 de novembro de 2026.',
+      'Esta declaração descreve a intenção do site e seu estado atual. Ela é revisada quando o site muda. Última revisão em 27 de novembro de 2026.',
   },
 
   home: {

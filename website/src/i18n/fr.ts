@@ -309,7 +309,7 @@ export const fr: Strings = {
       'Si quelque chose sur ce site est difficile à utiliser avec une technologie d’assistance, ou si vous avez besoin du contenu sous une autre forme, écrivez à ',
     contactAfter: '. Indiquez la page et ce qui s’est passé. Vous devriez recevoir une réponse sous dix jours ouvrés.',
     review:
-      'Cette déclaration décrit l’intention du site et son état actuel. Elle est revue quand le site change. Dernière revue le 22 novembre 2026.',
+      'Cette déclaration décrit l’intention du site et son état actuel. Elle est revue quand le site change. Dernière revue le 27 novembre 2026.',
   },
 
   home: {

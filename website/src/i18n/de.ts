@@ -309,7 +309,7 @@ export const de: Strings = {
       'Wenn etwas auf dieser Website mit assistiven Technologien schwer zu bedienen ist oder Sie die Inhalte in einer anderen Form brauchen, schreiben Sie an ',
     contactAfter: '. Nennen Sie die Seite und was passiert ist. Sie sollten innerhalb von zehn Arbeitstagen eine Antwort erhalten.',
     review:
-      'Diese Erklärung beschreibt die Absicht der Website und ihren aktuellen Stand. Sie wird überprüft, wenn sich die Website ändert. Zuletzt geprüft am 22. November 2026.',
+      'Diese Erklärung beschreibt die Absicht der Website und ihren aktuellen Stand. Sie wird überprüft, wenn sich die Website ändert. Zuletzt geprüft am 27. November 2026.',
   },
 
   home: {

@@ -309,7 +309,7 @@ export const es: Strings = {
       'Si algo en este sitio es difícil de usar con tecnología de apoyo, o necesita el contenido en otra forma, escriba a ',
     contactAfter: '. Indique qué página y qué ocurrió. Debería recibir respuesta en diez días laborables.',
     review:
-      'Esta declaración describe la intención del sitio y su estado actual. Se revisa cuando el sitio cambia. Última revisión el 22 de noviembre de 2026.',
+      'Esta declaración describe la intención del sitio y su estado actual. Se revisa cuando el sitio cambia. Última revisión el 27 de noviembre de 2026.',
   },
 
   home: {

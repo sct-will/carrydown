@@ -317,7 +317,7 @@ export const en = {
       'If something on this site is hard to use with assistive technology, or you need the content in another form, write to ',
     contactAfter: '. Say which page and what happened. You should hear back within ten working days.',
     review:
-      'This statement describes the site’s intent and its current state. It is reviewed when the site changes. Last reviewed 22 November 2026.',
+      'This statement describes the site’s intent and its current state. It is reviewed when the site changes. Last reviewed 27 November 2026.',
   },
 
   home: {
