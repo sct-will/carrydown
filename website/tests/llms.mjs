@@ -95,7 +95,7 @@ if (read('llms.txt') !== llms) fail('a second run of build-llms.mjs wrote a diff
 if (read('llms-full.txt') !== full) fail('a second run of build-llms.mjs wrote a different llms-full.txt');
 
 // Every address on the site answers 200, and the Markdown forms answer as Markdown.
-const { origin: preview, stop } = await startPreview(4398);
+const { origin: preview, stop } = await startPreview(0);
 try {
   const local = [...new Set([`${origin}/llms.txt`, `${origin}/llms-full.txt`, ...pageLinks, ...listed.filter((u) => u.startsWith(origin))])];
   for (const u of local) {

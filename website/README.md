@@ -46,6 +46,8 @@ This runs, in order:
 - `tests/reflow.mjs` takes screenshots of a bounded set of pages (the four site pages at six widths, plus Japanese, docs and fallback samples) into `tests/screenshots/` and fails on horizontal overflow, text under 12 px and tap targets under 44 px.
 - `tests/a11y.mjs` runs axe-core on a bounded set (the four site pages in every locale, every English docs page and one fallback docs page per locale) and fails on any violation.
 
+Each test that starts `astro preview` binds its own port: 4398 for `tests/llms.mjs`, 4399 for `tests/routes.mjs` and `tests/reflow.mjs`, and 4401 for `tests/a11y.mjs`. Two runs on one machine would collide on them, so `SITE_TEST_PORT` moves the set: it is the base, and the tests bind the base and the three ports above it. `SITE_TEST_PORT=4500 npm test` uses 4500 to 4503. A test whose port is already taken stops with a message, so it never reads another server by mistake.
+
 Type checks: `npx astro check`.
 
 ## Design

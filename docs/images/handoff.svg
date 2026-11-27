@@ -1,86 +1,76 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="806" viewBox="0 0 1000 806" role="img" aria-label="How carrydown works, in four stages. Your documents and team constraints go to your AI agent, which drafts the connected plan and specifications; you review them and approve publication, and the approved source excerpts pass through that approval to each engineer's coding agent, which checks and reads its approved handoff. When the project changes, you tell your planning agent what changed and review the proposed updates before publication.">
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="816" viewBox="0 0 1000 816" role="img" aria-label="How carrydown works, in four stages. Your documents and team constraints go to your AI agent, which drafts the connected plan and specifications; you review them and approve publication, and the approved source excerpts pass through that approval to each engineer's coding agent, which checks and reads its approved handoff. When the project changes, you tell your planning agent what changed and review the proposed updates before publication.">
 <title>How carrydown works</title>
-<style>@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap');
-text{font-family:'Inter',sans-serif}
-.h1{font-size:28px;font-weight:600;fill:#1F2A44}
-.sub{font-size:17px;font-weight:400;fill:#5B6472}
-.lane{font-size:14px;font-weight:700;fill:#2A6F6F;letter-spacing:1.5px}
-.lanesub{font-size:15px;font-weight:400;fill:#5B6472}
-.ttl{font-size:19px;font-weight:600;fill:#1F2A44}
-.ttl17{font-size:17px;font-weight:600;fill:#1F2A44}
-.b{font-size:15px;font-weight:400;fill:#1F2A44}
-.m{font-size:15px;font-weight:400;fill:#5B6472}
-.s{font-size:14px;font-weight:400;fill:#5B6472}
-.sb{font-size:14px;font-weight:400;fill:#1F2A44}
-.io{font-size:14px;font-weight:600;fill:#2A6F6F}
-.role{font-size:13px;font-weight:700;fill:#2A6F6F;letter-spacing:1.2px}
-.pl{font-size:14px;font-weight:500;fill:#2A6F6F}
-.plb{font-size:14px;font-weight:700;fill:#2A6F6F}
-.amb{font-size:14px;font-weight:600;fill:#9A6209}
-.quote{font-size:14px;font-weight:500;fill:#6B4508}
-.chip{font-size:14px;font-weight:700;fill:#9A6209}
-.bdg{font-size:15px;font-weight:700;fill:#FFFFFF}
-.q{font-size:17px;font-weight:600;fill:#1F2A44}
-.gate{font-size:14px;font-weight:700;fill:#FFFFFF}
+<!-- The README's How it works diagram in the palette of carriedcontext.dev: a bone ground, paper cards, ink and ink-soft text, pine for the agents, clay for the approval and the amber thread for the approved excerpts. Text is Atkinson Hyperlegible Next; labels and numerals are Geist Mono. handoff.png is this file rendered at twice its size in Chromium with the site's font files. -->
+<style>@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700&amp;family=Geist+Mono:wght@600;700&amp;display=swap');
+text{font-family:'Atkinson Hyperlegible Next','Atkinson Hyperlegible Next Variable',system-ui,sans-serif}
+.mono{font-family:'Geist Mono','Geist Mono Variable',ui-monospace,Menlo,monospace}
+.h1{font-size:28px;font-weight:700;fill:#1D1A15}
+.sub{font-size:17px;font-weight:400;fill:#5E574A}
+.ttl{font-size:19px;font-weight:600;fill:#1D1A15}
+.m{font-size:14px;font-weight:400;fill:#5E574A}
+.s{font-size:14px;font-weight:400;fill:#5E574A}
+.sb{font-size:14px;font-weight:400;fill:#1D1A15}
+.role{font-size:12.5px;font-weight:600;fill:#9A4620;letter-spacing:0.06em}
+.amb{font-size:14px;font-weight:600;fill:#8F5A08}
+.chip{font-size:13px;font-weight:600;fill:#8F5A08}
+.bdg{font-size:15px;font-weight:700;fill:#F5F1E8}
+.gate{font-size:13px;font-weight:600;fill:#8F5A08}
 </style>
-<defs><marker id="chev-ink" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="6" orient="auto" overflow="visible"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#1F2A44" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></marker><marker id="chev-amber" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="6" orient="auto" overflow="visible"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#E8A33D" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></marker><marker id="chev-teal" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="6" orient="auto" overflow="visible"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#2A6F6F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></marker><marker id="chev-muted" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="6" orient="auto" overflow="visible"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#5B6472" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
-<rect x="0.75" y="0.75" width="998.5" height="804.5" rx="12" fill="#FBF7F0" stroke="#BDB6A6" stroke-width="1.5"/>
+<defs><marker id="chev-ink" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="6" orient="auto" overflow="visible"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#1D1A15" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></marker><marker id="chev-amber" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="6" orient="auto" overflow="visible"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#A8740C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></marker><marker id="chev-muted" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="11" refY="6" orient="auto" overflow="visible"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#5E574A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+<rect width="1000" height="816" fill="#EAE3D3"/>
 <text x="30" y="54" class="h1">How carrydown works</text>
 <text x="30" y="85" class="sub">Your agent drafts. You approve. Each coding agent starts from its approved handoff.</text>
-<path d="M848.0 210 V156 H384.0 V208" fill="none" stroke="#5B6472" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#chev-muted)" stroke-dasharray="6 5"/>
+<path d="M848.0 210 V156 H384.0 V208" fill="none" stroke="#5E574A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#chev-muted)" stroke-dasharray="6 5"/>
 <text x="616" y="144" class="m" text-anchor="middle">Tell your planning agent what changed. Review the proposed updates before publication.</text>
-<rect x="48" y="214" width="208" height="270" rx="12" fill="#FFFFFF" stroke="#D9D4C7" stroke-width="1.5"/>
-<circle cx="74" cy="214" r="16" fill="#1F2A44"/>
-<text x="74" y="219.4" class="bdg" text-anchor="middle">1</text>
-<rect x="78" y="244" width="54" height="22" rx="2" fill="#FFFFFF" stroke="#E8A33D" stroke-width="1"/>
-<text x="105" y="261" class="chip" text-anchor="middle">Word</text>
-<rect x="137" y="244" width="44" height="22" rx="2" fill="#FFFFFF" stroke="#E8A33D" stroke-width="1"/>
-<text x="159" y="261" class="chip" text-anchor="middle">PDF</text>
-<rect x="78" y="271" width="86" height="22" rx="2" fill="#FFFFFF" stroke="#E8A33D" stroke-width="1"/>
-<text x="121" y="288" class="chip" text-anchor="middle">Markdown</text>
-<g transform="translate(117 -197.222) scale(0.62)"><circle cx="150" cy="734.1" r="16" fill="#FFFFFF" stroke="#1F2A44" stroke-width="2.2"/><path d="M114.8 785.3 Q150 751.7 185.2 785.3" fill="none" stroke="#1F2A44" stroke-width="2.2"/></g>
-<text x="66" y="326" class="role">YOU</text>
+<rect x="48" y="214" width="208" height="270" rx="4" fill="#F5F1E8" stroke="#5E574A" stroke-width="1.2"/>
+<circle cx="74" cy="214" r="16" fill="#1D1A15"/>
+<text x="74" y="219.4" class="bdg mono" text-anchor="middle">1</text>
+<rect x="78" y="244" width="54" height="22" rx="2" fill="#F5F1E8" stroke="#A8740C" stroke-width="1"/><text x="105" y="260" class="chip mono" text-anchor="middle">Word</text>
+<rect x="137" y="244" width="44" height="22" rx="2" fill="#F5F1E8" stroke="#A8740C" stroke-width="1"/><text x="159" y="260" class="chip mono" text-anchor="middle">PDF</text>
+<rect x="78" y="271" width="86" height="22" rx="2" fill="#F5F1E8" stroke="#A8740C" stroke-width="1"/><text x="121" y="287" class="chip mono" text-anchor="middle">Markdown</text>
+<g transform="translate(117 -197.222) scale(0.62)"><circle cx="150" cy="734.1" r="16" fill="#F5F1E8" stroke="#1D1A15" stroke-width="2.2"/><path d="M114.8 785.3 Q150 751.7 185.2 785.3" fill="none" stroke="#1D1A15" stroke-width="2.2"/></g>
+<text x="66" y="326" class="role mono">YOU</text>
 <text class="ttl"><tspan x="66" y="352">Your documents</tspan><tspan x="66" y="375">and team</tspan><tspan x="66" y="398">constraints</tspan></text>
-<rect x="280" y="214" width="208" height="270" rx="12" fill="#E6F0F0" stroke="#3C8C8C" stroke-width="1.5"/>
-<circle cx="306" cy="214" r="16" fill="#1F2A44"/>
-<text x="306" y="219.4" class="bdg" text-anchor="middle">2</text>
-<g transform="translate(219 -223.452) scale(0.66)"><line x1="250" y1="708.6" x2="250" y2="720.2" stroke="#3C8C8C" stroke-width="2.4"/><circle cx="250" cy="705.7" r="3.5" fill="#3C8C8C"/><rect x="229.7" y="720.2" width="40.6" height="24.4" rx="4.6" fill="#E6F0F0" stroke="#3C8C8C" stroke-width="2.4"/><rect x="226.8" y="747.5" width="46.4" height="36.0" rx="4.6" fill="#E6F0F0" stroke="#3C8C8C" stroke-width="2.4"/><line x1="226.8" y1="757.9" x2="210.6" y2="769.5" stroke="#3C8C8C" stroke-width="2.4" stroke-linecap="round"/><line x1="273.2" y1="757.9" x2="289.4" y2="769.5" stroke="#3C8C8C" stroke-width="2.4" stroke-linecap="round"/></g>
-<text x="298" y="326" class="role">YOUR AI AGENT</text>
+<text class="sb"><tspan x="66" y="564">Word, Markdown, PDF,</tspan><tspan x="66" y="582">text and images,</tspan><tspan x="66" y="600">wherever they are</tspan></text>
+<text class="s"><tspan x="66" y="626">Team availability,</tspan><tspan x="66" y="644">skills, deadlines,</tspan><tspan x="66" y="662">preferences</tspan></text>
+<text class="s"><tspan x="66" y="688">Personal staffing</tspan><tspan x="66" y="706">details stay private</tspan></text>
+<rect x="280" y="214" width="208" height="270" rx="4" fill="#F5F1E8" stroke="#17332C" stroke-width="1.5"/>
+<circle cx="306" cy="214" r="16" fill="#1D1A15"/>
+<text x="306" y="219.4" class="bdg mono" text-anchor="middle">2</text>
+<g transform="translate(219 -223.452) scale(0.66)"><line x1="250" y1="708.6" x2="250" y2="720.2" stroke="#17332C" stroke-width="2.4"/><circle cx="250" cy="705.7" r="3.5" fill="#17332C"/><rect x="229.7" y="720.2" width="40.6" height="24.4" rx="4.6" fill="#F5F1E8" stroke="#17332C" stroke-width="2.4"/><rect x="226.8" y="747.5" width="46.4" height="36.0" rx="4.6" fill="#F5F1E8" stroke="#17332C" stroke-width="2.4"/><line x1="226.8" y1="757.9" x2="210.6" y2="769.5" stroke="#17332C" stroke-width="2.4" stroke-linecap="round"/><line x1="273.2" y1="757.9" x2="289.4" y2="769.5" stroke="#17332C" stroke-width="2.4" stroke-linecap="round"/></g>
+<text x="298" y="326" class="role mono">YOUR AI AGENT</text>
 <text class="ttl"><tspan x="298" y="352">Your AI agent</tspan><tspan x="298" y="375">drafts the</tspan><tspan x="298" y="398">connected plan</tspan><tspan x="298" y="421">and specifications</tspan></text>
-<rect x="512" y="214" width="208" height="270" rx="12" fill="#FFFFFF" stroke="#1F2A44" stroke-width="1.8"/>
-<circle cx="538" cy="214" r="16" fill="#1F2A44"/>
-<text x="538" y="219.4" class="bdg" text-anchor="middle">3</text>
-<g transform="translate(502 -273.032) scale(0.72)"><circle cx="150" cy="734.1" r="16" fill="#FFFFFF" stroke="#1F2A44" stroke-width="2.2"/><path d="M114.8 785.3 Q150 751.7 185.2 785.3" fill="none" stroke="#1F2A44" stroke-width="2.2"/><circle cx="196" cy="738" r="15" fill="#2A6F6F"/><path d="M188 738 L194 744 L205 731" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g>
-<text x="530" y="326" class="role">YOU</text>
+<text class="sb"><tspan x="298" y="564">A plan with milestones</tspan><tspan x="298" y="582">and tracks</tspan></text>
+<text class="s"><tspan x="298" y="608">One specification per</tspan><tspan x="298" y="626">work item</tspan></text>
+<text class="s"><tspan x="298" y="652">Sources cited</tspan><tspan x="298" y="670">by section</tspan></text>
+<rect x="512" y="214" width="208" height="270" rx="4" fill="#F5F1E8" stroke="#1D1A15" stroke-width="1.8"/>
+<circle cx="538" cy="214" r="16" fill="#1D1A15"/>
+<text x="538" y="219.4" class="bdg mono" text-anchor="middle">3</text>
+<g transform="translate(502 -273.032) scale(0.72)"><circle cx="150" cy="734.1" r="16" fill="#F5F1E8" stroke="#1D1A15" stroke-width="2.2"/><path d="M114.8 785.3 Q150 751.7 185.2 785.3" fill="none" stroke="#1D1A15" stroke-width="2.2"/><circle cx="196" cy="738" r="15" fill="#BC5A2E"/><path d="M188 738 L194 744 L205 731" fill="none" stroke="#F5F1E8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></g>
+<text x="530" y="326" class="role mono">YOU</text>
 <text class="ttl"><tspan x="530" y="352">You review the</tspan><tspan x="530" y="375">plan and</tspan><tspan x="530" y="398">specifications,</tspan><tspan x="530" y="421">then approve</tspan><tspan x="530" y="444">publication.</tspan></text>
-<rect x="744" y="214" width="208" height="270" rx="12" fill="#E6F0F0" stroke="#3C8C8C" stroke-width="1.5"/>
-<circle cx="770" cy="214" r="16" fill="#1F2A44"/>
-<text x="770" y="219.4" class="bdg" text-anchor="middle">4</text>
-<g transform="translate(683 -223.452) scale(0.66)"><line x1="250" y1="708.6" x2="250" y2="720.2" stroke="#3C8C8C" stroke-width="2.4"/><circle cx="250" cy="705.7" r="3.5" fill="#3C8C8C"/><rect x="229.7" y="720.2" width="40.6" height="24.4" rx="4.6" fill="#E6F0F0" stroke="#3C8C8C" stroke-width="2.4"/><rect x="226.8" y="747.5" width="46.4" height="36.0" rx="4.6" fill="#E6F0F0" stroke="#3C8C8C" stroke-width="2.4"/><line x1="226.8" y1="757.9" x2="210.6" y2="769.5" stroke="#3C8C8C" stroke-width="2.4" stroke-linecap="round"/><line x1="273.2" y1="757.9" x2="289.4" y2="769.5" stroke="#3C8C8C" stroke-width="2.4" stroke-linecap="round"/></g>
-<text x="762" y="326" class="role">EACH CODING AGENT</text>
+<text class="sb"><tspan x="530" y="564">The plan, the</tspan><tspan x="530" y="582">specifications and</tspan><tspan x="530" y="600">their source excerpts</tspan></text>
+<text class="s"><tspan x="530" y="626">Then GitHub issues, a</tspan><tspan x="530" y="644">project board and the</tspan><tspan x="530" y="662">generated project skill</tspan></text>
+<rect x="744" y="214" width="208" height="270" rx="4" fill="#F5F1E8" stroke="#17332C" stroke-width="1.5"/>
+<circle cx="770" cy="214" r="16" fill="#1D1A15"/>
+<text x="770" y="219.4" class="bdg mono" text-anchor="middle">4</text>
+<g transform="translate(683 -223.452) scale(0.66)"><line x1="250" y1="708.6" x2="250" y2="720.2" stroke="#17332C" stroke-width="2.4"/><circle cx="250" cy="705.7" r="3.5" fill="#17332C"/><rect x="229.7" y="720.2" width="40.6" height="24.4" rx="4.6" fill="#F5F1E8" stroke="#17332C" stroke-width="2.4"/><rect x="226.8" y="747.5" width="46.4" height="36.0" rx="4.6" fill="#F5F1E8" stroke="#17332C" stroke-width="2.4"/><line x1="226.8" y1="757.9" x2="210.6" y2="769.5" stroke="#17332C" stroke-width="2.4" stroke-linecap="round"/><line x1="273.2" y1="757.9" x2="289.4" y2="769.5" stroke="#17332C" stroke-width="2.4" stroke-linecap="round"/></g>
+<text x="762" y="326" class="role mono">EACH CODING AGENT</text>
 <text class="ttl"><tspan x="762" y="352">Each engineer’s</tspan><tspan x="762" y="375">coding agent</tspan><tspan x="762" y="398">checks and reads</tspan><tspan x="762" y="421">its approved</tspan><tspan x="762" y="444">handoff</tspan></text>
-<path d="M259.0 284 H275.0" fill="none" stroke="#1F2A44" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#chev-ink)"/>
-<path d="M491.0 284 H507.0" fill="none" stroke="#1F2A44" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#chev-ink)"/>
-<path d="M723.0 284 H739.0" fill="none" stroke="#1F2A44" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#chev-ink)"/>
-<path d="M384.0 484 V507 H607.0" fill="none" stroke="#E8A33D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M625.0 507 H848.0 V488" fill="none" stroke="#E8A33D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#chev-amber)"/>
-<circle cx="384" cy="484" r="3.6" fill="#E8A33D"/>
-<line x1="616.0" y1="484" x2="616.0" y2="498" stroke="#E8A33D" stroke-width="2.6"/>
-<circle cx="616.0" cy="507" r="9" fill="#FBF7F0" stroke="#E8A33D" stroke-width="1.5"/>
-<path d="M611.8 507.2 L614.8 510.2 L620.4 504" fill="none" stroke="#9A6209" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-<text x="616.0" y="532" text-anchor="middle" style="font-size:13px;font-weight:600;fill:#9A6209">you approve</text>
-<rect x="661.5" y="491" width="150" height="32" rx="16" fill="#FFFFFF" stroke="#E8A33D" stroke-width="1.6"/>
+<text class="sb"><tspan x="762" y="564">Each engineer installs</tspan><tspan x="762" y="582">the generated skill</tspan><tspan x="762" y="600">once, then asks their</tspan><tspan x="762" y="618">agent to start a</tspan><tspan x="762" y="636">work item</tspan></text>
+<text class="s"><tspan x="762" y="662">It checks its approved</tspan><tspan x="762" y="680">inputs, then reads the</tspan><tspan x="762" y="698">specification, the</tspan><tspan x="762" y="716">approved source excerpts</tspan><tspan x="762" y="734">and the project</tspan><tspan x="762" y="752">conventions.</tspan></text>
+<path d="M259.0 284 H275.0" fill="none" stroke="#1D1A15" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#chev-ink)"/>
+<path d="M491.0 284 H507.0" fill="none" stroke="#1D1A15" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#chev-ink)"/>
+<path d="M723.0 284 H739.0" fill="none" stroke="#1D1A15" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#chev-ink)"/>
+<path d="M384.0 484 V507 H607.0" fill="none" stroke="#A8740C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M625.0 507 H848.0 V488" fill="none" stroke="#A8740C" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#chev-amber)"/>
+<circle cx="384" cy="484" r="3.6" fill="#A8740C"/>
+<line x1="616.0" y1="484" x2="616.0" y2="498" stroke="#A8740C" stroke-width="2.6"/>
+<circle cx="616.0" cy="507" r="9" fill="#EAE3D3" stroke="#A8740C" stroke-width="1.5"/>
+<path d="M611.8 507.2 L614.8 510.2 L620.4 504" fill="none" stroke="#8F5A08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="616.0" y="532" class="gate" text-anchor="middle">you approve</text>
+<rect x="656.5" y="491" width="160" height="32" rx="16" fill="#F5F1E8" stroke="#A8740C" stroke-width="1.6"/>
 <text x="736.5" y="512" class="amb" text-anchor="middle">approved excerpts</text>
-<text class="sb"><tspan x="66" y="564">Word, Markdown, PDF, text</tspan><tspan x="66" y="583">and images, wherever</tspan><tspan x="66" y="602">they are</tspan></text>
-<text class="s"><tspan x="66" y="631">Team availability, skills,</tspan><tspan x="66" y="650">deadlines, preferences</tspan></text>
-<text class="s"><tspan x="66" y="679">Personal staffing details</tspan><tspan x="66" y="698">stay private</tspan></text>
-<text class="sb"><tspan x="298" y="564">A plan with milestones</tspan><tspan x="298" y="583">and tracks</tspan></text>
-<text class="s"><tspan x="298" y="612">One specification per</tspan><tspan x="298" y="631">work item</tspan></text>
-<text class="s"><tspan x="298" y="660">Sources cited by section</tspan></text>
-<text class="sb"><tspan x="530" y="564">The plan, the specifications</tspan><tspan x="530" y="583">and their source excerpts</tspan></text>
-<text class="s"><tspan x="530" y="612">Then GitHub issues, a</tspan><tspan x="530" y="631">project board and the</tspan><tspan x="530" y="650">generated project skill</tspan></text>
-<text class="sb"><tspan x="762" y="564">Each engineer installs the</tspan><tspan x="762" y="583">generated skill once, then</tspan><tspan x="762" y="602">asks their agent to start</tspan><tspan x="762" y="621">a work item</tspan></text>
-<text class="s"><tspan x="762" y="650">It checks its approved</tspan><tspan x="762" y="669">inputs, then reads the</tspan><tspan x="762" y="688">specification, the approved</tspan><tspan x="762" y="707">source excerpts and the</tspan><tspan x="762" y="726">project conventions.</tspan></text>
-<line x1="48" y1="754" x2="952" y2="754" stroke="#D9D4C7" stroke-width="1"/>
-<text x="48" y="782" class="s">Your documents can stay where they are. You approve which source excerpts reach the engineers.</text>
+<line x1="48" y1="766" x2="952" y2="766" stroke="#D6CDBA" stroke-width="1"/>
+<text x="48" y="792" class="s">Your documents can stay where they are. You approve which source excerpts reach the engineers.</text>
 </svg>

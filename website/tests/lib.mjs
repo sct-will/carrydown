@@ -27,8 +27,23 @@ export function listRoutes() {
   return routes.sort();
 }
 
-/** Starts `astro preview` and resolves with { origin, stop } once it answers. */
-export async function startPreview(port = 4399) {
+/* The ports the tests bind. Each test that starts `astro preview` takes its own, so one run never has two
+ * previews on one port. Two runs on one machine would collide, so SITE_TEST_PORT moves the whole set: it is
+ * the base, and a test binds the base plus its offset. Unset, the base is 4398 and the ports are 4398 to
+ * 4401, as before. */
+export const basePort = (() => {
+  const raw = process.env.SITE_TEST_PORT;
+  if (raw === undefined || raw === '') return 4398;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1024 || n > 65531) {
+    throw new Error(`SITE_TEST_PORT must be a whole number from 1024 to 65531, not "${raw}".`);
+  }
+  return n;
+})();
+
+/** Starts `astro preview` on basePort + offset and resolves with { origin, stop } once it answers. */
+export async function startPreview(offset = 1) {
+  const port = basePort + offset;
   const child = spawn(process.execPath, [join(websiteDir, 'node_modules/astro/bin/astro.mjs'), 'preview', '--ignore-lock', '--host', '127.0.0.1', '--port', String(port)], {
     cwd: websiteDir,
     env: { ...process.env, ASTRO_TELEMETRY_DISABLED: '1' },
@@ -46,6 +61,12 @@ export async function startPreview(port = 4399) {
   });
   for (let i = 0; i < 100; i++) {
     if (child.exitCode !== null) throw new Error(`astro preview exited early:\n${log}`);
+    // A busy port makes the preview move to the next free one, while the test would keep fetching this
+    // one and reach whatever answers there. Stop instead.
+    if (/is in use|EADDRINUSE/.test(log)) {
+      await stop();
+      throw new Error(`port ${port} is in use. Set SITE_TEST_PORT to a free base.\n${log}`);
+    }
     try {
       const r = await fetch(`${origin}${basePath}/`);
       if (r.ok) return { origin, stop };
