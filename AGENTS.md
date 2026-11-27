@@ -64,6 +64,10 @@ python3 scripts/sync_skill_assets.py --check
 
 The self test runs every script's `--help` and dry run on the sample. If you change a script, run the dry run on the sample again and read the output.
 
+If you change the website, also run `npm run build` and then `npm test` in `website/`.
+
+A pull request runs the prose lint, and for a change outside `website/` the self test on Ubuntu 24.04 with Python 3.9 and on Windows with the current Python, the two acceptance scenario runs and the six negative tests in one job. A change to a page the website is built from (`website/`, `docs/`, the README, the sample's README and images) runs the website build and tests without deploying. The full self test matrix, macOS included, runs on every push to `main` and nightly, so a pass on a pull request is not the last word.
+
 ## Using the skills from a user's project
 
 Follow the README's "Start here" link to the setup guide and install both skills there. The README's "What to tell your agent, and when" section has tables with the same phrases. The plan owner has three actions:

@@ -86,6 +86,20 @@ python3 scripts/sync_skill_assets.py --check
 
 `selftest.py` does the following. It compiles every script, checks that the skill copies are current, runs the specification checker on the sample, and runs every script's `--help` and its dry run against the sample. It is the test expectation for a change: the dry run on the sample must still pass. `lint_prose.py` checks the style rules below.
 
+If you changed the website, build it and run its tests too. They need Node.js 22 or later and, once, the browser the tests drive. [The website README](website/README.md) describes each test.
+
+```bash
+cd website
+npm ci
+npx playwright install chromium
+npm run build
+npm test
+```
+
+### What runs on a pull request
+
+The checks on a pull request take about six minutes. The prose lint runs on every pull request. A change outside `website/` runs the self test on Ubuntu 24.04 with Python 3.9, the oldest version the scripts support, and on Windows with the current Python, the two acceptance scenario runs, and the six negative tests G1 to G6 in one job, one step each. A change to the website, or to a page it is built from (`docs/`, the README, the sample's README and images), runs the website build and tests without deploying. A pull request that changes only the website skips the Python jobs, and one that changes no page of the website skips the website job. The full self test matrix, every operating system on both Pythons, macOS included, runs on every push to `main`, every night at 03:17 UTC and on request from the Actions tab. The macOS runners can queue for twenty minutes, which is why they are not on the pull request path.
+
 After you change a canonical script or template, preview the copies, read the preview, then apply:
 
 ```bash
@@ -128,7 +142,7 @@ If you change something that talks to GitHub, say in the pull request how you te
 
 ## Review process
 
-1. The checks run on your pull request. They must pass.
+1. The checks run on your pull request. They must pass. The full matrix runs after the merge, so a change that passes on the pull request can still fail on `main`, and the maintainer will ask for a fix.
 2. The maintainer reads the change, usually within a week. This is a one-person project, so replies may take time.
 3. You may be asked for changes. Push them as new commits on the same branch.
 4. When the change is approved the maintainer merges it. Squash merges are the default.

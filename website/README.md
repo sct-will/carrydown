@@ -124,4 +124,4 @@ The reading order is a short list of paths at the top of the script. A new docs 
 
 ## Deploy
 
-`.github/workflows/website.yml` builds, tests and deploys to GitHub Pages on a push to `main`. It uses no secret beyond the built-in `GITHUB_TOKEN`. The Pages source must be set to GitHub Actions, as in `docs-setup.md`.
+`.github/workflows/website.yml` deploys to GitHub Pages on a push to `main`. The build and the tests are in `.github/workflows/website-build.yml`, which `website.yml` calls before the deploy and `.github/workflows/ci.yml` calls on a pull request that changes the site or a page it is built from, without deploying. No secret is used beyond the built-in `GITHUB_TOKEN`. The Pages source must be set to GitHub Actions, as in `docs-setup.md`.
