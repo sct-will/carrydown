@@ -156,14 +156,18 @@ body.site {
 .site .sec-head h2 {
   margin: 0;
 }
-/* In the number's place, a small clay chevron: the figure's prompt chevron without its underscore,
- * centered on the heading's first line. */
+/* In the number's place, a clay chevron 22 px tall: the figure's prompt chevron without its underscore,
+ * its stroke about 2.4 px. It sits on the heading's baseline like the heading's first line, then moves
+ * up so its middle is level with the middle of the capitals. Its font size is the heading's, so 1cap is
+ * the heading's cap height. */
 .site .sec-mark {
-  align-self: start;
-  margin-top: calc(2.15rem * 1.15 / 2 - 7px);
+  position: relative;
+  top: calc(11px - 0.5cap);
+  font-size: 2.15rem;
+  font-weight: 700;
   fill: none;
   stroke: var(--clay);
-  stroke-width: 2.2;
+  stroke-width: 1.42;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -642,7 +646,7 @@ body.site {
     grid-template-columns: 26px minmax(0, 1fr);
   }
   .site .sec-mark {
-    margin-top: calc(1.8rem * 1.15 / 2 - 7px);
+    font-size: 1.8rem;
   }
   .site .hero h1 {
     margin-bottom: 30px;

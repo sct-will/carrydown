@@ -63,7 +63,7 @@ The design is the Hartwell direction of the round 3 and round 4 mockups, carried
   | `--ink` | #1D1A15 | text, headings, figure strokes | 15.4 on paper |
   | `--ink-soft` | #5E574A | secondary text | 6.3 on paper, 5.6 on bone |
   | `--clay` | #BC5A2E | the primary button, the figure's connectors | white on clay 4.5 |
-  | `--clay-ink` | #9A4620 | section numbers, eyebrows, links, the focus ring | 5.7 on paper |
+  | `--clay-ink` | #9A4620 | list numbers on paper (What you get, the definition's rules), eyebrows, links, the focus ring | 5.7 on paper |
   | `--clay-tint` | #E8C9B5 | a pale clay ground | |
   | `--amber-ink` | #8F5A08 | the title's emphasis | 5.1 on paper |
   | `--amber-stroke` | #A8740C | the mark's thread on paper | |
