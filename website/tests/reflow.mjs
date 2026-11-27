@@ -1,4 +1,4 @@
-// Screenshots every page at six widths in both themes and fails on any layout problem:
+// Screenshots every page at six widths in the site's one theme and fails on any layout problem:
 //   - horizontal overflow (scrollWidth > innerWidth)
 //   - rendered text smaller than 12 px (HTML text; SVG text is reported, see below)
 //   - tap targets under 44 px (buttons, selects, button-like links, header and footer links)
@@ -22,7 +22,8 @@ const jobs = [
   { route: routeFor('de', '/docs/setup/'), widths: [375, 1280] },
 ];
 requireBuilt(jobs.map((j) => j.route));
-const themes = ['light', 'dark'];
+// The site has one theme, light.
+const themes = ['light'];
 const shots = join(websiteDir, 'tests', 'screenshots');
 rmSync(shots, { recursive: true, force: true });
 mkdirSync(shots, { recursive: true });
@@ -91,8 +92,6 @@ function smallestSvgText() {
 try {
   for (const theme of themes) {
     const context = await browser.newContext({ colorScheme: theme, viewport: { width: 1280, height: 800 } });
-    // Light is the site's default whatever the system prefers; the dark theme is the stored choice.
-    if (theme === 'dark') await context.addInitScript(() => localStorage.setItem('cc-theme', 'dark'));
     const page = await context.newPage();
     for (const { route, widths } of jobs) {
       for (const width of widths) {
@@ -124,7 +123,7 @@ if (notes.length) {
   if (notes.length > 6) console.log(`  ... ${notes.length - 6} more`);
 }
 const shotCount = jobs.reduce((n, j) => n + j.widths.length, 0) * themes.length;
-console.log(`reflow: ${jobs.length} page(s), ${shotCount} screenshots (widths per page, both themes), in tests/screenshots/`);
+console.log(`reflow: ${jobs.length} page(s), ${shotCount} screenshots (widths per page), in tests/screenshots/`);
 if (failures.length) {
   for (const f of unique(failures)) console.error(`FAIL ${f}`);
   console.error(`reflow: ${unique(failures).length} problem(s)`);

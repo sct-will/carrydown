@@ -1,10 +1,8 @@
 ---
-// Runs before first paint so the theme applies without a flash. The visitor's choice is kept in
-// localStorage under "cc-theme": "light" (the default when nothing is stored), "dark" or "auto". The
-// choice goes on <html> as data-theme-choice, and the theme it resolves to as data-theme, which is what
-// the tokens, Starlight and the code blocks read. "auto" follows the system preference and is resolved
-// again when that preference changes. The script also marks the page as script-enabled, which the
-// narrow-screen menu and the motion need.
+// Runs before first paint. The site has one theme, light: the script holds data-theme="light" on <html>,
+// which Starlight's styles read, and marks the page as script-enabled, which the narrow-screen menu and
+// the motion need. The build writes the same data-theme into every page (see astro.config.mjs), so a
+// page without script is light as well.
 //
 // It also guards the page transition (chrome.css opts every page into a cross-document view
 // transition): a transition still unfinished 600 ms after this script ran is skipped. A healthy one
@@ -16,19 +14,7 @@
   (function () {
     var d = document.documentElement;
     d.classList.add('js');
-    var choice = 'light';
-    try {
-      var t = localStorage.getItem('cc-theme');
-      if (t === 'dark' || t === 'auto') choice = t;
-    } catch (e) {}
-    var mq = window.matchMedia('(prefers-color-scheme: dark)');
-    var apply = function () {
-      var c = d.dataset.themeChoice;
-      d.dataset.theme = c === 'auto' ? (mq.matches ? 'dark' : 'light') : c;
-    };
-    d.dataset.themeChoice = choice;
-    apply();
-    mq.addEventListener('change', apply);
+    d.dataset.theme = 'light';
     setTimeout(function () {
       var vt = document.activeViewTransition;
       if (vt) vt.skipTransition();

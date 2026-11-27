@@ -1,7 +1,8 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import { writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { customDomain, site, base, siteName } from './site.config.mjs';
 import { sidebar } from './src/sidebar.mjs';
@@ -29,6 +30,31 @@ const starlightLocales = Object.fromEntries(
     { label: l.label, lang: l.lang, dir: l.dir },
   ]),
 );
+
+// The site has one theme, light. Starlight writes its dark theme into the <html> data-theme of every docs
+// page as its no-script fallback; this writes the site's theme there instead, so a docs page is light
+// before any script runs. ThemeScript holds the same value at runtime.
+/** @type {import('astro').AstroIntegration} */
+const lightTheme = {
+  name: 'carried-context-light-theme',
+  hooks: {
+    'astro:build:done': ({ dir }) => {
+      /** @param {string} folder */
+      const walk = (folder) => {
+        for (const entry of readdirSync(folder, { withFileTypes: true })) {
+          const path = join(folder, entry.name);
+          if (entry.isDirectory()) walk(path);
+          else if (entry.name.endsWith('.html')) {
+            const html = readFileSync(path, 'utf8');
+            const next = html.replace(/(<html\b[^>]*?)\sdata-theme="[a-z]+"/, '$1 data-theme="light"');
+            if (next !== html) writeFileSync(path, next);
+          }
+        }
+      };
+      walk(fileURLToPath(dir));
+    },
+  },
+};
 
 // The docs FAQ page became the troubleshooting page. The old address in each locale redirects to the
 // new one. Astro adds the base path to both sides.
@@ -63,10 +89,12 @@ export default defineConfig({
         ThemeProvider: './src/components/starlight/ThemeProvider.astro',
         MobileMenuFooter: './src/components/starlight/MobileMenuFooter.astro',
       },
-      // Code blocks as plain bordered boxes, as in the docs design, without the window frame.
+      // Code blocks as plain bordered boxes, without the window frame, in the one light theme.
       expressiveCode: {
+        themes: ['starlight-light'],
+        useStarlightDarkModeSwitch: false,
         defaultProps: { frame: 'none' },
-        styleOverrides: { borderColor: 'var(--border-strong)', borderRadius: '6px' },
+        styleOverrides: { borderColor: 'var(--hairline)', borderRadius: '4px' },
       },
       // Pagefind indexes the whole build after `astro build`: the docs, and every site page whose main
       // element carries data-pagefind-body. The header's search dialog reads that index.
@@ -74,5 +102,6 @@ export default defineConfig({
       sidebar,
     }),
     pagesFiles,
+    lightTheme,
   ],
 });

@@ -1,6 +1,5 @@
 ---
 import Mark from './Mark.astro';
-import ThemeControl from './ThemeControl.astro';
 import LanguageControl from './LanguageControl.astro';
 import SiteSearch from './SiteSearch.astro';
 import { getStrings, locales } from '../i18n';
@@ -27,7 +26,7 @@ const isCurrent = (match: string) => match !== '' && route.startsWith(match);
 <div class:list={['site-header', { 'site-header--wide': wide }]} data-site-header>
   <div class="site-header__bar">
     <a class="brand" href={localePath(locale, '/')}>
-      <Mark size={36} />
+      <Mark size={22} />
       <span>{t.site.name}</span>
     </a>
     <div class="site-header__panel" id="site-header-panel" data-menu-panel>
@@ -41,7 +40,6 @@ const isCurrent = (match: string) => match !== '' && route.startsWith(match);
         </ul>
       </nav>
       <div class="controls">
-        <ThemeControl locale={locale} />
         <LanguageControl locale={locale} />
       </div>
     </div>

@@ -58,6 +58,9 @@ const graph = buildGraph({
 const isDocs = kind === 'docs' || kind === 'notfound';
 ---
 
+{/* The site's one theme color, pine-deep, on every page: a browser that tints its toolbar frames the
+  paper page in the green of the footer. */}
+<meta name="theme-color" content="#0E241E" />
 {!INDEXING_ENABLED && <meta name="robots" content="noindex, nofollow" />}
 {
   !isDocs && (
