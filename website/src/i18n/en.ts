@@ -152,7 +152,7 @@ export const en = {
     description:
       'Answers about carried-context development and carrydown: how it differs from spec-driven development, why it is not waterfall, how the GitHub work stays reconciled with the ground truth, and what carrydown does not do.',
     h1: 'Questions',
-    intro: 'Answers to the questions that come up most, with links into the docs where there is more. Each question has a link of its own.',
+    intro: 'Answers to the questions that come up most, with links into the docs where there is more.',
     methodHeading: 'About carried-context development',
     toolHeading: 'About carrydown',
     /** The accessible name of the link beside each question; the icon is its only visible sign. */

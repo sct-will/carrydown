@@ -148,7 +148,7 @@ export const fr: Strings = {
     description:
       'Des réponses sur carried-context development et carrydown : la différence avec le développement piloté par les spécifications, pourquoi ce n’est pas un modèle en cascade, comment le travail sur GitHub reste aligné sur la vérité de référence, et ce que carrydown ne fait pas.',
     h1: 'Questions',
-    intro: 'Des réponses aux questions les plus fréquentes, avec des liens vers les docs quand il y a plus à lire. Chaque question a son propre lien.',
+    intro: 'Des réponses aux questions les plus fréquentes, avec des liens vers les docs quand il y a plus à lire.',
     methodHeading: 'À propos de carried-context development',
     toolHeading: 'À propos de carrydown',
     anchorLabel: 'Lien vers cette question',

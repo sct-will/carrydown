@@ -129,7 +129,7 @@ export const zhCN: Strings = {
     description:
       '关于 carried-context development 和 carrydown 的解答：它与规格驱动开发的区别、为什么它不是瀑布式、GitHub 上的工作如何与基准事实保持一致，以及 carrydown 不做什么。',
     h1: '常见问题',
-    intro: '最常见问题的解答，并在有更多内容处链接到文档。每个问题都有自己的链接。',
+    intro: '最常见问题的解答，并在有更多内容处链接到文档。',
     methodHeading: '关于 carried-context development',
     toolHeading: '关于 carrydown',
     anchorLabel: '此问题的链接',

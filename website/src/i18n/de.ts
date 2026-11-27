@@ -148,7 +148,7 @@ export const de: Strings = {
     description:
       'Antworten zu carried-context development und carrydown: der Unterschied zu spezifikationsgetriebener Entwicklung, warum es kein Wasserfall ist, wie die Arbeit auf GitHub mit der Faktengrundlage abgeglichen bleibt und was carrydown nicht tut.',
     h1: 'Fragen',
-    intro: 'Antworten auf die häufigsten Fragen, mit Links in die Doku, wo es mehr gibt. Jede Frage hat einen eigenen Link.',
+    intro: 'Antworten auf die häufigsten Fragen, mit Links in die Doku, wo es mehr gibt.',
     methodHeading: 'Zu carried-context development',
     toolHeading: 'Zu carrydown',
     anchorLabel: 'Link zu dieser Frage',

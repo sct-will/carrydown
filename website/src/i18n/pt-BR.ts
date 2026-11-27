@@ -148,7 +148,7 @@ export const ptBR: Strings = {
     description:
       'Respostas sobre carried-context development e carrydown: como difere do desenvolvimento orientado por especificações, por que não é cascata, como o trabalho no GitHub se mantém reconciliado com a verdade de referência e o que o carrydown não faz.',
     h1: 'Perguntas',
-    intro: 'Respostas às perguntas mais frequentes, com links para a documentação onde há mais. Cada pergunta tem um link próprio.',
+    intro: 'Respostas às perguntas mais frequentes, com links para a documentação onde há mais.',
     methodHeading: 'Sobre carried-context development',
     toolHeading: 'Sobre o carrydown',
     anchorLabel: 'Link para esta pergunta',

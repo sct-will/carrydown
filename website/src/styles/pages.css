@@ -97,6 +97,8 @@
     transition: none;
   }
 }
+/* The anchor link sits before the question. Its 44 px target hangs 15 px into the gutter so the icon's
+ * visible edge lines up with the heading above, and the answer indents to the question text. */
 .site .faq-anchor-link {
   flex: none;
   display: inline-flex;
@@ -104,6 +106,7 @@
   justify-content: center;
   width: 44px;
   height: 44px;
+  margin-left: -15px;
   color: var(--ink-soft);
   opacity: 0.7;
 }
@@ -118,7 +121,7 @@
   fill: currentColor;
 }
 .site .faq-panel {
-  padding: 0 0 20px;
+  padding: 0 0 20px 33px;
 }
 .site .faq-panel[hidden] {
   display: none;
