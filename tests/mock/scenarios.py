@@ -88,8 +88,9 @@ M = mockgh.S
 failures = []
 
 
-def check(ok, what):
-    print(("PASS " if ok else "FAIL ") + what)
+def check(ok, what, detail=""):
+    """detail is shown only when the check fails: what the client printed, so a failure in CI names its cause."""
+    print(("PASS " if ok else "FAIL ") + what + ("" if ok or not detail else f"; {detail}"))
     if not ok:
         failures.append(what)
 
@@ -124,6 +125,12 @@ def titles():
 def one_line_error(text):
     errs = [ln for ln in text.splitlines() if ln.startswith("error:")]
     return len(errs) == 1 and "Fix:" in errs[0] and "Traceback" not in text
+
+
+def error_lines(text):
+    """The error lines of a captured output, cut short and without the token, for a check's detail."""
+    text = text.replace(os.environ["CARRYDOWN_GITHUB_TOKEN"], "<token>")
+    return "errors " + repr([ln[:160] for ln in text.splitlines() if ln.startswith("error:")])
 
 
 def links_complete():
@@ -582,7 +589,7 @@ def scenario_errors():
     check(rc == 1 and "GitHub rejected the token (HTTP 401)" in out and "Traceback" not in out, f"a 401 on the token check is one message (got {rc})")
     M.fail[("GET", r"/repos/o/r")] = ["401"]
     rc, out = sync()
-    check(rc == 1 and one_line_error(out) and "the token is wrong, expired or revoked" in out, f"a 401 on the dry run is one line with the fix (got {rc})")
+    check(rc == 1 and one_line_error(out) and "the token is wrong, expired or revoked" in out, f"a 401 on the dry run is one line with the fix (got {rc})", error_lines(out))
     # 429 with Retry-After on a read: waited for and retried, the run goes on
     M.fail[("GET", r"/repos/o/r")] = ["429", "429"]
     rc, out = sync()
@@ -605,17 +612,18 @@ def scenario_errors():
     M.fail[("PATCH", r"/repos/o/r/issues/\d+")] = ["429"] * 10
     M.issues[3]["body"] += "\nA line a person added."
     rc, out = sync("--apply", "--create-epic", "--update-bodies")
-    check(rc == 1 and one_line_error(out) and "secondary rate limit" in out and len(M.issues) == n, f"a secondary limit that does not end stops with one line (got {rc})")
+    check(rc == 1 and one_line_error(out) and "secondary rate limit" in out and len(M.issues) == n,
+          f"a secondary limit that does not end stops with one line (got {rc})", error_lines(out) + f", {len(M.issues)} issues, {n} before")
     M.fail.clear()
     # the primary limit, as 429 and as 403: not retried, one line with the reset time
     M.fail[("GET", r"/repos/o/r")] = ["429-primary"]
     rc, out = sync()
-    check(rc == 1 and one_line_error(out) and "rate limit for this token is used up" in out, f"a 429 with no requests left is one line (got {rc})")
+    check(rc == 1 and one_line_error(out) and "rate limit for this token is used up" in out, f"a 429 with no requests left is one line (got {rc})", error_lines(out))
     check(token not in out, "the token is not printed")
     # an answer that is not JSON, as from a captive portal: one line, no traceback
     M.fail[("GET", r"/repos/o/r")] = ["200-html"]
     rc, out = sync()
-    check(rc == 1 and one_line_error(out) and "the answer is not JSON" in out, f"an HTML answer is one line with the fix (got {rc})")
+    check(rc == 1 and one_line_error(out) and "the answer is not JSON" in out, f"an HTML answer is one line with the fix (got {rc})", error_lines(out))
 
 
 def scenario_paging():
