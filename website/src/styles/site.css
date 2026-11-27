@@ -136,7 +136,7 @@ body.site {
   padding-block: 64px;
 }
 
-/* Section heads: the number in mono clay ink, the heading beside it, a 1.5 px ink rule above both. */
+/* Section heads: a clay chevron, the heading beside it, a 1.5 px ink rule above both. */
 .site .sec-head {
   position: relative;
   display: grid;
@@ -156,12 +156,16 @@ body.site {
 .site .sec-head h2 {
   margin: 0;
 }
-.site .num {
-  color: var(--clay-ink);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+/* In the number's place, a small clay chevron: the figure's prompt chevron without its underscore,
+ * centered on the heading's first line. */
+.site .sec-mark {
+  align-self: start;
+  margin-top: calc(2.15rem * 1.15 / 2 - 7px);
+  fill: none;
+  stroke: var(--clay);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* Home: hero. Two columns, about 7 to 5: the title, the buttons and the license line; then the
@@ -271,7 +275,6 @@ body.site {
 .site .on-pine .sec-head::before {
   background: var(--cream-soft);
 }
-.site .on-pine .num,
 .site .on-pine .tile .n {
   color: var(--ochre);
 }
@@ -636,8 +639,10 @@ body.site {
     margin-top: 64px;
   }
   .site .sec-head {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 10px;
+    grid-template-columns: 26px minmax(0, 1fr);
+  }
+  .site .sec-mark {
+    margin-top: calc(1.8rem * 1.15 / 2 - 7px);
   }
   .site .hero h1 {
     margin-bottom: 30px;
