@@ -14,13 +14,14 @@ const { locale = 'en' } = Astro.props;
 const t = getStrings(locale);
 const h = t.home;
 const c = h.carrydown;
-// The product name in the intro is set in the accent color: the text is split on it and it is put back as a span.
+// The product name in the intro links to Start here: the text is split on it and it is put back as a link.
 const introParts = c.intro.split('carrydown');
-// The second title line stays whole. The part the locale names in h1Emphasis is set in the amber;
-// a part that is empty or not in the line leaves the line plain.
-const [line1, line2] = h.h1;
-const emphasis = h.h1Emphasis && line2.includes(h.h1Emphasis) ? h.h1Emphasis : '';
-const line2Parts = emphasis ? line2.split(emphasis) : [line2];
+// The title is one sentence. The part the locale names in h1Emphasis is set in amber; a part that is
+// empty or not in the sentence leaves the title plain.
+const emphasis = h.h1Emphasis && h.h1.includes(h.h1Emphasis) ? h.h1Emphasis : '';
+const h1Parts = emphasis ? h.h1.split(emphasis) : [h.h1];
+// Two-digit numbers for the numbered rows.
+const two = (n: number) => String(n).padStart(2, '0');
 
 // The way in: the Start here section of the docs' first page, and its How it works section. The reader
 // stays in the docs for the installation.
@@ -37,9 +38,8 @@ const w = h.whatYouGet;
     <div class="wrap">
       <div class="hero">
         <div class="hero-main">
-          <h1 class="r25 rise" style="--i: 0">
-            <span class="h1-line">{line1}</span>
-            <span class="h1-line">{line2Parts.map((part, i) => (<>{i > 0 && <em>{emphasis}</em>}{part}</>))}</span>
+          <h1 class="rise" style="--i: 0">
+            <span class="h1-line">{h1Parts.map((part, i) => (<>{i > 0 && <em>{emphasis}</em>}{part}</>))}</span>
           </h1>
           <div class="actions rise" style="--i: 2">
             <a class="btn primary" href={startHereUrl}>
@@ -56,49 +56,40 @@ const w = h.whatYouGet;
         </div>
       </div>
 
-      <h2 class="how tied" data-reveal>{h.howHeading}</h2>
-      <p class="how-intro">{h.paragraph} {h.learnMore.before}<a href={howItWorksUrl}>{h.learnMore.link}</a>{h.learnMore.after}</p>
-      <div class="flow-frame">
-        <div class="flow-frame__in">
+      <div class="how">
+        <div class="sec-head" data-reveal><svg class="sec-mark" viewBox="1.5 1.5 9 13" width="15.2" height="22" aria-hidden="true" focusable="false"><path d="M2.5 2.5L9.5 8L2.5 13.5"></path></svg><h2>{h.howHeading}</h2></div>
+        <p class="how-intro">{h.paragraph} {h.learnMore.before}<a href={howItWorksUrl}>{h.learnMore.link}</a>{h.learnMore.after}</p>
+        <div class="flow-frame">
           <HowItWorks locale={locale} />
         </div>
-      </div>
-      <div class="vals">
-        {h.values.map((v) => (
-          <div>
-            <span class="eb">{v.eyebrow}</span>
-            <h3>{v.title}</h3>
-            <p>{v.body}</p>
-          </div>
-        ))}
+        <div class="vals">
+          {h.values.map((v) => (
+            <div>
+              <span class="eb">{v.eyebrow}</span>
+              <h3>{v.title}</h3>
+              <p>{v.body}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   </section>
 
-  <section id="carrydown">
+  <section id="carrydown" class="on-pine">
     <div class="wrap">
-      <h2 class="cd-h tied" data-reveal>{c.heading}</h2>
-      <p class="cd-intro">{introParts.map((part, i) => (<>{i > 0 && <a class="accent" href={startHereUrl}>carrydown</a>}{part}</>))}</p>
+      <div class="sec-head" data-reveal><svg class="sec-mark" viewBox="1.5 1.5 9 13" width="15.2" height="22" aria-hidden="true" focusable="false"><path d="M2.5 2.5L9.5 8L2.5 13.5"></path></svg><h2>{c.heading}</h2></div>
+      <p class="cd-intro">{introParts.map((part, i) => (<>{i > 0 && <a href={startHereUrl}>carrydown</a>}{part}</>))}</p>
       <div class="tiles">
         {c.tiles.map((tile, i) => (
-          <>
-            {i > 0 && (
-              <svg class="tile-arrow" viewBox="0 0 56 28" aria-hidden="true" focusable="false">
-                <path d="M3 14h46M40 5l9 9-9 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
-            )}
-            <div class="tile">
-              <div class="tile__in">
-                <div class="n">{tile.step}</div>
-                <h3>{tile.title}</h3>
-                <p>{tile.body}{tile.command && <>{' '}<span class="mono">{tile.command}</span></>}</p>
-                <a class:list={['btn', i === 1 ? 'primary' : 'secondary']} href={tileLinks[i]}>
-                  {tile.button}
-                  {i === 1 && <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M7 17L17 7M9 7h8v8"></path></svg></span>}
-                </a>
-              </div>
-            </div>
-          </>
+          <div class="tile">
+            <span class="n">{tile.step}</span>
+            <h3>{tile.title}</h3>
+            <p>{tile.body}{tile.command && <>{' '}<span class="mono">{tile.command}</span></>}</p>
+            <a class:list={['btn', i === 1 ? 'primary' : 'secondary']} href={tileLinks[i]}>
+              {tile.button}
+              {i === 1 && <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M7 17L17 7M9 7h8v8"></path></svg></span>}
+            </a>
+          </div>
         ))}
       </div>
 
@@ -106,8 +97,8 @@ const w = h.whatYouGet;
       <ol class="runsteps" role="list">
         {c.steps.map((s, i) => (
           <li class="rs">
-            <div class="rs-n">{i + 1}</div>
-            <div class="rs-who">{s.who}</div>
+            <span class="rs-n" aria-hidden="true">{two(i + 1)}</span>
+            <span class="rs-who">{s.who}</span>
             <div class="rs-body">
               <div class="rs-what">{s.what}</div>
               <div class="rs-say">{s.say}</div>
@@ -121,33 +112,26 @@ const w = h.whatYouGet;
 
   <section id="what-you-get">
     <div class="wrap">
-      <h2 class="tied" data-reveal>{w.heading}</h2>
+      <div class="sec-head" data-reveal><svg class="sec-mark" viewBox="1.5 1.5 9 13" width="15.2" height="22" aria-hidden="true" focusable="false"><path d="M2.5 2.5L9.5 8L2.5 13.5"></path></svg><h2>{w.heading}</h2></div>
       <p class="wyg-intro">{w.intro}</p>
-      <div class="wyg-panel">
-        <div class="wyg-panel__in">
-          <ul class="wyg-list" role="list">
-            {w.items.map((item) => (
-              <li>
-                <svg class="wyg-check" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                  <circle cx="12" cy="12" r="9.5"></circle>
-                  <path d="M8 12.5l2.7 2.7L16 9.5"></path>
-                </svg>
-                <div>
-                  <h3>{item.title}{item.path && <>{' '}{w.inWord ? `${w.inWord} ` : ''}<span class="wyg-path">{item.path}</span></>}</h3>
-                  <p>{item.body}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      <ol class="wyg-list" role="list">
+        {w.items.map((item, i) => (
+          <li>
+            <span class="wn" aria-hidden="true">{two(i + 1)}</span>
+            <div>
+              <h3>{item.title}{item.path && <>{' '}{w.inWord ? `${w.inWord} ` : ''}<span class="wyg-path">{item.path}</span></>}</h3>
+              <p>{item.body}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
     </div>
   </section>
 </SiteLayout>
 
 <script>
-  // The motion of the home page, under the rule in chrome.css: a heading's tie draws when the heading
-  // enters the viewport, and the diagram draws itself as the reader scrolls it into view. The styles
+  // The motion of the home page, under the rule in chrome.css: the rule above a section heading draws
+  // when the heading enters the viewport, and the diagram draws itself as the reader scrolls it into view. The styles
   // are in site.css. This script only classifies the diagram's connectors by their direction and their
   // place in the flow (the coordinates are the drawing's, in HowItWorks.astro: a changed drawing needs
   // a look here), gives each its share of the scroll range and a delay for the fallback, and watches

@@ -1,6 +1,5 @@
-/* The generated docs, styled after specs/carried-context-site/final/docs.html: the heading sizes, the
- * sidebar with small group labels and an amber rule on the current page, quotes on a raised ground with
- * an amber rule, and code in a plain bordered box. Starlight's own styles sit in cascade layers, so these
+/* The generated docs, in the site's tokens: the heading sizes, the sidebar with small mono group labels
+ * and a clay rule on the current page, quotes on bone with a clay rule, and code in a plain bordered box. Starlight's own styles sit in cascade layers, so these
  * unlayered rules win. */
 
 :root {
@@ -11,19 +10,20 @@
   --sl-text-h5: 1rem;
 }
 
-/* Sidebar: group labels as small capitals, links in ink, the current page marked by an amber rule. */
+/* Sidebar: group labels as mono capitals, links in ink, the current page marked by a clay rule. */
 .sidebar-content .group-label .large {
-  color: var(--ink-muted);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 .sidebar-content ul ul li {
-  border-inline-start: 2px solid var(--border);
+  border-inline-start: 2px solid var(--hairline);
 }
 .sidebar-content ul ul li:has(> a[aria-current='page']) {
-  border-inline-start-color: var(--amber);
+  border-inline-start-color: var(--clay);
 }
 .sidebar-content a {
   color: var(--ink);
@@ -40,8 +40,8 @@
 /* Quotes: the commands a reader says to the agent. */
 .sl-markdown-content blockquote {
   padding: 10px 16px;
-  border-inline-start: 3px solid var(--amber);
-  background: var(--cream-raised);
+  border-inline-start: 3px solid var(--clay);
+  background: var(--bone);
 }
 
 /* The title row: the page title, and the Copy page control beside it. On a narrow page the control
@@ -68,8 +68,8 @@
   align-items: center;
   gap: 8px;
   min-height: 44px;
-  border: 1px solid var(--border-strong);
-  background: var(--cream-raised);
+  border: 1.5px solid var(--ink);
+  background: transparent;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 0.9rem;
@@ -90,7 +90,7 @@
 .copy-page__main:hover,
 .copy-page__toggle:hover,
 .copy-page__toggle[aria-expanded='true'] {
-  background: var(--teal-soft);
+  background: var(--bone);
 }
 .copy-page svg {
   width: 16px;
@@ -106,10 +106,10 @@
   margin: 0;
   padding: 6px;
   list-style: none;
-  border: 1px solid var(--border-strong);
-  border-radius: 8px;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
   background: var(--paper);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.14);
+  box-shadow: var(--pop);
 }
 .copy-page__menu[hidden] {
   display: none;
@@ -135,7 +135,7 @@
 }
 .copy-page__menu [role='menuitem']:hover,
 .copy-page__menu [role='menuitem']:focus-visible {
-  background: var(--teal-soft);
+  background: var(--bone);
 }
 @media (max-width: 599.98px) {
   .copy-page__menu {
@@ -144,33 +144,29 @@
   }
 }
 
-/* Headings in the display face, with the optical size set per size. */
+/* Headings in the text face at weight 700, as on the site pages. */
 .sl-markdown-content :is(h1, h2, h3, h4, h5, h6),
 h1#_top {
-  font-family: var(--font-display);
-  font-weight: 500;
+  font-family: var(--font-body);
+  font-weight: 700;
   letter-spacing: -0.012em;
   text-wrap: balance;
-  font-variation-settings: 'opsz' 48, 'SOFT' 20;
 }
 h1#_top {
   letter-spacing: -0.02em;
-  font-variation-settings: 'opsz' 96, 'SOFT' 30;
 }
 
-/* The thread under every link in the content, thicker on hover. */
+/* The underline of every link in the content, thicker on hover. */
 .sl-markdown-content a:not(.sl-anchor-link) {
+  color: var(--clay-ink);
   text-decoration: underline;
-  text-decoration-color: var(--amber-ink);
   text-decoration-thickness: 1.5px;
   text-underline-offset: 0.22em;
   transition:
-    text-decoration-thickness var(--dur) var(--ease),
-    text-decoration-color var(--dur) var(--ease);
+    text-decoration-thickness var(--dur) var(--ease);
 }
 .sl-markdown-content a:not(.sl-anchor-link):hover {
   text-decoration-thickness: 3px;
-  text-decoration-color: var(--amber);
 }
 
 /* The current page's marker in the sidebar is named for the page transition, so it slides to the new
@@ -192,13 +188,8 @@ starlight-toc a {
 .copy-page__toggle {
   border-radius: 0 999px 999px 0;
 }
-.copy-page__menu {
-  border-color: var(--shell-line);
-  border-radius: 16px;
-  box-shadow: var(--shadow-lift);
-}
 .copy-page__menu [role='menuitem'] {
-  border-radius: 999px;
+  border-radius: 4px;
 }
 .copy-page__tick {
   display: none;
@@ -208,7 +199,7 @@ starlight-toc a {
 }
 .copy-page--copied .copy-page__tick {
   display: block;
-  color: var(--teal);
+  color: var(--clay-ink);
 }
 @media (prefers-reduced-motion: no-preference) {
   @keyframes tick {
@@ -230,4 +221,27 @@ starlight-toc a {
   .expressive-code .copy button {
     transition: none;
   }
+}
+
+/* The site footer under a docs page sits in the content column: a pine panel set off from the page
+ * links above it, the links over the copyright line. */
+.site-footer {
+  margin-top: 3rem;
+  padding: 32px 28px;
+}
+.site-footer .site-footer__inner {
+  flex-direction: column;
+  align-items: flex-start;
+  padding-inline: 0;
+}
+.site-footer .site-footer__links {
+  margin: 0 0 0 -8px;
+}
+
+/* Starlight's sidebar button on a narrow screen: a round button with a hairline, like the site's. */
+starlight-menu-button button {
+  border: 1px solid var(--hairline);
+  background: var(--paper);
+  box-shadow: none;
+  color: var(--ink);
 }

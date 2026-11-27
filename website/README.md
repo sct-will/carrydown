@@ -43,19 +43,42 @@ This runs, in order:
 - `tests/docs-publication.mjs` runs the generator on a small temporary repository and proves that only listed pages are published: an unlisted file in `docs/` appears in no generated file or locale, and a listed page missing on disk stops the build. It needs no built site.
 - `tests/routes.mjs` starts `astro preview` and expects 200 for every page, in every locale, and for every internal link and asset.
 - `tests/llms.mjs` checks `llms.txt` and `llms-full.txt`: the format, that every English page is listed once and no redirect is, the reading order, the "What to tell your agent, and when" phrases against the README, that a second run writes the same bytes, and that every listed address answers 200.
-- `tests/reflow.mjs` takes screenshots of a bounded set of pages (the four site pages at six widths, plus Japanese, docs and fallback samples) in both themes into `tests/screenshots/` and fails on horizontal overflow, text under 12 px and tap targets under 44 px.
-- `tests/a11y.mjs` runs axe-core on a bounded set (the four site pages in every locale in both themes, every English docs page and one fallback docs page per locale in light) and fails on any violation.
+- `tests/reflow.mjs` takes screenshots of a bounded set of pages (the four site pages at six widths, plus Japanese, docs and fallback samples) into `tests/screenshots/` and fails on horizontal overflow, text under 12 px and tap targets under 44 px.
+- `tests/a11y.mjs` runs axe-core on a bounded set (the four site pages in every locale, every English docs page and one fallback docs page per locale) and fails on any violation.
 
 Type checks: `npx astro check`.
 
 ## Design
 
-The design is the round 2 mock-up in `specs/carried-context-site/mockups-v2/` (paper and thread), carried into the site in November 2026.
+The design is the Hartwell direction of the round 3 and round 4 mockups, carried into the site in November 2026. The reference renders and their notes are in `specs/carried-context-site/mockups-v3/` (tokens, contrast, type, the figure) and `specs/carried-context-site/mockups-v4/` (the decisions, the mark, the title). The grammar: type-led, one accent for action and one for emphasis, a rule above each section heading, mono labels, the figure on a bone panel, the Try it out section as a pine band, hairline rows instead of cards. Nothing at rest carries a shadow. In place of a section number, each home page section head carries a small clay chevron, the figure's prompt chevron without its underscore.
 
-- Type: Fraunces for display, with its optical size axis set per size; Atkinson Hyperlegible Next for text, with true small capitals for the eyebrow labels, old-style figures in running text and tabular figures where numbers line up; Geist Mono for code. All three are self-hosted from their Fontsource packages, imported in `src/styles/tokens.css`. Chinese and Japanese pages put a native sans after the text face and a native serif after the display face (`src/styles/locales.css`).
-- The second line of the home page title stays one string in the locale file; the `h1Emphasis` key beside it names the part set in the amber, upright in the same face. A translation may move that part or leave it empty.
-- Theme: light is the default. The control offers Light, Dark and Auto; the choice is kept in `localStorage` under `cc-theme` and resolved to `data-theme` on `<html>` before first paint by `src/components/ThemeScript.astro`. The tests reach the dark theme by storing that choice.
-- Motion follows one rule, written at the top of `src/styles/chrome.css`: it answers something, happens once, takes 150 to 600 ms for interface feedback, uses one easing family and only transform, opacity, clip and stroke, and is off under reduced motion. The home page diagram draws itself as the reader scrolls it into view (a scroll-driven animation in `src/styles/site.css`, with a timed fallback), page changes are cross-document view transitions (with a guard in `ThemeScript.astro` that skips a transition still unfinished after 600 ms, since an embedded or automated browser can hold one for seconds), and a theme change crossfades.
+- Tokens, in `src/styles/tokens.css`. Each text pair meets WCAG 2.2 AA.
+
+  | Token | Value | Use | Contrast |
+  | --- | --- | --- | --- |
+  | `--paper` | #F5F1E8 | the page | |
+  | `--bone` | #EAE3D3 | the figure panel, raised grounds | |
+  | `--pine` | #17332C | hover ground on pine | |
+  | `--pine-deep` | #0E241E | the Try it out band, the footer | |
+  | `--ink` | #1D1A15 | text, headings, figure strokes | 15.4 on paper |
+  | `--ink-soft` | #5E574A | secondary text | 6.3 on paper, 5.6 on bone |
+  | `--clay` | #BC5A2E | the primary button, the figure's connectors | white on clay 4.5 |
+  | `--clay-ink` | #9A4620 | list numbers on paper (What you get, the definition's rules), eyebrows, links, the focus ring | 5.7 on paper |
+  | `--clay-tint` | #E8C9B5 | a pale clay ground | |
+  | `--amber-ink` | #8F5A08 | the title's emphasis | 5.1 on paper |
+  | `--amber-stroke` | #A8740C | the mark's thread on paper | |
+  | `--ochre` | #D9A441 | numbers, links and the focus ring on pine; the mark's thread on pine | 7.2 on pine-deep |
+  | `--cream-soft` | #B9C2B4 | body text on pine | 8.9 on pine-deep |
+  | `--hairline` | #D6CDBA | rules on paper | |
+  | `--hairline-dark` | #2E4A41 | rules on pine | |
+
+- Light only. `color-scheme` is light, there is no theme control, and the docs are light too. `src/components/ThemeScript.astro` holds `data-theme="light"` on `<html>` for Starlight's styles and marks the page as script-enabled; the `lightTheme` step in `astro.config.mjs` writes the same value into every built docs page in place of Starlight's own no-script default. Code blocks use the one `starlight-light` theme.
+- Theme color: `<meta name="theme-color" content="#0E241E">`, pine-deep, on every page, from `src/components/Seo.astro`. A browser that tints its toolbar (Safari, Android Chrome) frames the paper page in the green of the footer.
+- Type: Atkinson Hyperlegible Next for everything, the titles included; Geist Mono for labels, numbers, quoted commands and paths. Both are self-hosted from their Fontsource packages, imported in `src/styles/tokens.css`. The home page title is weight 700. Chinese and Japanese pages put a native sans after the text face (`src/styles/locales.css`).
+- The home page title is one sentence in the locale file (`home.h1`); the `h1Emphasis` key beside it names the part set in amber-ink, upright, in the same face and weight. A translation may move that part or leave it empty.
+- The mark, `src/assets/logo/mark.svg` (K1 in the mockups): the letters C, C and D as three ink outlines, the thread cut through them by a mask and drawn over. `src/components/Mark.astro` draws the same geometry with the letters in `currentColor` and the thread in the `--thread` custom property: amber-stroke on paper (the header, at 22 px), ochre on pine (the footer). `scripts/build-icons.mjs` writes the variants, the favicon and the PNGs from the master file, on a paper ground for the icons; the favicon and every size under 64 px use the heavier K3 weights (outline 58, thread 72). `scripts/build-og-image.mjs` draws the share image on pine-deep: the mark with paper letters and the ochre thread, the title in Atkinson with the emphasis in ochre, the site name in cream-soft.
+- The How it works figure, `src/components/HowItWorks.astro`, is styled as V1 of the round 3 mockups: boxes on paper with 3 unit corners and an ink-soft outline, clay connectors, mono eyebrows, the agent as a prompt chevron in an ink ring, and each engineer's coding agent as the same glyph, small, in clay. Its geometry is unchanged: every connector is the same `line.ln` with the same coordinates and dash pattern, and the agent's ring is the same `circle.tk`, so the drawing script reads it as before. The stacked variant under 1100 px has the same structure. At 1440 px the figure's smallest text renders at about 12.1 px.
+- Motion follows one rule, written at the top of `src/styles/chrome.css`: it answers something, happens once, takes 150 to 600 ms for interface feedback, uses one easing family and only transform, opacity, clip and stroke, and is off under reduced motion. The home page diagram draws itself as the reader scrolls it into view (a scroll-driven animation in `src/styles/site.css`, with a timed fallback), the rule above each section heading draws out as the heading enters, and page changes are cross-document view transitions (with a guard in `ThemeScript.astro` that skips a transition still unfinished after 600 ms, since an embedded or automated browser can hold one for seconds).
 
 ## Settings
 

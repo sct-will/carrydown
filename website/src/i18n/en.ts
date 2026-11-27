@@ -27,10 +27,6 @@ export const en = {
   },
 
   controls: {
-    themeLabel: 'Theme',
-    themeAuto: 'Auto',
-    themeDark: 'Dark',
-    themeLight: 'Light',
     languageLabel: 'Language',
   },
 
@@ -306,34 +302,31 @@ export const en = {
       'This site is meant to be usable by everyone, including people who use a screen reader, a keyboard alone, magnification, or reduced motion. It aims to meet the Web Content Accessibility Guidelines (WCAG) 2.2 at level AA.',
     doneHeading: 'What has been done',
     done: [
-      'Text and interface colors are checked for contrast in both the light and the dark theme, and you can choose either theme or follow your system.',
+      'Text and interface colors are checked for contrast.',
       'Every page works with a keyboard alone, with a visible focus indicator and a skip link to the main content.',
-      'The diagram is drawn as text and vector shapes, so it scales, respects your theme, and carries a written description for screen readers.',
-      'Animations, page transitions and the theme crossfade turn off when your system is set to reduce motion. Brief color and underline changes on links and buttons remain, and so does the turn of a documentation sidebar arrow.',
+      'The diagram is drawn as text and vector shapes, so it scales and carries a written description for screen readers.',
+      'Animations and page transitions turn off when your system is set to reduce motion. Brief color and underline changes on links and buttons remain, and so does the turn of a documentation sidebar arrow.',
       'Headings, landmarks and link text are written to be read in order and out of context.',
       'The site is checked with automated tools before each release and reviewed by hand with a screen reader.',
     ],
     notFinishedHeading: 'What is not finished',
     notFinished:
-      'Translations of the site are being reviewed by native speakers and go live one language at a time. The documentation pages are not translated yet. Each language shows the English page with a note. They are built from the repository’s Markdown, so their diagrams and screenshots are raster images with written descriptions. These images do not follow the dark theme.',
+      'Translations of the site are being reviewed by native speakers and go live one language at a time. The documentation pages are not translated yet. Each language shows the English page with a note. They are built from the repository’s Markdown, so their diagrams and screenshots are raster images with written descriptions.',
     contactHeading: 'Tell us about a problem',
     contactBefore:
       'If something on this site is hard to use with assistive technology, or you need the content in another form, write to ',
     contactAfter: '. Say which page and what happened. You should hear back within ten working days.',
     review:
-      'This statement describes the site’s intent and its current state. It is reviewed when the site changes. Last reviewed 22 November 2026.',
+      'This statement describes the site’s intent and its current state. It is reviewed when the site changes. Last reviewed 27 November 2026.',
   },
 
   home: {
     title: 'Carried context, one ground truth for every coding agent',
     description:
       'Carried-context development is an approach to agentic development that carries project decisions and context all the way down to each engineer’s coding agent and helps keep specifications and coding agents aligned as the project changes.',
-    h1: [
-      'Carried-context development goes beyond spec-driven development.',
-      'The context travels with the work.',
-    ],
-    /** The part of the second title line set in the amber. The line itself stays whole; this names which
-     * part of it is emphasized. Empty leaves the line plain. */
+    h1: 'With carried-context development, agent context travels with the work.',
+    /** The part of the title set in amber. The title stays one string; this names which part of it is
+     * emphasized. Empty leaves the title plain. */
     h1Emphasis: 'travels with the work.',
     definition:
       'Keep the project aligned by giving each engineer’s coding agent the same project decisions and context.',
@@ -423,13 +416,13 @@ export const en = {
       inWord: 'in',
       items: [
         { title: 'A plan you review as a page in your web browser', path: '', body: 'Milestones, tracks, owners and dates fitted to your people and time, with a load table and a critical path, and a reason for every milestone. The committed plan, docs/spec/plan.yaml, holds ids and tracks only.' },
+        { title: 'The engineer’s AI agent skill', path: '', body: 'Generated from your specifications and committed in your repository. An engineer starts a work item by naming it, for example “Work on [work item ID]”, and the coding agent reads that item’s specification and approved context before it touches code.' },
         { title: 'One specification per work item', path: '', body: 'The smallest piece of work an engineer can finish and show, citing its sections and checked against the plan on every pull request.' },
         { title: 'One approved context per work item', path: 'docs/context/', body: 'The exact source text the item cites and the decisions behind it, approved by you. The only part of your documents that reaches the engineers’ agents.' },
         { title: 'A release receipt', path: 'docs/release/', body: 'A small public file naming the approved release, its state and its expiry.' },
         { title: 'A second-pass review report', path: '', body: 'Coverage, evidence, reasoning and risk, with your decisions and the checks on accepted repairs.' },
         { title: 'GitHub issues', path: '', body: 'One per work item under a sub-epic per milestone, each telling the engineer’s agent what to read.' },
         { title: 'A GitHub Project board', path: '', body: 'Work units, tracks, dates and checkpoints filled in.' },
-        { title: 'The engineer’s AI agent skill', path: '', body: 'Generated from your specifications and committed in your repository. An engineer starts a work item by naming it, for example “Work on [work item ID]”, and the coding agent reads that item’s specification and approved context before it touches code.' },
       ],
     },
   },

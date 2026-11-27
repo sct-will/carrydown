@@ -26,10 +26,6 @@ export const zhCN: Strings = {
   },
 
   controls: {
-    themeLabel: '主题',
-    themeAuto: '自动',
-    themeDark: '深色',
-    themeLight: '浅色',
     languageLabel: '语言',
   },
 
@@ -278,31 +274,28 @@ export const zhCN: Strings = {
       '本网站旨在让所有人都能使用，包括使用屏幕阅读器、只用键盘、放大显示或减少动态效果的人。目标是达到 Web Content Accessibility Guidelines (WCAG) 2.2 的 AA 级。',
     doneHeading: '已完成的工作',
     done: [
-      '文字和界面颜色在浅色和深色两种主题下都检查了对比度，你可以选择其中一种，也可以跟随系统设置。',
+      '文字和界面颜色已经过对比度检查。',
       '每个页面都可以只用键盘操作，有可见的焦点指示，并提供跳到主要内容的链接。',
-      '图表由文字和矢量图形绘制，因此可以缩放、跟随你的主题，并为屏幕阅读器提供文字说明。',
-      '当你的系统设置为减少动态效果时，动画、页面切换过渡和切换主题时的淡入淡出都会关闭。链接和按钮上简短的颜色和下划线变化仍会保留，文档侧边栏箭头的转动也会保留。',
+      '图表由文字和矢量图形绘制，因此可以缩放，并为屏幕阅读器提供文字说明。',
+      '当你的系统设置为减少动态效果时，动画和页面切换过渡都会关闭。链接和按钮上简短的颜色和下划线变化仍会保留，文档侧边栏箭头的转动也会保留。',
       '标题、地标区域和链接文字的写法，便于按顺序阅读，也便于脱离上下文阅读。',
       '网站在每次发布前用自动化工具检查，并由人工使用屏幕阅读器审阅。',
     ],
     notFinishedHeading: '尚未完成的工作',
     notFinished:
-      '网站的翻译正在由母语人士审校，将逐种语言上线。文档页面尚未翻译。每种语言都显示带有说明的英文页面。文档由代码仓库中的 Markdown 生成，因此其中的图表和截图是带有文字说明的位图，不会跟随深色主题。',
+      '网站的翻译正在由母语人士审校，将逐种语言上线。文档页面尚未翻译。每种语言都显示带有说明的英文页面。文档由代码仓库中的 Markdown 生成，因此其中的图表和截图是带有文字说明的位图。',
     contactHeading: '告诉我们遇到的问题',
     contactBefore: '如果本网站的某些内容在使用辅助技术时难以使用，或者你需要其他形式的内容，请写信到 ',
     contactAfter: '。请说明是哪个页面以及发生了什么。你应该会在十个工作日内收到回复。',
-    review: '本声明说明网站的意图和当前状态。网站变化时会重新审阅。最近一次审阅是2026年11月22日。',
+    review: '本声明说明网站的意图和当前状态。网站变化时会重新审阅。最近一次审阅是2026年11月27日。',
   },
 
   home: {
     title: 'Carried context，为每个编码代理提供同一个基准事实',
     description:
       'Carried-context development 是一种智能体开发方法，把项目决策和上下文一直传递到每位工程师的编码代理，并帮助规格和编码代理在项目变化时保持一致。',
-    h1: [
-      'Carried-context development 超越规格驱动开发。',
-      '上下文与工作同行。',
-    ],
-    /** The part of the second title line set in the amber, a styling choice a native reviewer may move or empty. */
+    h1: '借助 Carried-context development，代理上下文与工作同行。',
+    /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
     h1Emphasis: '与工作同行。',
     definition:
       '把同样的项目决策和上下文交给每位工程师的编码代理，让项目保持一致。',
@@ -392,13 +385,13 @@ export const zhCN: Strings = {
       inWord: '位于',
       items: [
         { title: '一份你在网页浏览器中以页面形式审阅的计划', path: '', body: '里程碑、工作线、负责人和日期按你的人员和时间来安排，附带负荷表和关键路径，每个里程碑都写明理由。提交到仓库的计划 docs/spec/plan.yaml 只包含 ID 和工作线。' },
+        { title: '工程师的 AI 代理 skill', path: '', body: '由你的规格生成并提交到你的仓库。工程师通过点名来开始一个工作项，例如“Work on [work item ID]”，编码代理会先读取该工作项的规格和已批准的上下文。' },
         { title: '每个工作项一份规格', path: '', body: '工程师能够完成并展示的最小工作单元，引用其依据的章节，并在每次拉取请求时对照计划检查。' },
         { title: '每个工作项一份已批准的上下文', path: 'docs/context/', body: '工作项所引用章节的原文和背后的决策，由你批准。这是你的文档中唯一会到达工程师代理的部分。' },
         { title: '一份发布回执', path: 'docs/release/', body: '一个小的公开文件，写明已批准的发布、其状态和有效期。' },
         { title: '一份二次审阅报告', path: '', body: '覆盖范围、证据、推理和风险，加上你的决定以及对已接受修复的检查。' },
         { title: 'GitHub issue', path: '', body: '每个工作项一个，归在每个里程碑的子史诗之下，每个都告诉工程师的代理该读什么。' },
         { title: '一个 GitHub 项目看板', path: '', body: '工作单元、工作线、日期和检查点均已填好。' },
-        { title: '工程师的 AI 代理 skill', path: '', body: '由你的规格生成并提交到你的仓库。工程师通过点名来开始一个工作项，例如“Work on [work item ID]”，编码代理会先读取该工作项的规格和已批准的上下文。' },
       ],
     },
   },

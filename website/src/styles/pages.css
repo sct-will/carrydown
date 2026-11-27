@@ -1,4 +1,4 @@
-/* The definition, questions and accessibility pages. Scoped under body.site. The translation note is in
+/* The definition, questions and accessibility pages, in the site's tokens. Scoped under body.site. The translation note is in
  * site.css, since the home page shows it too. Ported from specs/carried-context-site/final/definition.html,
  * faq.html and accessibility.html. */
 
@@ -16,7 +16,7 @@
 .site .page-intro {
   max-width: 44rem;
   margin: 0 0 8px;
-  color: var(--ink-muted);
+  color: var(--ink-soft);
   font-size: 1.05rem;
   line-height: 1.6;
 }
@@ -33,7 +33,7 @@
   margin: 36px 0 0;
 }
 .site .muted {
-  color: var(--ink-muted);
+  color: var(--ink-soft);
 }
 
 /* Questions: an accordion. Each question is a button in its heading, with the answer under it, and a
@@ -43,7 +43,7 @@
   margin: 10px 0 0;
 }
 .site .faq-item {
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--hairline);
   scroll-margin-top: 24px;
 }
 .site .faq-item:last-child {
@@ -86,7 +86,7 @@
   flex: none;
   width: 0.8em;
   height: 0.8em;
-  color: var(--ink-muted);
+  color: var(--ink-soft);
   transition: transform 0.15s ease;
 }
 .site .faq-toggle[aria-expanded='true'] .faq-chevron {
@@ -104,12 +104,12 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  color: var(--ink-muted);
+  color: var(--ink-soft);
   opacity: 0.7;
 }
 .site .faq-anchor-link:hover,
 .site .faq-anchor-link:focus-visible {
-  color: var(--amber-ink);
+  color: var(--clay-ink);
   opacity: 1;
 }
 .site .faq-anchor {
@@ -132,14 +132,14 @@
   font-size: 0.95rem;
 }
 /* The two groups are sections inside the page's first section. They take none of the site-wide section
- * padding and rule, so the groups read as one page. The group headings are set in the amber that carries text. */
+ * padding and rule, so the groups read as one page. The group headings are set in clay ink. */
 .site .faq-section {
   padding: 0;
   border-top: 0;
 }
 .site .faq-section > .page-h2 {
   margin-top: 40px;
-  color: var(--amber-ink);
+  color: var(--clay-ink);
 }
 .site .faq-section + .faq-section > .page-h2 {
   margin-top: 48px;
@@ -161,12 +161,12 @@
   margin: 14px 0 0;
   padding: 0;
   list-style: none;
-  border-top: 1px solid var(--border-strong);
+  border-top: 1.5px solid var(--ink);
 }
 .site .fact {
   position: relative;
   padding: 12px 0 12px 22px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--hairline);
   font-size: 0.98rem;
 }
 .site .fact::before {
@@ -176,7 +176,7 @@
   top: 22px;
   width: 10px;
   height: 2px;
-  background: var(--amber);
+  background: var(--clay);
 }
 
 /* Definition: status line, contents, rules */
@@ -185,7 +185,7 @@
   flex-wrap: wrap;
   gap: 4px 18px;
   margin: 0 0 28px;
-  color: var(--ink-muted);
+  color: var(--ink-soft);
   font-family: var(--font-mono);
   font-size: 0.85rem;
 }
@@ -202,7 +202,8 @@
 }
 .site .label-top {
   margin: 0 0 8px;
-  color: var(--ink-muted);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
   font-size: 0.8rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -210,18 +211,18 @@
 .site .toc ol {
   margin: 0;
   padding-inline-start: 20px;
-  color: var(--ink-muted);
+  color: var(--ink-soft);
 }
 .site .toc a {
   display: flex;
   align-items: center;
   min-height: 44px;
-  color: var(--ink-muted);
+  color: var(--ink-soft);
   text-decoration-thickness: 1px;
   text-decoration-color: transparent;
 }
 .site .toc a:hover {
-  text-decoration-color: var(--amber-ink);
+  text-decoration-color: var(--clay);
   text-decoration-thickness: 2px;
 }
 .site .toc a:hover {
@@ -257,20 +258,21 @@
   grid-template-columns: 56px minmax(0, 1fr);
   gap: 20px;
   padding: 20px 0;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--hairline);
 }
 .site .rules li:first-child {
   border-top: 0;
 }
 .site .rules li::before {
   content: counter(r, decimal-leading-zero);
-  padding-top: 2px;
-  color: var(--amber-ink);
-  font-family: var(--font-display);
-  font-size: 1.45rem;
-  line-height: 1;
-  font-variation-settings: 'opsz' 48;
-  font-variant-numeric: lining-nums;
+  padding-top: 5px;
+  color: var(--clay-ink);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
 }
 .site .rules b {
   display: block;
@@ -279,7 +281,7 @@
 }
 .site .rules p {
   margin: 0;
-  color: var(--ink-muted);
+  color: var(--ink-soft);
 }
 
 /* Definition: the comparison table */
@@ -292,17 +294,17 @@
 .site .compare th,
 .site .compare td {
   padding: 10px 12px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--hairline);
   text-align: start;
   vertical-align: top;
 }
 .site .compare th {
-  color: var(--ink-muted);
+  color: var(--ink-soft);
   font-weight: 500;
 }
 .site .compare thead th {
   border-top: 0;
-  border-bottom: 2px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink);
   color: var(--ink);
   font-weight: 600;
 }
@@ -310,10 +312,8 @@
 /* Definition: how to cite */
 .site .cite {
   padding: 24px 28px;
-  border: 1px solid var(--border-strong);
-  border-radius: 16px;
-  background: var(--cream-raised);
-  box-shadow: var(--inner-highlight);
+  border: 1px solid var(--hairline);
+  background: var(--bone);
 }
 .site .cite-text {
   margin: 8px 0 0;
@@ -371,7 +371,7 @@
   }
   .site .compare tr {
     padding: 12px 0;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--hairline);
   }
   .site .compare tr:first-child {
     border-top: 0;
@@ -390,7 +390,7 @@
     content: attr(data-label);
     display: block;
     margin-top: 6px;
-    color: var(--ink-muted);
+    color: var(--ink-soft);
     font-size: 0.8rem;
     font-weight: 600;
     letter-spacing: 0.04em;

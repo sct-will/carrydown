@@ -1,18 +1,15 @@
-/* Language-specific type. Latin text uses Atkinson Hyperlegible Next, and display text Fraunces. Chinese
- * and Japanese pages put the system's CJK fonts after them, so Latin words and numbers keep the site's
- * faces and the characters get a native one: a sans for text and a serif (Mincho, Song) for headings,
- * to match the serif display face. The diagram, the docs and the pages all read --font-body, so one
- * override covers them. */
+/* Language-specific type. Latin text, the titles included, uses Atkinson Hyperlegible Next. Chinese and
+ * Japanese pages put the system's CJK sans fonts after it, so Latin words and numbers keep the site's
+ * face and the characters get a native one. The diagram, the docs and the pages all read --font-body, so
+ * one override covers them. */
 
 :root:lang(ja) {
   --font-body: 'Atkinson Hyperlegible Next Variable', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic UI',
     'Yu Gothic', Meiryo, 'Noto Sans CJK JP', 'Noto Sans JP', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Fraunces Variable', 'Hiragino Mincho ProN', 'Yu Mincho', 'Noto Serif CJK JP', 'Noto Serif JP', serif;
 }
 :root:lang(zh-CN) {
   --font-body: 'Atkinson Hyperlegible Next Variable', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI',
     'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans SC', 'WenQuanYi Micro Hei', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Fraunces Variable', 'Songti SC', 'STSong', 'SimSun', 'Noto Serif CJK SC', 'Noto Serif SC', serif;
 }
 :root:lang(ja) body.site,
 :root:lang(zh-CN) body.site {

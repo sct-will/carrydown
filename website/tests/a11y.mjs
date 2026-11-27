@@ -7,14 +7,14 @@ import { localeCodes } from '../src/i18n/locales.mjs';
 import { siteRoutes, englishDocsRoutes, fallbackDocsRoute, otherLocales, requireBuilt } from './sets.mjs';
 
 const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-// A bounded set, so the run takes minutes even with hundreds of docs pages. In both themes: the four
-// site pages in every locale. In the light theme only: every English docs page and one fallback docs
-// page per other locale.
-const both = requireBuilt(localeCodes.flatMap((l) => siteRoutes(l)));
-const lightOnly = requireBuilt([...englishDocsRoutes(), ...otherLocales.map(fallbackDocsRoute)]);
-const plan = { light: [...both, ...lightOnly], dark: both };
+// A bounded set, so the run takes minutes even with hundreds of docs pages: the four site pages in every
+// locale, every English docs page and one fallback docs page per other locale. The site has one theme,
+// light.
+const sitePages = requireBuilt(localeCodes.flatMap((l) => siteRoutes(l)));
+const docsPages = requireBuilt([...englishDocsRoutes(), ...otherLocales.map(fallbackDocsRoute)]);
+const plan = { light: [...sitePages, ...docsPages] };
 const themes = Object.keys(plan);
-const routes = [...new Set([...both, ...lightOnly])];
+const routes = [...new Set([...sitePages, ...docsPages])];
 const { origin, stop } = await startPreview(4401);
 const browser = await chromium.launch();
 let violations = 0;
@@ -23,8 +23,6 @@ let scans = 0;
 try {
   for (const theme of themes) {
     const context = await browser.newContext({ colorScheme: theme, viewport: { width: 1280, height: 800 } });
-    // Light is the site's default whatever the system prefers; the dark theme is the stored choice.
-    if (theme === 'dark') await context.addInitScript(() => localStorage.setItem('cc-theme', 'dark'));
     const page = await context.newPage();
     for (const route of plan[theme]) {
       await page.goto(origin + route, { waitUntil: 'networkidle' });
@@ -47,5 +45,5 @@ try {
   await stop();
 }
 
-console.log(`a11y: ${routes.length} page(s), ${scans} scans (${both.length} pages in both themes, ${lightOnly.length} in light only), ${violations} violation(s)`);
+console.log(`a11y: ${routes.length} page(s), ${scans} scans (${sitePages.length} site pages, ${docsPages.length} docs pages), ${violations} violation(s)`);
 if (violations) process.exit(1);

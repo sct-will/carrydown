@@ -26,10 +26,6 @@ export const ptBR: Strings = {
   },
 
   controls: {
-    themeLabel: 'Tema',
-    themeAuto: 'Auto',
-    themeDark: 'Escuro',
-    themeLight: 'Claro',
     languageLabel: 'Idioma',
   },
 
@@ -298,33 +294,30 @@ export const ptBR: Strings = {
       'Este site foi feito para ser utilizável por todos, inclusive por pessoas que usam leitor de tela, apenas o teclado, ampliação ou movimento reduzido. Ele busca atender às Web Content Accessibility Guidelines (WCAG) 2.2 no nível AA.',
     doneHeading: 'O que foi feito',
     done: [
-      'As cores do texto e da interface são verificadas quanto ao contraste nos temas claro e escuro, e você pode escolher um deles ou seguir o seu sistema.',
+      'As cores do texto e da interface são verificadas quanto ao contraste.',
       'Todas as páginas funcionam apenas com o teclado, com indicador de foco visível e um link para pular ao conteúdo principal.',
-      'O diagrama é desenhado com texto e formas vetoriais, então ele escala, respeita o seu tema e traz uma descrição escrita para leitores de tela.',
-      'As animações, as transições entre páginas e o esmaecimento na troca de tema se desativam quando o seu sistema está configurado para reduzir o movimento. Continuam breves mudanças de cor e de sublinhado em links e botões, e também o giro de uma seta da barra lateral da documentação.',
+      'O diagrama é desenhado com texto e formas vetoriais, então ele escala e traz uma descrição escrita para leitores de tela.',
+      'As animações e as transições entre páginas se desativam quando o seu sistema está configurado para reduzir o movimento. Continuam breves mudanças de cor e de sublinhado em links e botões, e também o giro de uma seta da barra lateral da documentação.',
       'Títulos, regiões e textos de links são escritos para serem lidos em ordem e fora de contexto.',
       'O site é verificado com ferramentas automáticas antes de cada versão e revisado à mão com um leitor de tela.',
     ],
     notFinishedHeading: 'O que não está concluído',
     notFinished:
-      'As traduções do site estão sendo revisadas por falantes nativos e entram no ar um idioma por vez. As páginas de documentação ainda não estão traduzidas. Cada idioma mostra a página em inglês com uma nota. Elas são geradas a partir do Markdown do repositório, então seus diagramas e capturas de tela são imagens rasterizadas com descrição escrita e não seguem o tema escuro.',
+      'As traduções do site estão sendo revisadas por falantes nativos e entram no ar um idioma por vez. As páginas de documentação ainda não estão traduzidas. Cada idioma mostra a página em inglês com uma nota. Elas são geradas a partir do Markdown do repositório, então seus diagramas e capturas de tela são imagens rasterizadas com descrição escrita.',
     contactHeading: 'Conte-nos sobre um problema',
     contactBefore:
       'Se algo neste site for difícil de usar com tecnologia assistiva, ou se você precisar do conteúdo em outra forma, escreva para ',
     contactAfter: '. Diga qual página e o que aconteceu. Você deve receber uma resposta em até dez dias úteis.',
     review:
-      'Esta declaração descreve a intenção do site e seu estado atual. Ela é revisada quando o site muda. Última revisão em 22 de novembro de 2026.',
+      'Esta declaração descreve a intenção do site e seu estado atual. Ela é revisada quando o site muda. Última revisão em 27 de novembro de 2026.',
   },
 
   home: {
     title: 'Carried context, uma verdade de referência para cada agente de programação',
     description:
       'Carried-context development é uma abordagem de desenvolvimento com agentes que leva as decisões e o contexto do projeto até o agente de programação de cada engenheiro e ajuda a manter especificações e agentes de programação alinhados à medida que o projeto muda.',
-    h1: [
-      'Carried-context development vai além do desenvolvimento orientado por especificações.',
-      'O contexto viaja com o trabalho.',
-    ],
-    /** The part of the second title line set in the amber, a styling choice a native reviewer may move or empty. */
+    h1: 'Com carried-context development, o contexto do agente viaja com o trabalho.',
+    /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
     h1Emphasis: 'viaja com o trabalho.',
     definition:
       'Mantenha o projeto alinhado dando ao agente de programação de cada engenheiro as mesmas decisões e o mesmo contexto do projeto.',
@@ -414,13 +407,13 @@ export const ptBR: Strings = {
       inWord: 'em',
       items: [
         { title: 'Um plano que você revisa como uma página no seu navegador web', path: '', body: 'Marcos, trilhas, responsáveis e datas ajustados às suas pessoas e ao seu tempo, com uma tabela de carga e um caminho crítico, e uma razão escrita para cada marco. O plano confirmado no repositório, docs/spec/plan.yaml, contém apenas identificadores e trilhas.' },
+        { title: 'O skill de agente de IA do engenheiro', path: '', body: 'Gerado a partir das suas especificações e commitado no seu repositório. Um engenheiro começa um item de trabalho nomeando-o, por exemplo “Work on [work item ID]”, e o agente de programação lê primeiro a especificação e o contexto aprovado desse item.' },
         { title: 'Uma especificação por item de trabalho', path: '', body: 'A menor parte do trabalho que um engenheiro consegue terminar e mostrar, citando suas seções e verificada contra o plano a cada pull request.' },
         { title: 'Um contexto aprovado por item de trabalho', path: 'docs/context/', body: 'O texto exato das seções que o item cita e as decisões por trás dele, aprovados por você. A única parte dos seus documentos que chega aos agentes dos engenheiros.' },
         { title: 'Um recibo de release', path: 'docs/release/', body: 'Um pequeno arquivo público que nomeia o release aprovado, seu estado e sua validade.' },
         { title: 'Um relatório de segunda revisão', path: '', body: 'Cobertura, evidências, raciocínio e risco, com suas decisões e as verificações dos reparos aceitos.' },
         { title: 'Issues do GitHub', path: '', body: 'Uma por item de trabalho sob um sub-épico por marco, cada uma dizendo ao agente do engenheiro o que ler.' },
         { title: 'Um quadro do GitHub Projects', path: '', body: 'Unidades de trabalho, trilhas, datas e pontos de verificação preenchidos.' },
-        { title: 'O skill de agente de IA do engenheiro', path: '', body: 'Gerado a partir das suas especificações e commitado no seu repositório. Um engenheiro começa um item de trabalho nomeando-o, por exemplo “Work on [work item ID]”, e o agente de programação lê primeiro a especificação e o contexto aprovado desse item.' },
       ],
     },
   },

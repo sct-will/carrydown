@@ -1,15 +1,17 @@
 ---
-// The mark: three rounded bars with one channel cut through them, the path context takes from the plan
-// through the work to the engineer's agent. The channel is a mask, so it shows the ground behind the
-// mark and the one drawing reads on cream and on navy; the bars take the theme's teal. The geometry is
+// The mark: the letters C, C and D drawn as three outlines, with one thread cut through them, the path
+// context takes from the plan through the work to the engineer's agent. The letters take the text color
+// through currentColor; the thread takes --thread, amber-stroke on paper and ochre on pine. The cut
+// under the thread is a mask, so it shows the ground behind the mark on either surface. The geometry is
 // the master file src/assets/logo/mark.svg. It is decorative: the words next to it carry the name.
 interface Props {
   /** The height in pixels. The mark is wider than tall, 931 by 777 units. */
   size?: number;
 }
-const { size = 24 } = Astro.props;
+const { size = 22 } = Astro.props;
 const width = Math.round((size * 931) / 777);
 const id = `mark-cut-${size}`;
+const thread = 'M300 699H590C640 699 640 538 690 538H1100';
 ---
 
 <svg
@@ -23,15 +25,15 @@ const id = `mark-cut-${size}`;
   <defs>
     <mask id={id} maskUnits="userSpaceOnUse" x="0" y="0" width="1254" height="1254">
       <rect width="1254" height="1254" fill="#fff"></rect>
-      <rect x="313" y="481" width="160" height="250" rx="14" fill="#000"></rect>
-      <path d="M440 699H590C640 699 640 538 690 538H1100" fill="none" stroke="#000" stroke-width="66"></path>
+      <path d={thread} fill="none" stroke="#000" stroke-width="130" stroke-linecap="round" stroke-linejoin="round"></path>
     </mask>
   </defs>
-  <g mask={`url(#${id})`}>
-    <rect x="173" y="252" width="296" height="753" rx="64"></rect>
-    <rect x="482" y="252" width="287" height="753" rx="64"></rect>
-    <rect x="782" y="252" width="298" height="753" rx="64"></rect>
+  <g class="mark__letters" fill="none" stroke="currentColor" stroke-width="44" stroke-linecap="round" mask={`url(#${id})`}>
+    <path d="M409 468.5V304A30 30 0 0 0 379 274H263A30 30 0 0 0 233 304V953A30 30 0 0 0 263 983H379A30 30 0 0 0 409 953V788.5"></path>
+    <path d="M713 468.5V304A30 30 0 0 0 683 274H567A30 30 0 0 0 537 304V953A30 30 0 0 0 567 983H683A30 30 0 0 0 713 953V788.5"></path>
+    <path d="M857 274H949A70 70 0 0 1 1019 344V913A70 70 0 0 1 949 983H857A14 14 0 0 1 843 969V288A14 14 0 0 1 857 274Z"></path>
   </g>
+  <path class="mark__thread" d={thread} fill="none" stroke-width="66" stroke-linecap="round" stroke-linejoin="round"></path>
 </svg>
 
 <style>
@@ -39,7 +41,7 @@ const id = `mark-cut-${size}`;
     display: block;
     flex: none;
   }
-  .mark g {
-    fill: var(--teal);
+  .mark__thread {
+    stroke: var(--thread, currentColor);
   }
 </style>

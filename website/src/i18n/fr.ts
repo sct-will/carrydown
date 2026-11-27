@@ -26,10 +26,6 @@ export const fr: Strings = {
   },
 
   controls: {
-    themeLabel: 'Thème',
-    themeAuto: 'Auto',
-    themeDark: 'Sombre',
-    themeLight: 'Clair',
     languageLabel: 'Langue',
   },
 
@@ -298,33 +294,30 @@ export const fr: Strings = {
       'Ce site est conçu pour être utilisable par tous, y compris par les personnes qui utilisent un lecteur d’écran, le clavier seul, l’agrandissement ou la réduction des animations. Il vise la conformité aux Web Content Accessibility Guidelines (WCAG) 2.2 au niveau AA.',
     doneHeading: 'Ce qui a été fait',
     done: [
-      'Les couleurs du texte et de l’interface sont vérifiées pour le contraste dans les thèmes clair et sombre, et vous pouvez choisir l’un ou l’autre ou suivre votre système.',
+      'Les couleurs du texte et de l’interface sont vérifiées pour le contraste.',
       'Chaque page fonctionne au clavier seul, avec un indicateur de focus visible et un lien d’évitement vers le contenu principal.',
-      'Le schéma est dessiné avec du texte et des formes vectorielles. Il s’adapte à la taille, respecte votre thème et porte une description écrite pour les lecteurs d’écran.',
-      'Les animations, les transitions entre pages et le fondu au changement de thème se désactivent quand votre système est réglé pour réduire les mouvements. De brefs changements de couleur et de soulignement sur les liens et les boutons subsistent, ainsi que la rotation d’une flèche de la barre latérale de la documentation.',
+      'Le schéma est dessiné avec du texte et des formes vectorielles. Il s’adapte à la taille et porte une description écrite pour les lecteurs d’écran.',
+      'Les animations et les transitions entre pages se désactivent quand votre système est réglé pour réduire les mouvements. De brefs changements de couleur et de soulignement sur les liens et les boutons subsistent, ainsi que la rotation d’une flèche de la barre latérale de la documentation.',
       'Les titres, les repères et les textes de liens sont écrits pour être lus dans l’ordre et hors contexte.',
       'Le site est vérifié avec des outils automatiques avant chaque version et relu à la main avec un lecteur d’écran.',
     ],
     notFinishedHeading: 'Ce qui n’est pas terminé',
     notFinished:
-      'Les traductions du site sont relues par des locuteurs natifs et sont mises en ligne une langue à la fois. Les pages de documentation ne sont pas encore traduites. Chaque langue affiche la page anglaise avec une note. Elles sont générées à partir du Markdown du dépôt, si bien que leurs schémas et captures d’écran sont des images matricielles accompagnées d’une description écrite, qui ne suivent pas le thème sombre.',
+      'Les traductions du site sont relues par des locuteurs natifs et sont mises en ligne une langue à la fois. Les pages de documentation ne sont pas encore traduites. Chaque langue affiche la page anglaise avec une note. Elles sont générées à partir du Markdown du dépôt, si bien que leurs schémas et captures d’écran sont des images matricielles accompagnées d’une description écrite.',
     contactHeading: 'Signalez-nous un problème',
     contactBefore:
       'Si quelque chose sur ce site est difficile à utiliser avec une technologie d’assistance, ou si vous avez besoin du contenu sous une autre forme, écrivez à ',
     contactAfter: '. Indiquez la page et ce qui s’est passé. Vous devriez recevoir une réponse sous dix jours ouvrés.',
     review:
-      'Cette déclaration décrit l’intention du site et son état actuel. Elle est revue quand le site change. Dernière revue le 22 novembre 2026.',
+      'Cette déclaration décrit l’intention du site et son état actuel. Elle est revue quand le site change. Dernière revue le 27 novembre 2026.',
   },
 
   home: {
     title: 'Carried context, une vérité de référence pour chaque agent de codage',
     description:
       'Carried-context development est une approche du développement agentique qui fait descendre les décisions et le contexte du projet jusqu’à l’agent de codage de chaque ingénieur et aide à garder les spécifications et les agents de codage alignés à mesure que le projet évolue.',
-    h1: [
-      'Carried-context development va plus loin que le développement piloté par les spécifications.',
-      'Le contexte voyage avec le travail.',
-    ],
-    /** The part of the second title line set in the amber, a styling choice a native reviewer may move or empty. */
+    h1: 'Avec carried-context development, le contexte de l’agent voyage avec le travail.',
+    /** The part of the title set in amber, a styling choice a native reviewer may move or empty. */
     h1Emphasis: 'voyage avec le travail.',
     definition:
       'Gardez le projet aligné en donnant à l’agent de codage de chaque ingénieur les mêmes décisions et le même contexte de projet.',
@@ -414,13 +407,13 @@ export const fr: Strings = {
       inWord: 'dans',
       items: [
         { title: 'Un plan que vous relisez comme une page dans votre navigateur web', path: '', body: 'Jalons, pistes, responsables et dates ajustés à vos personnes et à votre temps, avec un tableau de charge et un chemin critique, et une raison écrite pour chaque jalon. Le plan validé dans le dépôt, docs/spec/plan.yaml, ne contient que les identifiants et les pistes.' },
+        { title: 'Le skill d’agent d’IA de l’ingénieur', path: '', body: 'Généré à partir de vos spécifications et commité dans votre dépôt. Un ingénieur démarre un élément de travail en le nommant, par exemple « Work on [work item ID] », et l’agent de codage lit d’abord la spécification et le contexte approuvé de cet élément.' },
         { title: 'Une spécification par élément de travail', path: '', body: 'La plus petite unité de travail qu’un ingénieur peut terminer et montrer, citant ses sections et vérifiée par rapport au plan à chaque pull request.' },
         { title: 'Un contexte approuvé par élément de travail', path: 'docs/context/', body: 'Le texte exact des sections citées et les décisions qui le fondent, approuvés par vous. La seule partie de vos documents qui atteint les agents des ingénieurs.' },
         { title: 'Un reçu de publication', path: 'docs/release/', body: 'Un petit fichier public qui nomme la publication approuvée, son état et son expiration.' },
         { title: 'Un rapport de seconde revue', path: '', body: 'Couverture, preuves, raisonnement et risque, avec vos décisions et les contrôles des corrections acceptées.' },
         { title: 'Des tickets GitHub', path: '', body: 'Un par élément de travail sous une sous-épopée par jalon, chacun disant à l’agent de l’ingénieur quoi lire.' },
         { title: 'Un tableau GitHub Projects', path: '', body: 'Unités de travail, pistes, dates et points de contrôle remplis.' },
-        { title: 'Le skill d’agent d’IA de l’ingénieur', path: '', body: 'Généré à partir de vos spécifications et commité dans votre dépôt. Un ingénieur démarre un élément de travail en le nommant, par exemple « Work on [work item ID] », et l’agent de codage lit d’abord la spécification et le contexte approuvé de cet élément.' },
       ],
     },
   },

@@ -1,6 +1,5 @@
-/* Shared by the pages and the docs: header, footer, controls, buttons, skip link, focus, the paper
- * grain, the page transition and the theme crossfade. Class based, so it does not touch Starlight's
- * content styles.
+/* Shared by the pages and the docs: header, footer, controls, buttons, skip link, focus and the page
+ * transition. Class based, so it does not touch Starlight's content styles.
  *
  * Motion, here and in site.css and docs.css, follows one rule: it answers something (a load, an entry,
  * a hover, a press, a navigation), happens once, takes 150 to 600 ms for interface feedback, uses one
@@ -19,11 +18,14 @@
   border: 0;
 }
 
-/* The focus ring is the amber of the mark's channel, like the underline of every link. It sits 3 px off
- * the element, so it reads against the page rather than the element. */
+/* The focus ring is the link color, 3 px off the element, so it reads against the page rather than the
+ * element. On pine it turns ochre. */
 :where(a, button, select, summary, [tabindex]):focus-visible {
-  outline: 3px solid var(--amber-ink);
+  outline: 3px solid var(--clay-ink);
   outline-offset: 3px;
+}
+:where(.on-pine, .site-footer) :where(a, button, select, summary, [tabindex]):focus-visible {
+  outline-color: var(--ochre);
 }
 
 .skip-link {
@@ -37,7 +39,7 @@
   padding: 0 18px;
   border-radius: 999px;
   background: var(--ink);
-  color: var(--cream);
+  color: var(--paper);
   font-weight: 600;
   text-decoration: none;
 }
@@ -45,20 +47,9 @@
   top: 12px;
 }
 
-/* Film grain: a fixed, inert overlay, the light theme only (its opacity token is 0 in the Ink theme). */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  pointer-events: none;
-  opacity: var(--grain);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
 /* Page to page: a cross-document view transition. The content crossfades in 200 ms while the header
- * island holds still, in browsers that have it; the others load the page as before. ThemeScript skips
- * a transition still unfinished after 600 ms. */
+ * holds still, in browsers that have it; the others load the page as before. ThemeScript skips a
+ * transition still unfinished after 600 ms. */
 @view-transition {
   navigation: auto;
 }
@@ -73,20 +64,6 @@ body::after {
 ::view-transition-group(site-header) {
   animation-duration: 200ms;
 }
-
-/* A theme change crossfades the colors. ThemeControl puts the class on for 500 ms. */
-html.theme-fade,
-html.theme-fade *,
-html.theme-fade *::before,
-html.theme-fade *::after {
-  transition:
-    background-color 0.4s var(--ease),
-    color 0.4s var(--ease),
-    border-color 0.4s var(--ease),
-    fill 0.4s var(--ease),
-    stroke 0.4s var(--ease) !important;
-}
-
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*),
   ::view-transition-old(*),
@@ -95,45 +72,44 @@ html.theme-fade *::after {
   }
 }
 
-/* Header: a floating island, detached from the top, on a soft shadow. On the site pages the wrapper is
- * sticky; on the docs Starlight's header is fixed and the island sits inside it. */
+/* Header: a flat bar on the paper with a hairline under it. On the site pages the wrapper is sticky; on
+ * the docs Starlight's header is fixed and the bar fills it. */
 .site-top {
   position: sticky;
   top: 0;
   z-index: 20;
+  background: var(--paper);
+  border-bottom: 1px solid var(--hairline);
 }
 header.header {
-  padding: 12px clamp(16px, 2.2vw, 32px) 0;
-  background: transparent;
-  border-bottom: 0;
+  padding: 0;
+  background: var(--paper);
+  border-bottom: 1px solid var(--hairline);
 }
 .site-header {
   position: relative;
   z-index: 20;
-  padding: 16px var(--gutter) 0;
+  padding: 0;
   font-family: var(--font-body);
   color: var(--ink);
-  pointer-events: none;
 }
 header.header .site-header {
-  padding: 0;
+  height: 100%;
 }
 .site-header__bar {
+  position: relative;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 0 8px;
   max-width: var(--measure);
-  min-height: 60px;
+  box-sizing: border-box;
+  min-height: 72px;
   margin-inline: auto;
-  padding: 8px 10px 8px 14px;
-  border: 1px solid var(--shell-line);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--cream-raised) 88%, transparent);
-  box-shadow: var(--shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  pointer-events: auto;
+  padding: 0 var(--gutter);
+}
+header.header .site-header__bar {
+  height: 100%;
 }
 .site-header--wide .site-header__bar {
   max-width: none;
@@ -141,32 +117,27 @@ header.header .site-header {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-height: 44px;
   padding: 0 8px 0 0;
   color: var(--ink);
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.97rem;
+  font-weight: 500;
   letter-spacing: -0.005em;
   text-decoration: none;
-}
-.brand .mark {
-  width: 30px;
-  height: 25px;
 }
 .menu-button {
   display: none;
 }
 /* From 900 px the panel is only a grouping for the narrow-screen menu: its nav and controls lay out in
- * the bar itself, with the search between them, in this order. The nav takes the free space of the bar
- * as its start margin, so the nav, the search and the controls sit together at the end and the name has
- * the room. */
+ * the bar itself. The nav sits between the name and the tools; the search and the language control sit
+ * together at the end. */
 .site-header__panel {
   display: contents;
 }
 .site-header__panel nav {
   order: 2;
-  margin-inline-start: auto;
+  margin-inline: auto;
 }
 .site-search {
   order: 3;
@@ -181,7 +152,7 @@ header.header .site-header {
   padding: 0;
   list-style: none;
 }
-/* A link in the island carries the thread under it only when it is current or hovered. */
+/* A link in the bar is underlined only when it is current or hovered. */
 .nav-links a {
   display: inline-flex;
   align-items: center;
@@ -190,68 +161,64 @@ header.header .site-header {
   min-height: 44px;
   padding: 0 14px;
   color: var(--ink);
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: 0.97rem;
+  font-weight: 400;
   text-decoration: underline;
   text-decoration-color: transparent;
-  text-decoration-thickness: 2px;
+  text-decoration-thickness: 1.5px;
   text-underline-offset: 0.32em;
   transition: text-decoration-color var(--dur) var(--ease);
 }
 .nav-links a:hover,
 .nav-links a[aria-current='page'] {
-  text-decoration-color: var(--amber-ink);
+  text-decoration-color: var(--clay);
 }
 .controls {
   display: flex;
   gap: 8px;
 }
 
-/* The search button: a field-shaped pill with the shortcut hint at its end. It takes the free space of
- * the bar, up to a comfortable field width. */
+/* The search button: a round icon button with a hairline. The word stays in the accessible name and
+ * the keyboard shortcut in aria-keyshortcuts. */
 .site-search {
-  flex: 1 1 auto;
-  max-width: 300px;
+  flex: none;
 }
 .search-button {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  width: 100%;
-  min-width: 176px;
+  justify-content: center;
+  width: 44px;
+  min-width: 44px;
   min-height: 44px;
-  padding: 0 12px 0 14px;
-  border: 1px solid var(--shell-line);
+  padding: 0;
+  border: 1px solid var(--hairline);
   border-radius: 999px;
-  background: var(--shell);
-  color: var(--ink-muted);
+  background: transparent;
+  color: var(--ink);
   font: inherit;
-  font-size: 0.9rem;
-  text-align: start;
   cursor: pointer;
-  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+  transition: border-color var(--dur) var(--ease);
 }
 .search-button:hover {
-  border-color: var(--border-strong);
-  color: var(--ink);
+  border-color: var(--ink-soft);
 }
 .search-button svg {
   flex: none;
-  width: 16px;
-  height: 16px;
-  color: var(--ink-muted);
+  width: 18px;
+  height: 18px;
+  color: var(--ink);
 }
 .search-button__label {
-  flex: 1;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }
 .search-button__kbd {
-  padding: 0;
-  color: var(--ink-muted);
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  white-space: nowrap;
+  display: none;
 }
 
 /* The search dialog. Pagefind's own list is styled through its variables, from the tokens. It opens
@@ -262,25 +229,25 @@ header.header .site-header {
   margin: 7vh auto auto;
   padding: 0;
   overflow: auto;
-  border: 1px solid var(--shell-line);
-  border-radius: 20px;
-  background: var(--cream);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: var(--paper);
   color: var(--ink);
-  box-shadow: var(--shadow-lift);
+  box-shadow: var(--pop);
   font-family: var(--font-body);
   font-size: 1rem;
   --pagefind-ui-scale: 0.9;
-  --pagefind-ui-primary: var(--teal);
+  --pagefind-ui-primary: var(--clay-ink);
   --pagefind-ui-text: var(--ink);
   --pagefind-ui-background: var(--paper);
-  --pagefind-ui-border: var(--border-strong);
-  --pagefind-ui-tag: var(--cream-deep);
+  --pagefind-ui-border: var(--ink-soft);
+  --pagefind-ui-tag: var(--bone);
   --pagefind-ui-border-width: 1px;
-  --pagefind-ui-border-radius: 10px;
+  --pagefind-ui-border-radius: 6px;
   --pagefind-ui-font: var(--font-body);
 }
 .search-dialog::backdrop {
-  background: rgba(15, 20, 32, 0.55);
+  background: rgba(14, 36, 30, 0.55);
 }
 @media (prefers-reduced-motion: no-preference) {
   @keyframes dialog-in {
@@ -313,20 +280,20 @@ header.header .site-header {
 }
 .search-dialog__title {
   margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.35rem;
-  font-weight: 500;
+  font-family: var(--font-body);
+  font-size: 1.3rem;
+  font-weight: 700;
   line-height: 1.3;
-  font-variation-settings: 'opsz' 36, 'SOFT' 20;
+  letter-spacing: -0.01em;
 }
 .search-dialog__close {
   flex: none;
   min-width: 44px;
   min-height: 44px;
-  padding: 0 16px;
-  border: 1px solid var(--border-strong);
+  padding: 0 18px;
+  border: 1.5px solid var(--ink);
   border-radius: 999px;
-  background: var(--shell);
+  background: transparent;
   color: var(--ink);
   font: inherit;
   font-size: 0.9rem;
@@ -334,90 +301,29 @@ header.header .site-header {
   cursor: pointer;
 }
 .search-dialog__close:hover {
-  background: var(--teal-soft);
+  background: var(--bone);
 }
 .search-dialog__note {
   margin: 0;
-  color: var(--ink-muted);
+  color: var(--ink-soft);
 }
 .search-dialog .pagefind-ui__result-link {
-  color: var(--teal);
+  color: var(--clay-ink);
 }
 .search-dialog .pagefind-ui__search-clear,
 .search-dialog .pagefind-ui__button {
   min-height: 44px;
 }
 
-/* A select as a pill. */
-.control.select {
-  position: relative;
-  display: inline-flex;
-}
-.control.select select {
-  appearance: none;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0 32px 0 14px;
-  border: 1px solid var(--shell-line);
-  border-radius: 999px;
-  background: var(--shell);
-  color: var(--ink);
-  font: inherit;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-.control.select::after {
-  content: '';
-  position: absolute;
-  inset-inline-end: 13px;
-  top: 50%;
-  width: 7px;
-  height: 7px;
-  margin-top: -5px;
-  border-inline-end: 1.5px solid var(--ink);
-  border-bottom: 1.5px solid var(--ink);
-  transform: rotate(45deg);
-  pointer-events: none;
-}
-
-/* Up to 1200 px the bar has no room for the search field beside the longer name: the search is an icon
- * button. Between 900 and 1100 px the nav and the controls still sit in the bar, with the tighter gaps
- * from locales.css. */
-@media (max-width: 1199.98px) {
-  .site-search {
-    flex: none;
-  }
-  .search-button {
-    justify-content: center;
-    width: 44px;
-    min-width: 44px;
-    padding: 0;
-  }
-  /* The word stays in the accessible name; the shortcut hint leaves it. */
-  .search-button__label {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-  }
-  .search-button__kbd {
-    display: none;
-  }
-}
-
 /* Under 900 px (phones, and a tablet held upright) the nav and controls sit behind a labeled button.
  * Without script the panel simply stays visible under the bar. */
 @media (max-width: 899.98px) {
-  .site-header {
-    padding: 12px 16px 0;
-  }
   .site-header__bar {
     gap: 0 8px;
-    padding: 6px 6px 6px 12px;
+    min-height: 64px;
+  }
+  header.header .site-header__bar {
+    min-height: 0;
   }
   /* The name takes what is left of the bar and wraps onto two lines on a narrow phone. */
   .brand {
@@ -446,9 +352,9 @@ header.header .site-header {
     min-width: 44px;
     min-height: 44px;
     padding: 0 16px;
-    border: 1px solid var(--shell-line);
+    border: 1px solid var(--hairline);
     border-radius: 999px;
-    background: var(--shell);
+    background: transparent;
     color: var(--ink);
     font: inherit;
     font-size: 0.9rem;
@@ -462,25 +368,25 @@ header.header .site-header {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;
-    padding: 8px 8px 12px;
+    padding: 8px 0 12px;
   }
   .site-header__panel nav,
   .controls {
     order: 0;
-    margin-inline-start: 0;
+    margin-inline: 0;
   }
-  /* With script the panel is a card under the island. */
+  /* With script the panel is a sheet of paper under the bar, edge to edge, ruled off below. */
   .js .site-header__panel {
     display: none;
     position: absolute;
     inset-inline: 0;
-    top: calc(100% + 8px);
+    top: 100%;
     flex: none;
-    padding: 12px 16px 16px;
-    border: 1px solid var(--shell-line);
-    border-radius: 24px;
-    background: var(--cream-raised);
-    box-shadow: var(--shadow-lift);
+    padding: 8px var(--gutter) 20px;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    background: var(--paper);
+    box-shadow: var(--pop);
   }
   .js .site-header__panel[data-open] {
     display: flex;
@@ -489,8 +395,12 @@ header.header .site-header {
     flex-direction: column;
     gap: 0;
   }
+  .nav-links li + li {
+    border-top: 1px solid var(--hairline);
+  }
   .nav-links a {
     justify-content: flex-start;
+    width: 100%;
     padding: 0 4px;
     font-size: 1.05rem;
   }
@@ -511,7 +421,7 @@ header.header .site-header {
 .menu-icon span {
   position: absolute;
   inset-inline: 0;
-  height: 2px;
+  height: 1.5px;
   border-radius: 1px;
   background: currentColor;
   transform-origin: center;
@@ -541,7 +451,7 @@ header.header .site-header {
       transform var(--dur) var(--ease),
       opacity var(--dur-fast) var(--ease);
   }
-  /* The card settles in, and its links follow 30 ms apart. */
+  /* The sheet settles in, and its links follow 30 ms apart. */
   @keyframes panel-in {
     from {
       opacity: 0;
@@ -588,21 +498,25 @@ header.header .site-header {
   }
 }
 
-/* Buttons: pills. The primary carries its arrow in a circle of its own. On hover a button lifts one
- * pixel and its arrow drifts up and right; on press it gives to 0.98. */
+/* Buttons: pills 48 px tall. The primary is clay with white text and carries its arrow in a circle of
+ * its own; the secondary is an ink outline. On hover the arrow drifts up and right; on press a button
+ * gives to 0.98. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
   min-height: 48px;
-  padding: 6px 22px;
+  padding: 6px 26px;
+  border: 1.5px solid var(--ink);
   border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
   font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 600;
   letter-spacing: -0.005em;
-  line-height: 1.3;
+  line-height: 1.2;
   text-decoration: none;
 }
 .btn .ic {
@@ -610,55 +524,49 @@ header.header .site-header {
   align-items: center;
   justify-content: center;
   flex: none;
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 24px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.18);
 }
 .btn .ic svg {
-  width: 15px;
-  height: 15px;
+  width: 14px;
+  height: 14px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.8;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 .btn.primary {
-  background: var(--teal);
-  color: var(--on-teal);
-  box-shadow: var(--shadow);
-}
-.btn.primary:has(.ic) {
-  padding-inline-end: 6px;
-}
-:root[data-theme='dark'] .btn .ic {
-  background: rgba(15, 20, 32, 0.18);
+  border-color: var(--clay);
+  background: var(--clay);
+  color: #FFFFFF;
 }
 .btn.primary:hover {
-  background: var(--teal-strong);
-}
-.btn.secondary {
-  border: 1px solid var(--border-strong);
-  background: var(--shell);
-  color: var(--ink);
+  border-color: var(--clay-ink);
+  background: var(--clay-ink);
 }
 .btn.secondary:hover {
-  background: var(--teal-soft);
+  background: var(--bone);
+}
+/* On pine the outline is cream and the text paper. */
+.on-pine .btn.secondary {
+  border-color: var(--cream-soft);
+  color: var(--paper);
+}
+.on-pine .btn.secondary:hover {
+  background: var(--pine);
 }
 @media (prefers-reduced-motion: no-preference) {
   .btn {
     transition:
       transform var(--dur-slow) var(--ease),
-      box-shadow var(--dur-slow) var(--ease),
-      background-color var(--dur) var(--ease);
+      background-color var(--dur) var(--ease),
+      border-color var(--dur) var(--ease);
   }
   .btn .ic {
     transition: transform var(--dur-slow) var(--ease);
-  }
-  .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-lift);
   }
   .btn:hover .ic {
     transform: translate(2px, -2px);
@@ -669,16 +577,23 @@ header.header .site-header {
   }
 }
 
-/* Footer */
+/* Footer: on pine-deep, the copyright line with the mark on one side and the links on the other. */
 .site-footer {
-  margin-top: 16px;
-  border-top: 1px solid var(--border);
-  padding: 40px 0 56px;
-  color: var(--ink-muted);
+  --thread: var(--ochre);
+  margin-top: 0;
+  padding: 40px 0;
+  background: var(--pine-deep);
+  color: var(--cream-soft);
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 .site-footer__inner {
+  display: flex;
+  flex-direction: row-reverse;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
   max-width: var(--measure);
   margin-inline: auto;
   padding-inline: var(--gutter);
@@ -686,13 +601,12 @@ header.header .site-header {
 .site-footer__links {
   display: flex;
   flex-wrap: wrap;
-  /* 6 px between the 8 px side paddings gives the 22 px spacing of the design, and the negative margin
-   * keeps the first word on the text edge. The padding keeps every link at least 44 px wide. */
-  gap: 0 6px;
-  margin: 0 0 8px -8px;
+  /* The 8 px side paddings keep every link at least 44 px wide, and the negative margin keeps the last
+   * word on the text edge. */
+  gap: 0 4px;
+  margin: 0 -8px 0 0;
   padding: 0;
   list-style: none;
-  font-size: 0.95rem;
 }
 .site-footer__links a {
   display: inline-flex;
@@ -701,7 +615,7 @@ header.header .site-header {
   min-width: 44px;
   min-height: 44px;
   padding-inline: 8px;
-  color: var(--ink);
+  color: var(--paper);
   text-decoration: underline;
   text-decoration-color: transparent;
   text-decoration-thickness: 1.5px;
@@ -709,13 +623,16 @@ header.header .site-header {
   transition: text-decoration-color var(--dur) var(--ease);
 }
 .site-footer__links a:hover {
-  text-decoration-color: var(--amber-ink);
+  text-decoration-color: var(--ochre);
 }
 .site-footer__copyright {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   margin: 0;
+}
+.site-footer__copyright .mark {
+  color: var(--paper);
 }
 /* The author's name links to their site. The vertical padding and the matching negative margin give
  * the link a 44 px tap target without moving the line. */
@@ -723,21 +640,36 @@ header.header .site-header {
   display: inline-block;
   padding: 12px 0;
   margin: -12px 0;
-  color: inherit;
+  color: var(--paper);
   text-decoration: underline;
-  text-decoration-color: var(--amber-ink);
+  text-decoration-color: var(--ochre);
   text-decoration-thickness: 1.5px;
   text-underline-offset: 0.22em;
 }
 .site-footer__copyright a:hover {
-  color: var(--ink);
   text-decoration-thickness: 3px;
+}
+@media (max-width: 899.98px) {
+  .site-footer__inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .site-footer__links {
+    margin: 0 0 0 -8px;
+  }
 }
 
 /* The order of the controls in the narrow-screen menu's stagger, after the four links. */
 .controls > :nth-child(1) {
   --n: 4;
 }
-.controls > :nth-child(2) {
-  --n: 5;
+
+/* Content images, the screenshots and diagrams that come from the repository Markdown on the docs pages
+ * and any image in a site page's content, sit in a 1 px hairline frame with no shadow. The status badges
+ * at the top of the documentation page (the continuous integration badge and the shields.io badges)
+ * stay unframed; they are matched by their source, so a regenerated page keeps the rule. The mark, the
+ * icons and the inline SVG figures are not img elements, so this leaves them alone. */
+:is(.sl-markdown-content, body.site main) img:not([src*='shields.io']):not([src$='/badge.svg']) {
+  border: 1px solid var(--hairline);
+  box-shadow: none;
 }
