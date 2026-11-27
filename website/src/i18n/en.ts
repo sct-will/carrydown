@@ -397,7 +397,7 @@ export const en = {
         {
           who: 'Each engineer',
           what: 'Installs the generated agent skill once and names a work item.',
-          say: '“Work on WI-03.”',
+          say: '“Work on item WI-03.”',
         },
         {
           who: 'Stakeholders',
