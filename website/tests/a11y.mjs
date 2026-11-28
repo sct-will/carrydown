@@ -7,7 +7,7 @@ import { localeCodes } from '../src/i18n/locales.mjs';
 import { siteRoutes, englishDocsRoutes, fallbackDocsRoute, otherLocales, requireBuilt } from './sets.mjs';
 
 const tags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
-// A bounded set, so the run takes minutes even with hundreds of docs pages: the four site pages in every
+// A bounded set, so the run takes minutes even with hundreds of docs pages: the five site pages in every
 // locale, every English docs page and one fallback docs page per other locale. The site has one theme,
 // light.
 const sitePages = requireBuilt(localeCodes.flatMap((l) => siteRoutes(l)));

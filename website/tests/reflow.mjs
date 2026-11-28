@@ -12,7 +12,7 @@ import { siteRoutes, routeFor, requireBuilt } from './sets.mjs';
 const widths = [375, 414, 768, 1024, 1280, 1440];
 
 // A bounded set, so the run takes minutes even with hundreds of docs pages. Each job is a page and the
-// widths to check it at: the four site pages in English at every width, the same pages in Japanese
+// widths to check it at: the five site pages in English at every width, the same pages in Japanese
 // (the CJK check) at the narrowest and a wide width, the docs index and the setup page in English, and
 // one fallback docs page.
 const jobs = [

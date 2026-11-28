@@ -1,6 +1,6 @@
 # carriedcontext.dev website
 
-The website for carried-context development: the home page, the definition, the FAQ, the accessibility statement and the carrydown documentation. It is an Astro 7 site with Starlight for the docs. The docs are generated from the Markdown in this repository at build time.
+The website for carried-context development: the home page, the definition, the sample walkthrough, the FAQ, the accessibility statement and the carrydown documentation. It is an Astro 7 site with Starlight for the docs. The docs are generated from the Markdown in this repository at build time.
 
 ## Run it
 
@@ -41,10 +41,11 @@ This runs, in order:
 
 - `scripts/check-docs-sync.mjs` regenerates the docs into a temporary folder and fails with a diff if the generated pages differ from the repository's Markdown.
 - `tests/docs-publication.mjs` runs the generator on a small temporary repository and proves that only listed pages are published: an unlisted file in `docs/` appears in no generated file or locale, and a listed page missing on disk stops the build. It needs no built site.
+- `tests/sample-excerpts.mjs` checks that every excerpt on the sample page, `/sample/`, is verbatim: each fragment in `src/lib/sample-excerpts.mjs` must appear in the repository file it quotes (the issue excerpt against the copy in `tests/fixtures/issue-9.md`), and the board image must match `docs/images/board.png`. It needs no built site.
 - `tests/routes.mjs` starts `astro preview` and expects 200 for every page, in every locale, and for every internal link and asset.
 - `tests/llms.mjs` checks `llms.txt` and `llms-full.txt`: the format, that every English page is listed once and no redirect is, the reading order, the "What to tell your agent, and when" phrases against the README, that a second run writes the same bytes, and that every listed address answers 200.
-- `tests/reflow.mjs` takes screenshots of a bounded set of pages (the four site pages at six widths, plus Japanese, docs and fallback samples) into `tests/screenshots/` and fails on horizontal overflow, text under 12 px and tap targets under 44 px.
-- `tests/a11y.mjs` runs axe-core on a bounded set (the four site pages in every locale, every English docs page and one fallback docs page per locale) and fails on any violation.
+- `tests/reflow.mjs` takes screenshots of a bounded set of pages (the five site pages at six widths, plus Japanese, docs and fallback samples) into `tests/screenshots/` and fails on horizontal overflow, text under 12 px and tap targets under 44 px.
+- `tests/a11y.mjs` runs axe-core on a bounded set (the five site pages in every locale, every English docs page and one fallback docs page per locale) and fails on any violation.
 
 Each test that starts `astro preview` binds its own port: 4398 for `tests/llms.mjs`, 4399 for `tests/routes.mjs` and `tests/reflow.mjs`, and 4401 for `tests/a11y.mjs`. Two runs on one machine would collide on them, so `SITE_TEST_PORT` moves the set: it is the base, and the tests bind the base and the three ports above it. `SITE_TEST_PORT=4500 npm test` uses 4500 to 4503. A test whose port is already taken stops with a message, so it never reads another server by mistake.
 

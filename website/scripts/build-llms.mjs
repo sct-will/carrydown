@@ -41,7 +41,7 @@ const DOCS_ORDER = [
   'docs/organization-setup',
   'docs/delivery-modes',
 ];
-const PAGES_ORDER = ['', 'definition', 'faq'];
+const PAGES_ORDER = ['', 'definition', 'sample', 'faq'];
 // Pages a reader may skip: a worked example and the site's accessibility statement. They are listed in
 // llms.txt under Optional and left out of llms-full.txt.
 const OPTIONAL_ORDER = ['docs/derive-the-date', 'accessibility'];
@@ -99,7 +99,7 @@ const entry = (p) => `- [${titleOf(p.html)}](${linkOf(p)})${descriptionOf(p.html
 
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
 const SKIP = new Set(['script', 'style', 'template', 'nav', 'caption', 'svg', 'noscript']);
-const BLOCK = new Set(['address', 'article', 'aside', 'blockquote', 'div', 'dl', 'dd', 'dt', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr', 'li', 'main', 'ol', 'p', 'pre', 'section', 'table', 'ul']);
+const BLOCK = new Set(['address', 'article', 'aside', 'blockquote', 'details', 'div', 'dl', 'dd', 'dt', 'figcaption', 'figure', 'footer', 'form', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr', 'li', 'main', 'ol', 'p', 'pre', 'section', 'summary', 'table', 'ul']);
 
 /** Parses HTML into a tree of { tag, attrs, children } and strings. Tolerant of what Astro writes. */
 function parse(html) {
@@ -211,11 +211,13 @@ function converter(pageUrl) {
     if (n.tag === 'pre') return [`\`\`\`\n${textOf(n).replace(/\n+$/, '')}\n\`\`\``];
     if (n.tag === 'ul' || n.tag === 'ol') {
       const items = n.children.filter((c) => typeof c !== 'string' && c.tag === 'li' && !hidden(c));
+      // A numbered list keeps the number it starts at, as the sample page's excerpts do.
+      const start = Number(n.attrs.start) || 1;
       const lines = items.map((li, i) => {
         // A block that holds only the item's number repeats the list marker, so it is dropped.
         const parts = blocks(li.children, { inItem: true }).filter((b) => !(n.tag === 'ol' && /^\d+$/.test(b)));
         const text = parts.reduce((acc, b) => (acc ? `${acc}${endsSentence(acc) ? ' ' : ': '}${b}` : b), '');
-        return `${n.tag === 'ol' ? `${i + 1}.` : '-'} ${text.replace(/\n/g, ' ')}`;
+        return `${n.tag === 'ol' ? `${start + i}.` : '-'} ${text.replace(/\n/g, ' ')}`;
       });
       return lines.length ? [lines.join('\n')] : [];
     }
