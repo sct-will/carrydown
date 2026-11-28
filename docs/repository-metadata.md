@@ -47,7 +47,7 @@ gh repo edit sct-will/carrydown \
 
 **Description:** `What carrydown made from one fictional architecture document: a dated plan, specifications, issues and a public board.`
 
-**Homepage:** `https://github.com/users/sct-will/projects/2`, the public board, so the first link on the repository page is the result.
+**Homepage:** `https://carriedcontext.dev/sample/`, the sample walkthrough, so the first link on the repository page shows what the agent generated, with a link to each artifact.
 
 ### Proposed first screen of its README
 
@@ -62,7 +62,7 @@ Start with one work item. WI-03, the approval routing engine, is a GitHub issue 
 
 [![Work item WI-03 as a GitHub issue, beside the specification file its AI engineering notes link to, which cites ground truth sections 3.4, 3.5 and 7.1.](docs/images/issue-9.png)](https://github.com/sct-will/carrydown-sample/issues/9)
 
-**Look.** Open the [public board](https://github.com/users/sct-will/projects/2), click WI-03, then follow its specification link to the sections it cites, and open its approved context in `docs/context/`. No account and no install.
+**Look.** Start with [the sample walkthrough](https://carriedcontext.dev/sample/): each artifact the agent generated, with an excerpt and a link to its file, and one change followed through the project. Then open the [public board](https://github.com/users/sct-will/projects/2), click WI-03, then follow its specification link to the sections it cites, and open its approved context in `docs/context/`. No account and no install.
 
 **Install.** Run `npx skills add sct-will/carrydown` in a project folder, give your agent `ground-truth/architecture.md` from this repository, and tell it "Set up a project plan from this document." It asks first who may see the documents. This one is fictional and public, so answer yes. Compare your plan with this one. Nothing is written to GitHub until you say yes.
 ```

@@ -2,6 +2,8 @@
 
 An AI agent plans the project around real people, then carries the architecture to every issue and every engineer's coding agent. Two skills you install, one skill is generated for your engineers.
 
+To see the sample without opening the files, read [the sample walkthrough](https://carriedcontext.dev/sample/): what the agent generated, each artifact with an excerpt and a link to its file, and one change followed through the project.
+
 This is a sample. The project is fictional. The people, the company and the numbers are made up. Replace all of it with your own material.
 
 It shows what the two carrydown skills produce from a short ground truth, including the skill they generate for the engineers. It is a project after its release: the plan owner answered yes to the question "Can everyone who can read this repository see all of these documents and your staffing notes?", approved the exact outputs, and exported them with a receipt.

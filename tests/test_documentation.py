@@ -653,8 +653,9 @@ class OwnerJourneyTests(unittest.TestCase):
             self.assertIn(word, start)
         self.assertIn("(docs/plan-owner-guide.md#glossary)", start)
         sample = text.split("## Explore the sample\n", 1)[1].split("\n## ", 1)[0]
-        self.assertIn("(sample/expense-approvals/README.md#run-it)", sample)
-        self.assertIn("read-only preview", sample)
+        # Since 2026-11-28 the section is a short pointer: the walkthrough on the site carries the sample.
+        self.assertIn("(https://carriedcontext.dev/sample/)", sample)
+        self.assertIn("(https://github.com/sct-will/carrydown-sample)", sample)
         self.assertNotIn("```", sample)
 
     def test_the_guide_has_dry_run_in_the_glossary_and_short_interview_paragraphs(self):

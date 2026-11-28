@@ -262,7 +262,9 @@ class RepublishedSampleTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertNotIn("waiting to be republished", readme)
         self.assertNotIn("before approved contexts and receipts existed", readme)
-        self.assertIn("Author details anonymized; issue content unchanged", readme)
+        # The README showed the image with this caption until 2026-11-28, when its sample section became a
+        # pointer to the walkthrough. The image is no longer in the README, so neither is the caption.
+        self.assertNotIn("docs/images/issue-9.png", readme)
         storyboard = (ROOT / "docs" / "recording-storyboard.md").read_text(encoding="utf-8")
         row = next(x for x in storyboard.splitlines() if x.startswith("| `docs/images/issue-9.png`"))
         self.assertIn("Current.", row)
