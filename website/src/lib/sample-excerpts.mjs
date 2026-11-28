@@ -10,6 +10,9 @@
 // - Its text is verbatim from the file named by `source` (or by the block's own `from`). Inline code is
 //   written with backticks, as in the file, and the page sets it in code.
 // - An abridgment is marked with "…". The test splits the text on it and checks each piece on its own.
+//   A line that does not end with "…" is shown to the end of its line in the file. A tile with any "…"
+//   carries an abridged label ('abridged', or 'milestones', which names the abridged rationale), and a
+//   tile without one carries none.
 // - Where the page shows a line in another shape than the file holds it (a row of a Markdown table, a
 //   list item without its marker), `verify` lists the exact strings of the file the line comes from.
 
@@ -107,7 +110,7 @@ export const tiles = [
     heading: 'docs/context/wi-03.md',
     blocks: [
       { t: 'h', text: 'Approved context for WI-03, Approval routing engine', verify: ['# Approved context for WI-03, Approval routing engine'] },
-      { t: 'cite', text: "Downstream use: approved for implementation in this repository's code and tests. Not for quoting in issue text." },
+      { t: 'cite', text: "Downstream use: approved for implementation in this repository's code and tests. Not for quoting in issue text. Evidence may include response bodies with synthetic data only." },
       { t: 'small', text: 'architecture 3.4 Report lifecycle · architecture 3.5 Routing · architecture 6.2 Edge cases the interviews surfaced · architecture 7.1 REST API', verify: ['### architecture 3.4 Report lifecycle', '### architecture 3.5 Routing', '### architecture 6.2 Edge cases the interviews surfaced', '### architecture 7.1 REST API'] },
       { t: 'h', text: 'architecture 6.2 Edge cases the interviews surfaced', verify: ['### architecture 6.2 Edge cases the interviews surfaced'] },
       {
@@ -135,7 +138,7 @@ export const tiles = [
       },
       { t: 'sub', text: 'On exit 0, read `docs/context/<id in lower case>.md`. …' },
       { t: 'sub', text: 'If the output has a block that starts `carrydown: approved inputs changed since your last check`, … read the current specification and context again. Reassess your plan against them. …' },
-      { t: 'p', text: 'Do not open `docs/ground-truth/` or any source; the approved context is complete for this item.' },
+      { t: 'p', text: 'Do not open `docs/ground-truth/` or any source; the approved context is complete for this item. …' },
     ],
   },
   {
@@ -145,7 +148,7 @@ export const tiles = [
     // Issue 9 lives on GitHub. The test checks the excerpt against the copy of its body committed in
     // tests/fixtures/issue-9.md, which names the issue, its title and the day it was read.
     source: 'website/tests/fixtures/issue-9.md',
-    label: 'excerpt',
+    label: 'abridged',
     heading: 'sct-will/carrydown-sample#9',
     blocks: [
       { t: 'h', text: 'WI-03 Approval routing engine' },

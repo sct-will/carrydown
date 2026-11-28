@@ -26,6 +26,16 @@ const expect = (rel, needle, where) => {
 };
 /** The pieces of a shown text: its own text split on the abridgment mark, or its `verify` strings. */
 const pieces = (text, verify) => verify ?? text.split('…');
+/** Fails unless `needle` ends where a line of the file ends: a shown line without "…" is not cut short. */
+const expectLineEnd = (rel, needle, where) => {
+  const s = needle.trim();
+  if (!s) return;
+  checked += 1;
+  const file = read(rel).replace(/\r\n/g, '\n');
+  if (!file.includes(`${s}\n`) && !file.trimEnd().endsWith(s)) failures.push(`${where}: shown without "…" but its line in ${rel} goes on after:\n    ${s}`);
+};
+const unabridgedEnd = (text) => !text.replace(/[“”"]/g, '').trimEnd().endsWith('…');
+const abridgedLabels = new Set(['abridged', 'milestones']);
 
 for (const tile of tiles) {
   // A path heading names the source file itself. The issue's heading is checked with its fixture below.
@@ -33,12 +43,22 @@ for (const tile of tiles) {
     checked += 1;
     if (!tile.source.endsWith(tile.heading)) failures.push(`${tile.key} heading: ${tile.heading} is not the source ${tile.source}`);
   }
+  // The label says "abridged" exactly when the preview marks an abridgment.
+  const marked = tile.blocks.some((b) => (b.lines ?? [b.text]).some((x) => x.includes('…')));
+  checked += 1;
+  if (marked !== abridgedLabels.has(tile.label)) failures.push(`${tile.key}: label '${tile.label}' ${marked ? 'does not say abridged, but the preview is abridged' : 'says abridged, but nothing is abridged'}`);
   tile.blocks.forEach((b, i) => {
     const rel = b.from ?? tile.source;
     const where = `${tile.key} block ${i + 1}`;
-    if (b.t === 'code') b.lines.forEach((line, j) => pieces(line).forEach((p) => expect(rel, p, `${where} line ${j + 1}`)));
-    else {
+    if (b.t === 'code') {
+      b.lines.forEach((line, j) => {
+        pieces(line).forEach((p) => expect(rel, p, `${where} line ${j + 1}`));
+        if (unabridgedEnd(line)) expectLineEnd(rel, line.split('…').pop(), `${where} line ${j + 1}`);
+      });
+    } else {
       pieces(b.text, b.verify).forEach((p) => expect(rel, p, where));
+      // A heading is a name, not a sentence: the issue's title comes from the fixture's source note.
+      if (b.t !== 'h' && unabridgedEnd(b.text)) (b.verify ?? [b.text.split('…').pop()]).forEach((p) => expectLineEnd(rel, p, where));
       // A line shown in another shape than the file's still says only what its verify strings say:
       // without the table pipes, heading marks, list markers and quotes, each shown piece is in them.
       if (b.verify) {
@@ -68,6 +88,7 @@ checked += 1;
 // The change: the section, the added rule and the two work items' names.
 expect(change.source, change.section, 'change section');
 expect(change.source, `+5. ${change.rule}`, 'change rule');
+expectLineEnd(change.source, `+5. ${change.rule}`, 'change rule');
 for (const item of change.items) expect(change.source, item.name, `change ${item.id}`);
 expect(spec.source, `# ${change.items[0].id} ${change.items[0].name}`, 'change WI-03 title');
 expect('sample/expense-approvals/docs/spec/m2-route-to-approvers/wi-04-approver-inbox.md', `# ${change.items[1].id} ${change.items[1].name}`, 'change WI-04 title');
