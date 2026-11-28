@@ -6,7 +6,6 @@ import TranslationNote from '../TranslationNote.astro';
 import Mark from '../Mark.astro';
 import { getStrings } from '../../i18n';
 import { localePath } from '../../lib/paths';
-import { sampleBoardUrl } from '../../../site.config.mjs';
 
 interface Props {
   locale?: string;
@@ -25,12 +24,13 @@ const h1Parts = emphasis ? h.h1.split(emphasis) : [h.h1];
 const two = (n: number) => String(n).padStart(2, '0');
 
 // The way in: the Start here section of the docs' first page, and its How it works section. The reader
-// stays in the docs for the installation.
+// stays in the docs for the installation. The sample page walks through what the agent generated.
+const sampleUrl = localePath(locale, '/sample/');
 const startHereUrl = `${localePath(locale, '/docs/')}#start-here`;
 const howItWorksUrl = `${localePath(locale, '/docs/')}#how-it-works`;
-// Step 1 opens the sample board, like the link under the hero button; step 2 opens Start here, like
+// Step 1 opens the sample page, like the link under the hero button; step 2 opens Start here, like
 // the hero button.
-const tileLinks = [sampleBoardUrl, startHereUrl];
+const tileLinks = [sampleUrl, startHereUrl];
 const w = h.whatYouGet;
 ---
 
@@ -49,7 +49,7 @@ const w = h.whatYouGet;
               <span class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M7 17L17 7M9 7h8v8"></path></svg></span>
             </a>
           </div>
-          <p class="sample-link rise" style="--i: 2"><a href={sampleBoardUrl}>{h.sampleLink}</a></p>
+          <p class="sample-link rise" style="--i: 2"><a href={sampleUrl}>{h.sampleLink}</a></p>
           <p class="license rise" style="--i: 3">{h.license}</p>
         </div>
         <div class="hero-side">

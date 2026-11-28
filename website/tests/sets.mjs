@@ -3,13 +3,13 @@
 import { localeCodes, defaultLocale } from '../src/i18n/locales.mjs';
 import { basePath, listRoutes } from './lib.mjs';
 
-/** The four site pages, as routes without the locale prefix. */
-const sitePages = ['/', '/definition/', '/faq/', '/accessibility/'];
+/** The five site pages, as routes without the locale prefix. */
+const sitePages = ['/', '/definition/', '/sample/', '/faq/', '/accessibility/'];
 
 /** A route in a locale, with the base path. Locale codes are the lowercase URL prefixes. */
 export const routeFor = (locale, path) => `${basePath}${locale === defaultLocale ? '' : `/${locale}`}${path}`;
 
-/** The four site pages in a locale. */
+/** The five site pages in a locale. */
 export const siteRoutes = (locale) => sitePages.map((p) => routeFor(locale, p));
 
 export const otherLocales = localeCodes.filter((c) => c !== defaultLocale);

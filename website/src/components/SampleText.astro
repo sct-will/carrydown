@@ -1,0 +1,11 @@
+---
+// A line of excerpt text from the sample page. Backticks mark inline code, as in the Markdown it was
+// quoted from; each marked run is set in code and the backticks are dropped.
+interface Props {
+  text: string;
+}
+const { text } = Astro.props;
+const parts = text.split('`');
+---
+
+{parts.map((part, i) => (i % 2 === 1 ? <code>{part}</code> : part))}

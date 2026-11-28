@@ -166,4 +166,4 @@ Say: "If this is right, I will render the documents and draft the plan. Nothing 
 
 Offer the dry run for every script.
 
-If the user wants to see the whole flow first, give them the browser links to open themselves, never a local folder. Do not open the links with a browser tool. An install copies only this skill folder, so the sample is not on their computer. The sample is in [the carrydown-sample repository](https://github.com/sct-will/carrydown-sample). Its README holds the renderings and the sample output, and the repository has the live issues and the public board.
+If the user wants to see the whole flow first, give them the browser links to open themselves, never a local folder. Do not open the links with a browser tool. An install copies only this skill folder, so the sample is not on their computer. Start with [the sample walkthrough](https://carriedcontext.dev/sample/). It shows what the agent generated, each artifact with an excerpt and a link to its file. The sample itself is in [the carrydown-sample repository](https://github.com/sct-will/carrydown-sample), with the live issues and the public board.

@@ -4,7 +4,7 @@
 // strings falls back to English through getStrings.
 import { getStrings } from '../i18n';
 
-export type PageKey = 'home' | 'definition' | 'faq' | 'accessibility';
+export type PageKey = 'home' | 'definition' | 'faq' | 'accessibility' | 'sample';
 
 /** The route of each page, without the base path and without the locale prefix. */
 export const routes: Record<string, PageKey> = {
@@ -12,6 +12,7 @@ export const routes: Record<string, PageKey> = {
   '/definition/': 'definition',
   '/faq/': 'faq',
   '/accessibility/': 'accessibility',
+  '/sample/': 'sample',
 };
 
 export interface PageMeta {
@@ -38,6 +39,11 @@ const englishDefaults: Record<PageKey, PageMeta> = {
   accessibility: {
     title: 'Accessibility statement',
     description: 'The accessibility statement for carriedcontext.dev: what the site supports, how it was checked and how to report a problem.',
+  },
+  sample: {
+    title: 'A sample project, carried-context development',
+    description:
+      'A fictional expense approvals project: the company, the people and the dates are invented, and nothing is implemented. The owner supplied one architecture document and two staffing files, reviewed the plan and approved it.',
   },
 };
 

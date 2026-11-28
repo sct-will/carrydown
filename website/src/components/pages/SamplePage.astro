@@ -1,0 +1,378 @@
+---
+// The sample page, /sample/: the artifacts the agent generated for the fictional expense approvals
+// project, each with its value to the reader, a real excerpt, a guide to what to notice and a link to the
+// real file on GitHub; then one change followed through the project; then the trial. The reference is
+// the round 6 mockup, specs/carried-context-site/mockups-v6-explorations/build-x7v2.mjs (mode a, nav 2),
+// set in the site's grammar: hairline rows, the previews on bone panels, the trial as a pine band.
+//
+// The words are in the locale strings under `sample`. The excerpts, links, paths, commands and the
+// check's output are in src/lib/sample-excerpts.mjs, in English on every page, and
+// tests/sample-excerpts.mjs checks each excerpt against its repository file.
+import { Image } from 'astro:assets';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import TranslationNote from '../TranslationNote.astro';
+import SampleText from '../SampleText.astro';
+import { getStrings } from '../../i18n';
+import { en } from '../../i18n/en';
+import { localePath } from '../../lib/paths';
+import { tiles, change, trial } from '../../lib/sample-excerpts.mjs';
+import board from '../../assets/sample/board.png';
+import '../../styles/pages.css';
+
+interface Props {
+  locale?: string;
+}
+const { locale = 'en' } = Astro.props;
+const t = getStrings(locale);
+// Every locale carries these strings once the translations land. Until then a locale without them
+// shows the English words, so the page still builds in every locale.
+const s = t.sample ?? en.sample;
+// The excerpts, commands and paths are English. On a translated page they say so.
+const enLang = locale === 'en' ? undefined : 'en';
+const two = (n: number) => String(n).padStart(2, '0');
+// Japanese and Chinese set no space between a sentence and the next, or around a code span.
+const sp = locale === 'ja' || locale === 'zh-cn' ? '' : ' ';
+
+const setupUrl = localePath(locale, '/docs/setup/');
+const troubleshootingUrl = localePath(locale, '/docs/troubleshooting/');
+const installHelpUrl = `${troubleshootingUrl}#installing`;
+// The check fails first when Python or Git is missing; that entry walks through both.
+const checkHelpUrl = `${troubleshootingUrl}#python-or-git-is-missing`;
+
+type Block = (typeof tiles)[number]['blocks'][number];
+type Node =
+  | { kind: 'block'; b: Block }
+  | { kind: 'ul'; items: Block[] }
+  | { kind: 'cites'; items: Block[] }
+  | { kind: 'li'; b: Block; children: Node[] };
+// The blocks of an excerpt as a small tree: a numbered item holds the lines that follow it up to the
+// next heading or item, and consecutive bullet lines and reference lines are one list each.
+const tree = (blocks: Block[]): Node[] => {
+  const out: Node[] = [];
+  let item: Extract<Node, { kind: 'li' }> | null = null;
+  for (const b of blocks) {
+    if (b.t === 'li') {
+      item = { kind: 'li', b, children: [] };
+      out.push(item);
+      continue;
+    }
+    if (b.t === 'h' || b.t === 'code') item = null;
+    const target = item ? item.children : out;
+    const last = target[target.length - 1];
+    if (b.t === 'sub' || b.t === 'cite') {
+      const kind = b.t === 'sub' ? 'ul' : 'cites';
+      if (last && last.kind === kind) last.items.push(b);
+      else target.push({ kind, items: [b] });
+    } else target.push({ kind: 'block', b });
+  }
+  return out;
+};
+const textOf = (tile: (typeof tiles)[number]) => s.tiles.find((x) => x.key === tile.key) ?? s.tiles[0];
+const entries = tiles.map((tile) => ({ tile, words: textOf(tile), nodes: tree(tile.blocks) }));
+const extIcon = '<path d="M7 17L17 7M9 7h8v8"></path>';
+---
+
+<SiteLayout title={s.title} description={s.description} locale={locale} kind="sample">
+  <TranslationNote locale={locale} />
+  <section class="first sample-first">
+    <div class="wrap">
+      <p class="eb">{s.eyebrow}</p>
+      <h1 class="doc-title sample-h1">{s.h1}</h1>
+      <p class="page-intro sample-lede">{s.lede}</p>
+      <div class="actions sample-actions">
+        <a class="btn primary" href="#run">{s.primary}</a>
+        <p class="sample-ready">{s.ready} <a href={setupUrl}>{s.readyLink}</a></p>
+      </div>
+
+      <p class="sample-callout">
+        <svg class="sample-callout__mark" viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+          <circle cx="10" cy="10" r="10"></circle>
+          <path d="M4.5 12.5h4c1.6 0 1.6-5 3.2-5h3.8"></path>
+        </svg>
+        <span>{s.callout}</span>
+      </p>
+
+      <div class="sample-tiles">
+        {
+          entries.map(({ tile, words, nodes }, i) => (
+            <article class="st" id={`sample-${tile.key}`}>
+              <div class="st-text">
+                <span class="st-n" aria-hidden="true">{two(i + 1)}</span>
+                <h2 class="st-title">
+                  <a href={tile.href}>
+                    {words.title}
+                    <svg class="st-ext" viewBox="0 0 24 24" aria-hidden="true" focusable="false" set:html={extIcon} />
+                  </a>
+                </h2>
+                <p class="st-value">{words.value}</p>
+                <p class="st-what">{words.what}</p>
+                {words.note && <p class="st-note">{words.note}</p>}
+                <details class="st-notice">
+                  <summary>
+                    <span>{s.notice}</span>
+                    <svg class="st-chev" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                      <path d="M4 6l4 4 4-4"></path>
+                    </svg>
+                  </summary>
+                  <ol class="st-notice__list">
+                    {words.notice.map((point) => (
+                      <li>{point}</li>
+                    ))}
+                  </ol>
+                </details>
+                <p class="st-path" lang={enLang}>{tile.path}</p>
+              </div>
+              <figure class="st-preview">
+                <figcaption class="st-label">{s.labels[tile.label as keyof typeof s.labels]}</figcaption>
+                {tile.key === 'project' ? (
+                  <Image class="st-shot" src={board} alt={s.boardAlt} widths={[480, 960, 1440]} sizes="(min-width: 900px) 440px, calc(100vw - 32px)" />
+                ) : (
+                  <div class="st-x" lang={enLang}>
+                    {tile.heading && <p class="st-x-path">{tile.heading}</p>}
+                    {nodes.map((node) =>
+                      node.kind === 'li' ? (
+                        <ol class="st-x-ol" start={node.b.n}>
+                          <li>
+                            <SampleText text={node.b.text ?? ''} />
+                            {node.children.map((child) =>
+                              child.kind === 'ul' ? (
+                                <ul class="st-x-ul">
+                                  {child.items.map((b) => (
+                                    <li>
+                                      <SampleText text={b.text ?? ''} />
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : child.kind === 'block' ? (
+                                <p class="st-x-p">
+                                  <SampleText text={child.b.text ?? ''} />
+                                </p>
+                              ) : null,
+                            )}
+                          </li>
+                        </ol>
+                      ) : node.kind === 'ul' ? (
+                        <ul class="st-x-ul">
+                          {node.items.map((b) => (
+                            <li>
+                              <SampleText text={b.text ?? ''} />
+                            </li>
+                          ))}
+                        </ul>
+                      ) : node.kind === 'cites' ? (
+                        node.items.length > 1 ? (
+                          <ul class="st-x-cites">
+                            {node.items.map((b) => (
+                              <li>{b.text}</li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p class="st-x-cite">{node.items[0].text}</p>
+                        )
+                      ) : node.b.t === 'code' ? (
+                        <pre class="st-x-code">{(node.b.lines ?? []).join('\n')}</pre>
+                      ) : node.b.t === 'h' ? (
+                        <p class="st-x-h">{node.b.text}</p>
+                      ) : node.b.t === 'small' ? (
+                        <p class="st-x-small">
+                          <SampleText text={node.b.text ?? ''} />
+                        </p>
+                      ) : (
+                        <p class="st-x-p">
+                          <SampleText text={node.b.text ?? ''} />
+                        </p>
+                      ),
+                    )}
+                  </div>
+                )}
+              </figure>
+            </article>
+          ))
+        }
+      </div>
+      <p class="sample-previews">{s.previewsNote}</p>
+    </div>
+  </section>
+
+  <section class="sample-change" aria-labelledby="sample-change-h">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <svg class="sec-mark" viewBox="1.5 1.5 9 13" width="15.2" height="22" aria-hidden="true" focusable="false"><path d="M2.5 2.5L9.5 8L2.5 13.5"></path></svg>
+        <h2 id="sample-change-h">{s.changeHeading}</h2>
+      </div>
+      <article class="st st--change" id="sample-change">
+        <div class="st-text">
+          <span class="st-n" aria-hidden="true">{two(tiles.length + 1)}</span>
+          <h2 class="st-title">
+            <a href={change.href}>
+              {s.change.title}
+              <svg class="st-ext" viewBox="0 0 24 24" aria-hidden="true" focusable="false" set:html={extIcon} />
+            </a>
+          </h2>
+          <p class="st-value">{s.change.value}</p>
+          <p class="st-what">{s.change.what}</p>
+          <details class="st-notice">
+            <summary>
+              <span>{s.notice}</span>
+              <svg class="st-chev" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path d="M4 6l4 4 4-4"></path>
+              </svg>
+            </summary>
+            <ol class="st-notice__list">
+              {s.change.notice.map((point) => (
+                <li>{point}</li>
+              ))}
+            </ol>
+          </details>
+          <p class="st-path" lang={enLang}>{change.path}</p>
+        </div>
+        <figure class="st-preview">
+          <figcaption class="st-label">{s.labels.excerpt}</figcaption>
+          <div class="st-mini">
+            <div class="st-mini__doc">
+              <p class="st-x-path"><span lang={enLang}>{change.docPath}</span> · {s.change.addedRule}</p>
+              <p class="st-mini__rule" lang={enLang}><ins>{change.rule}</ins></p>
+            </div>
+            <svg class="st-mini__thread" viewBox="0 0 60 120" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+              <path d="M2 40 C30 40 30 20 58 20 M2 40 C30 40 30 92 58 92"></path>
+            </svg>
+            <ul class="st-mini__cards">
+              {change.items.map((item, i) => (
+                <li class="st-mini__card">
+                  <span lang={enLang}><span class="st-id">{item.id}</span> {item.name}</span>
+                  <span class="st-mini__note">{s.change.items[i]}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p class="st-status">{s.change.status}</p>
+        </figure>
+      </article>
+    </div>
+  </section>
+
+  <section id="run" class="on-pine sample-run" aria-labelledby="run-h">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <svg class="sec-mark" viewBox="1.5 1.5 9 13" width="15.2" height="22" aria-hidden="true" focusable="false"><path d="M2.5 2.5L9.5 8L2.5 13.5"></path></svg>
+        <h2 id="run-h">{s.trial.heading}</h2>
+      </div>
+      <p class="run-intro">{s.trial.intro}</p>
+      <div class="run-keys" data-copy-root data-copied={s.trial.copied} data-ok={s.trial.copyOk} data-fail={s.trial.copyFail}>
+        <p class="run-lead">{s.trial.lead}</p>
+        <ol class="run-steps" role="list">
+          {
+            s.trial.steps.map((step, i) => (
+              <li class="run-step">
+                <span class="run-n" aria-hidden="true">{two(i + 1)}</span>
+                <span class="run-label">{step.label}</span>
+                <div class="run-line">
+                  <code class="run-cmd" lang={enLang}>{trial.commands[i]}</code>
+                  <button type="button" class="btn secondary run-copy" aria-label={step.copyLabel} data-copy={trial.commands[i]}>
+                    <span data-copy-label>{s.trial.copy}</span>
+                  </button>
+                </div>
+                {i === 1 && <p class="run-alt">{s.trial.folderNote}</p>}
+                {i === 2 && (
+                  <p class="run-alt">
+                    {s.trial.installNote}{sp}{s.trial.readInstead.before}{sp}<code lang={enLang}>{trial.skillFile}</code>{sp}{s.trial.readInstead.after}
+                  </p>
+                )}
+              </li>
+            ))
+          }
+        </ol>
+        <div class="run-see">
+          <p class="run-see__label">{s.trial.expected}</p>
+          <samp class="run-see__out" lang={enLang}>{trial.expected.map((line, i) => (<>{i > 0 && <br />}{line}</>))}</samp>
+        </div>
+        <p class="run-foot"><a href={installHelpUrl}>{s.trial.installHelp}</a> · <a href={checkHelpUrl}>{s.trial.checkHelp}</a></p>
+        <span class="sr-only" role="status" data-copy-status></span>
+      </div>
+    </div>
+  </section>
+</SiteLayout>
+
+<script>
+  // The rule above each section heading draws out as the heading enters, as on the home page (the
+  // styles are in site.css). Without script, under reduced motion, or if anything fails, the rules are
+  // simply drawn.
+  const heads = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+  const show = (el: Element) => el.classList.add('in');
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+    heads.forEach(show);
+  } else {
+    try {
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            show(entry.target);
+            io.unobserve(entry.target);
+          }
+        },
+        { rootMargin: '0px 0px -20% 0px' },
+      );
+      heads.forEach((el) => io.observe(el));
+    } catch {
+      heads.forEach(show);
+    }
+  }
+
+  // The trial's Copy buttons, in the pattern of the docs' Copy page control: the button names what it
+  // copies, its label says Copied for a moment, and a polite status message says whether the copy worked.
+  document.querySelectorAll<HTMLElement>('[data-copy-root]').forEach((root) => {
+    const status = root.querySelector<HTMLElement>('[data-copy-status]');
+    const say = (message: string) => {
+      if (!status) return;
+      status.textContent = '';
+      window.setTimeout(() => {
+        status.textContent = message;
+      }, 50);
+    };
+    // The last resort, for a browser without the async clipboard or one that refuses it.
+    const fallbackCopy = (value: string, button: HTMLButtonElement) => {
+      const area = document.createElement('textarea');
+      area.value = value;
+      area.setAttribute('readonly', '');
+      area.setAttribute('aria-hidden', 'true');
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
+      area.remove();
+      button.focus();
+      return ok;
+    };
+    root.querySelectorAll<HTMLButtonElement>('[data-copy]').forEach((button) => {
+      const label = button.querySelector<HTMLElement>('[data-copy-label]');
+      const rest = label?.textContent ?? '';
+      let timer: number | undefined;
+      button.addEventListener('click', async () => {
+        const value = button.dataset.copy ?? '';
+        let ok = false;
+        try {
+          await navigator.clipboard.writeText(value);
+          ok = true;
+        } catch {
+          ok = fallbackCopy(value, button);
+        }
+        say(ok ? (root.dataset.ok ?? '') : (root.dataset.fail ?? ''));
+        if (!ok || !label) return;
+        label.textContent = root.dataset.copied ?? rest;
+        button.classList.add('is-copied');
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          label.textContent = rest;
+          button.classList.remove('is-copied');
+        }, 2000);
+      });
+    });
+  });
+</script>

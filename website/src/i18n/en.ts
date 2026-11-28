@@ -335,7 +335,7 @@ export const en = {
     buttons: {
       try: 'Start here',
     },
-    /** The text link under the Start here button. It opens the sample board, as step 1 of Try it out does. */
+    /** The text link under the Start here button. It opens the sample page, as step 1 of Try it out does. */
     sampleLink: 'See what an agent created for a sample project',
     /** A small line under the Start here button and the sample link. */
     license: 'Open source under Apache 2.0.',
@@ -370,7 +370,7 @@ export const en = {
         {
           step: 'Step 1',
           title: 'Look at a sample finished plan.',
-          body: 'The sample board and its issues, on GitHub.',
+          body: 'A walkthrough of what the agent generated, with a link to each artifact on GitHub.',
           command: '',
           button: 'See what an agent created for a sample project',
         },
@@ -424,6 +424,170 @@ export const en = {
         { title: 'GitHub issues', path: '', body: 'One per work item under a sub-epic per milestone, each telling the engineer’s agent what to read.' },
         { title: 'A GitHub Project board', path: '', body: 'Work units, tracks, dates and checkpoints filled in.' },
       ],
+    },
+  },
+
+  /** The sample page, /sample/: what the agent generated for the fictional expense approvals project,
+   * one change followed through it, then the trial. Only the words around the excerpts are here. The
+   * excerpts, the commands, the paths, the identifiers such as WI-03, the links and the check's output
+   * are in src/lib/sample-excerpts.mjs and stay in English on every page. */
+  sample: {
+    title: 'A sample project, carried-context development',
+    description:
+      'A fictional expense approvals project: the company, the people and the dates are invented, and nothing is implemented. The owner supplied one architecture document and two staffing files, reviewed the plan and approved it.',
+    eyebrow: 'The sample',
+    h1: 'See how ground truth context carries through a sample project.',
+    lede: 'A fictional expense approvals project: the company, the people and the dates are invented, and nothing is implemented. The owner supplied one architecture document and two staffing files, reviewed the plan and approved it.',
+    /** The primary button. It moves to the trial at the end of the page. */
+    primary: 'Run the sample on your machine',
+    /** The line beside the button: plain text, then the link to the setup guide. */
+    ready: 'Ready to start?',
+    readyLink: 'Run carrydown on your project',
+    /** The one line above the list, beside the generated mark. */
+    callout: 'All six artifacts listed below were AI generated during the carrydown workflow.',
+    /** The one sentence under the list of six. */
+    previewsNote: 'Every preview is a real excerpt, a labeled summary or abridgment, or the board’s published image.',
+    /** The summary of the disclosure under each tile's text. */
+    notice: 'What to notice',
+    /** The visible label above each preview. Each tile names its label by key in sample-excerpts.mjs. */
+    labels: {
+      milestones: 'Excerpt from the milestones section, rationale abridged',
+      excerpt: 'Excerpt',
+      abridged: 'Excerpt, abridged',
+      board: 'The board’s published image',
+    },
+    /** The text alternative of the board image. */
+    boardAlt:
+      'The sample project’s table view on GitHub, grouped by work unit. Each group lists its work items with Track, Complete by and Checkpoint columns.',
+    /** The six tiles, in the page's order. `key` matches a tile in sample-excerpts.mjs and is not
+     * translated. The title is the link to the artifact on GitHub; `value` is the sentence in bold,
+     * `what` the description under it, `note` a smaller note (empty means none), and `notice` the
+     * numbered points of "What to notice". */
+    tiles: [
+      {
+        key: 'plan',
+        title: 'View the plan the owner approved',
+        value: 'Lets you review a schedule fitted to your people and your time: milestones, tracks, owners and dates, with a written reason for every milestone.',
+        what: 'You review it as a page in your browser and ask for changes in the conversation. The repository keeps ids and tracks only.',
+        note: 'In a real project the staffing answers stay on the owner’s machine. This sample publishes fictional ones.',
+        notice: [
+          'Each milestone states what the team must demonstrate together, in one sentence the owner can hold it to.',
+          'A written reason for the order. Routing and the inbox are two halves of one capability, so they share a milestone.',
+          'Ids and tracks only. Names and days off never reach the repository.',
+        ],
+      },
+      {
+        key: 'specification',
+        title: 'View a specification with its sources',
+        value: 'Lets you hand each engineer the smallest piece of work they can finish and show, with the sections it comes from cited.',
+        what: 'One per work item: why it exists, the contract, acceptance criteria and a place to record decisions. A script checks it against the plan, and runs again in continuous integration from a clean clone.',
+        note: '',
+        notice: [
+          'The references name the source sections this item obeys.',
+          'The contract quotes the reminder rule and the acceptance criterion turns it into a named test. Same rule, both places.',
+          'Depends on WI-01 and unblocks three items: how related work connects.',
+        ],
+      },
+      {
+        key: 'context',
+        title: 'View the approved context an agent reads first',
+        value: 'Lets you decide exactly which text from your documents reaches the engineers’ agents: the sections each work item cites, and nothing else.',
+        what: 'With the decisions that settle conflicts between sources and what the text may be used for. A check verifies it before the agent plans.',
+        note: '',
+        notice: [
+          'Only the four sections WI-03 cites are here. Nothing else from the document.',
+          'A conflict and its settlement. Finance asked for 2 days, the document says 3, and the agent reads “use 3” instead of guessing.',
+          'What the text may be used for: code and tests, not issue text.',
+        ],
+      },
+      {
+        key: 'skill',
+        title: 'View the agent skill that was generated',
+        value: 'Enables your engineers to start a work item with one sentence: a skill generated from your specifications and committed in your repository.',
+        what: 'Installed once. “Work on WI-03” makes the coding agent check and read that item’s approved context and specification before touching code.',
+        note: '',
+        notice: [
+          'The check is the first command for every work item. Only when it passes does the agent read the approved context.',
+          'The agent never opens the source document. The approved context is complete for the item.',
+          'If the approved inputs changed since the last check, the agent reads them again and reassesses its plan.',
+        ],
+      },
+      {
+        key: 'issues',
+        title: 'View the issues the agent created',
+        value: 'Lets you track each work item where your team already works, with every issue telling the engineer’s agent what to read.',
+        what: 'An epic, five sub-epics and nine work items, each with its target date, its checkpoint and the reasons it exists.',
+        note: '',
+        notice: [
+          'The AI engineering notes link the specification and the skill, and say what to tell your agent.',
+          'The ground truth line names the same sections as the specification.',
+          'Depends on WI-01 links the issue this one waits for.',
+        ],
+      },
+      {
+        key: 'project',
+        title: 'View the GitHub project',
+        value: 'Lets you run the plan in the tool your team already uses, with work units, tracks, dates and checkpoints filled in.',
+        what: 'Grouped by work unit. Each work item links its specification, the engineers’ skill and the sections it cites.',
+        note: '',
+        notice: [
+          'Grouped by work unit with its dates. The milestone row sits with its work items.',
+          'Track, complete-by and checkpoint come from the plan. Nobody typed them in.',
+        ],
+      },
+    ],
+    /** The heading above the seventh tile. */
+    changeHeading: 'Agent generated artifacts are updated when changes occur.',
+    /** The seventh tile: one change followed through the project. */
+    change: {
+      title: 'Follow one change through the project',
+      value: 'Lets you change the document and approve the update before anything is published, with the agent assessing the affected work for you.',
+      what: 'One rule was added to the document. The agent proposed updates to the routing engine and the dependent inbox, two draft specifications, and the owner accepted them in one review.',
+      notice: [
+        'The inbox never cited the changed section and was updated anyway. It depends on the routing engine, and the agent followed the dependency.',
+        'Three other items cite the section. The agent read them, found no conflict and left them alone.',
+        'The owner accepted both drafts in one review. Nothing is published until then.',
+      ],
+      /** The label after the changed document's path in the preview. */
+      addedRule: 'added rule',
+      /** What changed in each work item, under its id and name. WI-04's change is described in the
+       * record, not printed, so its line says it is a summary. */
+      items: [
+        'Added contract rule, added acceptance criterion (printed)',
+        'Added acceptance criterion (summary; wording not printed)',
+      ],
+      /** The line under the preview. */
+      status: 'Recorded local exercise · Accepted drafts awaiting release',
+    },
+    /** The trial, a pine band at the end of the page. */
+    trial: {
+      heading: 'Run the sample on your machine',
+      intro:
+        'Git, Python 3.9 or later, a coding agent that reads files and runs commands, and network access for the first check. No GitHub account or publishing token is needed for this public-sample trial.',
+      lead: 'Your own coding agent. No GitHub account or publishing token for this public-sample trial. The last line tells the agent to stop before any implementation.',
+      /** The four steps, in order. `copyLabel` is the accessible name of the step's Copy button and
+       * names what it copies. The commands themselves are in sample-excerpts.mjs. */
+      steps: [
+        { label: 'Get the sample', copyLabel: 'Copy the clone command' },
+        { label: 'Work in that folder', copyLabel: 'Copy the folder command' },
+        { label: 'Load the engineers’ skill, one of two ways', copyLabel: 'Copy the install command' },
+        { label: 'Say this to the agent', copyLabel: 'Copy the sentence to say' },
+      ],
+      /** The note under step 2. */
+      folderNote: 'Open the same folder in your coding agent as its working folder.',
+      /** The note under step 3: the installer's needs, then the other way, around the skill's path. */
+      installNote: 'The installer needs Node.js 22.20 or later; start a new agent session afterward.',
+      readInstead: { before: 'Or, with no installation, ask the agent to read', after: 'and follow it.' },
+      /** The visible text of every Copy button, and what it says for a moment after a copy. */
+      copy: 'Copy',
+      copied: 'Copied',
+      /** Read out after a copy, or when the browser refuses it. */
+      copyOk: 'Copied to the clipboard.',
+      copyFail: 'Could not copy. Select the text and copy it.',
+      expected: 'Expected output when the check passes',
+      /** The two help links under the trial, to the troubleshooting page. */
+      installHelp: 'Installation problems',
+      checkHelp: 'If the check does not pass',
     },
   },
 

@@ -87,24 +87,7 @@ The [owner guide](docs/plan-owner-guide.md#when-the-project-changes) explains th
 
 ## Explore the sample
 
-You can inspect a fictional expense approvals project before installing anything. The company, the people and the dates are invented. The planning artifacts are real output from an AI agent using carrydown.
-
-Employees submit expense reports with receipts. Approval follows spending limits and reporting lines, with no self-approval and delegates for absent approvers. The service sends notifications, keeps an uneditable audit trail for seven years and exports approved expenses to finance each night.
-
-The ground truth is one architecture document of about 3,000 words: requirements, design, company rules and their owners, user findings, interfaces and risks. Its logging rule is deliberately simple, so you can trace it from the source through the specifications to the instructions for the coding agents. Real projects involve many documents, overlapping rules, exceptions and decisions from different owners.
-
-Start with [the sample project board](https://github.com/users/sct-will/projects/2). Open a work item, for example [issue 9, the approval routing engine](https://github.com/sct-will/carrydown-sample/issues/9), to find its specification and the source sections it cites. As you explore, notice:
-
-- **The complete set of artifacts the AI agent generated.** A dated plan with five milestones and nine work items across two tracks. Each work item has a specification and an issue on the board. A generated, project-specific skill carries the instructions for the engineers' coding agents. Each milestone also states what the team must demonstrate together.
-- **The detail carried down from the source.** Open [the ledger export specification](sample/expense-approvals/docs/spec/m4-pilot/wi-09-ledger-export.md). Its "Ground truth" row names the source sections. Its "Contract" section quotes the applicable rules, and its acceptance criteria turn them into checks. The rule that log lines never carry amounts appears in both.
-- **How related work connects.** The ledger export depends on [the audit log](sample/expense-approvals/docs/spec/m3-enforce-policy/wi-07-audit-log.md). Its specification says why and names the shared behavior. Both specifications quote the same logging rule, word for word, from the same section of the source. If the rule changes, tell the agent you plan with: “This changed: [describe the change].” It proposes updates to the work that may be affected and keeps engineer corrections that still fit. You review the changes before publication.
-- **What reaches the coding agent.** Read [the generated skill](sample/expense-approvals/docs/dev/skills/expense-approvals-dev/SKILL.md). It directs the coding agent to check its approved inputs, then read the approved source excerpts, the full specification and the project conventions before planning the code. If the approved inputs have changed, it directs the agent to reassess its plan.
-
-[![Issue 9 in the sample repository, WI-03 Approval routing engine, as GitHub renders it. Open, parent Milestone 2, Route to approvers. The body gives the target completion date, the checkpoint, why the item exists, then the AI engineering notes: a link to the specification, a link to the engineers' skill, the instruction to install it once and ask your coding agent to work on WI-03, and the ground truth line naming the architecture document's sections 3.4, 3.5 and 7.1. Author details anonymized; issue content unchanged.](docs/images/issue-9.png)](https://github.com/sct-will/carrydown-sample/issues/9)
-
-*Issue 9 as GitHub renders it, and [the specification it links to](https://github.com/sct-will/carrydown-sample/blob/main/docs/spec/m2-route-to-approvers/wi-03-routing-engine.md). Author details anonymized; issue content unchanged.*
-
-Everything the two skills made is public in [carrydown-sample](https://github.com/sct-will/carrydown-sample), and a copy sits in [`sample/expense-approvals/`](sample/expense-approvals/) for the self test. With a local copy of this repository you can also run the sample's read-only preview, which changes no file and needs no token; [the sample's own page](sample/expense-approvals/README.md#run-it) shows the command and what it prints.
+[The sample walkthrough](https://carriedcontext.dev/sample/) shows what an AI agent generated with carrydown for a fictional expense approvals project: six artifacts, from the plan to the project board, and one change followed through the project. Each artifact links to its real file. Everything the two skills made is public in [carrydown-sample](https://github.com/sct-will/carrydown-sample).
 
 <br />
 
